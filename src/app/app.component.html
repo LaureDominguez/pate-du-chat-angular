@@ -1,10 +1,14 @@
 <main>
-    <h1>Hello World</h1>
+    <h1>Les Pâtes du Chat</h1>
     <nav>
-        <li><a routerLink="/about">About</a></li>
-        <li><a routerLink="/contact">Contact</a></li>
-        <li><a routerLink="/login">Login</a></li>
-        <li><a routerLink="/register">Register</a></li>
+      @for (item of [
+        { title: 'Home', link: '/' },
+        { title: 'About', link: '/about' },
+        { title: 'Shop', link: '/shop' },
+        { title: 'Contact', link: '/contact' }
+      ]; track item.title){
+        <li><a routerLink={{item.link}}>{{item.title}}</a></li>
+      }
     </nav>
 </main>
 
