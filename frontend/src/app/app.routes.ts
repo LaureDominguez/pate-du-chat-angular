@@ -5,7 +5,7 @@ import { ShopComponent } from './components/shop/shop.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { ProductsComponent } from './components/products/products.component';
 
-export const routes: Routes = [
+export const APP_ROUTES: Routes = [
   { path: '', title: 'Accueil', component: HomeComponent }, //Home
   { path: 'about', title: "L'Atelier", component: AboutComponent }, //About
   { path: 'products', title: 'Les Produits', component: ProductsComponent }, //Products
