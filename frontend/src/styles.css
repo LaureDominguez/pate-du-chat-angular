@@ -1,0 +1,18 @@
+/* You can add global styles to this file, and also import other style files */
+h1 {
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  justify-content: space-evenly;
+  list-style: none;
+}
+nav a {
+  color: orange;
+  text-decoration: none;
+}
+nav a:hover {
+  color: pink;
+  background-color: black;
+}/*# sourceMappingURL=styles.css.map */
