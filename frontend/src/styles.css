@@ -1,4 +1,42 @@
 /* You can add global styles to this file, and also import other style files */
+:root {
+  --orange: #FF9800;
+  --brun: #271403;
+  --beige: #fff7e8;
+  --vert: #1a5c1a;
+}
+
+body {
+  box-sizing: border-box;
+  user-select: none;
+  margin: 0 auto;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+app-root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--beige);
+}
+
+h1, h2, h3, h4 {
+  font-family: cursive;
+  text-transform: capitalize;
+  text-wrap: balance;
+}
+
 h1 {
   text-align: center;
+  color: var(--vert);
+}
+
+a, a:active, a:hover {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.container {
+  background-color: red;
 }/*# sourceMappingURL=styles.css.map */

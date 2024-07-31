@@ -1,16 +1,18 @@
 <main>
     <nav>
       <h2>Les Pâtes du Chat</h2>
-      @for (item of [
-        { title: 'Accueil', link: '/' },
-        { title: 'L\'Atelier', link: '/about' },
-        { title: 'Les Produits', link: '/products' },
-        { title: 'La Boutique', link: '/shop' },
-        { title: 'Contact', link: '/contact' }
-      ]; track item.title){
-        <li><a routerLink={{item.link}}>{{item.title}}</a></li>
-      }
+      <ul>
+        @for (item of [
+          { title: 'Accueil', link: '/' },
+          { title: 'L\'Atelier', link: '/about' },
+          { title: 'Les Produits', link: '/products' },
+          { title: 'La Boutique', link: '/shop' },
+          { title: 'Contact', link: '/contact' }
+        ]; track item.title){
+          <li><a routerLink={{item.link}}>{{item.title}}</a></li>
+        }
+        </ul>
     </nav>
 </main>
 
-<router-outlet><router-outlet />
+<router-outlet />

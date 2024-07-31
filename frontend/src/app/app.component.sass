@@ -1,18 +1,28 @@
 nav
     width: 10em
+    height: 97%
+    margin: 7% 0
     display: flex
     flex-direction: column
+    justify-content: space-evenly
     list-style: none
-    background-color: orange
+    background-color: var(--brun)
+    border-radius: 0 20px 20px 0
+    h2
+        color: var(--orange)
+        padding: 0 0.5em
+    ul
+        list-style: none
+        padding: 0
+        height: 50%
+        display: flex
+        flex-direction: column
+        justify-content: space-between
     li
         a 
-            color: white
-            text-decoration: none
+            color: var(--beige)
             display: block
             padding: 1em 2em
         &:hover
             color: pink
             background-color: black
-    h2
-        color: green
-        padding: 0 0.5em
