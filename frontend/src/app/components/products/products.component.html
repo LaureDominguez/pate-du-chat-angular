@@ -1,16 +1,21 @@
 <h1>Les Produits</h1>
-<p>products works!</p>
-<div *ngIf="products$ | async as products">
-    <ul>
-        <li *ngFor="let product of products">
-        <h2>{{ product.name }}</h2>
-        <p>{{ product.description }}</p>
-        <p>{{ product.price }}</p>
-        <img [src]="product.image" alt="{{ product.name }}">
+
+<div class="container">
+    <div *ngIf="products$ | async as products">
+    <ul class="tile-list">
+        <li class="tile" *ngFor="let product of products">
+            <img [src]="product.image" alt="{{ product.name }}" class="img-tile" *ngIf="(product.image)?.length">
+            <img [src]="'pate-R.png'" alt="Pas d'image disponible" class="img-tile" *ngIf="!(product.image)?.length">
+            <div class="txt-tile">
+                <h2>{{ product.name }}</h2>
+                <p>{{ product.category }}</p>
+                <p>{{ product.price }}</p>
+            </div>
         </li>
     </ul>
-</div>
-<div *ngIf="!(products$ | async)?.length">
-    <p>No products available.</p>
-</div>
+    </div>
+    <div *ngIf="!(products$ | async)?.length">
+        <p>Pas de produits disponibles</p>
+    </div>
 
+</div>

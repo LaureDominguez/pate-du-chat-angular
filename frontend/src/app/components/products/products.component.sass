@@ -1,0 +1,37 @@
+.tile-list
+    display: grid
+    grid-template-columns: repeat(6, 1fr)
+    gap: 1rem
+    padding: 1rem
+    list-style: none
+
+.tile
+    height: 10rem
+    width: 10rem
+    overflow: hidden
+    border: 1px solid #ddd
+    border-radius: 8px
+    // padding: 0.8rem
+    text-align: center
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
+    transition: transform 0.2s
+    position: relative
+
+    &:hover 
+        transform: translateY(-5px)
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2)
+
+.img-tile 
+    object-fit: fill
+    height: 9rem
+    width: 9rem
+    border-radius: 4px
+    z-index: 5
+    position: absolute
+
+.txt-tile
+    height: 9rem
+    width: 9rem
+    border-radius: 4px
+    z-index: 10
+    position: absolute
