@@ -1,13 +1,15 @@
 nav {
-  width: 10em;
-  height: 97%;
-  margin: 7% 0;
+  width: 200px;
+  height: 95%;
+  top: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   list-style: none;
   background-color: var(--brun);
   border-radius: 0 20px 20px 0;
+  z-index: 10;
+  position: fixed;
 }
 nav h2 {
   color: var(--orange);

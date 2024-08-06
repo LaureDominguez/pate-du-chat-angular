@@ -5,11 +5,19 @@
     --brun: #271403
     --beige: #fff7e8
     --vert: #1a5c1a
+    // --pacifico: "Pacifico"
 
 
 // vert: #004f12
 // orange: #FF8357
 // Pacifico: "Pacifico", cursive;
+
+@font-face 
+    font-family: "Pacifico"
+    src: url('assets/fonts/Pacifico-Regular.ttf') format('ttf')
+    font-weight: normal
+    font-style: normal
+
 
 body
     box-sizing: border-box
@@ -17,14 +25,22 @@ body
     margin: 0 auto
     font-family: Arial, Helvetica, sans-serif
 
-app-root
+main
     width: 100%
+    position: relative
+
+
+.content
     min-height: 100vh
+    // padding-left: 210px
     display: flex
+    justify-content: center
     background-color: var(--beige)
+    z-index: 0
+
 
 h1, h2, h3, h4
-    font-family: cursive
+    font-family: "Pacifico", cursive
     text-transform: capitalize
     text-wrap: balance
 
@@ -36,6 +52,3 @@ a, a:active, a:hover
     text-decoration: none
     color: inherit
     cursor: pointer
-
-.container
-    background-color: red
