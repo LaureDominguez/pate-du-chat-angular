@@ -1,37 +1,94 @@
-.tile-list
-    display: grid
-    grid-template-columns: repeat(6, 1fr)
-    gap: 1rem
-    padding: 1rem
-    list-style: none
-
-.tile
-    height: 10rem
-    width: 10rem
-    overflow: hidden
-    border: 1px solid #ddd
+.product-card
+    height: 18rem
+    width: 12rem
+    display: flex
+    flex-direction: column
+    justify-content: space-between
+    padding: 15px
+    background-color: #fff
+    border: 1px solid #e0e0e0
     border-radius: 8px
-    // padding: 0.8rem
-    text-align: center
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
-    transition: transform 0.2s
-    position: relative
+    transition: transform 0.2s, box-shadow 0.2s, height 0.3s ease-in-out
 
-    &:hover 
+    &:hover
         transform: translateY(-5px)
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2)
+    
+    &.selected
+        height: 100%
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3)
+        img
+            max-height: 150px // Gardez l'image petite pour révéler plus de contenu
+        h2, p, .price
+            transition: opacity 0.3s ease-in-out
+            opacity: 1
 
-.img-tile 
-    object-fit: fill
-    height: 9rem
-    width: 9rem
+img
+    max-height: 150px
+    object-fit: cover
     border-radius: 4px
-    z-index: 5
-    position: absolute
+    margin-bottom: 10px
 
-.txt-tile
-    height: 9rem
-    width: 9rem
-    border-radius: 4px
-    z-index: 10
-    position: absolute
+h2
+    font-size: 1rem
+    margin: 10px 0
+    color: #333
+
+p
+    font-size: 0.875rem
+    color: #666
+
+.price
+    font-size: 1rem
+    font-weight: bold
+    color: #e91e63
+
+// Grille
+::ng-deep .mat-grid-list
+    padding: 20px
+    margin: 0 auto
+
+::ng-deep .mat-grid-tile
+    overflow: visible
+
+// selected
+.selected
+    height: 500px
+    transition: height 0.3s ease, box-shadow 0.3s ease
+
+.product-card
+    transition: transform 0.2s, box-shadow 0.2s, height 0.3s ease
+
+
+.product-details
+    margin-top: 20px
+    padding: 20px
+    border: 1px solid #ddd
+    border-radius: 8px
+    background-color: #f9f9f9
+
+h2
+    font-size: 1.5rem
+    margin-bottom: 15px
+
+p
+    font-size: 1rem
+    color: #555
+
+// media queries
+@media (max-width: 1200px)
+    ::ng-deep .mat-grid-list[cols='5']
+        grid-template-columns: repeat(4, 1fr)
+
+@media (max-width: 900px)
+    ::ng-deep .mat-grid-list[cols='5']
+        grid-template-columns: repeat(3, 1fr)
+
+@media (max-width: 600px)
+    ::ng-deep .mat-grid-list[cols='5']
+        grid-template-columns: repeat(2, 1fr)
+
+@media (max-width: 400px)
+    ::ng-deep .mat-grid-list[cols='5']
+        grid-template-columns: repeat(1, 1fr)

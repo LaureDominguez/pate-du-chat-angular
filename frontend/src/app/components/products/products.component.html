@@ -1,21 +1,25 @@
 <h1>Les Produits</h1>
 
-<div class="container">
-    <div *ngIf="products$ | async as products">
-    <ul class="tile-list">
-        <li class="tile" *ngFor="let product of products">
-            <img [src]="product.image" alt="{{ product.name }}" class="img-tile" *ngIf="(product.image)?.length">
-            <img [src]="'pate-R.png'" alt="Pas d'image disponible" class="img-tile" *ngIf="!(product.image)?.length">
-            <div class="txt-tile">
-                <h2>{{ product.name }}</h2>
-                <p>{{ product.category }}</p>
-                <p>{{ product.price }}</p>
-            </div>
-        </li>
-    </ul>
+    <div class="container" *ngIf="products$ | async as products">
+        <mat-grid-list cols="5" rowHeight="350px" gutterSize="10px">
+            <mat-grid-tile *ngFor="let product of products" (click)="selectProduct(product)">
+                <mat-card [class.selected]="isSelected(product)" class="product-card">
+                    <img mat-card-image [src]="product.image" alt="{{ product.name }}" *ngIf="(product.image)?.length">
+                    <img mat-card-image [src]="'pate-R.png'" alt="Pas d'image disponible" *ngIf="!(product.image)?.length">
+                    <mat-card-content *ngIf="!isSelected(product)">
+                        <h2>{{ product.name }}</h2>
+                        <span class="price">{{ product.price | currency }}</span>
+                    </mat-card-content>
+                    <mat-card-content *ngIf="isSelected(product)">
+                        <h2>{{ product.name }}</h2>
+                        <p>{{ product.description }}</p>
+                        <p class="price">{{ product.price | currency }}</p>
+                        <button mat-button color="primary" (click)="deselectProduct($event)">Réduire</button>
+                    </mat-card-content>
+                </mat-card>
+            </mat-grid-tile>
+        </mat-grid-list>
     </div>
-    <div *ngIf="!(products$ | async)?.length">
+    <div class="container" *ngIf="!(products$ | async)?.length">
         <p>Pas de produits disponibles</p>
     </div>
-
-</div>

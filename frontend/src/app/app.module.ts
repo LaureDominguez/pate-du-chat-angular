@@ -1,18 +1,22 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
-import { ProductsComponent } from './components/products/products.component';
-// import { ProductService } from './services/product.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { APP_ROUTES } from './app.routes';
+import { MatCardModule } from '@angular/material/card';
+import { MatGridListModule } from '@angular/material/grid-list';
+
+
 
 @NgModule({
-  declarations: [AppComponent,
-    // ProductsComponent
+  declarations: [AppComponent
   ],
-  imports: [BrowserModule],
+  imports: [
+    BrowserModule,
+    MatCardModule,
+    MatGridListModule
+  ],
   providers: [
     provideHttpClient(),
     provideRouter(APP_ROUTES)
