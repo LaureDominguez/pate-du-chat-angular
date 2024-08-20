@@ -18,6 +18,7 @@ export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();
   cols: number = 3;
   selectedProduct: Product | null = null;
+  products: Product[] = [];
 
   constructor(
     private productService: ProductService,
@@ -25,7 +26,9 @@ export class ProductsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.products$ = this.productService.getProducts();
+    this.products$.subscribe((products) => {
+      this.products = products;
+    });
 
     this.breakpointObserver
       .observe([Breakpoints.Medium, Breakpoints.Large])
@@ -45,6 +48,7 @@ export class ProductsComponent implements OnInit {
 
   selectProduct(product: Product) {
     this.selectedProduct = product;
+    this.updateGrid();
   }
 
   isSelected(product: Product): boolean {
@@ -54,5 +58,25 @@ export class ProductsComponent implements OnInit {
   deselectProduct(event: Event) {
     event.stopPropagation();
     this.selectedProduct = null;
+  }
+
+  updateGrid(): void {
+    if (this.selectedProduct) {
+      const selectedIndex = this.products.indexOf(this.selectedProduct);
+      const previousProduct = this.products[selectedIndex - 1];
+      const nextProduct = this.products[selectedIndex + 1];
+
+      // mise à jour de la structure de la grille de produits
+      const grid1 = this.products.slice(0, selectedIndex);
+      const grid2 = this.products.slice(selectedIndex + 1);
+
+      // affichage des produits dans les deux grilles
+      this.displayProducts(grid1, grid2);
+      console.log(grid1, grid2);
+    }
+  }
+
+  displayProducts(grid1: any[], grid2: any[]): void {
+    // code pour afficher les produits dans les deux grilles
   }
 }
