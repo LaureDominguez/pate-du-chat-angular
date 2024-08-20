@@ -1,25 +1,38 @@
 .product-card
+    text-align: center
+    text-wrap: balance
+
+    position: relative
+
     height: 18rem
-    width: 12rem
+    width: 12rem 
     display: flex
     flex-direction: column
     justify-content: space-between
-    padding: 15px
     background-color: #fff
     border: 1px solid #e0e0e0
     border-radius: 8px
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
+    // box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
     transition: transform 0.2s, box-shadow 0.2s, height 0.3s ease-in-out
+
+    .close
+        position: absolute
+        top: 1px
+        right: 1px
+
+    h2, p, .price
+        line-height: normal
+        margin: 0
 
     &:hover
         transform: translateY(-5px)
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2)
+        // box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2)
     
     &.selected
         height: 100%
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3)
+        // box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3)
         img
-            max-height: 150px // Gardez l'image petite pour révéler plus de contenu
+            max-height: 150px
         h2, p, .price
             transition: opacity 0.3s ease-in-out
             opacity: 1
@@ -54,11 +67,12 @@ p
 
 // selected
 .selected
-    height: 500px
-    transition: height 0.3s ease, box-shadow 0.3s ease
+    height: 20rem
+    width: 15rem
+    transition: height 0.3s ease, width 0.2s ease, box-shadow 0.3s ease
 
 .product-card
-    transition: transform 0.2s, box-shadow 0.2s, height 0.3s ease
+    transition: transform 0.2s, box-shadow 0.2s, height 0.3s ease, width 0.2s ease
 
 
 .product-details

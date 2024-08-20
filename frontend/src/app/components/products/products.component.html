@@ -1,25 +1,28 @@
 <h1>Les Produits</h1>
 
     <div class="container" *ngIf="products$ | async as products">
-        <mat-grid-list cols="5" rowHeight="350px" gutterSize="10px">
-            <mat-grid-tile *ngFor="let product of products" (click)="selectProduct(product)">
+        <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px">
+            <mat-grid-tile *ngFor="let product of products$ | async" (click)="selectProduct(product)">
                 <mat-card [class.selected]="isSelected(product)" class="product-card">
-                    <img mat-card-image [src]="product.image" alt="{{ product.name }}" *ngIf="(product.image)?.length">
-                    <img mat-card-image [src]="'pate-R.png'" alt="Pas d'image disponible" *ngIf="!(product.image)?.length">
-                    <mat-card-content *ngIf="!isSelected(product)">
+
+                    <img mat-card-image 
+                        [src]="product.image || 'pate-R.png'"
+                        [alt]="product.image ? product.name : 'Pas d\'image disponible'">
+
+                    <mat-card-content>
                         <h2>{{ product.name }}</h2>
+                        <p *ngIf="isSelected(product)">{{ product.description }}</p>
                         <span class="price">{{ product.price | currency }}</span>
                     </mat-card-content>
-                    <mat-card-content *ngIf="isSelected(product)">
-                        <h2>{{ product.name }}</h2>
-                        <p>{{ product.description }}</p>
-                        <p class="price">{{ product.price | currency }}</p>
-                        <button mat-button color="primary" (click)="deselectProduct($event)">Réduire</button>
-                    </mat-card-content>
+
+                    <mat-card-actions *ngIf="isSelected(product)">
+                        <button mat-button (click)="deselectProduct($event)" class="close">X</button>
+                    </mat-card-actions>
                 </mat-card>
             </mat-grid-tile>
         </mat-grid-list>
     </div>
+
     <div class="container" *ngIf="!(products$ | async)?.length">
         <p>Pas de produits disponibles</p>
     </div>

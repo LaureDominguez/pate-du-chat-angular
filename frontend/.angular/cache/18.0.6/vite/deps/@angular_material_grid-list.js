@@ -3,10 +3,12 @@ import {
   MatCommonModule,
   MatLine,
   MatLineModule,
-  coerceNumberProperty,
   setLines
-} from "./chunk-W6KXMIGO.js";
-import "./chunk-CSWWMJGC.js";
+} from "./chunk-YZHHU6KZ.js";
+import {
+  coerceNumberProperty
+} from "./chunk-JZBEVOBH.js";
+import "./chunk-6PP5HM6Y.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,8 +37,8 @@ import {
   ɵɵprojection,
   ɵɵprojectionDef,
   ɵɵqueryRefresh
-} from "./chunk-6ER6TL3Y.js";
-import "./chunk-R7GQRDZ6.js";
+} from "./chunk-IUG2G4JP.js";
+import "./chunk-6VB2XR5J.js";
 
 // node_modules/@angular/material/fesm2022/grid-list.mjs
 var _c0 = ["*"];
