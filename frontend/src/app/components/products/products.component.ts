@@ -16,9 +16,15 @@ import { MatGridListModule } from '@angular/material/grid-list';
 })
 export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();
-  cols: number = 3;
-  selectedProduct: Product | null = null;
   products: Product[] = [];
+  selectedProduct: Product | null = null;
+
+  cols: number = 3;
+
+  showNormalGrid = false;
+  showSelectedGrid = false;
+  grid1: Product[] = [];
+  grid2: Product[] = [];
 
   constructor(
     private productService: ProductService,
@@ -28,6 +34,13 @@ export class ProductsComponent implements OnInit {
   ngOnInit() {
     this.products$.subscribe((products) => {
       this.products = products;
+      if (this.selectedProduct == null) {
+        this.showNormalGrid = true;
+        this.showSelectedGrid = false;
+      } else {
+        this.showNormalGrid = false;
+        this.showSelectedGrid = true;
+      }
     });
 
     this.breakpointObserver
@@ -48,7 +61,10 @@ export class ProductsComponent implements OnInit {
 
   selectProduct(product: Product) {
     this.selectedProduct = product;
+    this.showNormalGrid = false;
+    this.showSelectedGrid = true;
     this.updateGrid();
+    console.log('pouet', this.selectedProduct);
   }
 
   isSelected(product: Product): boolean {
@@ -58,6 +74,8 @@ export class ProductsComponent implements OnInit {
   deselectProduct(event: Event) {
     event.stopPropagation();
     this.selectedProduct = null;
+    this.showNormalGrid = true;
+    this.showSelectedGrid = false;
   }
 
   updateGrid(): void {
@@ -67,12 +85,12 @@ export class ProductsComponent implements OnInit {
       const nextProduct = this.products[selectedIndex + 1];
 
       // mise à jour de la structure de la grille de produits
-      const grid1 = this.products.slice(0, selectedIndex);
-      const grid2 = this.products.slice(selectedIndex + 1);
+      this.grid1 = this.products.slice(0, selectedIndex);
+      this.grid2 = this.products.slice(selectedIndex + 1);
 
       // affichage des produits dans les deux grilles
-      this.displayProducts(grid1, grid2);
-      console.log(grid1, grid2);
+      this.displayProducts(this.grid1, this.grid2);
+      console.log('grid1', this.grid1, 'grid2', this.grid2);
     }
   }
 

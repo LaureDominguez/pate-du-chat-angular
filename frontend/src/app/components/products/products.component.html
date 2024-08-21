@@ -1,6 +1,8 @@
 <h1>Les Produits</h1>
 
-    <div class="container" *ngIf="products$ | async as products">
+<!-- grid normal -->
+<div class="container" *ngIf="products$ | async as products">
+    <div class="grid-container" *ngIf="showNormalGrid">
         <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px">
             <mat-grid-tile *ngFor="let product of products$ | async" (click)="selectProduct(product)">
                 <mat-card [class.selected]="isSelected(product)" class="product-card">
@@ -11,18 +13,82 @@
 
                     <mat-card-content>
                         <h2>{{ product.name }}</h2>
-                        <p *ngIf="isSelected(product)">{{ product.description }}</p>
                         <span class="price">{{ product.price | currency }}</span>
                     </mat-card-content>
-
-                    <mat-card-actions *ngIf="isSelected(product)">
-                        <button mat-button (click)="deselectProduct($event)" class="close">X</button>
-                    </mat-card-actions>
                 </mat-card>
             </mat-grid-tile>
         </mat-grid-list>
     </div>
 
-    <div class="container" *ngIf="!(products$ | async)?.length">
-        <p>Pas de produits disponibles</p>
+    <!-- 2 grids with selected product -->
+    <div class="grid-container" *ngIf="showSelectedGrid">
+        <!-- grid1 -->
+        <div class="grid1">
+            <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px">
+                <mat-grid-tile *ngFor="let product of grid1; let i = index; let last = last"
+                    (click)="selectProduct(product)">
+                    <mat-card [class.selected]="isSelected(product)" class="product-card">
+
+                        <!-- contenu de la carte -->
+                        <mat-card [class.selected]="isSelected(product)" class="product-card">
+                        
+                            <img mat-card-image [src]="product.image || 'pate-R.png'"
+                                [alt]="product.image ? product.name : 'Pas d\'image disponible'">
+                        
+                            <mat-card-content>
+                                <h2>{{ product.name }}</h2>
+                                <span class="price">{{ product.price | currency }}</span>
+                            </mat-card-content>
+                        </mat-card>
+
+                    </mat-card>
+                </mat-grid-tile>
+            </mat-grid-list>
+        </div>
+
+        <!-- selected product -->
+        <div class="selectedProduct" *ngIf="selectedProduct">
+            <mat-card class="product-card">
+                <img mat-card-image [src]="selectedProduct.image || 'pate-R.png'"
+                    [alt]="selectedProduct.image ? selectedProduct.name : 'Pas d\'image disponible'">
+            
+                <mat-card-content>
+                    <h2>{{ selectedProduct.name }}</h2>
+                    <p>{{ selectedProduct.description }}</p>
+                    <span class="price">{{ selectedProduct .price | currency }}</span>
+                </mat-card-content>
+            
+                <mat-card-actions>
+                    <button mat-button (click)="deselectProduct($event)" class="close">X</button>
+                </mat-card-actions>
+            </mat-card>
+        </div>
+
+        <!-- grid2 -->
+        <div class="grid2">
+            <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px">
+                <mat-grid-tile *ngFor="let product of grid2; let i = index; let last = last"
+                    (click)="selectProduct(product)">
+                    <mat-card [class.selected]="isSelected(product)" class="product-card">
+                        <!-- contenu de la carte -->
+                        <mat-card [class.selected]="isSelected(product)" class="product-card">
+                        
+                            <img mat-card-image [src]="product.image || 'pate-R.png'"
+                                [alt]="product.image ? product.name : 'Pas d\'image disponible'">
+                        
+                            <mat-card-content>
+                                <h2>{{ product.name }}</h2>
+                                <span class="price">{{ product.price | currency }}</span>
+                            </mat-card-content>
+                        </mat-card>
+                    </mat-card>
+                </mat-grid-tile>
+            </mat-grid-list>
+        </div>
     </div>
+</div>
+
+<!-- no product found -->
+<div class="container" *ngIf="!(products$ | async)?.length">
+    <p>Pas de produits disponibles</p>
+</div>
