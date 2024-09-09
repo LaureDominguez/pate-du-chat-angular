@@ -8,6 +8,10 @@ mat-card
         transform: translateY(-5px)
         transition: transform 0.2s ease-in-out
         cursor: pointer
+    &.selected
+        margin: 1rem
+        border: 2px solid #e91e63
+    
     img
         max-height: 150px
         object-fit: cover
@@ -48,17 +52,3 @@ mat-card-content
     top: 5px
     right: 5px
 
-
-.selectedProduct
-    margin: 1rem
-    .product-card
-        display: flex
-        flex-direction: row
-        align-items: center
-        height: 20rem
-        img
-            max-height: 100%
-            height: 100%
-            width: 50%
-        mat-card-content
-            width: 50%

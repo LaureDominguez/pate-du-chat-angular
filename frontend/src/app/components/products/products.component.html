@@ -5,7 +5,7 @@
     <div class="grid-container" >
         <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px">
             <mat-grid-tile *ngFor="let product of products$ | async">
-                <app-product-card [product]="product"></app-product-card>
+                <app-product-card [product]="product" [isSelected]="product === selectedProduct" (click)="selectProduct(product)"></app-product-card>
             </mat-grid-tile>
         </mat-grid-list>
     </div>

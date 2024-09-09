@@ -1,4 +1,4 @@
-<mat-card class="product-card">
+<mat-card class="product-card" [class.selected]="isSelected">
     <img mat-card-image [src]="product.image || 'pate-R.png'"
         [alt]="product.image ? product.name : 'Pas d\'image disponible'">
     

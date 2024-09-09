@@ -9,6 +9,10 @@ mat-card:hover {
   transition: transform 0.2s ease-in-out;
   cursor: pointer;
 }
+mat-card.selected {
+  margin: 1rem;
+  border: 2px solid #e91e63;
+}
 mat-card img {
   max-height: 150px;
   object-fit: cover;
@@ -48,22 +52,4 @@ mat-card-content {
   position: absolute;
   top: 5px;
   right: 5px;
-}
-
-.selectedProduct {
-  margin: 1rem;
-}
-.selectedProduct .product-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 20rem;
-}
-.selectedProduct .product-card img {
-  max-height: 100%;
-  height: 100%;
-  width: 50%;
-}
-.selectedProduct .product-card mat-card-content {
-  width: 50%;
 }/*# sourceMappingURL=product-card.component.css.map */

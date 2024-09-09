@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, output } from '@angular/core';
+import { Component, Input} from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { Product } from '../../services/product.service';
 import { ProductsComponent } from '../products/products.component';
@@ -13,23 +13,10 @@ import { ProductsComponent } from '../products/products.component';
 })
 export class ProductCardComponent{
   @Input() product!: Product;
-  // @Output() selectProductEvent = new EventEmitter();
-  // @Output() deselectProductEvent = new EventEmitter();
-  // @Output() isSelectedEvent = new EventEmitter();
+  @Input() isSelected!: boolean;
 
   constructor(private productsComponent: ProductsComponent) {}
 
-  // selectProduct(product: Product) {
-  //   this.selectProductEvent.emit(this.product);
-  // }
-
-  // deselectProduct(event: Event) {
-  //   this.deselectProductEvent.emit();
-  // }
-
-  // isSelected(): boolean {
-  //   return this.isSelectedEvent.emit(this.product);
-  // }
 }
 
 

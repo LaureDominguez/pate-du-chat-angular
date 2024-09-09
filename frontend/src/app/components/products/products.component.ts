@@ -19,22 +19,25 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.sass'],
 })
-
 export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();
   products: Product[] = [];
 
   cols: number = 3;
 
+  isSelected: boolean = false;
+  selectedProduct: Product | null = null;
+  lastSelectedProduct: Product | null = null;
+
   constructor(
     private productService: ProductService,
     private breakpointObserver: BreakpointObserver
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.products$.subscribe((products) => {
       this.products = products;
-    })
+    });
 
     this.breakpointObserver
       .observe([
@@ -42,21 +45,37 @@ export class ProductsComponent implements OnInit {
         Breakpoints.Small,
         Breakpoints.Medium,
         Breakpoints.Large,
-        Breakpoints.XLarge
+        Breakpoints.XLarge,
       ])
       .pipe(
         map(({ breakpoints }) => {
           switch (true) {
-            case breakpoints[Breakpoints.XSmall]: return 1
-            case breakpoints[Breakpoints.Small]: return 2
-            case breakpoints[Breakpoints.Medium]: return 3
-            case breakpoints[Breakpoints.Large]: return 5
-            case breakpoints[Breakpoints.XLarge]: return 9
-            default: return 3
+            case breakpoints[Breakpoints.XSmall]:
+              return 1;
+            case breakpoints[Breakpoints.Small]:
+              return 2;
+            case breakpoints[Breakpoints.Medium]:
+              return 3;
+            case breakpoints[Breakpoints.Large]:
+              return 5;
+            case breakpoints[Breakpoints.XLarge]:
+              return 9;
+            default:
+              return 3;
           }
         })
       )
       .subscribe((cols: number) => (this.cols = cols));
   }
 
+  selectProduct(product: Product) {
+    this.selectedProduct = product;
+    this.isSelected = true;
+  }
+
+  deselectProduct(event: Event) {
+    event.stopPropagation();
+    this.selectedProduct = null;
+    this.isSelected = false;
+  }
 }
