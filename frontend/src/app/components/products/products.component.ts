@@ -73,8 +73,7 @@ export class ProductsComponent implements OnInit {
     this.isSelected = true;
   }
 
-  deselectProduct(event: Event) {
-    event.stopPropagation();
+  onCloseClick() {
     this.selectedProduct = null;
     this.isSelected = false;
   }

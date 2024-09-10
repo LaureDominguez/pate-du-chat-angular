@@ -4,11 +4,11 @@
     
     <mat-card-content>
         <h2>{{ product.name }}</h2>
-        <!-- <p *ngIf="selectedProduct">{{ product.description }}</p> -->
+        <p *ngIf="isSelected">{{ product.description }}</p>
         <span class="price">{{ product.price | currency }}</span>
     </mat-card-content>
 
-    <!-- <mat-card-actions *ngIf="isSelected">
-        <button mat-button (click)="deselectProduct($event)" class="close">X</button>
-    </mat-card-actions> -->
+    <mat-card-actions *ngIf="isSelected">
+        <button mat-button (click)="onCloseClick($event)" class="close">X</button>
+    </mat-card-actions>
 </mat-card>
