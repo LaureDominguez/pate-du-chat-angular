@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ProductService, Product } from '../../services/product.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -29,14 +29,28 @@ export class ProductsComponent implements OnInit {
   selectedProduct: Product | null = null;
   lastSelectedProduct: Product | null = null;
 
+  showNormalGrid = true;
+  showSelectedGrid = false;
+  grid1: Product[] = [];
+  grid2: Product[] = [];
+
   constructor(
     private productService: ProductService,
-    private breakpointObserver: BreakpointObserver
+    private breakpointObserver: BreakpointObserver,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.products$.subscribe((products) => {
       this.products = products;
+      if (this.selectedProduct == null) {
+        this.showNormalGrid = true;
+        this.showSelectedGrid = false;
+      } else {
+        this.showNormalGrid = false;
+        this.showSelectedGrid = true;
+        this.updateGrid();
+      }
     });
 
     this.breakpointObserver
@@ -71,10 +85,34 @@ export class ProductsComponent implements OnInit {
   selectProduct(product: Product) {
     this.selectedProduct = product;
     this.isSelected = true;
+    this.showNormalGrid = false;
+    this.showSelectedGrid = true;
+    this.updateGrid();
   }
 
   onCloseClick() {
     this.selectedProduct = null;
     this.isSelected = false;
+    this.showNormalGrid = true;
+    this.showSelectedGrid = false;
+  }
+
+  displayProducts(grid1: any[], grid2: any[]): void { }
+
+  updateGrid(): void {
+    if (this.selectedProduct) {
+      const selectedIndex = this.products.indexOf(this.selectedProduct);
+      const previousProduct = this.products[selectedIndex - 1];
+      const nextProduct = this.products[selectedIndex + 1];
+
+      // mise à jour de la structure de la grille de produits
+      this.grid1 = this.products.slice(0, selectedIndex);
+      this.grid2 = this.products.slice(selectedIndex + 1);
+      this.cdRef.detectChanges();
+
+      // affichage des produits dans les deux grilles
+      this.displayProducts(this.grid1, this.grid2);
+      console.log('grid1', this.grid1, 'grid2', this.grid2);
+    }
   }
 }

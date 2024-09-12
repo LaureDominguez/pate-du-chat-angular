@@ -1,20 +1,9 @@
 
-mat-card
+.product-card
     background-color: #fff
     border: 1px solid #e0e0e0
-    border-radius: 8px
+    position: relative
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
-    &:hover
-        transform: translateY(-5px)
-        transition: transform 0.2s ease-in-out
-        cursor: pointer
-    &.selected
-        margin: 1rem
-        border: 2px solid #e91e63
-    
-    img
-        max-height: 150px
-        object-fit: cover
 
     h2
         font-size: 1.2rem
@@ -28,17 +17,23 @@ mat-card
         margin: 0
         color: #666
 
+.product-card:not(.selected)
+    width: 12rem
+    img
+        max-height: 150px
+        object-fit: cover
+    &:hover
+        transform: translateY(-5px)
+        transition: transform 0.2s ease-in-out
+        cursor: pointer
+
+
 mat-card-content
     background-color: #fff
     border: 1px solid #e0e0e0
-    height: 3rem
     text-align: center
     text-wrap: balance
     border-radius: 0 0 8px 8px
-
-    .product-card
-    width: 12rem
-    position: relative
 
 .price
     font-size: 1rem
@@ -47,8 +42,28 @@ mat-card-content
     margin: 0
     color: #e91e63
 
+
+.product-card.selected
+    margin: 1rem
+    // border: 2px solid #e91e63
+    flex-direction: row
+    justify-content: center
+    align-items: center
+    height: 70vh
+    img
+        width: 30%
+        height: 100%
+        object-fit: contain
+    mat-card-content
+        height: 100%
+        width: 70%
+        display: flex
+        flex-direction: column
+        justify-content: center
+
+
+
 .close
     position: absolute
     top: 5px
     right: 5px
-
