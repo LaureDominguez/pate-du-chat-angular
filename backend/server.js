@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api/products', require('./routes/product'));
+app.use('/api/ingredients', require('./routes/ingredient'));
 
 const PORT = process.env.PORT || 5000;
 

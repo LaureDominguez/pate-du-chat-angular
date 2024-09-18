@@ -4,8 +4,10 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { ProductCardComponent } from '../product-card/product-card.component';
-import { map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, tap } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Ingredient, IngredientService } from '../../services/ingredient.service';
+import { error } from 'console';
 
 @Component({
   selector: 'app-products',
@@ -23,6 +25,10 @@ export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();
   products: Product[] = [];
 
+  ingredients$: Observable<Ingredient[]> =
+    this.ingredientService.getIngredients();
+  ingredients: Ingredient[] = [];
+
   cols: number = 3;
 
   isSelected: boolean = false;
@@ -36,6 +42,7 @@ export class ProductsComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
+    private ingredientService: IngredientService,
     private breakpointObserver: BreakpointObserver,
     private cdRef: ChangeDetectorRef
   ) {}
@@ -53,6 +60,7 @@ export class ProductsComponent implements OnInit {
       }
     });
 
+    //media queries
     this.breakpointObserver
       .observe([
         Breakpoints.XSmall,
@@ -82,9 +90,38 @@ export class ProductsComponent implements OnInit {
       .subscribe((cols: number) => (this.cols = cols));
   }
 
+  getIngredientsForSelectedProduct() {
+    if (this.selectedProduct && this.selectedProduct.composition) {
+      // Vérification : map retourne un tableau d'Observables
+      const ingredientObservables: Observable<Ingredient>[] =
+        this.selectedProduct.composition.map((id: string) =>
+          this.ingredientService.getIngredientById(id)
+        );
+      console.log('Ingrédients observés :', this.selectedProduct.composition);
+      // Utilisation correcte de forkJoin avec un tableau d'Observables
+      forkJoin(ingredientObservables).subscribe(
+        (ingredients: Ingredient[]) => {
+          this.ingredients = ingredients;
+          console.log('Ingrédients récupérés :', this.ingredients);
+        },
+        (error) => {
+          console.error(
+            'Erreur lors de la récupération des ingrédients:',
+            error
+          );
+        }
+      );
+    }
+  }
+
+  // gestion des grilles d'affichage
   selectProduct(product: Product) {
     this.selectedProduct = product;
     this.isSelected = true;
+    this.ingredients = [];
+
+    this.getIngredientsForSelectedProduct();
+
     this.showNormalGrid = false;
     this.showSelectedGrid = true;
     this.updateGrid();
@@ -97,7 +134,7 @@ export class ProductsComponent implements OnInit {
     this.showSelectedGrid = false;
   }
 
-  displayProducts(grid1: any[], grid2: any[]): void { }
+  displayProducts(grid1: any[], grid2: any[]): void {}
 
   updateGrid(): void {
     if (this.selectedProduct) {

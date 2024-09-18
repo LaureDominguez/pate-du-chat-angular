@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
-const ProductSchema = new mongoose.Schema({
+const IngredientSchema = new mongoose.Schema({
+	id: {
+		type: String,
+		required: true,
+	},
 	name: {
 		type: String,
 		required: true,
@@ -9,14 +13,14 @@ const ProductSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
-	composition: [
+	allergens: [
 		{
 			type: String,
 			required: true,
-		}
+		},
 	],
-	price: {
-		type: Number,
+	vegan: {
+		type: Boolean,
 		required: true,
 	},
 	imageUrl: {
@@ -25,4 +29,4 @@ const ProductSchema = new mongoose.Schema({
 	},
 });
 
-module.exports = mongoose.model('Product', ProductSchema);
+module.exports = mongoose.model('Ingredient', IngredientSchema);
