@@ -4,7 +4,12 @@
     
     <mat-card-content>
         <h2>{{ product.name }}</h2>
-        <p *ngIf="isSelected">{{ product.description }}</p>
+        <div *ngIf="isSelected">
+            <p>{{ product.description }}</p>
+            <ul>
+                <li *ngFor="let ingredient of ingredients">{{ ingredient.name }}</li>
+            </ul>
+        </div>
         <span class="price">{{ product.price | currency }}</span>
     </mat-card-content>
 

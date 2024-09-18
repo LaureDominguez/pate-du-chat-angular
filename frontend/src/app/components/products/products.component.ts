@@ -25,8 +25,7 @@ export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();
   products: Product[] = [];
 
-  ingredients$: Observable<Ingredient[]> =
-    this.ingredientService.getIngredients();
+  ingredients$: Observable<Ingredient[]> = this.ingredientService.getIngredients();
   ingredients: Ingredient[] = [];
 
   cols: number = 3;
@@ -54,6 +53,7 @@ export class ProductsComponent implements OnInit {
         this.showNormalGrid = true;
         this.showSelectedGrid = false;
       } else {
+        this.getIngredientsForSelectedProduct();
         this.showNormalGrid = false;
         this.showSelectedGrid = true;
         this.updateGrid();
@@ -90,27 +90,27 @@ export class ProductsComponent implements OnInit {
       .subscribe((cols: number) => (this.cols = cols));
   }
 
+  //affiche les ingredients
   getIngredientsForSelectedProduct() {
     if (this.selectedProduct && this.selectedProduct.composition) {
-      // Vérification : map retourne un tableau d'Observables
       const ingredientObservables: Observable<Ingredient>[] =
         this.selectedProduct.composition.map((id: string) =>
           this.ingredientService.getIngredientById(id)
         );
-      console.log('Ingrédients observés :', this.selectedProduct.composition);
-      // Utilisation correcte de forkJoin avec un tableau d'Observables
-      forkJoin(ingredientObservables).subscribe(
-        (ingredients: Ingredient[]) => {
+
+      forkJoin(ingredientObservables).subscribe({
+        next: (ingredients: Ingredient[]) => {
           this.ingredients = ingredients;
-          console.log('Ingrédients récupérés :', this.ingredients);
+          this.cdRef.markForCheck();
+          console.log('Ingrédients sélectionés :', this.ingredients);
         },
-        (error) => {
-          console.error(
-            'Erreur lors de la récupération des ingrédients:',
-            error
-          );
+        error: (error) => {
+          console.error('Erreur lors de la sélection des ingrédients:', error);
+        },
+        complete: () => {
+          console.log('Tous les ingrédients sont sélectionés');
         }
-      );
+      });
     }
   }
 
@@ -130,6 +130,7 @@ export class ProductsComponent implements OnInit {
   onCloseClick() {
     this.selectedProduct = null;
     this.isSelected = false;
+    this.ingredients = [];
     this.showNormalGrid = true;
     this.showSelectedGrid = false;
   }
@@ -149,7 +150,7 @@ export class ProductsComponent implements OnInit {
 
       // affichage des produits dans les deux grilles
       this.displayProducts(this.grid1, this.grid2);
-      console.log('grid1', this.grid1, 'grid2', this.grid2);
+      // console.log('grid1', this.grid1, 'grid2', this.grid2);
     }
   }
 }
