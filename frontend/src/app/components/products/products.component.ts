@@ -4,10 +4,9 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { ProductCardComponent } from '../product-card/product-card.component';
-import { forkJoin, map, Observable, tap } from 'rxjs';
+import { forkJoin, map, Observable } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Ingredient, IngredientService } from '../../services/ingredient.service';
-import { error } from 'console';
 
 @Component({
   selector: 'app-products',
@@ -150,7 +149,6 @@ export class ProductsComponent implements OnInit {
 
       // affichage des produits dans les deux grilles
       this.displayProducts(this.grid1, this.grid2);
-      // console.log('grid1', this.grid1, 'grid2', this.grid2);
     }
   }
 }
