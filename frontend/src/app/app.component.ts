@@ -11,4 +11,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   title = 'les_pates_du_chat';
+  
+  navItems = [
+    { title: 'Accueil', link: '/' },
+    { title: 'L\'Atelier', link: '/about' },
+    { title: 'Les Produits', link: '/products' },
+    { title: 'La Boutique', link: '/shop' },
+    { title: 'Contact', link: '/contact' }
+  ];
 }
+
