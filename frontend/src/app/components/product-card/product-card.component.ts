@@ -23,7 +23,7 @@ export class ProductCardComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['ingredients']) {
-      console.log('pouet !!!', this.ingredients);
+      // console.log('pouet !!!', this.ingredients);
     }
   }
 
