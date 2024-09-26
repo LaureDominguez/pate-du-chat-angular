@@ -17,7 +17,8 @@ export class AppComponent {
     { title: 'L\'Atelier', link: '/about' },
     { title: 'Les Produits', link: '/products' },
     { title: 'La Boutique', link: '/shop' },
-    { title: 'Contact', link: '/contact' }
+    { title: 'Contact', link: '/contact' },
+    { title: 'Gestion du site', link: '/admin' },
   ];
 }
 
