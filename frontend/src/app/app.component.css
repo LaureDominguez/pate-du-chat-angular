@@ -1,4 +1,4 @@
-nav {
+git nav {
   width: 200px;
   height: 95%;
   top: 1rem;
@@ -10,10 +10,10 @@ nav {
   z-index: 10;
   position: fixed;
 }
-nav h2 {
+git nav h2 {
   padding: 0 0.5em;
 }
-nav ul {
+git nav ul {
   list-style: none;
   padding: 0;
   height: 50%;
@@ -21,7 +21,7 @@ nav ul {
   flex-direction: column;
   justify-content: space-between;
 }
-nav li {
+git nav li {
   display: block;
   padding: 1em 2em;
 }/*# sourceMappingURL=app.component.css.map */
