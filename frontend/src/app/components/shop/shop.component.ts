@@ -7,6 +7,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './shop.component.html',
-  styleUrl: './shop.component.sass',
+  styleUrls: ['./shop.component.sass'],
 })
 export class ShopComponent {}

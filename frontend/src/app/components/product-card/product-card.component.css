@@ -1,20 +1,15 @@
 .product-card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
   position: relative;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .product-card h2 {
   font-size: 1.2rem;
   line-height: normal;
   margin: 0;
-  color: #555;
 }
 .product-card p {
   font-size: 0.875rem;
   line-height: normal;
   margin: 0;
-  color: #666;
 }
 
 .product-card:not(.selected) {
@@ -31,8 +26,6 @@
 }
 
 mat-card-content {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
   text-align: center;
   text-wrap: balance;
   border-radius: 0 0 8px 8px;
@@ -43,7 +36,6 @@ mat-card-content {
   font-weight: bold;
   line-height: normal;
   margin: 0;
-  color: #e91e63;
 }
 
 .product-card.selected {

@@ -10,7 +10,7 @@ import { Ingredient } from '../../services/ingredient.service';
   standalone: true,
   imports: [CommonModule, MatCardModule, ProductsComponent],
   templateUrl: './product-card.component.html',
-  styleUrl: './product-card.component.sass',
+  styleUrls: ['./product-card.component.sass'],
 })
 
 export class ProductCardComponent implements OnChanges {

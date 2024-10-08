@@ -25,7 +25,6 @@ main {
 
 .content {
   min-height: 100vh;
-  background-color: var(--beige);
   z-index: 0;
 }
 
@@ -41,7 +40,6 @@ h1, h2, h3, h4 {
 
 h1 {
   text-align: center;
-  color: var(--vert);
 }
 
 a, a:active, a:hover {

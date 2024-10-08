@@ -1,69 +1,80 @@
-
-.product-card
-    background-color: #fff
-    border: 1px solid #e0e0e0
+.product-card 
+    // background-color: #fff
+    // border: 1px solid #e0e0e0
     position: relative
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
+    // box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
 
-    h2
+    h2 
         font-size: 1.2rem
-        line-height: normal 
+        line-height: normal
         margin: 0
-        color: #555
+        // color: #555
+    
 
-    p
+    p 
         font-size: 0.875rem
         line-height: normal
         margin: 0
-        color: #666
+        // color: #666
+    
 
-.product-card:not(.selected)
+
+.product-card:not(.selected) 
     width: 12rem
-    img
+
+    img 
         max-height: 150px
         object-fit: cover
-    &:hover
+    
+
+    &:hover 
         transform: translateY(-5px)
         transition: transform 0.2s ease-in-out
         cursor: pointer
+    
 
 
-mat-card-content
-    background-color: #fff
-    border: 1px solid #e0e0e0
+mat-card-content 
+    // background-color: #fff
+    // border: 1px solid #e0e0e0
     text-align: center
     text-wrap: balance
     border-radius: 0 0 8px 8px
 
-.price
+
+.price 
     font-size: 1rem
     font-weight: bold
     line-height: normal
     margin: 0
-    color: #e91e63
+    // color: #e91e63
 
 
-.product-card.selected
+.product-card.selected 
     margin: 1rem
     // border: 2px solid #e91e63
     flex-direction: row
     justify-content: center
     align-items: center
     height: 70vh
-    img
+
+    img 
         width: 30%
         height: 100%
         object-fit: contain
-    mat-card-content
+    
+
+    mat-card-content 
         height: 100%
         width: 70%
         display: flex
         flex-direction: column
         justify-content: center
+    
 
 
-
-.close
+.close 
     position: absolute
     top: 5px
     right: 5px
+

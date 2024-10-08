@@ -1,9 +1,9 @@
-<main class="main">
-    <nav>
+<main class="main" mat-app-background>
+    <nav mat-primary>
       <h2>Les Pâtes du Chat</h2>
       <ul>
         <li *ngFor="let item of navItems">
-          <a routerLink={{item.link}}>{{item.title}}</a>
+          <a routerLink={{item.link}} mat-button color="accent">{{item.title}}</a>
         </li>
       </ul>
     </nav>

@@ -7,6 +7,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './contact.component.html',
-  styleUrl: './contact.component.sass',
+  styleUrls: ['./contact.component.sass'],
 })
 export class ContactComponent {}

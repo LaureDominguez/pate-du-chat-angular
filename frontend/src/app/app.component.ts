@@ -7,16 +7,16 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.sass', 
+  styleUrls: ['./app.component.sass'],
 })
 export class AppComponent {
   title = 'les_pates_du_chat';
-  
+
   navItems = [
     { title: 'Accueil', link: '/' },
-    { title: 'L\'Atelier', link: '/about' },
     { title: 'Les Produits', link: '/products' },
-    { title: 'La Boutique', link: '/shop' },
+    // { title: 'La Boutique', link: '/shop' },
+    // { title: 'L\'Atelier', link: '/about' },
     { title: 'Contact', link: '/contact' },
     { title: 'Gestion du site', link: '/admin' },
   ];

@@ -7,7 +7,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.sass',
+  styleUrls: ['./home.component.sass'],
 })
 export class HomeComponent {
   title = 'les_pates_du_chat';

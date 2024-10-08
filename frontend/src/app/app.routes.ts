@@ -4,7 +4,7 @@ import { AboutComponent } from './components/about/about.component';
 import { ShopComponent } from './components/shop/shop.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { ProductsComponent } from './components/products/products.component';
-import { AdminComponent } from './admin/admin.component';
+import { AdminComponent } from './components/admin/admin.component';
 
 export const APP_ROUTES: Routes = [
   { path: '', title: 'Accueil', component: HomeComponent }, //Home
