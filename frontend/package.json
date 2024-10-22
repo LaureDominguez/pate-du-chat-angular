@@ -25,10 +25,12 @@
     "@angular/router": "^18.2.5",
     "@angular/ssr": "^18.2.5",
     "@material/web": "^2.2.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
     "cookie": "^0.7.2",
     "express": "^4.21.0",
     "rxjs": "~7.8.0",
     "sass": "^1.79.4",
+    "scss": "^0.2.4",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
   },
@@ -40,7 +42,7 @@
     "@types/jasmine": "~5.1.0",
     "@types/node": "^18.18.0",
     "jasmine-core": "~5.1.0",
-    "rollup": "^4.22.4",
+    "rollup": "^4.24.0",
     "typescript": "~5.4.2"
   }
 }

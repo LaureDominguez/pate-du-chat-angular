@@ -18,7 +18,7 @@ import { Ingredient, IngredientService } from '../../services/ingredient.service
     MatSortModule,
   ],
   templateUrl: './admin.component.html',
-  styleUrls: ['./admin.component.sass'],
+  styleUrls: ['./admin.component.scss'],
 })
 export class AdminComponent implements OnInit {
   products = new MatTableDataSource<Product>([]);
