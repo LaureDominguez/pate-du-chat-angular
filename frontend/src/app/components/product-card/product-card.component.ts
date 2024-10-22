@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { Product } from '../../services/product.service';
 import { ProductsComponent } from '../products/products.component';
@@ -10,7 +10,7 @@ import { Ingredient } from '../../services/ingredient.service';
   standalone: true,
   imports: [CommonModule, MatCardModule, ProductsComponent],
   templateUrl: './product-card.component.html',
-  styleUrl: './product-card.component.sass',
+  styleUrls: ['./product-card.component.scss'],
 })
 
 export class ProductCardComponent implements OnChanges {

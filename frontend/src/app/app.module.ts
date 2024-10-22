@@ -6,6 +6,11 @@ import { provideRouter, RouterModule } from '@angular/router';
 import { APP_ROUTES } from './app.routes';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 
@@ -15,6 +20,11 @@ import { MatGridListModule } from '@angular/material/grid-list';
     BrowserModule,
     MatCardModule,
     MatGridListModule,
+    MatButtonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    BrowserAnimationsModule,
     RouterModule.forRoot(APP_ROUTES),
   ],
   providers: [provideHttpClient(withFetch()), provideRouter(APP_ROUTES)],

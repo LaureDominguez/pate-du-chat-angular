@@ -5,8 +5,10 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule],
   templateUrl: './contact.component.html',
-  styleUrl: './contact.component.sass',
+  styleUrls: ['./contact.component.scss'],
 })
-export class ContactComponent {}
+export class ContactComponent {
+  title = 'Contact';
+}

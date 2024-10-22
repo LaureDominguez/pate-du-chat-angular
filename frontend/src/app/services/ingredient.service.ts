@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Ingredient {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   allergens: string[];

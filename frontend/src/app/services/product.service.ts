@@ -8,6 +8,7 @@ export interface Product {
   description: string;
   composition: string[];
   price: number;
+  stock: boolean;
   image: string;
 }
 

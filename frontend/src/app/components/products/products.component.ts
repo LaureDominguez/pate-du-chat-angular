@@ -18,7 +18,7 @@ import { Ingredient, IngredientService } from '../../services/ingredient.service
     ProductCardComponent,
   ],
   templateUrl: './products.component.html',
-  styleUrls: ['./products.component.sass'],
+  styleUrls: ['./products.component.scss'],
 })
 export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();

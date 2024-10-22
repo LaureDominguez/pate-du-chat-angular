@@ -1,14 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.sass',
+  styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
-  title = 'les_pates_du_chat';
+  title = 'Accueil';
 }
