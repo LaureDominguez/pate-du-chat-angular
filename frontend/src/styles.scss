@@ -1,9 +1,5 @@
-
-// Custom Theming for Angular Material
-// For more information: https://material.angular.io/guide/theming
 @use '@angular/material' as mat;
-@use './assets/themes/theme-config' as *;
-
+@use './assets/themes/m3-theme';
 
 @import './assets/themes/dark-hc.css';
 @import './assets/themes/dark-mc.css';
@@ -14,70 +10,13 @@
 @import './assets/themes/dark.css';
 @import './assets/themes/light.css';
 
-// Plus imports for other components in your app.
-
-// Include the common styles for Angular Material. We include this here so that you only
-// have to load a single css file for Angular Material in your app.
-// Be sure that you only ever include this mixin once!
 @include mat.core();
 
-// html {
-//     @include mat.core-theme(m3-theme.$light-theme);
-//     @include mat.all-component-themes(m3-theme.$light-theme);
-// }
+html {
+    @include mat.core-theme(m3-theme.$light-theme);
+    @include mat.all-component-themes(m3-theme.$light-theme);
+}
 
-// body {
-//     background-color: var(--md-sys-color-background);
-//     color: var(--md-sys-color-on-background);
-// }
-
-
-// Define the theme object.
-$les_pates_du_chat-light-theme: (
-    color: (
-        theme-type: light,
-        primary: var(--md-sys-color-primary),
-        tertiary: var(--md-sys-color-tertiary),
-        use-system-variables: true,
-    ),
-);
-
-$les_pates_du_chat-dark-theme: (
-    color: (
-        theme-type: dark,
-        primary: var(--md-sys-color-primary),
-        tertiary: var(--md-sys-color-tertiary),
-        use-system-variables: true,
-    ),
-);
-
-// Include theme styles for core and each component used in your app.
-// Alternatively, you can import and @include the theme mixins for each component
-// that you are using.
-@include mat.all-component-themes($les_pates_du_chat-light-theme);
-
-
-// // Include theme styles for core and each component used in your app.
-// // Alternatively, you can import and @include the theme mixins for each component
-// // that you are using.
-//  
-
-// Comment out the line below if you want to use the pre-defined typography utility classes.
-// For more information: https://material.angular.io/guide/typography#using-typography-styles-in-your-application.
-// @include mat.typography-hierarchy($les_pates_du_chat-theme);
-
-// Comment out the line below if you want to use the deprecated `color` inputs.
-// @include mat.color-variants-backwards-compatibility($les_pates_du_chat-theme);
-
-
-
-// :root {
-//     --orange: #FF9800;
-//     --brun: #271403;
-//     --beige: #fff7e8;
-//     --vert: #1a5c1a;
-//     // --pacifico: "Pacifico";
-// }
 
 // // vert: #004f12;
 // // orange: #FF8357;
@@ -90,26 +29,13 @@ $les_pates_du_chat-dark-theme: (
 //     font-style: normal;
 // }
 
+html, body { height: 100%; }
+
 // body {
-//     box-sizing: border-box;
-//     user-select: none;
-//     margin: 0 auto;
-//     font-family: Arial, Helvetica, sans-serif;
-// }
-
-// main {
-//     width: 100%;
-//     position: relative;
-// }
-
-// .content {
-//     min-height: 100vh;
-//     // background-color: var(--beige);
-//     z-index: 0;
-// }
-
-// .container {
-//     padding-left: 210px;
+//     background-color: var(--md-sys-color-background);
+//     color: var(--md-sys-color-on-background);
+//     margin: 0; 
+//     // font-family: Arial, "Helvetica Neue", sans-serif;
 // }
 
 // h1, h2, h3, h4 {
@@ -128,6 +54,3 @@ $les_pates_du_chat-dark-theme: (
 //     color: inherit;
 //     cursor: pointer;
 // }
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
