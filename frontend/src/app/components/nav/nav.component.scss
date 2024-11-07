@@ -1,17 +1,15 @@
-.sidenav-container {
-  height: 100%;
-}
+@use 'sass:map';
+@use '@angular/material' as mat;
+// @use '/frontend/src/assets/themes/m3-theme' as m3-theme;
 
 .sidenav {
   width: 200px;
 }
 
-.sidenav .mat-toolbar {
-  background: inherit;
-}
+// .mat-sidenav{
+//   color: red;
+// }
 
-.mat-toolbar.mat-primary {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+@mixin mat-sidenav() {
+    color: mat.get-theme-color($theme, primary, 50);
 }

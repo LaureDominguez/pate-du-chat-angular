@@ -10,7 +10,7 @@ export class ThemeService {
   }
 
   setTheme(theme: string) {
-    const themes = ['dark', 'light', 'dark-hc', 'light-hc', 'dark-mc', 'light-mc'];
+    const themes = ['dark', 'light'];
     themes.forEach((t) => this.renderer.removeClass(document.body, t));
     this.renderer.addClass(document.body, theme);
   }

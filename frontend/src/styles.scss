@@ -1,14 +1,14 @@
 @use '@angular/material' as mat;
 @use './assets/themes/m3-theme';
 
-@import './assets/themes/dark-hc.css';
-@import './assets/themes/dark-mc.css';
+// @import './assets/themes/dark-hc.css';
+// @import './assets/themes/dark-mc.css';
 
-@import './assets/themes/light-hc.css';
-@import './assets/themes/light-mc.css'; 
+// @import './assets/themes/light-hc.css';
+// @import './assets/themes/light-mc.css'; 
 
-@import './assets/themes/dark.css';
-@import './assets/themes/light.css';
+// @import './assets/themes/dark.css';
+// @import './assets/themes/light.css';
 
 @include mat.core();
 
@@ -18,39 +18,23 @@ html {
 }
 
 
-// // vert: #004f12;
-// // orange: #FF8357;
-// // Pacifico: "Pacifico", cursive;
+// vert: #004f12;
+// orange: #FF8357;
+// Pacifico: "Pacifico", cursive;
 
-// @font-face {
-//     font-family: "Pacifico";
-//     src: url('assets/fonts/Pacifico-Regular.ttf') format('ttf');
-//     font-weight: normal;
-//     font-style: normal;
-// }
 
 html, body { height: 100%; }
 
-// body {
-//     background-color: var(--md-sys-color-background);
-//     color: var(--md-sys-color-on-background);
-//     margin: 0; 
-//     // font-family: Arial, "Helvetica Neue", sans-serif;
-// }
+body {
+    margin: 0; 
+}
 
-// h1, h2, h3, h4 {
-//     font-family: "Pacifico", cursive;
-//     text-transform: capitalize;
-//     text-wrap: balance;
-// }
+h1, h2, h3, h4 {
+    text-transform: capitalize;
+    text-wrap: balance;
+}
 
-// h1 {
-//     text-align: center;
-//     // color: var(--vert);
-// }
+h1 {
+    text-align: center;
+}
 
-// a, a:active, a:hover {
-//     text-decoration: none;
-//     color: inherit;
-//     cursor: pointer;
-// }
