@@ -1,6 +1,5 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
-// @use '/frontend/src/assets/themes/m3-theme' as m3-theme;
 
 .sidenav {
   width: 200px;
@@ -10,6 +9,8 @@
 //   color: red;
 // }
 
-@mixin mat-sidenav() {
-    color: mat.get-theme-color($theme, primary, 50);
+@mixin color($light-theme) {
+  .mat-sidenav {
+    background-color: mat.get-theme-color($light-theme, primary, 70);
+  }
 }
