@@ -1,6 +1,7 @@
 @use '@angular/material' as mat;
 @use './assets/themes/m3-theme';
 @use './app/components/nav/nav.component' as nav;
+@use './app/components/product-card/product-card.component.scss' as product;
 
 // @import './assets/themes/dark-hc.css';
 // @import './assets/themes/dark-mc.css';
@@ -17,6 +18,7 @@ html {
     @include mat.core-theme(m3-theme.$light-theme);
     @include mat.all-component-themes(m3-theme.$light-theme);
     @include nav.color(m3-theme.$light-theme);
+    @include product.color(m3-theme.$light-theme);
 }
 
 

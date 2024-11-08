@@ -1,16 +1,35 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
 
-.sidenav {
+.mat-sidenav {
   width: 200px;
+  .mat-divider {
+    width: 80%;
+    margin: auto;
+  }
+}
+
+.mat-sidenav-content {
+  min-height: 100vh;
+  position: relative;
+  h1 {
+    position: absolute;
+    left: calc(50% - 200px);
+  }
 }
 
 // .mat-sidenav{
 //   color: red;
+// #fff8f4
 // }
 
 @mixin color($light-theme) {
   .mat-sidenav {
-    background-color: mat.get-theme-color($light-theme, primary, 70);
+    background-color: mat.get-theme-color($light-theme, secondary, 90);
+    color: mat.get-theme-color($light-theme, secondary, 10);
+  }
+  .mat-sidenav-content {
+    background-color: mat.get-theme-color($light-theme, neutral, 98);
+    color: mat.get-theme-color($light-theme, neutral, 10);
   }
 }

@@ -1,32 +1,37 @@
-.product-card {
-    // background-color: #fff;
-    // border: 1px solid #e0e0e0;
-    position: relative;
-    // box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+@use 'sass:map';
+@use '@angular/material' as mat;
 
+@mixin color($light-theme) {
+    .product-card {
+        background-color: mat.get-theme-color($light-theme, secondary, 90);
+        color: mat.get-theme-color($light-theme, secondary, 10);
+    }
+    img{
+        background-color: mat.get-theme-color($light-theme, neutral, 100);
+    }
+}
+
+.product-card {
+    position: relative;
     h2 {
         font-size: 1.2rem;
         line-height: normal;
         margin: 0;
-        // color: #555;
     }
-
     p {
         font-size: 0.875rem;
         line-height: normal;
         margin: 0;
-        // color: #666;
     }
 }
 
 .product-card:not(.selected) {
-    width: 12rem;
-
+    height: 13rem;
+    width: 13rem;
     img {
         max-height: 150px;
         object-fit: cover;
     }
-
     &:hover {
         transform: translateY(-5px);
         transition: transform 0.2s ease-in-out;
@@ -35,8 +40,6 @@
 }
 
 mat-card-content {
-    // background-color: #fff;
-    // border: 1px solid #e0e0e0;
     text-align: center;
     text-wrap: balance;
     border-radius: 0 0 8px 8px;
@@ -47,23 +50,19 @@ mat-card-content {
     font-weight: bold;
     line-height: normal;
     margin: 0;
-    // color: #e91e63;
 }
 
 .product-card.selected {
     margin: 1rem;
-    // border: 2px solid #e91e63;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     height: 70vh;
-
     img {
         width: 30%;
         height: 100%;
         object-fit: contain;
     }
-
     mat-card-content {
         height: 100%;
         width: 70%;

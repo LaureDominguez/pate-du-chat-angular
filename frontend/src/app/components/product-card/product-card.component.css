@@ -13,7 +13,8 @@
 }
 
 .product-card:not(.selected) {
-  width: 12rem;
+  height: 13rem;
+  width: 13rem;
 }
 .product-card:not(.selected) img {
   max-height: 150px;
