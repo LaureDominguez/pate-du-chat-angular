@@ -138,6 +138,7 @@ $_rest: (
 $_primary: map.merge(map.get($_palettes, primary), $_rest);
 $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
 
+
 $light-theme: mat.define-theme((
   color: (
     theme-type: light,
@@ -148,9 +149,9 @@ $light-theme: mat.define-theme((
   typography: (
     plain-family: "Arial",
     brand-family: "Pacifico",
-    bold-weight: 700,
-    medium-weight: 500,
-    regular-weight: 400,
+    bold-weight: 500,
+    medium-weight: 400,
+    regular-weight: 200
   ),
 ));
 
@@ -164,8 +165,8 @@ $dark-theme: mat.define-theme((
   typography: (
     plain-family: "Arial",
     brand-family: "Pacifico",
-    bold-weight: 700,
-    medium-weight: 500,
-    regular-weight: 400,
+    bold-weight: 500,
+    medium-weight: 400,
+    regular-weight: 200
   ),
-));
+)); 

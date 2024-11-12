@@ -1,4 +1,4 @@
-<div class="container" *ngIf="products$ | async as products">
+<main *ngIf="products$ | async as products">
     <!-- grid normal -->
     <div class="grid-container" *ngIf="showNormalGrid">
         <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px">
@@ -14,7 +14,7 @@
     </div>
 
     <!-- 2 grids with selected product -->
-    <div class="grid-container" *ngIf="showSelectedGrid">
+    <main class="grid-container" *ngIf="showSelectedGrid">
         <!-- grid1 -->
         <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px" class="grid1" *ngIf="grid1.length > 0">
             <mat-grid-tile *ngFor="let product of grid1; let i = index; let last = last">
@@ -47,7 +47,7 @@
                 </app-product-card>
             </mat-grid-tile>
         </mat-grid-list>
-    </div>
+    </main>
 
 
 <!-- no product found -->

@@ -1,44 +1,42 @@
 @use '@angular/material' as mat;
 @use './assets/themes/m3-theme';
 @use './app/components/nav/nav.component' as nav;
-@use './app/components/product-card/product-card.component.scss' as product;
-
-// @import './assets/themes/dark-hc.css';
-// @import './assets/themes/dark-mc.css';
-
-// @import './assets/themes/light-hc.css';
-// @import './assets/themes/light-mc.css'; 
-
-// @import './assets/themes/dark.css';
-// @import './assets/themes/light.css';
+@use './app/components/product-card/product-card.component.scss' as product-card;
 
 @include mat.core();
 
-html {
-    @include mat.core-theme(m3-theme.$light-theme);
-    @include mat.all-component-themes(m3-theme.$light-theme);
-    @include nav.color(m3-theme.$light-theme);
-    @include product.color(m3-theme.$light-theme);
+$theme: m3-theme.$light-theme;
+@media (prefers-color-scheme: dark) {
+    $theme: m3-theme.$dark-theme;
 }
 
+
+html, body {
+    @include mat.core-theme($theme);
+    @include mat.all-component-themes($theme);
+    @include mat.all-component-typographies($theme);
+    @include nav.color($theme);
+    @include product-card.color($theme);
+}
 
 // vert: #004f12;
 // orange: #FF8357;
 // Pacifico: "Pacifico", cursive;
 
 
-html, body { height: 100%; }
+html, body { 
+    height: 100%; 
+}
 
 body {
     margin: 0; 
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-h1, h2, h3, h4 {
-    text-transform: capitalize;
-    text-wrap: balance;
-}
+// h1, h2, h3, h4 {
+//     text-transform: capitalize;
+//     text-wrap: balance;
+// }
 
-h1 {
-    text-align: center;
-}
+
 
