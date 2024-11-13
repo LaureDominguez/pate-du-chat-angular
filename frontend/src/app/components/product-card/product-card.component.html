@@ -6,11 +6,13 @@
         <h2>{{ product.name }}</h2>
         <div *ngIf="isSelected">
             <p>{{ product.description }}</p>
-            <ul>
-                <li *ngFor="let ingredient of ingredients">{{ ingredient.name }}</li>
-            </ul>
+            <table>
+                <tr *ngFor="let ingredient of ingredients">
+                    <td>{{ ingredient.name }}</td>
+                </tr>
+            </table>
+            <span class="price">{{ product.price | currency }}</span>
         </div>
-        <span class="price">{{ product.price | currency }}</span>
     </mat-card-content>
 
     <mat-card-actions *ngIf="isSelected">
