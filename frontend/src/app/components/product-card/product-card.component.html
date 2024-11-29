@@ -1,7 +1,7 @@
 <mat-card class="product-card" [class.selected]="isSelected">
     <img mat-card-image [src]="product.image || 'pate-R.png'"
         [alt]="product.image ? product.name : 'Pas d\'image disponible'">
-    
+
     <mat-card-content>
         <h2>{{ product.name }}</h2>
         <div *ngIf="isSelected">
@@ -9,6 +9,19 @@
             <table>
                 <tr *ngFor="let ingredient of ingredients">
                     <td>{{ ingredient.name }}</td>
+                    <!-- <td>{{ ingredient.allergens }}</td>
+                    <td>{{ ingredient.vegetarian }}</td>
+                    <td>{{ ingredient.vegan }}</td> -->
+                </tr>
+                <tr>
+                    <td>Allergène</td>
+                    <td>{{ product }}</td>
+                </tr>
+                <tr>
+                    <td>Végétarien</td>
+                </tr>
+                <tr>
+                    <td>Vegan</td>
                 </tr>
             </table>
             <span class="price">{{ product.price | currency }}</span>

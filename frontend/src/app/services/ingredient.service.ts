@@ -8,6 +8,7 @@ export interface Ingredient {
   description: string;
   allergens: string[];
   vegan: boolean;
+  vegeta: boolean;
   image: string;
 }
 

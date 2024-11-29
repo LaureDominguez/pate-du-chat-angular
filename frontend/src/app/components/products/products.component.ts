@@ -27,6 +27,10 @@ export class ProductsComponent implements OnInit {
   ingredients$: Observable<Ingredient[]> = this.ingredientService.getIngredients();
   ingredients: Ingredient[] = [];
 
+  allergensList: string[] = [];
+  isVegeta: boolean = true;
+  isVegan: boolean = true;
+
   cols: number = 3;
 
   isSelected: boolean = false;
@@ -100,8 +104,33 @@ export class ProductsComponent implements OnInit {
       forkJoin(ingredientObservables).subscribe({
         next: (ingredients: Ingredient[]) => {
           this.ingredients = ingredients;
+          this.allergensList = [];
+          this.isVegeta = true;
+          this.isVegan = true;
+
+          ingredients.forEach((ingredient) => { 
+            if (ingredient.allergens && ingredient.allergens.length > 0) {
+              ingredient.allergens.forEach((allergen: string) => {
+                if (!this.allergensList.includes(allergen)) {
+                  this.allergensList.push(allergen);
+                }
+              });
+            }
+
+            // Vérifier les mentions vegan et vegetarian
+            if (ingredient.vegeta === false) {
+              this.isVegeta = false;
+            }
+            if (ingredient.vegan === false || ingredient.vegeta === false) {
+              this.isVegan = false;
+            }
+          });
+
           this.cdRef.markForCheck();
           console.log('Ingrédients sélectionés :', this.ingredients);
+          console.log('Liste des allergènes :', this.allergensList);
+          console.log('Est végétarien :', this.isVegeta);
+          console.log('Est végan :', this.isVegan);
         },
         error: (error) => {
           console.error('Erreur lors de la sélection des ingrédients:', error);

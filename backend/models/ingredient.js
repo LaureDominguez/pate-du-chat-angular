@@ -23,6 +23,10 @@ const IngredientSchema = new mongoose.Schema({
 		type: Boolean,
 		required: true,
 	},
+	vegeta: {
+		type: Boolean,
+		required: true,
+	},
 	imageUrl: {
 		type: String,
 		required: true,

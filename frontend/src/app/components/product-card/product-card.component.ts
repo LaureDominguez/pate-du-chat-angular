@@ -23,7 +23,8 @@ export class ProductCardComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['ingredients']) {
-      // console.log('pouet !!!', this.ingredients);
+      // console.log('pouet !!!', this.ingredients.forEach((ingredient) => console.log(ingredient.name, ingredient.allergens, ingredient.vegetarian, ingredient.vegan)));
+      // this.ingredients.forEach((ingredient) => console.log(ingredient.name, ingredient.allergens, ingredient.vegetarian, ingredient.vegan));
     }
   }
 
