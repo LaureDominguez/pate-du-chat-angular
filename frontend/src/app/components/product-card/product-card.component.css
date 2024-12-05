@@ -59,6 +59,10 @@ mat-card-content {
   justify-content: center;
 }
 
+h1 {
+  width: 100%;
+}
+
 .close {
   position: absolute;
   top: 5px;

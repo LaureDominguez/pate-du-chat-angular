@@ -10,7 +10,13 @@ import { ThemeService } from './services/theme.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  constructor(private themeService: ThemeService) {}
+  constructor(private themeService: ThemeService) { }
+  
+  ngOnInit() {
+    this.themeService.loadTheme().subscribe((theme) => {
+      this.themeService.applyTheme(theme.schemes.dark);
+    });
+  }
 
   switchToLightTheme() {
     this.themeService.setTheme('light');

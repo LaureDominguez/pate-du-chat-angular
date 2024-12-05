@@ -27,15 +27,13 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/assets"
             ],
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules"]
             },
-            "styles": [
-              "src/styles.scss",
-              "src/assets/themes/m3-theme.scss"
-            ],
+            "styles": ["src/styles.scss"],
             "scripts": [],
             "server": "src/main.server.ts",
             "prerender": true,
@@ -92,15 +90,13 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/assets"
             ],
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules"]
             },
-            "styles": [
-              "src/styles.scss",
-              "src/assets/themes/m3-theme.scss"
-            ],
+            "styles": ["src/styles.scss"],
             "scripts": []
           }
         }

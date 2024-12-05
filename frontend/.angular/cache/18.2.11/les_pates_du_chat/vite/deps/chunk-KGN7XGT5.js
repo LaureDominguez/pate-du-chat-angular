@@ -8,7 +8,7 @@ import {
   coerceElement,
   coerceNumberProperty,
   normalizePassiveListenerOptions
-} from "./chunk-RD7CE4GQ.js";
+} from "./chunk-UW3U5P4Z.js";
 import {
   DOCUMENT
 } from "./chunk-X3XUYMSO.js";
@@ -5147,4 +5147,4 @@ export {
   MatOptionModule,
   MatRippleLoader
 };
-//# sourceMappingURL=chunk-EQY4BF5E.js.map
+//# sourceMappingURL=chunk-KGN7XGT5.js.map

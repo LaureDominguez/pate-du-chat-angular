@@ -7,21 +7,29 @@
         <div *ngIf="isSelected">
             <p>{{ product.description }}</p>
             <table>
-                <tr *ngFor="let ingredient of ingredients">
-                    <td>{{ ingredient.name }}</td>
-                    <!-- <td>{{ ingredient.allergens }}</td>
-                    <td>{{ ingredient.vegetarian }}</td>
-                    <td>{{ ingredient.vegan }}</td> -->
+                <tr>
+                    <td>Composition :</td>
+                    <td>
+                        <p *ngFor="let ingredient of ingredients">
+                            <span>{{ ingredient.name }}</span>
+                        </p>
+                    </td>
                 </tr>
                 <tr>
-                    <td>Allergène</td>
-                    <td>{{ product }}</td>
+                    <td>Allergène :</td>
+                    <td>
+                        <p *ngFor="let allergen of product.allergens">
+                            <span>{{ allergen }}</span>
+                        </p>
+                    </td>
                 </tr>
                 <tr>
-                    <td>Végétarien</td>
+                    <td>Végétarien :</td>
+                    <td>{{ product.vegeta }}</td>
                 </tr>
                 <tr>
-                    <td>Vegan</td>
+                    <td>Vegan :</td>
+                    <td>{{ product.vegan }}</td>
                 </tr>
             </table>
             <span class="price">{{ product.price | currency }}</span>

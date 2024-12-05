@@ -12,9 +12,9 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from 
 
 @Component({
   selector: 'app-nav',
-  templateUrl: './nav.component.html',
-  styleUrl: './nav.component.scss',
   standalone: true,
+  templateUrl: './nav.component.html',
+  styleUrls: ['./nav.component.scss'],
   imports: [
     MatToolbarModule,
     MatButtonModule,
@@ -24,7 +24,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from 
     AsyncPipe,
     CommonModule,
     RouterLink,
-    RouterOutlet
+    RouterOutlet,
   ],
 })
 export class NavComponent {
@@ -44,12 +44,12 @@ export class NavComponent {
     .pipe(
       map((result) => result.matches),
       shareReplay()
-  );
-  
+    );
+
   pageTitle: string = '';
 
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) { }
-  
+  constructor(private router: Router, private activatedRoute: ActivatedRoute) {}
+
   ngOnInit(): void {
     this.router.events
       .pipe(

@@ -8,6 +8,9 @@ export interface Product {
   description: string;
   composition: string[];
   price: number;
+  allergens: string[];
+  vegan: boolean;
+  vegeta: boolean;
   stock: boolean;
   image: string;
 }

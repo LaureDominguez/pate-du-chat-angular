@@ -1,27 +1,27 @@
-@use 'sass:map';
-@use '@angular/material' as mat;
+// @use 'sass:map';
+// @use '@angular/material' as mat;
 
-@mixin color($light-theme) {
-    .product-card {
-        background-color: mat.get-theme-color($light-theme, secondary, 90);
-        color: mat.get-theme-color($light-theme, secondary, 10);
-    }
-    img{
-        background-color: mat.get-theme-color($light-theme, neutral, 100);
-    }
-}
+// @mixin color($light-theme) {
+//     .product-card {
+//         background-color: mat.get-theme-color($light-theme, secondary, 90);
+//         color: mat.get-theme-color($light-theme, secondary, 10);
+//     }
+//     img{
+//         background-color: mat.get-theme-color($light-theme, neutral, 100);
+//     }
+// }
 // gestion du type ne marche pas
-@media (prefers-color-scheme: dark) {
-    @mixin color($dark-theme) {
-        .product-card {
-            background-color: mat.get-theme-color($dark-theme, secondary, 30);
-            color: mat.get-theme-color($dark-theme, secondary, 90);
-        }
-        img{
-            background-color: mat.get-theme-color($dark-theme, neutral, 4);
-        }
-    }
-}
+// @media (prefers-color-scheme: dark) {
+//     @mixin color($dark-theme) {
+//         .product-card {
+//             background-color: mat.get-theme-color($dark-theme, secondary, 30);
+//             color: mat.get-theme-color($dark-theme, secondary, 90);
+//         }
+//         img{
+//             background-color: mat.get-theme-color($dark-theme, neutral, 4);
+//         }
+//     }
+// }
 
 .product-card {
     position: relative;
@@ -82,6 +82,11 @@ mat-card-content {
         flex-direction: column;
         justify-content: center;
     }
+    
+}
+
+h1 {
+    width: 100%;
 }
 
 .close {

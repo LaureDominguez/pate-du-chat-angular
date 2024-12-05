@@ -6,25 +6,29 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { ProductCardComponent } from '../product-card/product-card.component';
 import { forkJoin, map, Observable } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Ingredient, IngredientService } from '../../services/ingredient.service';
+import {
+  Ingredient,
+  IngredientService,
+} from '../../services/ingredient.service';
 
 @Component({
   selector: 'app-products',
   standalone: true,
+  templateUrl: './products.component.html',
+  styleUrls: ['./products.component.scss'],
   imports: [
     CommonModule,
     MatCardModule,
     MatGridListModule,
     ProductCardComponent,
   ],
-  templateUrl: './products.component.html',
-  styleUrls: ['./products.component.scss'],
 })
 export class ProductsComponent implements OnInit {
   products$: Observable<Product[]> = this.productService.getProducts();
   products: Product[] = [];
 
-  ingredients$: Observable<Ingredient[]> = this.ingredientService.getIngredients();
+  ingredients$: Observable<Ingredient[]> =
+    this.ingredientService.getIngredients();
   ingredients: Ingredient[] = [];
 
   allergensList: string[] = [];
@@ -108,7 +112,7 @@ export class ProductsComponent implements OnInit {
           this.isVegeta = true;
           this.isVegan = true;
 
-          ingredients.forEach((ingredient) => { 
+          ingredients.forEach((ingredient) => {
             if (ingredient.allergens && ingredient.allergens.length > 0) {
               ingredient.allergens.forEach((allergen: string) => {
                 if (!this.allergensList.includes(allergen)) {
@@ -121,23 +125,31 @@ export class ProductsComponent implements OnInit {
             if (ingredient.vegeta === false) {
               this.isVegeta = false;
             }
-            if (ingredient.vegan === false || ingredient.vegeta === false) {
+            if (ingredient.vegan === false) {
               this.isVegan = false;
             }
           });
+
+          // Mise à jour des propriétés de selectedProduct
+          if (this.selectedProduct) {
+            this.selectedProduct.allergens = [...new Set(this.allergensList)];
+            this.selectedProduct.vegeta = this.isVegeta;
+            this.selectedProduct.vegan = this.isVegan;
+          }
 
           this.cdRef.markForCheck();
           console.log('Ingrédients sélectionés :', this.ingredients);
           console.log('Liste des allergènes :', this.allergensList);
           console.log('Est végétarien :', this.isVegeta);
           console.log('Est végan :', this.isVegan);
+          console.log('Produit mis à jour :', this.selectedProduct);
         },
         error: (error) => {
           console.error('Erreur lors de la sélection des ingrédients:', error);
         },
         complete: () => {
           console.log('Tous les ingrédients sont sélectionés');
-        }
+        },
       });
     }
   }

@@ -8,11 +8,10 @@ import { Ingredient } from '../../services/ingredient.service';
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, MatCardModule, ProductsComponent],
   templateUrl: './product-card.component.html',
   styleUrls: ['./product-card.component.scss'],
+  imports: [CommonModule, MatCardModule, ProductsComponent],
 })
-
 export class ProductCardComponent implements OnChanges {
   @Input() product!: Product;
   @Input() ingredients!: Ingredient[];
@@ -23,8 +22,6 @@ export class ProductCardComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['ingredients']) {
-      // console.log('pouet !!!', this.ingredients.forEach((ingredient) => console.log(ingredient.name, ingredient.allergens, ingredient.vegetarian, ingredient.vegan)));
-      // this.ingredients.forEach((ingredient) => console.log(ingredient.name, ingredient.allergens, ingredient.vegetarian, ingredient.vegan));
     }
   }
 
