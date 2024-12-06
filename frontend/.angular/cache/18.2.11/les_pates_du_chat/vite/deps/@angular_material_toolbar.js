@@ -32,8 +32,8 @@ import {
   ɵɵprojectionDef,
   ɵɵqueryRefresh
 } from "./chunk-FVV5RVQE.js";
-import "./chunk-DMUXSTP4.js";
 import "./chunk-CDRFSED4.js";
+import "./chunk-DMUXSTP4.js";
 import "./chunk-EREHKTG3.js";
 
 // node_modules/@angular/material/fesm2022/toolbar.mjs

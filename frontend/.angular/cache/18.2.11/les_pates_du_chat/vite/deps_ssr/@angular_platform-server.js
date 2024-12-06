@@ -8,7 +8,6 @@ import {
   WebAnimationsDriver,
   WebAnimationsStyleNormalizer
 } from "./chunk-PONP5MCO.js";
-import "./chunk-74BI3N4T.js";
 import {
   BrowserDomAdapter,
   BrowserModule,
@@ -20,6 +19,7 @@ import {
   HTTP_ROOT_INTERCEPTOR_FNS,
   HttpClientModule
 } from "./chunk-BJOHS2VD.js";
+import "./chunk-74BI3N4T.js";
 import {
   DOCUMENT,
   NullViewportScroller,

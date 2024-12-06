@@ -1,14 +1,5 @@
 import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
-  animate,
-  animateChild,
-  query,
-  state,
-  style,
-  transition,
-  trigger
-} from "./chunk-74BI3N4T.js";
-import {
   FormGroupDirective,
   NgControl,
   NgForm,
@@ -27,6 +18,15 @@ import {
   MatButtonModule,
   MatIconButton
 } from "./chunk-S7ZV6PYW.js";
+import {
+  animate,
+  animateChild,
+  query,
+  state,
+  style,
+  transition,
+  trigger
+} from "./chunk-74BI3N4T.js";
 import {
   A,
   A11yModule,
