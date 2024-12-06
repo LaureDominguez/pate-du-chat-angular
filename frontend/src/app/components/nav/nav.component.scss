@@ -3,6 +3,8 @@
 
 .mat-sidenav {
   width: 200px;
+  background-color: var(--secondaryContainer);
+  color: var(--onSecondaryContainer);
   .mat-divider {
     width: 80%;
     margin: auto;
@@ -17,28 +19,3 @@
     left: calc(50% - 200px);
   }
 }
-
-
-// @mixin color($light-theme) {
-//   .mat-sidenav {
-//     background-color: mat.get-theme-color($light-theme, tertiary, 90);
-//     color: mat.get-theme-color($light-theme, tertiary, 10);
-//   }
-//   .mat-sidenav-content {
-//     background-color: mat.get-theme-color($light-theme, neutral, 98);
-//     color: mat.get-theme-color($light-theme, neutral, 10);
-//   }
-// }
-// gestion du type ne marche pas
-// @media (prefers-color-scheme: dark) {
-//   @mixin color($dark-theme) {
-//     .mat-sidenav {
-//       background-color: mat.get-theme-color($dark-theme, secondary, 30);
-//       color: mat.get-theme-color($dark-theme, secondary, 90);
-//     }
-//     .mat-sidenav-content {
-//       background-color: mat.get-theme-color($dark-theme, neutral, 6);
-//       color: mat.get-theme-color($dark-theme, neutral, 90);
-//     }
-//   }
-// }

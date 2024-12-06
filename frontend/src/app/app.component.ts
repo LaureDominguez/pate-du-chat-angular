@@ -14,7 +14,7 @@ export class AppComponent {
   
   ngOnInit() {
     this.themeService.loadTheme().subscribe((theme) => {
-      this.themeService.applyTheme(theme.schemes.dark);
+      this.themeService.applyTheme(theme.schemes.light);
     });
   }
 

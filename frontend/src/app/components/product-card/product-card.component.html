@@ -5,14 +5,15 @@
     <mat-card-content>
         <h2>{{ product.name }}</h2>
         <div *ngIf="isSelected">
-            <p>{{ product.description }}</p>
-            <table>
+            <p class="description">{{ product.description }}</p>
+            <table class="composition">
                 <tr>
                     <td>Composition :</td>
                     <td>
-                        <p *ngFor="let ingredient of ingredients">
+                        <ng-container *ngFor="let ingredient of ingredients; let i = index">
                             <span>{{ ingredient.name }}</span>
-                        </p>
+                            <span *ngIf="i < ingredients.length - 1">, </span>
+                        </ng-container>
                     </td>
                 </tr>
                 <tr>

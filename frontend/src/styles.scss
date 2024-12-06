@@ -1,7 +1,5 @@
 @use '@angular/material' as mat;
 @use './assets/themes/m3-theme';
-// @use './app/components/nav/nav.component' as nav;
-// @use './app/components/product-card/product-card.component.scss' as product-card;
 
 
 @include mat.core();
@@ -17,10 +15,8 @@ html, body {
     @include mat.core-theme($theme);
     @include mat.all-component-themes($theme);
     @include mat.all-component-typographies($theme);
-    // @include nav.color($theme);
-    // @include product-card.color($theme);
-    background-color: var(--primary);
-    color: var(--on-primary);
+    background-color: var(--surface);
+    color: var(--onSurface);
 }
 
 

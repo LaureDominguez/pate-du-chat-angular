@@ -138,6 +138,7 @@ export class ProductsComponent implements OnInit {
           }
 
           this.cdRef.markForCheck();
+
           console.log('Ingrédients sélectionés :', this.ingredients);
           console.log('Liste des allergènes :', this.allergensList);
           console.log('Est végétarien :', this.isVegeta);
