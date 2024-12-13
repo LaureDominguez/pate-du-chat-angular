@@ -1,5 +1,7 @@
 .product-card {
   position: relative;
+  background-color: var(--surfaceContainer);
+  color: var(--onSecondaryContainer);
 }
 .product-card h2 {
   font-size: 1.2rem;
@@ -11,9 +13,13 @@
   line-height: normal;
   margin: 0;
 }
+.product-card img {
+  background-color: var(--surface);
+}
 
 .product-card:not(.selected) {
-  width: 12rem;
+  height: 13rem;
+  width: 13rem;
 }
 .product-card:not(.selected) img {
   max-height: 150px;
@@ -34,8 +40,11 @@ mat-card-content {
 .price {
   font-size: 1rem;
   font-weight: bold;
-  line-height: normal;
-  margin: 0;
+  line-height: 3rem;
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+  padding: 0.5rem;
+  border-radius: 8px;
 }
 
 .product-card.selected {
@@ -46,16 +55,46 @@ mat-card-content {
   height: 70vh;
 }
 .product-card.selected img {
-  width: 30%;
-  height: 100%;
-  object-fit: contain;
+  width: 40%;
+  height: 99%;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0.2rem;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.25);
 }
 .product-card.selected mat-card-content {
-  height: 100%;
-  width: 70%;
+  max-height: 95%;
+  max-width: 60%;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background-color: var(--surface);
+  padding: 2rem 5rem;
+  margin: auto;
+  border-radius: 8px;
+}
+.product-card.selected mat-card-content .description {
+  font-style: italic;
+}
+.product-card.selected mat-card-content .composition {
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: left;
+  width: 300px;
+}
+.product-card.selected mat-card-content .composition tr {
+  vertical-align: top;
+  margin: 1rem 0;
+}
+.product-card.selected mat-card-content .composition td:first-child {
+  font-weight: bold;
+  text-wrap: nowrap;
+}
+
+h1 {
+  width: 100%;
 }
 
 .close {

@@ -3,11 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Product {
+  id: string;
   name: string;
   category: string;
   description: string;
   composition: string[];
   price: number;
+  allergens: string[];
+  vegan: boolean;
+  vegeta: boolean;
   stock: boolean;
   image: string;
 }

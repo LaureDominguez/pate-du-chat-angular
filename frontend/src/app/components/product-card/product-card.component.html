@@ -1,16 +1,40 @@
 <mat-card class="product-card" [class.selected]="isSelected">
     <img mat-card-image [src]="product.image || 'pate-R.png'"
         [alt]="product.image ? product.name : 'Pas d\'image disponible'">
-    
+
     <mat-card-content>
         <h2>{{ product.name }}</h2>
         <div *ngIf="isSelected">
-            <p>{{ product.description }}</p>
-            <ul>
-                <li *ngFor="let ingredient of ingredients">{{ ingredient.name }}</li>
-            </ul>
+            <p class="description">{{ product.description }}</p>
+            <table class="composition">
+                <tr>
+                    <td>Composition :</td>
+                    <td>
+                        <ng-container *ngFor="let ingredient of ingredients; let i = index">
+                            <span>{{ ingredient.name }}</span>
+                            <span *ngIf="i < ingredients.length - 1">, </span>
+                        </ng-container>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Allergène :</td>
+                    <td>
+                        <p *ngFor="let allergen of product.allergens">
+                            <span>{{ allergen }}</span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Végétarien :</td>
+                    <td>{{ product.vegeta }}</td>
+                </tr>
+                <tr>
+                    <td>Vegan :</td>
+                    <td>{{ product.vegan }}</td>
+                </tr>
+            </table>
+            <span class="price">{{ product.price | currency }}</span>
         </div>
-        <span class="price">{{ product.price | currency }}</span>
     </mat-card-content>
 
     <mat-card-actions *ngIf="isSelected">

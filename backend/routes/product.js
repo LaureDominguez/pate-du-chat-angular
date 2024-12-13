@@ -4,9 +4,10 @@ const Product = require('../models/product');
 
 // Ajouter un produit
 router.post('/', async (req, res) => {
-	const { name, description, composition, price, imageUrl } = req.body;
+	const { id, name, description, composition, price, imageUrl } = req.body;
 	try {
 		const newProduct = new Product({
+			id,
 			name,
 			description,
 			composition,

@@ -4,13 +4,14 @@ const Ingredient = require('../models/ingredient');
 
 // Ajouter un ingredient
 router.post('/', async (req, res) => {
-	const { name, description, allergens, vegan, imageUrl } = req.body;
+	const { name, description, allergens, vegan, vegeta, imageUrl } = req.body;
 	try {
 		const newIngredient = new Ingredient({
 			name,
 			description,
 			allergens,
 			vegan,
+			vegeta,
 			imageUrl,
 		});
 		const ingredient = await newIngredient.save();

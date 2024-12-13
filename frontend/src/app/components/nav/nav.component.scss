@@ -1,17 +1,21 @@
-.sidenav-container {
-  height: 100%;
-}
+// @use 'sass:map';
+// @use '@angular/material' as mat;
 
-.sidenav {
+.mat-sidenav {
   width: 200px;
+  background-color: var(--secondaryContainer);
+  color: var(--onSecondaryContainer);
+  .mat-divider {
+    width: 80%;
+    margin: auto;
+  }
 }
 
-.sidenav .mat-toolbar {
-  background: inherit;
-}
-
-.mat-toolbar.mat-primary {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+.mat-sidenav-content {
+  min-height: 100vh;
+  position: relative;
+  h1 {
+    position: absolute;
+    left: calc(50% - 200px);
+  }
 }
