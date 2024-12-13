@@ -100,8 +100,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     this.selectedProduct = product;
     this.isSelected = true;
-    this.showNormalGrid = false;
-    this.showSelectedGrid = true;
 
     this.updateGrid();
     console.log('Produit sélectionné :', product);
@@ -164,30 +162,22 @@ export class ProductsComponent implements OnInit, OnDestroy {
   onCloseClick(): void {
     this.selectedProduct = null;
     this.isSelected = false;
-    this.showNormalGrid = true;
-    this.showSelectedGrid = false;
     this.ingredients = [];
     this.updateGrid();
   }
 
-  //changer les 2 types d'affichage de grille par un seul :
-  // 2 grilles + produit selectionné
-  // selected product = null
-  // grid1 = contient tous les produits
-  // grid2 = contient aucun produit
 
   updateGrid(): void {
     console.log('Mise à jour de la grille. Produits :', this.products);
 
     if (this.selectedProduct) {
       const selectedIndex = this.products.indexOf(this.selectedProduct);
-      // const selectedIndex = this.products.findIndex(product => product.id === this.selectedProduct?.id);
       console.log('pouet : ', selectedIndex, " ; ", this.selectedProduct);
       
       this.grid1 = this.products.slice(0, selectedIndex);
       this.grid2 = this.products.slice(selectedIndex + 1);
     } else {
-      this.grid1 = [];
+      this.grid1 = this.products;
       this.grid2 = [];
     }
 
