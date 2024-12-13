@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>{{ data.ingredient ? 'Modifier un ingrédient' : 'Ajouter un ingrédient' }}</h2>
+<form [formGroup]="ingredientForm" (ngSubmit)="save()">
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Fournisseur</mat-label>
+        <input matInput formControlName="supplier" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Allergènes</mat-label>
+        <input matInput formControlName="allergens" />
+    </mat-form-field>
+
+    <mat-checkbox formControlName="vegan">Vegan</mat-checkbox>
+    <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Image URL</mat-label>
+        <input matInput formControlName="imageUrl" />
+    </mat-form-field>
+
+    <div mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+</form>
+

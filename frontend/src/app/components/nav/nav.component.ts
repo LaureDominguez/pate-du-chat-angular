@@ -9,6 +9,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { Observable } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-nav',
@@ -21,6 +25,10 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from 
     MatSidenavModule,
     MatListModule,
     MatIconModule,
+    MatDialogModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatCheckboxModule,
     AsyncPipe,
     CommonModule,
     RouterLink,

@@ -6,6 +6,8 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { Product, ProductService } from '../../services/product.service';
 import { Ingredient, IngredientService } from '../../services/ingredient.service';
+import { MatDialog } from '@angular/material/dialog';
+import { IngredientFormComponent } from '../ingredient-form/ingredient-form.component';
 
 @Component({
   selector: 'app-admin',
@@ -48,7 +50,8 @@ export class AdminComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
-    private ingredientService: IngredientService
+    private ingredientService: IngredientService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -102,14 +105,39 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  addIngredient(): void {
-    // Logique pour ajouter un ingrédient
-    console.log("Ajout d'ingrédient :");
+  openIngredientForm(ingredient: Ingredient | null): void {
+    const dialogRef = this.dialog.open(IngredientFormComponent, {
+      width: '400px',
+      data: { ingredient },
+    });
+
+    dialogRef.afterClosed().subscribe((result: Ingredient | null) => {
+      if (result) {
+        if (ingredient) {
+          this.updateIngredient(ingredient._id!, result);
+        } else {
+          this.addIngredient(result);
+        }
+      }
+    });
   }
 
-  editIngredient(ingredient: Ingredient): void {
-    // Logique pour modifier un ingrédient
-    console.log("Modification de l'ingrédient :", ingredient);
+  addIngredient(ingredient: Ingredient): void {
+    this.ingredientService
+      .createIngredient(ingredient)
+      .subscribe(() => {
+        this.fetchIngredients();
+      });
+    console.log("Ajout du nouvel ingrédient : ", ingredient);
+  }
+
+  updateIngredient(id: string, updateIngredient: Ingredient): void {
+    this.ingredientService
+      .updateIngredient(id, updateIngredient)
+      .subscribe(() => {
+        this.fetchIngredients();
+      });
+    console.log("Modification de l'ingrédient :", updateIngredient);
   }
 
   deleteIngredient(ingredient: Ingredient): void {

@@ -51,7 +51,7 @@
     <!-- ingrédients -->
     <div>
         <h2>Liste des ingrédients</h2>
-        <button mat-button (click)="addIngredient()">Ajouter un ingrédient</button>
+        <button mat-button (click)="openIngredientForm(null)">Ajouter un ingrédient</button>
     
         <table mat-table [dataSource]="ingredients" matSort #ingredientsSort="matSort">
     
@@ -89,7 +89,7 @@
             <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let ingredient">
-                    <button mat-button (click)="editIngredient(ingredient)">Modifier</button>
+                    <button mat-button (click)="openIngredientForm(ingredient)">Modifier</button>
                     <button mat-button (click)="deleteIngredient(ingredient)">Supprimer</button>
                 </td>
             </ng-container>
