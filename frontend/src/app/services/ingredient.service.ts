@@ -5,11 +5,10 @@ import { Observable } from 'rxjs';
 export interface Ingredient {
   _id: string;
   name: string;
-  description: string;
+  supplier: string;
   allergens: string[];
   vegan: boolean;
   vegeta: boolean;
-  image: string;
 }
 
 @Injectable({

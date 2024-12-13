@@ -9,7 +9,7 @@ const IngredientSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
-	description: {
+	supplier: {
 		type: String,
 		required: true,
 	},
@@ -29,7 +29,7 @@ const IngredientSchema = new mongoose.Schema({
 	},
 	imageUrl: {
 		type: String,
-		required: true,
+		required: false,
 	},
 });
 

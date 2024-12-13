@@ -22,17 +22,29 @@ import { Ingredient, IngredientService } from '../../services/ingredient.service
 })
 export class AdminComponent implements OnInit {
   products = new MatTableDataSource<Product>([]);
-  ingredients: Ingredient[] = [];
-  displayedColumns: string[] = [
+  ingredients = new MatTableDataSource<Ingredient>([]);
+
+  displayedProductsColumns: string[] = [
     'name',
     'category',
     'price',
     'stock',
     'actions',
   ];
+  displayedIngredientsColumns: string[] = [
+    'name',
+    'supplier',
+    'allergens',
+    'vegan',
+    'vegeta',
+    'actions',
+  ];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('productsPaginator') productsPaginator!: MatPaginator;
+  @ViewChild('productsSort') productsSort!: MatSort;
+
+  @ViewChild('ingredientsPaginator') ingredientsPaginator!: MatPaginator;
+  @ViewChild('ingredientsSort') ingredientsSort!: MatSort;
 
   constructor(
     private productService: ProductService,
@@ -41,22 +53,27 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.fecthProducts();
+    this.fetchIngredients();
   }
 
   ngAfterViewInit() {
-    this.products.paginator = this.paginator;
-    this.products.sort = this.sort;
+    this.products.paginator = this.productsPaginator;
+    this.products.sort = this.productsSort;
+
+    this.ingredients.paginator = this.ingredientsPaginator;
+    this.ingredients.sort = this.ingredientsSort;
+
+    this.products.data = this.products.data; // Pour actualiser les données
+    this.ingredients.data = this.ingredients.data; // Idem pour les ingrédients
   }
+
+  ////////////////////////////////////
+  // Produits
+  ////////////////////////////////////
 
   fecthProducts(): void {
     this.productService.getProducts().subscribe((products) => {
-      this.products = new MatTableDataSource<Product>(products);
-    });
-  }
-
-  fetchIngredients(): void {
-    this.ingredientService.getIngredients().subscribe((ingredients) => {
-      this.ingredients = ingredients;
+      this.products.data = products;
     });
   }
 
@@ -73,5 +90,30 @@ export class AdminComponent implements OnInit {
   deleteProduct(product: Product): void {
     // Logique pour supprimer un produit
     console.log('Suppression du produit :', product);
+  }
+
+  //////////////////////////////////////
+  // Ingrédients
+  ////////////////////////////////////
+
+  fetchIngredients(): void {
+    this.ingredientService.getIngredients().subscribe((ingredients) => {
+      this.ingredients.data = ingredients;
+    });
+  }
+
+  addIngredient(): void {
+    // Logique pour ajouter un ingrédient
+    console.log("Ajout d'ingrédient :");
+  }
+
+  editIngredient(ingredient: Ingredient): void {
+    // Logique pour modifier un ingrédient
+    console.log("Modification de l'ingrédient :", ingredient);
+  }
+
+  deleteIngredient(ingredient: Ingredient): void {
+    // Logique pour supprimer un ingrédient
+    console.log("Suppression de l'ingrédient :", ingredient);
   }
 }
