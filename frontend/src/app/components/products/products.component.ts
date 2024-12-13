@@ -1,10 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ProductService, Product } from '../../services/product.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { ProductCardComponent } from '../product-card/product-card.component';
-import { forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, Subject, takeUntil } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import {
   Ingredient,
@@ -22,13 +22,14 @@ import {
     MatGridListModule,
     ProductCardComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProductsComponent implements OnInit {
+export class ProductsComponent implements OnInit, OnDestroy {
   products$: Observable<Product[]> = this.productService.getProducts();
-  products: Product[] = [];
-
   ingredients$: Observable<Ingredient[]> =
     this.ingredientService.getIngredients();
+
+  products: Product[] = [];
   ingredients: Ingredient[] = [];
 
   allergensList: string[] = [];
@@ -37,14 +38,15 @@ export class ProductsComponent implements OnInit {
 
   cols: number = 3;
 
-  isSelected: boolean = false;
   selectedProduct: Product | null = null;
-  lastSelectedProduct: Product | null = null;
+  isSelected: boolean = false;
+  showNormalGrid: boolean = true;
+  showSelectedGrid: boolean = false;
 
-  showNormalGrid = true;
-  showSelectedGrid = false;
   grid1: Product[] = [];
   grid2: Product[] = [];
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private productService: ProductService,
@@ -54,17 +56,9 @@ export class ProductsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.products$.subscribe((products) => {
+    this.products$.pipe(takeUntil(this.destroy$)).subscribe((products) => {
       this.products = products;
-      if (this.selectedProduct == null) {
-        this.showNormalGrid = true;
-        this.showSelectedGrid = false;
-      } else {
-        this.getIngredientsForSelectedProduct();
-        this.showNormalGrid = false;
-        this.showSelectedGrid = true;
-        this.updateGrid();
-      }
+      this.updateGrid();
     });
 
     //media queries
@@ -97,100 +91,114 @@ export class ProductsComponent implements OnInit {
       .subscribe((cols: number) => (this.cols = cols));
   }
 
-  //affiche les ingredients
-  getIngredientsForSelectedProduct() {
-    if (this.selectedProduct && this.selectedProduct.composition) {
-      const ingredientObservables: Observable<Ingredient>[] =
-        this.selectedProduct.composition.map((id: string) =>
-          this.ingredientService.getIngredientById(id)
-        );
-
-      forkJoin(ingredientObservables).subscribe({
-        next: (ingredients: Ingredient[]) => {
-          this.ingredients = ingredients;
-          this.allergensList = [];
-          this.isVegeta = true;
-          this.isVegan = true;
-
-          ingredients.forEach((ingredient) => {
-            if (ingredient.allergens && ingredient.allergens.length > 0) {
-              ingredient.allergens.forEach((allergen: string) => {
-                if (!this.allergensList.includes(allergen)) {
-                  this.allergensList.push(allergen);
-                }
-              });
-            }
-
-            // Vérifier les mentions vegan et vegetarian
-            if (ingredient.vegeta === false) {
-              this.isVegeta = false;
-            }
-            if (ingredient.vegan === false) {
-              this.isVegan = false;
-            }
-          });
-
-          // Mise à jour des propriétés de selectedProduct
-          if (this.selectedProduct) {
-            this.selectedProduct.allergens = [...new Set(this.allergensList)];
-            this.selectedProduct.vegeta = this.isVegeta;
-            this.selectedProduct.vegan = this.isVegan;
-          }
-
-          this.cdRef.markForCheck();
-
-          console.log('Ingrédients sélectionés :', this.ingredients);
-          console.log('Liste des allergènes :', this.allergensList);
-          console.log('Est végétarien :', this.isVegeta);
-          console.log('Est végan :', this.isVegan);
-          console.log('Produit mis à jour :', this.selectedProduct);
-        },
-        error: (error) => {
-          console.error('Erreur lors de la sélection des ingrédients:', error);
-        },
-        complete: () => {
-          console.log('Tous les ingrédients sont sélectionés');
-        },
-      });
-    }
-  }
-
   // gestion des grilles d'affichage
-  selectProduct(product: Product) {
+  selectProduct(product: Product): void {
+    if (!this.products || this.products.length === 0) {
+      console.warn('Les produits ne sont pas encore chargés.');
+      return;
+    }
+
     this.selectedProduct = product;
     this.isSelected = true;
-    this.ingredients = [];
-
-    this.getIngredientsForSelectedProduct();
-
     this.showNormalGrid = false;
     this.showSelectedGrid = true;
+
+    this.updateGrid();
+    console.log('Produit sélectionné :', product);
+    this.getIngredientsForSelectedProduct();
+
+    console.log('Grille mise à jour après sélection :', this.grid1, this.grid2);
+    this.cdRef.detectChanges();
+  }
+
+  //affiche les ingredients
+  getIngredientsForSelectedProduct() {
+    if (!this.selectedProduct?.composition) return;
+
+    forkJoin(
+      this.selectedProduct.composition.map((id: string) =>
+        this.ingredientService.getIngredientById(id)
+      )
+    )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (ingredients: Ingredient[]) => {
+          this.ingredients = ingredients;
+          this.processIngredients(ingredients);
+        },
+        error: (error) => {
+          console.error(
+            'Erreur lors de la récupération des ingrédients:',
+            error
+          );
+        },
+      });
+  }
+
+  // Traiter les ingrédients pour allergènes et régimes alimentaires
+  private processIngredients(ingredients: Ingredient[]) {
+    const allergensSet = new Set<string>();
+    let isVegeta = true;
+    let isVegan = true;
+
+    ingredients.forEach((ingredient) => {
+      if (ingredient.allergens) {
+        ingredient.allergens.forEach((allergen) => allergensSet.add(allergen));
+      }
+      if (!ingredient.vegeta) isVegeta = false;
+      if (!ingredient.vegan) isVegan = false;
+    });
+
+    this.allergensList = Array.from(allergensSet);
+    this.isVegeta = isVegeta;
+    this.isVegan = isVegan;
+
+    if (this.selectedProduct) {
+      this.selectedProduct.allergens = this.allergensList;
+      this.selectedProduct.vegeta = this.isVegeta;
+      this.selectedProduct.vegan = this.isVegan;
+    }
+    this.cdRef.markForCheck();
+  }
+
+  onCloseClick(): void {
+    this.selectedProduct = null;
+    this.isSelected = false;
+    this.showNormalGrid = true;
+    this.showSelectedGrid = false;
+    this.ingredients = [];
     this.updateGrid();
   }
 
-  onCloseClick() {
-    this.selectedProduct = null;
-    this.isSelected = false;
-    this.ingredients = [];
-    this.showNormalGrid = true;
-    this.showSelectedGrid = false;
-  }
-
-  displayProducts(grid1: any[], grid2: any[]): void {}
+  //changer les 2 types d'affichage de grille par un seul :
+  // 2 grilles + produit selectionné
+  // selected product = null
+  // grid1 = contient tous les produits
+  // grid2 = contient aucun produit
 
   updateGrid(): void {
+    console.log('Mise à jour de la grille. Produits :', this.products);
+
     if (this.selectedProduct) {
       const selectedIndex = this.products.indexOf(this.selectedProduct);
-      const previousProduct = this.products[selectedIndex - 1];
-      const nextProduct = this.products[selectedIndex + 1];
-
-      // mise à jour de la structure de la grille de produits
+      // const selectedIndex = this.products.findIndex(product => product.id === this.selectedProduct?.id);
+      console.log('pouet : ', selectedIndex, " ; ", this.selectedProduct);
+      
       this.grid1 = this.products.slice(0, selectedIndex);
       this.grid2 = this.products.slice(selectedIndex + 1);
-      this.cdRef.detectChanges();
-
-      // affichage des produits dans les deux grilles
-      this.displayProducts(this.grid1, this.grid2);
+    } else {
+      this.grid1 = [];
+      this.grid2 = [];
     }
+
+    this.cdRef.detectChanges();
+    console.log('Grille avant produit sélectionné :', this.grid1);
+    console.log('Grille après produit sélectionné :', this.grid2);
+
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
