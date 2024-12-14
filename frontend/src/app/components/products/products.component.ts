@@ -101,10 +101,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.isSelected = true;
 
     this.updateGrid();
-    console.log('Produit sélectionné :', product);
+    // console.log('Produit sélectionné :', product);
     this.getIngredientsForSelectedProduct();
 
-    console.log('Grille mise à jour après sélection :', this.grid1, this.grid2);
+    // console.log('Grille mise à jour après sélection :', this.grid1, this.grid2);
     this.cdRef.detectChanges();
   }
 
@@ -167,11 +167,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
 
   updateGrid(): void {
-    console.log('Mise à jour de la grille. Produits :', this.products);
+    // console.log('Mise à jour de la grille. Produits :', this.products);
 
     if (this.selectedProduct) {
       const selectedIndex = this.products.indexOf(this.selectedProduct);
-      console.log('pouet : ', selectedIndex, " ; ", this.selectedProduct);
+      // console.log('pouet : ', selectedIndex, " ; ", this.selectedProduct);
       
       this.grid1 = this.products.slice(0, selectedIndex);
       this.grid2 = this.products.slice(selectedIndex + 1);
@@ -181,8 +181,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
 
     this.cdRef.detectChanges();
-    console.log('Grille avant produit sélectionné :', this.grid1);
-    console.log('Grille après produit sélectionné :', this.grid2);
+    // console.log('Grille avant produit sélectionné :', this.grid1);
+    // console.log('Grille après produit sélectionné :', this.grid2);
 
   }
 
