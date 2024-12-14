@@ -65,15 +65,15 @@ context, extensions) {
         context.addTeardown(() => controller.abort('builder-teardown'));
     }
     yield* (0, build_action_1.runEsBuildBuildAction)(async (rebuildState) => {
-        const { prerenderOptions, jsonLogs } = normalizedOptions;
+        const { serverEntryPoint, jsonLogs, partialSSRBuild } = normalizedOptions;
         const startTime = process.hrtime.bigint();
         const result = await (0, execute_build_1.executeBuild)(normalizedOptions, context, rebuildState);
         if (jsonLogs) {
             result.addLog(await (0, utils_1.createJsonBuildManifest)(result, normalizedOptions));
         }
         else {
-            if (prerenderOptions) {
-                const prerenderedRoutesLength = result.prerenderedRoutes.length;
+            if (serverEntryPoint && !partialSSRBuild) {
+                const prerenderedRoutesLength = Object.keys(result.prerenderedRoutes).length;
                 let prerenderMsg = `Prerendered ${prerenderedRoutesLength} static route`;
                 prerenderMsg += prerenderedRoutesLength !== 1 ? 's.' : '.';
                 result.addLog(color_1.colors.magenta(prerenderMsg));
@@ -100,16 +100,21 @@ context, extensions) {
         signal,
     });
 }
-async function* buildApplication(options, context, pluginsOrExtensions) {
-    let extensions;
-    if (pluginsOrExtensions && Array.isArray(pluginsOrExtensions)) {
-        extensions = {
-            codePlugins: pluginsOrExtensions,
-        };
-    }
-    else {
-        extensions = pluginsOrExtensions;
-    }
+/**
+ * Builds an application using the `application` builder with the provided
+ * options.
+ *
+ * Usage of the `extensions` parameter is NOT supported and may cause unexpected
+ * build output or build failures.
+ *
+ * @experimental Direct usage of this function is considered experimental.
+ *
+ * @param options The options defined by the builder's schema to use.
+ * @param context An Architect builder context instance.
+ * @param extensions An object contain extension points for the build.
+ * @returns The build output results of the build.
+ */
+async function* buildApplication(options, context, extensions) {
     let initial = true;
     for await (const result of buildApplicationInternal(options, context, extensions)) {
         const outputOptions = result.detail?.['outputOptions'];
@@ -137,7 +142,9 @@ async function* buildApplication(options, context, pluginsOrExtensions) {
         // Writes the output files to disk and ensures the containing directories are present
         const directoryExists = new Set();
         await (0, utils_1.emitFilesToDisk)(Object.entries(result.files), async ([filePath, file]) => {
-            if (outputOptions.ignoreServer && file.type === bundler_context_1.BuildOutputFileType.Server) {
+            if (outputOptions.ignoreServer &&
+                (file.type === bundler_context_1.BuildOutputFileType.ServerApplication ||
+                    file.type === bundler_context_1.BuildOutputFileType.ServerRoot)) {
                 return;
             }
             let typeDirectory;
@@ -146,7 +153,8 @@ async function* buildApplication(options, context, pluginsOrExtensions) {
                 case bundler_context_1.BuildOutputFileType.Media:
                     typeDirectory = outputOptions.browser;
                     break;
-                case bundler_context_1.BuildOutputFileType.Server:
+                case bundler_context_1.BuildOutputFileType.ServerApplication:
+                case bundler_context_1.BuildOutputFileType.ServerRoot:
                     typeDirectory = outputOptions.server;
                     break;
                 case bundler_context_1.BuildOutputFileType.Root:

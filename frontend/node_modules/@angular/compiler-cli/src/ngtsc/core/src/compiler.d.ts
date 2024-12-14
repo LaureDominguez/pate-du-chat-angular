@@ -133,6 +133,8 @@ export declare class NgCompiler {
     private readonly enableBlockSyntax;
     private readonly enableLetSyntax;
     private readonly angularCoreVersion;
+    private readonly enableHmr;
+    private readonly implicitStandaloneValue;
     /**
      * `NgCompiler` can be reused for multiple compilations (for resource-only changes), and each
      * new compilation uses a fresh `PerfRecorder`. Thus, classes created with a lifespan of the
@@ -251,6 +253,11 @@ export declare class NgCompiler {
      * Collect i18n messages into the `Xi18nContext`.
      */
     xi18n(ctx: Xi18nContext): void;
+    /**
+     * Emits the JavaScript module that can be used to replace the metadata of a class during HMR.
+     * @param node Class for which to generate the update module.
+     */
+    emitHmrUpdateModule(node: DeclarationNode): string | null;
     private ensureAnalyzed;
     private analyzeSync;
     private resolveCompilation;

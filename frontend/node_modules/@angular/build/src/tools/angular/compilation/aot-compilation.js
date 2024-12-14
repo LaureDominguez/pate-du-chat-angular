@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AotCompilation = void 0;
 const node_assert_1 = __importDefault(require("node:assert"));
+const node_path_1 = require("node:path");
 const typescript_1 = __importDefault(require("typescript"));
 const profiling_1 = require("../../esbuild/profiling");
 const angular_host_1 = require("../angular-host");
@@ -47,8 +48,35 @@ class AotCompilation extends angular_compilation_1.AngularCompilation {
         // Load the compiler configuration and transform as needed
         const { options: originalCompilerOptions, rootNames, errors: configurationDiagnostics, } = await this.loadConfiguration(tsconfig);
         const compilerOptions = compilerOptionsTransformer?.(originalCompilerOptions) ?? originalCompilerOptions;
+        if (compilerOptions.externalRuntimeStyles) {
+            hostOptions.externalStylesheets ??= new Map();
+        }
+        // Reuse the package.json cache from the previous compilation
+        const packageJsonCache = this.#state?.compilerHost
+            .getModuleResolutionCache?.()
+            ?.getPackageJsonInfoCache();
+        const useHmr = compilerOptions['_enableHmr'];
+        let staleSourceFiles;
+        let clearPackageJsonCache = false;
+        if (hostOptions.modifiedFiles && this.#state) {
+            for (const modifiedFile of hostOptions.modifiedFiles) {
+                // Clear package.json cache if a node modules file was modified
+                if (!clearPackageJsonCache && modifiedFile.includes('node_modules')) {
+                    clearPackageJsonCache = true;
+                    packageJsonCache?.clear();
+                }
+                // Collect stale source files for HMR analysis of inline component resources
+                if (useHmr) {
+                    const sourceFile = this.#state.typeScriptProgram.getSourceFile(modifiedFile);
+                    if (sourceFile) {
+                        staleSourceFiles ??= new Map();
+                        staleSourceFiles.set(modifiedFile, sourceFile);
+                    }
+                }
+            }
+        }
         // Create Angular compiler host
-        const host = (0, angular_host_1.createAngularCompilerHost)(typescript_1.default, compilerOptions, hostOptions);
+        const host = (0, angular_host_1.createAngularCompilerHost)(typescript_1.default, compilerOptions, hostOptions, packageJsonCache);
         // Create the Angular specific program that contains the Angular compiler
         const angularProgram = (0, profiling_1.profileSync)('NG_CREATE_PROGRAM', () => new NgtscProgram(rootNames, compilerOptions, host, this.#state?.angularProgram));
         const angularCompiler = angularProgram.compiler;
@@ -62,6 +90,30 @@ class AotCompilation extends angular_compilation_1.AngularCompilation {
         }
         const typeScriptProgram = typescript_1.default.createEmitAndSemanticDiagnosticsBuilderProgram(angularTypeScriptProgram, host, oldProgram, configurationDiagnostics);
         await (0, profiling_1.profileAsync)('NG_ANALYZE_PROGRAM', () => angularCompiler.analyzeAsync());
+        let templateUpdates;
+        if (compilerOptions['_enableHmr'] && hostOptions.modifiedFiles && this.#state) {
+            const componentNodes = collectHmrCandidates(hostOptions.modifiedFiles, angularProgram, staleSourceFiles);
+            for (const node of componentNodes) {
+                if (!typescript_1.default.isClassDeclaration(node)) {
+                    continue;
+                }
+                const componentFilename = node.getSourceFile().fileName;
+                let relativePath = (0, node_path_1.relative)(host.getCurrentDirectory(), componentFilename);
+                if (relativePath.startsWith('..')) {
+                    relativePath = componentFilename;
+                }
+                relativePath = relativePath.replaceAll('\\', '/');
+                const updateId = encodeURIComponent(`${host.getCanonicalFileName(relativePath)}@${node.name?.text}`);
+                const updateText = angularCompiler.emitHmrUpdateModule(node);
+                if (updateText === null) {
+                    // Build is needed if a template cannot be updated
+                    templateUpdates = undefined;
+                    break;
+                }
+                templateUpdates ??= new Map();
+                templateUpdates.set(updateId, updateText);
+            }
+        }
         const affectedFiles = (0, profiling_1.profileSync)('NG_FIND_AFFECTED', () => findAffectedFiles(typeScriptProgram, angularCompiler, usingBuildInfo));
         // Get all files referenced in the TypeScript/Angular program including component resources
         const referencedFiles = typeScriptProgram
@@ -82,7 +134,13 @@ class AotCompilation extends angular_compilation_1.AngularCompilation {
             return [sourceFile.fileName, ...resourceDependencies];
         });
         this.#state = new AngularCompilationState(angularProgram, host, typeScriptProgram, affectedFiles, affectedFiles.size === 1 ? OptimizeFor.SingleFile : OptimizeFor.WholeProgram, (0, web_worker_transformer_1.createWorkerTransformer)(hostOptions.processWebWorker.bind(hostOptions)), this.#state?.diagnosticCache);
-        return { affectedFiles, compilerOptions, referencedFiles };
+        return {
+            affectedFiles,
+            compilerOptions,
+            referencedFiles,
+            externalStylesheets: hostOptions.externalStylesheets,
+            templateUpdates,
+        };
     }
     *collectDiagnostics(modes) {
         (0, node_assert_1.default)(this.#state, 'Angular compilation must be initialized prior to collecting diagnostics.');
@@ -258,4 +316,36 @@ function findAffectedFiles(builder, { ignoreForDiagnostics }, includeTTC) {
         }
     }
     return affectedFiles;
+}
+function collectHmrCandidates(modifiedFiles, { compiler }, staleSourceFiles) {
+    const candidates = new Set();
+    for (const file of modifiedFiles) {
+        const templateFileNodes = compiler.getComponentsWithTemplateFile(file);
+        if (templateFileNodes.size) {
+            templateFileNodes.forEach((node) => candidates.add(node));
+            continue;
+        }
+        const styleFileNodes = compiler.getComponentsWithStyleFile(file);
+        if (styleFileNodes.size) {
+            styleFileNodes.forEach((node) => candidates.add(node));
+            continue;
+        }
+        const staleSource = staleSourceFiles?.get(file);
+        if (staleSource === undefined) {
+            // Unknown file requires a rebuild so clear out the candidates and stop collecting
+            candidates.clear();
+            break;
+        }
+        const updatedSource = compiler.getCurrentProgram().getSourceFile(file);
+        if (updatedSource === undefined) {
+            // No longer existing program file requires a rebuild so clear out the candidates and stop collecting
+            candidates.clear();
+            break;
+        }
+        // Compare the stale and updated file for changes
+        // TODO: Implement -- for now assume a rebuild is needed
+        candidates.clear();
+        break;
+    }
+    return candidates;
 }

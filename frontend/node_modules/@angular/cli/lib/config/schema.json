@@ -409,7 +409,6 @@
                       "@angular-devkit/build-angular:prerender",
                       "@angular-devkit/build-angular:jest",
                       "@angular-devkit/build-angular:web-test-runner",
-                      "@angular-devkit/build-angular:protractor",
                       "@angular-devkit/build-angular:server",
                       "@angular-devkit/build-angular:ssr-dev-server"
                     ]
@@ -704,28 +703,6 @@
               "additionalProperties": false,
               "properties": {
                 "builder": {
-                  "const": "@angular-devkit/build-angular:protractor"
-                },
-                "defaultConfiguration": {
-                  "type": "string",
-                  "description": "A default named configuration to use when a target configuration is not provided."
-                },
-                "options": {
-                  "$ref": "#/definitions/AngularDevkitBuildAngularBuildersProtractorSchema"
-                },
-                "configurations": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "$ref": "#/definitions/AngularDevkitBuildAngularBuildersProtractorSchema"
-                  }
-                }
-              }
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "builder": {
                   "const": "@angular-devkit/build-angular:prerender"
                 },
                 "defaultConfiguration": {
@@ -929,6 +906,15 @@
           "description": "Creates an application with Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) enabled.",
           "type": "boolean",
           "default": false
+        },
+        "serverRouting": {
+          "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview).",
+          "type": "boolean"
+        },
+        "experimentalZoneless": {
+          "description": "Create an application that does not utilize zone.js.",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -1111,6 +1097,11 @@
           "type": "boolean",
           "default": false,
           "description": "The declaring NgModule exports this component."
+        },
+        "exportDefault": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use default export for the component instead of a named export."
         }
       }
     },
@@ -1651,6 +1642,15 @@
         "ssr": {
           "description": "Creates an application with Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) enabled.",
           "type": "boolean"
+        },
+        "serverRouting": {
+          "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview).",
+          "type": "boolean"
+        },
+        "experimentalZoneless": {
+          "description": "Create an application that does not utilize zone.js.",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -1798,7 +1798,18 @@
         },
         "server": {
           "type": "string",
-          "description": "The full path for the server entry point to the application, relative to the current workspace."
+          "description": "The full path for the server entry point to the application, relative to the current workspace.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "The full path for the server entry point to the application, relative to the current workspace."
+            },
+            {
+              "const": false,
+              "type": "boolean",
+              "description": "Indicates that a server entry point is not provided."
+            }
+          ]
         },
         "polyfills": {
           "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
@@ -1816,6 +1827,33 @@
         "deployUrl": {
           "type": "string",
           "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations."
+        },
+        "security": {
+          "description": "Security features to protect against XSS and other common attacks",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "autoCsp": {
+              "description": "Enables automatic generation of a hash-based Strict Content Security Policy (https://web.dev/articles/strict-csp#choose-hash) based on scripts in index.html. Will default to true once we are out of experimental/preview phases.",
+              "default": false,
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "unsafeEval": {
+                      "type": "boolean",
+                      "description": "Include the `unsafe-eval` directive (https://web.dev/articles/strict-csp#remove-eval) in the auto-CSP. Please only enable this if you are absolutely sure that you need to, as allowing calls to eval will weaken the XSS defenses provided by the auto-CSP.",
+                      "default": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          }
         },
         "scripts": {
           "description": "Global scripts to be included in the build.",
@@ -1908,6 +1946,34 @@
                 "type": "string"
               },
               "default": []
+            },
+            "sass": {
+              "description": "Options to pass to the sass preprocessor.",
+              "type": "object",
+              "properties": {
+                "fatalDeprecations": {
+                  "description": "A set of deprecations to treat as fatal. If a deprecation warning of any provided type is encountered during compilation, the compiler will error instead. If a Version is provided, then all deprecations that were active in that compiler version will be treated as fatal.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "silenceDeprecations": {
+                  "description": " A set of active deprecations to ignore. If a deprecation warning of any provided type is encountered during compilation, the compiler will ignore it instead.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "futureDeprecations": {
+                  "description": "A set of future deprecations to opt into early. Future deprecations passed here will be treated as active by the compiler, emitting warnings as necessary.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false
@@ -2284,7 +2350,6 @@
         },
         "prerender": {
           "description": "Prerender (SSG) pages of your application during build time.",
-          "default": false,
           "oneOf": [
             {
               "type": "boolean",
@@ -2321,6 +2386,14 @@
                 "entry": {
                   "type": "string",
                   "description": "The server entry-point that when executed will spawn the web server."
+                },
+                "experimentalPlatform": {
+                  "description": "Specifies the platform for which the server bundle is generated. This affects the APIs and modules available in the server-side code. \n\n- `node`:  (Default) Generates a bundle optimized for Node.js environments. \n- `neutral`: Generates a platform-neutral bundle suitable for environments like edge workers, and other serverless platforms. This option avoids using Node.js-specific APIs, making the bundle more portable. \n\nPlease note that this feature does not provide polyfills for Node.js modules. Additionally, it is experimental, and the schematics may undergo changes in future versions.",
+                  "default": "node",
+                  "enum": [
+                    "node",
+                    "neutral"
+                  ]
                 }
               },
               "additionalProperties": false
@@ -2329,8 +2402,15 @@
         },
         "appShell": {
           "type": "boolean",
-          "description": "Generates an application shell during build time.",
-          "default": false
+          "description": "Generates an application shell during build time."
+        },
+        "outputMode": {
+          "type": "string",
+          "description": "Defines the build output target. 'static': Generates a static site for deployment on any static hosting service. 'server': Produces an application designed for deployment on a server that supports server-side rendering (SSR).",
+          "enum": [
+            "static",
+            "server"
+          ]
         }
       },
       "additionalProperties": false,
@@ -3671,8 +3751,7 @@
         },
         "hmr": {
           "type": "boolean",
-          "description": "Enable hot module replacement.",
-          "default": false
+          "description": "Enable hot module replacement. Defaults to the value of 'liveReload'. Currently, only global and component stylesheets are supported."
         },
         "watch": {
           "type": "boolean",
@@ -3726,12 +3805,6 @@
       "description": "Dev Server target options for Build Facade.",
       "type": "object",
       "properties": {
-        "browserTarget": {
-          "type": "string",
-          "description": "A browser builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
-          "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-          "deprecated": true
-        },
         "buildTarget": {
           "type": "string",
           "description": "A build builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
@@ -3812,8 +3885,7 @@
         },
         "hmr": {
           "type": "boolean",
-          "description": "Enable hot module replacement.",
-          "default": false
+          "description": "Enable hot module replacement."
         },
         "watch": {
           "type": "boolean",
@@ -3864,11 +3936,7 @@
           ]
         }
       },
-      "additionalProperties": false,
-      "anyOf": [
-        {},
-        {}
-      ]
+      "additionalProperties": false
     },
     "AngularBuildBuildersExtractI18nSchema": {
       "title": "Extract i18n Target",
@@ -3917,12 +3985,6 @@
       "description": "Extract i18n target options for Build Facade.",
       "type": "object",
       "properties": {
-        "browserTarget": {
-          "type": "string",
-          "description": "A browser builder target to extract i18n messages in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
-          "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-          "deprecated": true
-        },
         "buildTarget": {
           "type": "string",
           "description": "A builder target to extract i18n messages in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
@@ -4230,6 +4292,16 @@
           "items": {
             "type": "string"
           }
+        },
+        "builderMode": {
+          "type": "string",
+          "description": "Determines how to build the code under test. If set to 'detect', attempts to follow the development builder.",
+          "enum": [
+            "detect",
+            "browser",
+            "application"
+          ],
+          "default": "browser"
         },
         "webWorkerTsConfig": {
           "type": "string",
@@ -4603,62 +4675,6 @@
           ]
         }
       }
-    },
-    "AngularDevkitBuildAngularBuildersProtractorSchema": {
-      "title": "Protractor Target",
-      "description": "Protractor target options for Build Facade.",
-      "type": "object",
-      "properties": {
-        "protractorConfig": {
-          "type": "string",
-          "description": "The name of the Protractor configuration file."
-        },
-        "devServerTarget": {
-          "type": "string",
-          "description": "A dev-server builder target to run tests against in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
-          "pattern": "^([^:\\s]+:[^:\\s]+(:[^\\s]+)?)?$"
-        },
-        "grep": {
-          "type": "string",
-          "description": "Execute specs whose names match the pattern, which is internally compiled to a RegExp."
-        },
-        "invertGrep": {
-          "type": "boolean",
-          "description": "Invert the selection specified by the 'grep' option.",
-          "default": false
-        },
-        "specs": {
-          "type": "array",
-          "description": "Override specs in the protractor config.",
-          "default": [],
-          "items": {
-            "type": "string",
-            "description": "Spec name."
-          }
-        },
-        "suite": {
-          "type": "string",
-          "description": "Override suite in the protractor config."
-        },
-        "webdriverUpdate": {
-          "type": "boolean",
-          "description": "Try to update webdriver.",
-          "default": true
-        },
-        "port": {
-          "type": "number",
-          "description": "The port to use to serve the application."
-        },
-        "host": {
-          "type": "string",
-          "description": "Host to listen on."
-        },
-        "baseUrl": {
-          "type": "string",
-          "description": "Base URL for protractor to connect to."
-        }
-      },
-      "additionalProperties": false
     },
     "AngularDevkitBuildAngularBuildersPrerenderSchema": {
       "title": "Prerender Target",

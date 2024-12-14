@@ -6,11 +6,10 @@ import { ProductsComponent } from '../products/products.component';
 import { Ingredient } from '../../services/ingredient.service';
 
 @Component({
-  selector: 'app-product-card',
-  standalone: true,
-  templateUrl: './product-card.component.html',
-  styleUrls: ['./product-card.component.scss'],
-  imports: [CommonModule, MatCardModule, ProductsComponent],
+    selector: 'app-product-card',
+    templateUrl: './product-card.component.html',
+    styleUrls: ['./product-card.component.scss'],
+    imports: [CommonModule, MatCardModule, ProductsComponent]
 })
 export class ProductCardComponent implements OnChanges {
   @Input() product!: Product;

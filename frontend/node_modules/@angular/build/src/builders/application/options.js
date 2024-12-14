@@ -10,7 +10,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.INDEX_HTML_SERVER = exports.INDEX_HTML_CSR = void 0;
 exports.normalizeOptions = normalizeOptions;
+exports.getLocaleBaseHref = getLocaleBaseHref;
 const node_fs_1 = require("node:fs");
 const promises_1 = require("node:fs/promises");
 const node_module_1 = require("node:module");
@@ -21,7 +23,18 @@ const environment_options_1 = require("../../utils/environment-options");
 const i18n_options_1 = require("../../utils/i18n-options");
 const normalize_cache_1 = require("../../utils/normalize-cache");
 const postcss_configuration_1 = require("../../utils/postcss-configuration");
+const url_1 = require("../../utils/url");
 const schema_1 = require("./schema");
+/**
+ * The filename for the client-side rendered HTML template.
+ * This template is used for client-side rendering (CSR) in a web application.
+ */
+exports.INDEX_HTML_CSR = 'index.csr.html';
+/**
+ * The filename for the server-side rendered HTML template.
+ * This template is used for server-side rendering (SSR) in a web application.
+ */
+exports.INDEX_HTML_SERVER = 'index.server.html';
 /**
  * Normalize the user provided options by creating full paths for all path based options
  * and converting multi-form options into a single form that can be directly used
@@ -90,6 +103,27 @@ async function normalizeOptions(context, projectName, options, extensions) {
             loaderExtensions[extension] = value;
         }
     }
+    // Validate prerender and ssr options when using the outputMode
+    if (options.outputMode === schema_1.OutputMode.Server) {
+        if (!options.server) {
+            throw new Error('The "server" option is required when "outputMode" is set to "server".');
+        }
+        if (typeof options.ssr === 'boolean' || !options.ssr?.entry) {
+            throw new Error('The "ssr.entry" option is required when "outputMode" is set to "server".');
+        }
+    }
+    if (options.outputMode) {
+        if (!options.server) {
+            options.ssr = false;
+        }
+        if (options.prerender !== undefined) {
+            context.logger.warn('The "prerender" option is not considered when "outputMode" is specified.');
+        }
+        options.prerender = !!options.server;
+        if (options.appShell !== undefined) {
+            context.logger.warn('The "appShell" option is not considered when "outputMode" is specified.');
+        }
+    }
     // A configuration file can exist in the project or workspace root
     const searchDirectories = await (0, postcss_configuration_1.generateSearchDirectories)([projectRoot, workspaceRoot]);
     const postcssConfiguration = await (0, postcss_configuration_1.loadPostcssConfiguration)(searchDirectories);
@@ -117,9 +151,10 @@ async function normalizeOptions(context, projectName, options, extensions) {
         ssrOptions = {};
     }
     else if (typeof options.ssr === 'object') {
-        const { entry } = options.ssr;
+        const { entry, experimentalPlatform = schema_1.ExperimentalPlatform.Node } = options.ssr;
         ssrOptions = {
             entry: entry && node_path_1.default.join(workspaceRoot, entry),
+            platform: experimentalPlatform,
         };
     }
     let appShellOptions;
@@ -138,7 +173,9 @@ async function normalizeOptions(context, projectName, options, extensions) {
         clean: options.deleteOutputPath ?? true,
         // For app-shell and SSG server files are not required by users.
         // Omit these when SSR is not enabled.
-        ignoreServer: ssrOptions === undefined || serverEntryPoint === undefined,
+        ignoreServer: ((ssrOptions === undefined || serverEntryPoint === undefined) &&
+            options.outputMode === undefined) ||
+            options.outputMode === schema_1.OutputMode.Static,
     };
     const outputNames = {
         bundles: options.outputHashing === schema_1.OutputHashing.All || options.outputHashing === schema_1.OutputHashing.Bundles
@@ -157,18 +194,25 @@ async function normalizeOptions(context, projectName, options, extensions) {
         let indexOutput;
         // The output file will be created within the configured output path
         if (typeof options.index === 'string') {
-            /**
-             * If SSR is activated, create a distinct entry file for the `index.html`.
-             * This is necessary because numerous server/cloud providers automatically serve the `index.html` as a static file
-             * if it exists (handling SSG).
-             * For instance, accessing `foo.com/` would lead to `foo.com/index.html` being served instead of hitting the server.
-             */
-            const indexBaseName = node_path_1.default.basename(options.index);
-            indexOutput = ssrOptions && indexBaseName === 'index.html' ? 'index.csr.html' : indexBaseName;
+            indexOutput = options.index;
         }
         else {
             indexOutput = options.index.output || 'index.html';
         }
+        /**
+         * If SSR is activated, create a distinct entry file for the `index.html`.
+         * This is necessary because numerous server/cloud providers automatically serve the `index.html` as a static file
+         * if it exists (handling SSG).
+         *
+         * For instance, accessing `foo.com/` would lead to `foo.com/index.html` being served instead of hitting the server.
+         *
+         * This approach can also be applied to service workers, where the `index.csr.html` is served instead of the prerendered `index.html`.
+         */
+        const indexBaseName = node_path_1.default.basename(indexOutput);
+        indexOutput =
+            (ssrOptions || prerenderOptions) && indexBaseName === 'index.html'
+                ? exports.INDEX_HTML_CSR
+                : indexBaseName;
         indexHtmlOptions = {
             input: node_path_1.default.join(workspaceRoot, typeof options.index === 'string' ? options.index : options.index.input),
             output: indexOutput,
@@ -193,7 +237,7 @@ async function normalizeOptions(context, projectName, options, extensions) {
         }
     }
     // Initial options to keep
-    const { allowedCommonJsDependencies, aot, baseHref, crossOrigin, externalDependencies, extractLicenses, inlineStyleLanguage = 'css', outExtension, serviceWorker, poll, polyfills, statsJson, stylePreprocessorOptions, subresourceIntegrity, verbose, watch, progress = true, externalPackages, namedChunks, budgets, deployUrl, clearScreen, define, } = options;
+    const { allowedCommonJsDependencies, aot = true, baseHref, crossOrigin, externalDependencies, extractLicenses, inlineStyleLanguage = 'css', outExtension, serviceWorker, poll, polyfills, statsJson, outputMode, stylePreprocessorOptions, subresourceIntegrity, verbose, watch, progress = true, externalPackages, namedChunks, budgets, deployUrl, clearScreen, define, partialSSRBuild = false, externalRuntimeStyles, instrumentForCoverage, security, } = options;
     // Return all the normalized options
     return {
         advancedOptimizations: !!aot && optimizationOptions.scripts,
@@ -216,6 +260,7 @@ async function normalizeOptions(context, projectName, options, extensions) {
         serverEntryPoint,
         prerenderOptions,
         appShellOptions,
+        outputMode,
         ssrOptions,
         verbose,
         watch,
@@ -248,6 +293,11 @@ async function normalizeOptions(context, projectName, options, extensions) {
         colors: (0, color_1.supportColor)(),
         clearScreen,
         define,
+        partialSSRBuild: environment_options_1.usePartialSsrBuild || partialSSRBuild,
+        externalRuntimeStyles: aot && externalRuntimeStyles,
+        instrumentForCoverage,
+        security,
+        templateUpdates: !!options.templateUpdates,
     };
 }
 async function getTailwindConfig(searchDirectories, workspaceRoot, context) {
@@ -299,6 +349,14 @@ function normalizeEntryPoints(workspaceRoot, browser, entryPoints = new Set()) {
     if (browser) {
         // Use `browser` alone.
         return { 'main': node_path_1.default.join(workspaceRoot, browser) };
+    }
+    else if (entryPoints instanceof Map) {
+        return Object.fromEntries(Array.from(entryPoints.entries(), ([name, entryPoint]) => {
+            // Get the full file path to a relative entry point input. Leave bare specifiers alone so they are resolved as modules.
+            const isRelativePath = entryPoint.startsWith('.');
+            const entryPointPath = isRelativePath ? node_path_1.default.join(workspaceRoot, entryPoint) : entryPoint;
+            return [name, entryPointPath];
+        }));
     }
     else {
         // Use `entryPoints` alone.
@@ -368,4 +426,13 @@ function normalizeGlobalEntries(rawEntries, defaultName) {
         existing.files.push(input);
     }
     return [...bundles.values()];
+}
+function getLocaleBaseHref(baseHref, i18n, locale) {
+    if (i18n.flatOutput) {
+        return undefined;
+    }
+    if (i18n.locales[locale] && i18n.locales[locale].baseHref !== '') {
+        return (0, url_1.urlJoin)(baseHref || '', i18n.locales[locale].baseHref ?? `/${locale}/`);
+    }
+    return undefined;
 }

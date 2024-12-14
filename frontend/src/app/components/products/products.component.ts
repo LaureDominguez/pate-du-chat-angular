@@ -12,17 +12,16 @@ import {
 } from '../../services/ingredient.service';
 
 @Component({
-  selector: 'app-products',
-  standalone: true,
-  templateUrl: './products.component.html',
-  styleUrls: ['./products.component.scss'],
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatGridListModule,
-    ProductCardComponent,
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-products',
+    templateUrl: './products.component.html',
+    styleUrls: ['./products.component.scss'],
+    imports: [
+        CommonModule,
+        MatCardModule,
+        MatGridListModule,
+        ProductCardComponent,
+    ],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products$: Observable<Product[]> = this.productService.getProducts();

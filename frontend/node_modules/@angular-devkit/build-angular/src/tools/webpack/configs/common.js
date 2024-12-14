@@ -62,7 +62,8 @@ async function getCommonConfig(wco) {
     // Load ESM `@angular/compiler-cli` using the TypeScript dynamic import workaround.
     // Once TypeScript provides support for keeping the dynamic import this workaround can be
     // changed to a direct dynamic import.
-    const { GLOBAL_DEFS_FOR_TERSER, GLOBAL_DEFS_FOR_TERSER_WITH_AOT, VERSION: NG_VERSION, } = await (0, load_esm_1.loadEsmModule)('@angular/compiler-cli');
+    const { VERSION: NG_VERSION } = await (0, load_esm_1.loadEsmModule)('@angular/compiler-cli');
+    const { GLOBAL_DEFS_FOR_TERSER, GLOBAL_DEFS_FOR_TERSER_WITH_AOT } = await (0, load_esm_1.loadEsmModule)('@angular/compiler-cli/private/tooling');
     // determine hashing format
     const hashFormat = (0, helpers_1.getOutputHashFormat)(buildOptions.outputHashing);
     if (buildOptions.progress) {
@@ -85,7 +86,8 @@ async function getCommonConfig(wco) {
     if (isPlatformServer) {
         // Fixes Critical dependency: the request of a dependency is an expression
         extraPlugins.push(new webpack_2.ContextReplacementPlugin(/@?hapi|express[\\/]/));
-        if ((0, helpers_1.isPlatformServerInstalled)(wco.root) && Array.isArray(entryPoints['main'])) {
+        if ((0, helpers_1.isPackageInstalled)(wco.root, '@angular/platform-server') &&
+            Array.isArray(entryPoints['main'])) {
             // This import must come before any imports (direct or transitive) that rely on DOM built-ins being
             // available, such as `@angular/elements`.
             entryPoints['main'].unshift('@angular/platform-server/init');
@@ -229,7 +231,10 @@ async function getCommonConfig(wco) {
     const extraMinimizers = [];
     if (scriptsOptimization) {
         extraMinimizers.push(new plugins_1.JavaScriptOptimizerPlugin({
-            define: buildOptions.aot ? GLOBAL_DEFS_FOR_TERSER_WITH_AOT : GLOBAL_DEFS_FOR_TERSER,
+            define: {
+                ...(buildOptions.aot ? GLOBAL_DEFS_FOR_TERSER_WITH_AOT : GLOBAL_DEFS_FOR_TERSER),
+                'ngServerMode': isPlatformServer,
+            },
             sourcemap: scriptsSourceMap,
             supportedBrowsers: buildOptions.supportedBrowsers,
             keepIdentifierNames: !environment_options_1.allowMangle || isPlatformServer,

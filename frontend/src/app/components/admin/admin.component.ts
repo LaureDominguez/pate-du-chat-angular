@@ -10,17 +10,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { IngredientFormComponent } from '../ingredient-form/ingredient-form.component';
 
 @Component({
-  selector: 'app-admin',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-  ],
-  templateUrl: './admin.component.html',
-  styleUrls: ['./admin.component.scss'],
+    selector: 'app-admin',
+    imports: [
+        CommonModule,
+        MatButtonModule,
+        MatTableModule,
+        MatPaginatorModule,
+        MatSortModule,
+    ],
+    templateUrl: './admin.component.html',
+    styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
   products = new MatTableDataSource<Product>([]);

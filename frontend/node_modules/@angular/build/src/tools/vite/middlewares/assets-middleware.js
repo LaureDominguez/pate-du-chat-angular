@@ -11,8 +11,8 @@ exports.createAngularAssetsMiddleware = createAngularAssetsMiddleware;
 const mrmime_1 = require("mrmime");
 const node_path_1 = require("node:path");
 const utils_1 = require("../utils");
-function createAngularAssetsMiddleware(server, assets, outputFiles) {
-    return function (req, res, next) {
+function createAngularAssetsMiddleware(server, assets, outputFiles, componentStyles, encapsulateStyle) {
+    return function angularAssetsMiddleware(req, res, next) {
         if (req.url === undefined || res.writableEnded) {
             return;
         }
@@ -58,13 +58,67 @@ function createAngularAssetsMiddleware(server, assets, outputFiles) {
         if (extension !== '.js' && extension !== '.html') {
             const outputFile = outputFiles.get(pathname);
             if (outputFile?.servable) {
+                let data = outputFile.contents;
+                const componentStyle = componentStyles.get(pathname);
+                if (componentStyle) {
+                    // Inject component ID for view encapsulation if requested
+                    const searchParams = new URL(req.url, 'http://localhost').searchParams;
+                    const componentId = searchParams.get('ngcomp');
+                    if (componentId !== null) {
+                        // Track if the component uses ShadowDOM encapsulation (3 = ViewEncapsulation.ShadowDom)
+                        // Shadow DOM components currently require a full reload.
+                        // Vite's CSS hot replacement does not support shadow root searching.
+                        if (searchParams.get('e') === '3') {
+                            componentStyle.reload = true;
+                        }
+                        // Record the component style usage for HMR updates
+                        if (componentStyle.used === undefined) {
+                            componentStyle.used = new Set([componentId]);
+                        }
+                        else {
+                            componentStyle.used.add(componentId);
+                        }
+                        // Report if there are no changes to avoid reprocessing
+                        const etag = `W/"${outputFile.contents.byteLength}-${outputFile.hash}-${componentId}"`;
+                        if (req.headers['if-none-match'] === etag) {
+                            res.statusCode = 304;
+                            res.end();
+                            return;
+                        }
+                        // Shim the stylesheet if a component ID is provided
+                        if (componentId.length > 0) {
+                            // Validate component ID
+                            if (!/^[_.\-\p{Letter}\d]+-c\d+$/u.test(componentId)) {
+                                const message = 'Invalid component stylesheet ID request: ' + componentId;
+                                // eslint-disable-next-line no-console
+                                console.error(message);
+                                res.statusCode = 400;
+                                res.end(message);
+                                return;
+                            }
+                            data = encapsulateStyle(data, componentId);
+                        }
+                        res.setHeader('Content-Type', 'text/css');
+                        res.setHeader('Cache-Control', 'no-cache');
+                        res.setHeader('ETag', etag);
+                        res.end(data);
+                        return;
+                    }
+                }
+                // Avoid resending the content if it has not changed since last request
+                const etag = `W/"${outputFile.contents.byteLength}-${outputFile.hash}"`;
+                if (req.headers['if-none-match'] === etag) {
+                    res.statusCode = 304;
+                    res.end();
+                    return;
+                }
                 const mimeType = (0, mrmime_1.lookup)(extension);
                 if (mimeType) {
                     res.setHeader('Content-Type', mimeType);
                 }
                 res.setHeader('Cache-Control', 'no-cache');
-                (0, utils_1.appendServerConfiguredHeaders)(server, res);
-                res.end(outputFile.contents);
+                res.setHeader('ETag', etag);
+                res.end(data);
                 return;
             }
         }

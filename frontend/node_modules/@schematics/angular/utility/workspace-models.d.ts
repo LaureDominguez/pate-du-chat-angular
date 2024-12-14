@@ -28,7 +28,7 @@ export declare enum Builders {
     NgPackagr = "@angular-devkit/build-angular:ng-packagr",
     DevServer = "@angular-devkit/build-angular:dev-server",
     ExtractI18n = "@angular-devkit/build-angular:extract-i18n",
-    Protractor = "@angular-devkit/build-angular:protractor",
+    Protractor = "@angular-devkit/build-angular:private-protractor",
     BuildApplication = "@angular/build:application"
 }
 export interface FileReplacements {
@@ -67,11 +67,7 @@ export interface BrowserBuilderOptions extends BrowserBuilderBaseOptions {
     webWorkerTsConfig?: string;
 }
 export interface ServeBuilderOptions {
-    /**
-     * @deprecated not used since version 17.0.0. Use the property "buildTarget" instead.
-     */
-    browserTarget: string;
-    buildTarget?: string;
+    buildTarget: string;
 }
 export interface LibraryBuilderOptions {
     tsConfig: string;

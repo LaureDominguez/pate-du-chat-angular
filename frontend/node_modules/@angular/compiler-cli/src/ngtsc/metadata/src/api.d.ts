@@ -21,6 +21,11 @@ export interface NgModuleMeta {
     exports: Reference<ClassDeclaration>[];
     schemas: SchemaMetadata[];
     /**
+     * Whether the module had some issue being analyzed.
+     * This means it likely does not have complete and reliable metadata.
+     */
+    isPoisoned: boolean;
+    /**
      * The raw `ts.Expression` which gave rise to `declarations`, if one exists.
      *
      * If this is `null`, then either no declarations exist, or no expression was available (likely
@@ -206,6 +211,10 @@ export interface DirectiveMeta extends T2DirectiveMeta, DirectiveTypeCheckMeta {
      * For standalone components, the list of imported types.
      */
     imports: Reference<ClassDeclaration>[] | null;
+    /**
+     * Node declaring the `imports` of a standalone component. Used to produce diagnostics.
+     */
+    rawImports: ts.Expression | null;
     /**
      * For standalone components, the list of imported types that can be used
      * in `@defer` blocks (when only explicit dependencies are allowed).

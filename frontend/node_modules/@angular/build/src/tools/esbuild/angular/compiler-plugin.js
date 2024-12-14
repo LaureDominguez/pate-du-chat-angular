@@ -35,6 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createCompilerPlugin = createCompilerPlugin;
 const node_assert_1 = __importDefault(require("node:assert"));
+const node_crypto_1 = require("node:crypto");
 const path = __importStar(require("node:path"));
 const environment_options_1 = require("../../../utils/environment-options");
 const compilation_1 = require("../../angular/compilation");
@@ -42,11 +43,10 @@ const javascript_transformer_1 = require("../javascript-transformer");
 const load_result_cache_1 = require("../load-result-cache");
 const profiling_1 = require("../profiling");
 const compilation_state_1 = require("./compilation-state");
-const component_stylesheets_1 = require("./component-stylesheets");
 const file_reference_tracker_1 = require("./file-reference-tracker");
 const jit_plugin_callbacks_1 = require("./jit-plugin-callbacks");
 // eslint-disable-next-line max-lines-per-function
-function createCompilerPlugin(pluginOptions, styleOptions) {
+function createCompilerPlugin(pluginOptions, stylesheetBundler) {
     return {
         name: 'angular-compiler',
         // eslint-disable-next-line max-lines-per-function
@@ -100,8 +100,6 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
             let shouldTsIgnoreJs = true;
             // Determines if transpilation should be handle by TypeScript or esbuild
             let useTypeScriptTranspilation = true;
-            // Track incremental component stylesheet builds
-            const stylesheetBundler = new component_stylesheets_1.ComponentStylesheetBundler(styleOptions, pluginOptions.incremental);
             let sharedTSCompilationState;
             // To fully invalidate files, track resource referenced files and their referencing source
             const referencedFileTracker = new file_reference_tracker_1.FileReferenceTracker();
@@ -121,12 +119,17 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                 // dependencies or web worker processing.
                 let modifiedFiles;
                 if (pluginOptions.sourceFileCache?.modifiedFiles.size &&
-                    referencedFileTracker &&
                     !pluginOptions.noopTypeScriptCompilation) {
                     // TODO: Differentiate between changed input files and stale output files
                     modifiedFiles = referencedFileTracker.update(pluginOptions.sourceFileCache.modifiedFiles);
                     pluginOptions.sourceFileCache.invalidate(modifiedFiles);
-                    stylesheetBundler.invalidate(modifiedFiles);
+                    // External runtime styles are invalidated and rebuilt at the beginning of a rebuild to avoid
+                    // the need to execute the application bundler for component style only changes.
+                    if (!pluginOptions.externalRuntimeStyles) {
+                        stylesheetBundler.invalidate(modifiedFiles);
+                    }
+                    // Remove any stale additional results based on modified files
+                    modifiedFiles.forEach((file) => additionalResults.delete(file));
                 }
                 if (!pluginOptions.noopTypeScriptCompilation &&
                     compilation.update &&
@@ -138,21 +141,41 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                     fileReplacements: pluginOptions.fileReplacements,
                     modifiedFiles,
                     sourceFileCache: pluginOptions.sourceFileCache,
-                    async transformStylesheet(data, containingFile, stylesheetFile) {
+                    async transformStylesheet(data, containingFile, stylesheetFile, order, className) {
                         let stylesheetResult;
+                        let resultSource = stylesheetFile ?? containingFile;
                         // Stylesheet file only exists for external stylesheets
                         if (stylesheetFile) {
                             stylesheetResult = await stylesheetBundler.bundleFile(stylesheetFile);
                         }
                         else {
-                            stylesheetResult = await stylesheetBundler.bundleInline(data, containingFile, styleOptions.inlineStyleLanguage);
+                            stylesheetResult = await stylesheetBundler.bundleInline(data, containingFile, 
+                            // Inline stylesheets from a template style element are always CSS; Otherwise, use default.
+                            containingFile.endsWith('.html') ? 'css' : undefined, 
+                            // When external runtime styles are enabled, an identifier for the style that does not change
+                            // based on the content is required to avoid emitted JS code changes. Any JS code changes will
+                            // invalid the output and force a full page reload for HMR cases. The containing file and order
+                            // of the style within the containing file is used.
+                            pluginOptions.externalRuntimeStyles
+                                ? (0, node_crypto_1.createHash)('sha256')
+                                    .update(containingFile)
+                                    .update((order ?? 0).toString())
+                                    .update(className ?? '')
+                                    .digest('hex')
+                                : undefined);
+                            // Adjust result source for inline styles.
+                            // There may be multiple inline styles with the same containing file and to ensure that the results
+                            // do not overwrite each other the result source identifier needs to be unique for each. The class
+                            // name and order fields can be used for this. The structure is arbitrary as long as it is unique.
+                            resultSource += `?class=${className}&order=${order}`;
                         }
-                        const { contents, outputFiles, metafile, referencedFiles, errors, warnings } = stylesheetResult;
-                        if (errors) {
-                            (result.errors ??= []).push(...errors);
+                        (result.warnings ??= []).push(...stylesheetResult.warnings);
+                        if (stylesheetResult.errors) {
+                            (result.errors ??= []).push(...stylesheetResult.errors);
+                            return '';
                         }
-                        (result.warnings ??= []).push(...warnings);
-                        additionalResults.set(stylesheetFile ?? containingFile, {
+                        const { contents, outputFiles, metafile, referencedFiles } = stylesheetResult;
+                        additionalResults.set(resultSource, {
                             outputFiles,
                             metafile,
                         });
@@ -199,8 +222,9 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                 // Initialize the Angular compilation for the current build.
                 // In watch mode, previous build state will be reused.
                 let referencedFiles;
+                let externalStylesheets;
                 try {
-                    const initializationResult = await compilation.initialize(pluginOptions.tsconfig, hostOptions, createCompilerOptionsTransformer(setupWarnings, pluginOptions, preserveSymlinks));
+                    const initializationResult = await compilation.initialize(pluginOptions.tsconfig, hostOptions, createCompilerOptionsTransformer(setupWarnings, pluginOptions, preserveSymlinks, build.initialOptions.conditions));
                     shouldTsIgnoreJs = !initializationResult.compilerOptions.allowJs;
                     // Isolated modules option ensures safe non-TypeScript transpilation.
                     // Typescript printing support for sourcemaps is not yet integrated.
@@ -209,6 +233,11 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                             !!initializationResult.compilerOptions.sourceMap ||
                             !!initializationResult.compilerOptions.inlineSourceMap;
                     referencedFiles = initializationResult.referencedFiles;
+                    externalStylesheets = initializationResult.externalStylesheets;
+                    if (initializationResult.templateUpdates) {
+                        // Propagate any template updates
+                        initializationResult.templateUpdates.forEach((value, key) => pluginOptions.templateUpdates?.set(key, value));
+                    }
                 }
                 catch (error) {
                     (result.errors ??= []).push({
@@ -228,6 +257,12 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                 if (compilation instanceof compilation_1.NoopCompilation) {
                     hasCompilationErrors = await sharedTSCompilationState.waitUntilReady;
                     return result;
+                }
+                if (externalStylesheets) {
+                    // Process any new external stylesheets
+                    for (const [stylesheetFile, externalId] of externalStylesheets) {
+                        await bundleExternalStylesheet(stylesheetBundler, stylesheetFile, externalId, result, additionalResults);
+                    }
                 }
                 // Update TypeScript file output cache for all affected files
                 try {
@@ -310,7 +345,8 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                     // A string indicates untransformed output from the TS/NG compiler.
                     // This step is unneeded when using esbuild transpilation.
                     const sideEffects = await hasSideEffects(request);
-                    contents = await javascriptTransformer.transformData(request, contents, true /* skipLinker */, sideEffects);
+                    const instrumentForCoverage = pluginOptions.instrumentForCoverage?.(request);
+                    contents = await javascriptTransformer.transformData(request, contents, true /* skipLinker */, sideEffects, instrumentForCoverage);
                     // Store as the returned Uint8Array to allow caching the fully transformed code
                     typeScriptFileCache.set(request, contents);
                 }
@@ -350,9 +386,25 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
                     };
                 }, true);
             }));
+            // Add a load handler if there are file replacement option entries for JSON files
+            if (pluginOptions.fileReplacements &&
+                Object.keys(pluginOptions.fileReplacements).some((value) => value.endsWith('.json'))) {
+                build.onLoad({ filter: /\.json$/ }, (0, load_result_cache_1.createCachedLoad)(pluginOptions.loadResultCache, async (args) => {
+                    const replacement = pluginOptions.fileReplacements?.[path.normalize(args.path)];
+                    if (replacement) {
+                        return {
+                            contents: await Promise.resolve().then(() => __importStar(require('fs/promises'))).then(({ readFile }) => readFile(path.normalize(replacement))),
+                            loader: 'json',
+                            watchFiles: [replacement],
+                        };
+                    }
+                    // If no replacement defined, let esbuild handle it directly
+                    return null;
+                }));
+            }
             // Setup bundling of component templates and stylesheets when in JIT mode
             if (pluginOptions.jit) {
-                (0, jit_plugin_callbacks_1.setupJitPluginCallbacks)(build, stylesheetBundler, additionalResults, styleOptions.inlineStyleLanguage, pluginOptions.loadResultCache);
+                (0, jit_plugin_callbacks_1.setupJitPluginCallbacks)(build, stylesheetBundler, additionalResults, pluginOptions.loadResultCache);
             }
             build.onEnd((result) => {
                 // Ensure other compilations are unblocked if the main compilation throws during start
@@ -375,7 +427,6 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
             });
             build.onDispose(() => {
                 sharedTSCompilationState?.dispose();
-                void stylesheetBundler.dispose();
                 void compilation.close?.();
                 void cacheStore?.close();
             });
@@ -395,7 +446,26 @@ function createCompilerPlugin(pluginOptions, styleOptions) {
         },
     };
 }
-function createCompilerOptionsTransformer(setupWarnings, pluginOptions, preserveSymlinks) {
+async function bundleExternalStylesheet(stylesheetBundler, stylesheetFile, externalId, result, additionalResults) {
+    const styleResult = await stylesheetBundler.bundleFile(stylesheetFile, externalId);
+    (result.warnings ??= []).push(...styleResult.warnings);
+    if (styleResult.errors) {
+        (result.errors ??= []).push(...styleResult.errors);
+    }
+    else {
+        const { outputFiles, metafile } = styleResult;
+        // Clear inputs to prevent triggering a rebuild of the application code for component
+        // stylesheet file only changes when the dev server enables the internal-only external
+        // stylesheet option. This does not affect builds since only the dev server can enable
+        // the internal option.
+        metafile.inputs = {};
+        additionalResults.set(stylesheetFile, {
+            outputFiles,
+            metafile,
+        });
+    }
+}
+function createCompilerOptionsTransformer(setupWarnings, pluginOptions, preserveSymlinks, customConditions) {
     return (compilerOptions) => {
         // target of 9 is ES2022 (using the number avoids an expensive import of typescript just for an enum)
         if (compilerOptions.target === undefined || compilerOptions.target < 9 /** ES2022 */) {
@@ -443,6 +513,11 @@ function createCompilerOptionsTransformer(setupWarnings, pluginOptions, preserve
                 notes: [{ text: `The 'module' option will be set to 'ES2022' instead.` }],
             });
         }
+        // Synchronize custom resolve conditions.
+        // Set if using the supported bundler resolution mode (bundler is the default in new projects)
+        if (compilerOptions.moduleResolution === 100 /* ModuleResolutionKind.Bundler */) {
+            compilerOptions.customConditions = customConditions;
+        }
         return {
             ...compilerOptions,
             noEmitOnError: false,
@@ -452,6 +527,8 @@ function createCompilerOptionsTransformer(setupWarnings, pluginOptions, preserve
             mapRoot: undefined,
             sourceRoot: undefined,
             preserveSymlinks,
+            externalRuntimeStyles: pluginOptions.externalRuntimeStyles,
+            _enableHmr: !!pluginOptions.templateUpdates,
         };
     };
 }

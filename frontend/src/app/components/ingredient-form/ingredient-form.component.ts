@@ -7,17 +7,16 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
-  selector: 'app-ingredient-form',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatInputModule,
-    MatCheckboxModule,
-  ],
-  templateUrl: './ingredient-form.component.html',
-  styleUrls: ['./ingredient-form.component.scss']
+    selector: 'app-ingredient-form',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatInputModule,
+        MatCheckboxModule,
+    ],
+    templateUrl: './ingredient-form.component.html',
+    styleUrls: ['./ingredient-form.component.scss']
 })
 export class IngredientFormComponent {
   ingredientForm: FormGroup;

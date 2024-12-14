@@ -12,8 +12,10 @@ const promises_1 = require("node:fs/promises");
 const node_path_1 = require("node:path");
 const add_event_dispatch_contract_1 = require("./add-event-dispatch-contract");
 const augment_index_html_1 = require("./augment-index-html");
+const auto_csp_1 = require("./auto-csp");
 const inline_critical_css_1 = require("./inline-critical-css");
 const inline_fonts_1 = require("./inline-fonts");
+const ngcm_attribute_1 = require("./ngcm-attribute");
 const nonce_1 = require("./nonce");
 class IndexHtmlGenerator {
     options;
@@ -35,7 +37,15 @@ class IndexHtmlGenerator {
         this.csrPlugins.push(addNoncePlugin());
         // SSR plugins
         if (options.generateDedicatedSSRContent) {
+            this.csrPlugins.push(addNgcmAttributePlugin());
             this.ssrPlugins.push(addEventDispatchContractPlugin(), addNoncePlugin());
+        }
+        // Auto-CSP (as the last step)
+        if (options.autoCsp) {
+            if (options.generateDedicatedSSRContent) {
+                throw new Error('Cannot set both SSR and auto-CSP at the same time.');
+            }
+            this.csrPlugins.push(autoCspPlugin(options.autoCsp.unsafeEval));
         }
     }
     async process(options) {
@@ -128,9 +138,15 @@ function inlineCriticalCssPlugin(generator) {
 function addNoncePlugin() {
     return (html) => (0, nonce_1.addNonce)(html);
 }
+function autoCspPlugin(unsafeEval) {
+    return (html) => (0, auto_csp_1.autoCsp)(html, unsafeEval);
+}
 function postTransformPlugin({ options }) {
     return async (html) => (options.postTransform ? options.postTransform(html) : html);
 }
 function addEventDispatchContractPlugin() {
     return (html) => (0, add_event_dispatch_contract_1.addEventDispatchContract)(html);
+}
+function addNgcmAttributePlugin() {
+    return (html) => (0, ngcm_attribute_1.addNgcmAttribute)(html);
 }

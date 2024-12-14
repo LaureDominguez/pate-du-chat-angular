@@ -11,21 +11,20 @@ import { filter, map, shareReplay } from 'rxjs/operators';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-nav',
-  standalone: true,
-  templateUrl: './nav.component.html',
-  styleUrls: ['./nav.component.scss'],
-  imports: [
-    MatToolbarModule,
-    MatButtonModule,
-    MatSidenavModule,
-    MatListModule,
-    MatIconModule,
-    AsyncPipe,
-    CommonModule,
-    RouterLink,
-    RouterOutlet,
-  ],
+    selector: 'app-nav',
+    templateUrl: './nav.component.html',
+    styleUrls: ['./nav.component.scss'],
+    imports: [
+        MatToolbarModule,
+        MatButtonModule,
+        MatSidenavModule,
+        MatListModule,
+        MatIconModule,
+        AsyncPipe,
+        CommonModule,
+        RouterLink,
+        RouterOutlet,
+    ]
 })
 export class NavComponent {
   private breakpointObserver = inject(BreakpointObserver);

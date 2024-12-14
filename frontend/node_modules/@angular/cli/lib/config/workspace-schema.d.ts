@@ -105,6 +105,10 @@ export interface SchematicOptions {
  */
 export interface AngularApplicationOptionsSchema {
     /**
+     * Create an application that does not utilize zone.js.
+     */
+    experimentalZoneless?: boolean;
+    /**
      * Include styles inline in the root component.ts file. Only CSS styles can be included
      * inline. Default is false, meaning that an external styles file is created and referenced
      * in the root component.ts file.
@@ -136,6 +140,11 @@ export interface AngularApplicationOptionsSchema {
      * Creates an application with routing enabled.
      */
     routing?: boolean;
+    /**
+     * Creates a server application using the Server Routing and App Engine APIs (Developer
+     * Preview).
+     */
+    serverRouting?: boolean;
     /**
      * Skip installing dependency packages.
      */
@@ -232,6 +241,10 @@ export interface AngularComponentOptionsSchema {
      * The declaring NgModule exports this component.
      */
     export?: boolean;
+    /**
+     * Use default export for the component instead of a named export.
+     */
+    exportDefault?: boolean;
     /**
      * Create the new files at the top level of the current project.
      */
@@ -542,6 +555,10 @@ export interface AngularNgNewOptionsSchema {
      */
     directory?: string;
     /**
+     * Create an application that does not utilize zone.js.
+     */
+    experimentalZoneless?: boolean;
+    /**
      * Include styles inline in the component TS file. By default, an external styles file is
      * created and referenced in the component TypeScript file.
      */
@@ -575,6 +592,11 @@ export interface AngularNgNewOptionsSchema {
      * Enable routing in the initial project.
      */
     routing?: boolean;
+    /**
+     * Creates a server application using the Server Routing and App Engine APIs (Developer
+     * Preview).
+     */
+    serverRouting?: boolean;
     /**
      * Do not initialize a git repository.
      */

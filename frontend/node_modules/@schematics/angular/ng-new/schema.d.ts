@@ -17,6 +17,10 @@ export interface Schema {
      */
     directory?: string;
     /**
+     * Create an application that does not utilize zone.js.
+     */
+    experimentalZoneless?: boolean;
+    /**
      * Include styles inline in the component TS file. By default, an external styles file is
      * created and referenced in the component TypeScript file.
      */
@@ -50,6 +54,11 @@ export interface Schema {
      * Enable routing in the initial project.
      */
     routing?: boolean;
+    /**
+     * Creates a server application using the Server Routing and App Engine APIs (Developer
+     * Preview).
+     */
+    serverRouting?: boolean;
     /**
      * Do not initialize a git repository.
      */
