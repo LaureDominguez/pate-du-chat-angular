@@ -2,7 +2,8 @@
 @use './assets/themes/m3-theme';
 
 
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 
 $theme: m3-theme.$light-theme;
 // @media (prefers-color-scheme: dark) {
@@ -12,7 +13,8 @@ $theme: m3-theme.$light-theme;
 
 
 html, body {
-    @include mat.core-theme($theme);
+    @include mat.elevation-classes();
+    @include mat.app-background();
     @include mat.all-component-themes($theme);
     @include mat.all-component-typographies($theme);
     background-color: var(--surface);
