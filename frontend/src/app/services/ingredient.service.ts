@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Ingredient {
-  _id: string;
+  _id?: string;
   name: string;
   supplier: string;
   allergens: string[];
   vegan: boolean;
   vegeta: boolean;
+  imageUrl?: string;
 }
 
 @Injectable({
@@ -26,5 +27,19 @@ export class IngredientService {
   getIngredientById(id: string): Observable<Ingredient> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.get<Ingredient>(url);
+  }
+
+  createIngredient(ingredient: Ingredient): Observable<Ingredient> {
+    return this.http.post<Ingredient>(this.apiUrl, ingredient);
+  }
+  
+  updateIngredient(id: string, ingredient: Ingredient): Observable<Ingredient> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.put<Ingredient>(url, ingredient);
+  }
+
+  deleteIngredient(id: string): Observable<any> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.delete(url);
   }
 }

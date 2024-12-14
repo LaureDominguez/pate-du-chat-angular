@@ -8,6 +8,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { registerLocaleData } from '@angular/common';
 import { LOCALE_ID } from '@angular/core';
 import localeFr from '@angular/common/locales/fr';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 
 registerLocaleData(localeFr, 'fr');
@@ -19,12 +23,16 @@ registerLocaleData(localeFr, 'fr');
     BrowserModule,
     BrowserAnimationsModule,
     RouterModule.forRoot(APP_ROUTES),
+    MatDialogModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatCheckboxModule,
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'fr' },
     { provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' },
     provideHttpClient(withFetch()),
-    provideRouter(APP_ROUTES)
+    provideRouter(APP_ROUTES),
   ],
   bootstrap: [AppComponent],
 })

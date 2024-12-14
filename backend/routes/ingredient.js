@@ -4,7 +4,7 @@ const Ingredient = require('../models/ingredient');
 
 // Ajouter un ingredient
 router.post('/', async (req, res) => {
-	const { name, supplier, allergens, vegan, vegeta } = req.body;
+	const { name, supplier, allergens, vegan, vegeta, imageUrl } = req.body;
 	try {
 		const newIngredient = new Ingredient({
 			name,
@@ -12,6 +12,7 @@ router.post('/', async (req, res) => {
 			allergens,
 			vegan,
 			vegeta,
+			imageUrl,
 		});
 		const ingredient = await newIngredient.save();
 		res.json(ingredient);
@@ -51,5 +52,28 @@ router.get('/:id', async (req, res) => {
 		res.status(500).send('Server error');
 	}
 });
+
+// Modifier un ingredient
+router.put('/:id', async (req, res) => {
+	const { name, supplier, allergens, vegan, vegeta, imageUrl } = req.body;
+	try {
+		const ingredient = await Ingredient.findByIdAndUpdate(
+		req.params.id,
+		{ name, supplier, allergens, vegan, vegeta, imageUrl },
+		{ new: true }
+		);
+		if (!ingredient) {
+		return res.status(404).json({ msg: 'Ingrédient inconnu' });
+		}
+		res.json(ingredient);
+	} catch (error) {
+		console.error(error.message);
+		if (error.kind === 'ObjectId') {
+		return res.status(404).json({ msg: 'Ingrédient non trouvé' });
+		}
+		res.status(500).send('Server error');
+	}
+});
+
 
 module.exports = router;

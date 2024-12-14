@@ -11,12 +11,12 @@ const IngredientSchema = new mongoose.Schema({
 	},
 	supplier: {
 		type: String,
-		required: true,
+		required: false,
 	},
 	allergens: [
 		{
 			type: String,
-			required: true,
+			required: false,
 		},
 	],
 	vegan: {
