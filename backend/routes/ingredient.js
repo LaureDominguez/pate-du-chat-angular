@@ -75,5 +75,24 @@ router.put('/:id', async (req, res) => {
 	}
 });
 
+// Supprimer un ingredient
+router.delete('/:id', async (req, res) => {
+	console.log('ID reçu pour suppression :', req.params.id); // Log de l'ID
+	try {
+		const ingredient = await Ingredient.findByIdAndDelete(req.params.id);
+		if (!ingredient) {
+			return res.status(404).json({ msg: 'Ingrédient inconnu' });
+		}
+		await ingredient.remove();
+		res.json({ msg: 'Ingrédient supprimé' });
+	} catch (error) {
+		console.error(error.message);
+		if (error.kind === 'ObjectId') {
+			return res.status(404).json({ msg: 'Ingrédient non trouvé' });
+		}
+		res.status(500).send('Erreur serveur');
+	}
+});
+
 
 module.exports = router;

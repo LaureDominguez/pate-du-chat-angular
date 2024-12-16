@@ -8,6 +8,7 @@ import { Product, ProductService } from '../../services/product.service';
 import { Ingredient, IngredientService } from '../../services/ingredient.service';
 import { MatDialog } from '@angular/material/dialog';
 import { IngredientFormComponent } from '../ingredient-form/ingredient-form.component';
+import { response } from 'express';
 
 @Component({
     selector: 'app-admin',
@@ -140,7 +141,13 @@ export class AdminComponent implements OnInit {
   }
 
   deleteIngredient(ingredient: Ingredient): void {
-    // Logique pour supprimer un ingrédient
-    console.log("Suppression de l'ingrédient :", ingredient);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer cet ingrédient : "${ingredient.name}" ?`)) {
+      this.ingredientService
+        .deleteIngredient(ingredient._id!)
+        .subscribe(() => {
+          this.fetchIngredients();
+        })
+      console.log("Suppression de l'ingrédient : ", ingredient);
+    }
   }
 }

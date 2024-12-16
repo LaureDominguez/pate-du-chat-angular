@@ -38,8 +38,8 @@ export class IngredientService {
     return this.http.put<Ingredient>(url, ingredient);
   }
 
-  deleteIngredient(id: string): Observable<any> {
+  deleteIngredient(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
-    return this.http.delete(url);
+    return this.http.delete<{ message: string }>(url);
   }
 }
