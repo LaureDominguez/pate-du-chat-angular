@@ -8,19 +8,20 @@ import { Product, ProductService } from '../../services/product.service';
 import { Ingredient, IngredientService } from '../../services/ingredient.service';
 import { MatDialog } from '@angular/material/dialog';
 import { IngredientFormComponent } from '../ingredient-form/ingredient-form.component';
-import { response } from 'express';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-    selector: 'app-admin',
-    imports: [
-        CommonModule,
-        MatButtonModule,
-        MatTableModule,
-        MatPaginatorModule,
-        MatSortModule,
-    ],
-    templateUrl: './admin.component.html',
-    styleUrls: ['./admin.component.scss']
+  selector: 'app-admin',
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatIconModule,
+  ],
+  templateUrl: './admin.component.html',
+  styleUrls: ['./admin.component.scss'],
 })
 export class AdminComponent implements OnInit {
   products = new MatTableDataSource<Product>([]);
@@ -123,12 +124,10 @@ export class AdminComponent implements OnInit {
   }
 
   addIngredient(ingredient: Ingredient): void {
-    this.ingredientService
-      .createIngredient(ingredient)
-      .subscribe(() => {
-        this.fetchIngredients();
-      });
-    console.log("Ajout du nouvel ingrédient : ", ingredient);
+    this.ingredientService.createIngredient(ingredient).subscribe(() => {
+      this.fetchIngredients();
+    });
+    console.log('Ajout du nouvel ingrédient : ', ingredient);
   }
 
   updateIngredient(id: string, updateIngredient: Ingredient): void {
@@ -141,12 +140,14 @@ export class AdminComponent implements OnInit {
   }
 
   deleteIngredient(ingredient: Ingredient): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer cet ingrédient : "${ingredient.name}" ?`)) {
-      this.ingredientService
-        .deleteIngredient(ingredient._id!)
-        .subscribe(() => {
-          this.fetchIngredients();
-        })
+    if (
+      confirm(
+        `Êtes-vous sûr de vouloir supprimer cet ingrédient : "${ingredient.name}" ?`
+      )
+    ) {
+      this.ingredientService.deleteIngredient(ingredient._id!).subscribe(() => {
+        this.fetchIngredients();
+      });
       console.log("Suppression de l'ingrédient : ", ingredient);
     }
   }
