@@ -1,14 +1,20 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { Product, ProductService } from '../../services/product.service';
-import { Ingredient, IngredientService } from '../../services/ingredient.service';
+import {
+  Ingredient,
+  IngredientService,
+} from '../../services/ingredient.service';
 import { MatDialog } from '@angular/material/dialog';
-import { IngredientFormComponent } from '../ingredient-form/ingredient-form.component';
+import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
 import { MatIconModule } from '@angular/material/icon';
+import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+import { ProductFormComponent } from './product-form/product-form.component';
+import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-admin',
@@ -19,6 +25,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
+
+    MatChipsModule,
   ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
@@ -81,12 +89,29 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  addProduct(): void {
+  openProductForm(product: Product | null): void {
+    const dialogRef = this.dialog.open(ProductFormComponent, {
+      width: '400px',
+      data: { product },
+    });
+
+    dialogRef.afterClosed().subscribe((result: Product | null) => {
+      if (result) {
+        if (product) {
+          this.updateProduct(product.id!, result);
+        } else {
+          this.addProduct(result);
+        }
+      }
+    });
+  }
+
+  addProduct(product: Product): void {
     // Logique pour ajouter un ProductService
     console.log('Ajout du-produit :');
   }
 
-  editProduct(product: Product): void {
+  updateProduct(id: string, product: Product): void {
     // Logique pour modifier un produit
     console.log('Modification du produit :', product);
   }
@@ -140,15 +165,24 @@ export class AdminComponent implements OnInit {
   }
 
   deleteIngredient(ingredient: Ingredient): void {
-    if (
-      confirm(
-        `Êtes-vous sûr de vouloir supprimer cet ingrédient : "${ingredient.name}" ?`
-      )
-    ) {
-      this.ingredientService.deleteIngredient(ingredient._id!).subscribe(() => {
-        this.fetchIngredients();
-      });
-      console.log("Suppression de l'ingrédient : ", ingredient);
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        message: `Êtes-vous sûr de vouloir supprimer cet ingrédient : "${ingredient.name}" ?`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('admin.component : ', ingredient._id!);
+        this.ingredientService
+          .deleteIngredient(ingredient._id!)
+          .subscribe(() => {
+            this.fetchIngredients();
+            console.log('admin.component : ', result);
+          });
+        console.log("Suppression de l'ingrédient : ", ingredient);
+      }
+    });
   }
 }

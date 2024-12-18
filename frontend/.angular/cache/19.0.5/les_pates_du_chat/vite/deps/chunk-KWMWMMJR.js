@@ -1,9 +1,8 @@
-import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
   ScrollDispatcher,
   ScrollingModule,
   ViewportRuler
-} from "./chunk-KPINHEWE.js";
+} from "./chunk-PJFQ5Z7N.js";
 import {
   BidiModule,
   Directionality,
@@ -11,7 +10,7 @@ import {
   _CdkPrivateStyleLoader,
   _IdGenerator,
   hasModifierKey
-} from "./chunk-JZ6XJLKZ.js";
+} from "./chunk-VIJ4YA5W.js";
 import {
   Platform,
   _getEventTarget,
@@ -19,11 +18,11 @@ import {
   coerceArray,
   coerceCssPixelValue,
   supportsScrollBehavior
-} from "./chunk-F5PUH62E.js";
+} from "./chunk-UIRN7DJD.js";
 import {
   DOCUMENT,
   Location
-} from "./chunk-I3XTUUN3.js";
+} from "./chunk-HDDT47HJ.js";
 import {
   ANIMATION_MODULE_TYPE,
   ApplicationRef,
@@ -61,18 +60,19 @@ import {
   ɵɵdefineInjector,
   ɵɵdefineNgModule,
   ɵɵgetInheritedFactory
-} from "./chunk-ERLZJZI2.js";
+} from "./chunk-254F6SL7.js";
 import {
-  require_cjs
-} from "./chunk-TDK5NIWS.js";
+  merge
+} from "./chunk-LBBSG2YE.js";
 import {
-  require_operators
-} from "./chunk-WBQSER3X.js";
-import {
+  Subject,
+  Subscription,
   __spreadProps,
   __spreadValues,
-  __toESM
-} from "./chunk-YHCV7DAQ.js";
+  filter,
+  takeUntil,
+  takeWhile
+} from "./chunk-NGNUV6BG.js";
 
 // node_modules/@angular/cdk/fesm2022/portal.mjs
 function throwNullPortalError() {
@@ -635,8 +635,6 @@ var PortalModule = class _PortalModule {
 })();
 
 // node_modules/@angular/cdk/fesm2022/overlay.mjs
-var import_operators = __toESM(require_operators(), 1);
-var import_rxjs = __toESM(require_cjs(), 1);
 var scrollBehaviorSupported = supportsScrollBehavior();
 var BlockScrollStrategy = class {
   _viewportRuler;
@@ -729,7 +727,7 @@ var CloseScrollStrategy = class {
     if (this._scrollSubscription) {
       return;
     }
-    const stream = this._scrollDispatcher.scrolled(0).pipe((0, import_operators.filter)((scrollable) => {
+    const stream = this._scrollDispatcher.scrolled(0).pipe(filter((scrollable) => {
       return !scrollable || !this._overlayRef.overlayElement.contains(scrollable.getElementRef().nativeElement);
     }));
     if (this._config && this._config.threshold && this._config.threshold > 1) {
@@ -1271,12 +1269,12 @@ var OverlayRef = class {
   _injector;
   _backdropElement = null;
   _backdropTimeout;
-  _backdropClick = new import_rxjs.Subject();
-  _attachments = new import_rxjs.Subject();
-  _detachments = new import_rxjs.Subject();
+  _backdropClick = new Subject();
+  _attachments = new Subject();
+  _detachments = new Subject();
   _positionStrategy;
   _scrollStrategy;
-  _locationChanges = import_rxjs.Subscription.EMPTY;
+  _locationChanges = Subscription.EMPTY;
   _backdropClickHandler = (event) => this._backdropClick.next(event);
   _backdropTransitionendHandler = (event) => {
     this._disposeBackdrop(event.target);
@@ -1287,10 +1285,10 @@ var OverlayRef = class {
    */
   _previousHostParent;
   /** Stream of keydown events dispatched to this overlay. */
-  _keydownEvents = new import_rxjs.Subject();
+  _keydownEvents = new Subject();
   /** Stream of mouse outside events dispatched to this overlay. */
-  _outsidePointerEvents = new import_rxjs.Subject();
-  _renders = new import_rxjs.Subject();
+  _outsidePointerEvents = new Subject();
+  _renders = new Subject();
   _afterRenderRef;
   /** Reference to the currently-running `afterNextRender` call. */
   _afterNextRenderRef;
@@ -1615,7 +1613,7 @@ var OverlayRef = class {
   /** Detaches the overlay content next time the zone stabilizes. */
   _detachContentWhenEmpty() {
     this._ngZone.runOutsideAngular(() => {
-      const subscription = this._renders.pipe((0, import_operators.takeUntil)((0, import_rxjs.merge)(this._attachments, this._detachments))).subscribe(() => {
+      const subscription = this._renders.pipe(takeUntil(merge(this._attachments, this._detachments))).subscribe(() => {
         if (!this._pane || !this._host || this._pane.children.length === 0) {
           if (this._pane && this._config.panelClass) {
             this._toggleClasses(this._pane, this._config.panelClass, false);
@@ -1711,9 +1709,9 @@ var FlexibleConnectedPositionStrategy = class {
   /** The last calculated scroll visibility. Only tracked  */
   _lastScrollVisibility;
   /** Subject that emits whenever the position changes. */
-  _positionChanges = new import_rxjs.Subject();
+  _positionChanges = new Subject();
   /** Subscription to viewport size changes. */
-  _resizeSubscription = import_rxjs.Subscription.EMPTY;
+  _resizeSubscription = Subscription.EMPTY;
   /** Default offset for the overlay along the x axis. */
   _offsetX = 0;
   /** Default offset for the overlay along the y axis. */
@@ -2916,10 +2914,10 @@ var CdkConnectedOverlay = class _CdkConnectedOverlay {
   });
   _overlayRef;
   _templatePortal;
-  _backdropSubscription = import_rxjs.Subscription.EMPTY;
-  _attachSubscription = import_rxjs.Subscription.EMPTY;
-  _detachSubscription = import_rxjs.Subscription.EMPTY;
-  _positionSubscription = import_rxjs.Subscription.EMPTY;
+  _backdropSubscription = Subscription.EMPTY;
+  _attachSubscription = Subscription.EMPTY;
+  _detachSubscription = Subscription.EMPTY;
+  _positionSubscription = Subscription.EMPTY;
   _offsetX;
   _offsetY;
   _position;
@@ -3157,7 +3155,7 @@ var CdkConnectedOverlay = class _CdkConnectedOverlay {
     }
     this._positionSubscription.unsubscribe();
     if (this.positionChange.observers.length > 0) {
-      this._positionSubscription = this._position.positionChanges.pipe((0, import_operators.takeWhile)(() => this.positionChange.observers.length > 0)).subscribe((position) => {
+      this._positionSubscription = this._position.positionChanges.pipe(takeWhile(() => this.positionChange.observers.length > 0)).subscribe((position) => {
         this._ngZone.run(() => this.positionChange.emit(position));
         if (this.positionChange.observers.length === 0) {
           this._positionSubscription.unsubscribe();
@@ -3471,4 +3469,4 @@ export {
   CdkConnectedOverlay,
   OverlayModule
 };
-//# sourceMappingURL=chunk-UF2FWNL7.js.map
+//# sourceMappingURL=chunk-KWMWMMJR.js.map

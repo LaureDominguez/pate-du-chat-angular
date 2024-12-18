@@ -1,0 +1,58 @@
+<h2 mat-dialog-title>{{ data.product ? 'Modifier un produit' : 'Ajouter un produit' }}</h2>
+<form [formGroup]="productForm" (ngSubmit)="save()">
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Catégorie</mat-label>
+        <mat-select formControlName="category">
+            <mat-option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Prix</mat-label>
+        <input matInput type="number" formControlName="price" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Image URL</mat-label>
+        <input matInput formControlName="imageUrl" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Composition (Ingrédients)</mat-label>
+        <!-- <mat-chip-list>
+            <mat-chip *ngFor="let ingredient of productForm.get('composition').value"
+                (removed)="removeIngredient(ingredient)">
+                {{ ingredient.name }}
+                <mat-icon matChipRemove>cancel</mat-icon>
+            </mat-chip>
+            <input [matAutocomplete]="auto" [formControl]="ingredientCtrl" [matChipInputFor]="chipList"
+                (matChipInputTokenEnd)="addIngredient($event)" />
+        </mat-chip-list> -->
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectIngredient($event)">
+            <mat-option *ngFor="let ingredient of filteredIngredients" [value]="ingredient">
+                {{ ingredient.name }}
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <div>
+        <mat-checkbox formControlName="stock">En Stock</mat-checkbox>
+    </div>
+
+    <div mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+</form>

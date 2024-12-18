@@ -86,9 +86,9 @@ th {
 
 .animated-button .text {
     position: absolute;
-    left: 100%; /* Hors de la vue à droite */
+    left: 50%; /* Hors de la vue à droite */
     opacity: 0; /* Invisible de base */
-    transition: transform 0.2s ease-out, opacity 0.8s ease-out;
+    transition: transform 0.2s ease-out, opacity 0.8s ease-in-out;
     white-space: nowrap; /* Empêche le texte de sauter à la ligne */
 }
 

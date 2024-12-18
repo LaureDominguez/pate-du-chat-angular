@@ -40,6 +40,7 @@ export class IngredientService {
 
   deleteIngredient(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
+    console.log( "ingredient.service :", url);
     return this.http.delete<{ message: string }>(url);
   }
 }

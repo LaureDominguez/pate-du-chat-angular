@@ -1,22 +1,31 @@
 import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { Ingredient } from '../../services/ingredient.service';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+} from '@angular/material/dialog';
+import { Ingredient } from '../../../services/ingredient.service';
 import { CommonModule } from '@angular/common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
-    selector: 'app-ingredient-form',
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatInputModule,
-        MatCheckboxModule,
-    ],
-    templateUrl: './ingredient-form.component.html',
-    styleUrls: ['./ingredient-form.component.scss']
+  selector: 'app-ingredient-form',
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatInputModule,
+    MatCheckboxModule,
+  ],
+  templateUrl: './ingredient-form.component.html',
+  styleUrls: ['./ingredient-form.component.scss'],
 })
 export class IngredientFormComponent {
   ingredientForm: FormGroup;
@@ -36,7 +45,7 @@ export class IngredientFormComponent {
     });
   }
 
-  save(): void { 
+  save(): void {
     if (this.ingredientForm.valid) {
       this.dialogRef.close(this.ingredientForm.value);
     }

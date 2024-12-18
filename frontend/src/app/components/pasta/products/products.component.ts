@@ -1,5 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ProductService, Product } from '../../services/product.service';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { ProductService, Product } from '../../../services/product.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
@@ -9,19 +15,19 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import {
   Ingredient,
   IngredientService,
-} from '../../services/ingredient.service';
+} from '../../../services/ingredient.service';
 
 @Component({
-    selector: 'app-products',
-    templateUrl: './products.component.html',
-    styleUrls: ['./products.component.scss'],
-    imports: [
-        CommonModule,
-        MatCardModule,
-        MatGridListModule,
-        ProductCardComponent,
-    ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-products',
+  templateUrl: './products.component.html',
+  styleUrls: ['./products.component.scss'],
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatGridListModule,
+    ProductCardComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products$: Observable<Product[]> = this.productService.getProducts();
@@ -165,14 +171,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.updateGrid();
   }
 
-
   updateGrid(): void {
     // console.log('Mise à jour de la grille. Produits :', this.products);
 
     if (this.selectedProduct) {
       const selectedIndex = this.products.indexOf(this.selectedProduct);
       // console.log('pouet : ', selectedIndex, " ; ", this.selectedProduct);
-      
+
       this.grid1 = this.products.slice(0, selectedIndex);
       this.grid2 = this.products.slice(selectedIndex + 1);
     } else {
@@ -183,7 +188,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.cdRef.detectChanges();
     // console.log('Grille avant produit sélectionné :', this.grid1);
     // console.log('Grille après produit sélectionné :', this.grid2);
-
   }
 
   ngOnDestroy(): void {

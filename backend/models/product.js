@@ -15,7 +15,8 @@ const ProductSchema = new mongoose.Schema({
 	},
 	composition: [
 		{
-			type: String,
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Ingredient',
 			required: true,
 		},
 	],

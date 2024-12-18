@@ -2,7 +2,7 @@
     <!-- produits -->
     <div>
         <h2>Liste des produits</h2>
-        <button mat-button (click)="addProduct()">Ajouter un produit</button>
+        <button mat-button class="add" (click)="openProductForm(null)">Ajouter un produit</button>
 
         <table mat-table [dataSource]="products" matSort #productsSort="matSort">
 
@@ -34,7 +34,7 @@
             <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let product">
-                    <button mat-button (click)="editProduct(product)">Modifier</button>
+                    <button mat-button (click)="openProductForm(product)">Modifier</button>
                     <button mat-button (click)="deleteProduct(product)">Supprimer</button>
                 </td>
             </ng-container>

@@ -10,7 +10,7 @@ import {
   MatCommonModule,
   ObserversModule,
   _IdGenerator
-} from "./chunk-KPXFEXMK.js";
+} from "./chunk-VIJ4YA5W.js";
 import {
   Platform,
   coerceBooleanProperty
@@ -1626,4 +1626,4 @@ export {
   MatFormField,
   MatFormFieldModule
 };
-//# sourceMappingURL=chunk-EYNZFQ27.js.map
+//# sourceMappingURL=chunk-H3CGLNHR.js.map

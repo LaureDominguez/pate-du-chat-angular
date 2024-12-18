@@ -83,7 +83,6 @@ router.delete('/:id', async (req, res) => {
 		if (!ingredient) {
 			return res.status(404).json({ msg: 'Ingrédient inconnu' });
 		}
-		await ingredient.remove();
 		res.json({ msg: 'Ingrédient supprimé' });
 	} catch (error) {
 		console.error(error.message);

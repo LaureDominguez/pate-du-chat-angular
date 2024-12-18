@@ -5,7 +5,7 @@ import {
   MatRippleModule,
   _CdkPrivateStyleLoader,
   _StructuralStylesLoader
-} from "./chunk-KPXFEXMK.js";
+} from "./chunk-VIJ4YA5W.js";
 import {
   Platform
 } from "./chunk-UIRN7DJD.js";
@@ -1027,4 +1027,4 @@ export {
   MatIconAnchor,
   MatButtonModule
 };
-//# sourceMappingURL=chunk-UH7X4ODP.js.map
+//# sourceMappingURL=chunk-N7RWEWNX.js.map

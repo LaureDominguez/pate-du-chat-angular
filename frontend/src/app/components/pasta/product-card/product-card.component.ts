@@ -1,14 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { Product } from '../../services/product.service';
-import { Ingredient } from '../../services/ingredient.service';
+import { Product } from '../../../services/product.service';
+import { Ingredient } from '../../../services/ingredient.service';
 
 @Component({
-    selector: 'app-product-card',
-    templateUrl: './product-card.component.html',
-    styleUrls: ['./product-card.component.scss'],
-    imports: [CommonModule, MatCardModule]
+  selector: 'app-product-card',
+  templateUrl: './product-card.component.html',
+  styleUrls: ['./product-card.component.scss'],
+  imports: [CommonModule, MatCardModule],
 })
 export class ProductCardComponent implements OnChanges {
   @Input() product!: Product;
@@ -26,5 +33,3 @@ export class ProductCardComponent implements OnChanges {
     this.closeClick.emit();
   }
 }
-
-
