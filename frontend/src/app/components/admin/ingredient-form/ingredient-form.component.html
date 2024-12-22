@@ -1,4 +1,6 @@
-<h2 mat-dialog-title>{{ data.ingredient ? 'Modifier un ingrédient' : 'Ajouter un ingrédient' }}</h2>
+<h2 mat-dialog-title>
+    {{ data.ingredient ? 'Modifier un ingrédient' : 'Ajouter un ingrédient' }}
+</h2>
 <form [formGroup]="ingredientForm" (ngSubmit)="save()">
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Nom</mat-label>
@@ -20,10 +22,24 @@
         <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
     </div>
 
-    <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Image URL</mat-label>
-        <input matInput formControlName="imageUrl" />
-    </mat-form-field>
+    
+    <div class="file-upload">
+        <label for="imageUpload">Télécharger des image</label>
+        <input type="file" multiple (change)="onFileSelected($event)" accept="image/*"/>
+    </div>
+
+<div class="previews">
+    <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
+        <mat-grid-tile *ngFor="let preview of filePreviews; let i = index">
+            <mat-card>
+                <img mat-card-image [src]="preview" alt="Image preview" />
+                <button mat-icon-button color="warn" (click)="removeFile(i)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </mat-card>
+        </mat-grid-tile>
+    </mat-grid-list>
+</div>
 
     <div mat-dialog-actions align="end">
         <button mat-button type="button" (click)="cancel()">Annuler</button>

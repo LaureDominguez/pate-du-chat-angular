@@ -5,10 +5,6 @@ const IngredientSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
-	supplier: {
-		type: String,
-		required: false,
-	},
 	allergens: [
 		{
 			type: String,
@@ -23,7 +19,13 @@ const IngredientSchema = new mongoose.Schema({
 		type: Boolean,
 		required: true,
 	},
-	imageUrl: {
+	images: [
+		{
+			type: String,
+			required: false,
+		}
+	],
+	supplier: {
 		type: String,
 		required: false,
 	},

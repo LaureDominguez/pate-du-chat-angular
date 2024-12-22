@@ -9,7 +9,7 @@ export interface Ingredient {
   allergens: string[];
   vegan: boolean;
   vegeta: boolean;
-  imageUrl?: string;
+  images?: string[];
 }
 
 @Injectable({
@@ -29,11 +29,17 @@ export class IngredientService {
     return this.http.get<Ingredient>(url);
   }
 
-  createIngredient(ingredient: Ingredient): Observable<Ingredient> {
+  createIngredient(ingredient: FormData): Observable<Ingredient> {
+    console.log("ingredient.service :", this.apiUrl, ' ', ingredient);
+    console.log('FormData Keys:', Array.from((ingredient as any).keys()));
+    console.log('FormData Values:', Array.from((ingredient as any).values()));
+    console.log('FormData Entries:', Array.from((ingredient as any).entries()));
+
+    
     return this.http.post<Ingredient>(this.apiUrl, ingredient);
   }
   
-  updateIngredient(id: string, ingredient: Ingredient): Observable<Ingredient> {
+  updateIngredient(id: string, ingredient: FormData): Observable<Ingredient> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Ingredient>(url, ingredient);
   }

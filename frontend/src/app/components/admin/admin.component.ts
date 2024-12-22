@@ -15,6 +15,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { MatChipsModule } from '@angular/material/chips';
+import { error } from 'console';
+import { catchError, tap, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -25,7 +27,6 @@ import { MatChipsModule } from '@angular/material/chips';
     MatPaginatorModule,
     MatSortModule,
     MatIconModule,
-
     MatChipsModule,
   ],
   templateUrl: './admin.component.html',
@@ -137,31 +138,98 @@ export class AdminComponent implements OnInit {
       data: { ingredient },
     });
 
-    dialogRef.afterClosed().subscribe((result: Ingredient | null) => {
+    dialogRef.afterClosed().subscribe((result: FormData) => {
       if (result) {
-        if (ingredient) {
-          this.updateIngredient(ingredient._id!, result);
-        } else {
-          this.addIngredient(result);
-        }
+        console.log('admin.component : ', result);
+        console.log('FormData Keys:', Array.from((result as any).keys()));
+        console.log('FormData Values:', Array.from((result as any).values()));
+        this.handleFormSubmit(result);
       }
     });
   }
+  handleFormSubmit(formData: FormData): void {
+    // Récupérer l'ID du FormData
+    const id = formData.get('id');
+    console.log('admin.component -> handleFormSubmit -> ID : ', id);
 
-  addIngredient(ingredient: Ingredient): void {
-    this.ingredientService.createIngredient(ingredient).subscribe(() => {
-      this.fetchIngredients();
-    });
-    console.log('Ajout du nouvel ingrédient : ', ingredient);
+    if (id && typeof id === 'string' && id !== 'null') {
+      // Si l'ID est une chaîne valide, c'est une modification
+      this.updateIngredient(id, formData);
+    } else {
+      // Sinon, c'est une création
+      this.addIngredient(formData);
+    }
   }
 
-  updateIngredient(id: string, updateIngredient: Ingredient): void {
-    this.ingredientService
-      .updateIngredient(id, updateIngredient)
-      .subscribe(() => {
+  addIngredient(formData: FormData): void {
+    this.ingredientService.createIngredient(formData).pipe(
+      tap(() => {
+        console.log("Ajout de l'ingrédient :", formData);
         this.fetchIngredients();
-      });
-    console.log("Modification de l'ingrédient :", updateIngredient);
+      }),
+      catchError((error) => {
+        console.error("Erreur lors de l'ajout de l'ingrédient :", error);
+        return throwError(error);
+      })
+    ).subscribe();
+  }
+    
+  //   this.ingredientService.createIngredient(formData).subscribe(
+  //     () => {
+  //       this.fetchIngredients();
+  //       console.log("Ajout de l'ingrédient :", formData);
+  //     },
+  //     (error) => {
+  //       console.error("Erreur lors de l'ajout de l'ingrédient :", error);
+  //     }
+  //   );
+    // }
+
+    // console.log('admin.component -> addIngredient : ', ingredient, ' ', files);
+    // const formData = new FormData();
+    // Object.keys(ingredient).forEach((key) => {
+    //   formData.append(key, (ingredient as any)[key]);
+    //   console.log('admin.component -> ingredients : ' , key, (ingredient as any)[key]);
+    // })
+
+    // files.forEach((file) => {
+    //   formData.append('images', file);
+    //   console.log('admin.component -> images : ' , file);
+    // });
+
+    // this.ingredientService.createIngredient(formData).subscribe(() => {
+    //   this.fetchIngredients();
+    //   console.log('admin.component -> fetch : ', formData);
+    // });
+  // }
+
+  updateIngredient(id: string, formData: FormData): void {
+    this.ingredientService.updateIngredient(id, formData).subscribe(
+      () => {
+        this.fetchIngredients();
+        console.log("Modification de l'ingrédient :", formData);
+      },
+      (error) => {
+        console.error(
+          "Erreur lors de la modification de l'ingrédient :",
+          error
+        );
+      }
+    );
+    // const formData = new FormData();
+    // Object.keys(ingredient).forEach((key) => {
+    //   formData.append(key, (ingredient as any)[key]);
+    // })
+
+    // files.forEach((file) => {
+    //   formData.append('images', file);
+    // });
+    // this.ingredientService
+    //   .updateIngredient(id, formData)
+    //   .subscribe(() => {
+    //     this.fetchIngredients();
+    //   });
+    // console.log("Modification de l'ingrédient :", ingredient);
   }
 
   deleteIngredient(ingredient: Ingredient): void {

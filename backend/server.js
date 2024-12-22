@@ -2,15 +2,30 @@ const express = require('express');
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const path = require('path');
 const app = express();
+const multer = require('multer');
+const upload = multer();
 
 // Connecter à la base de données
 connectDB();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+	console.log(`Incoming request: ${req.method} ${req.url}`);
+	console.log('Headers:', req.headers);
+	next();
+});
+
+// Middlewares pour JSON et URL-encoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Servir les fichiers statiques
+app.use('/uploads', express.static('uploads'));
+
 
 // Routes
 app.use('/api/products', require('./routes/product'));
