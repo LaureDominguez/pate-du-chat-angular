@@ -17,6 +17,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import path from 'path';
+import { ImageService } from '../../../services/image.service';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -37,9 +39,11 @@ export class IngredientFormComponent {
   ingredientForm: FormGroup;
   selectedFiles: File[] = [];
   filePreviews: string[] = [];
+  existingImages: string[] = [];
 
   constructor(
     private fb: FormBuilder,
+    private imageService: ImageService,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { ingredient: Ingredient | null }
   ) {
@@ -50,6 +54,14 @@ export class IngredientFormComponent {
       vegan: [data.ingredient?.vegan || false],
       vegeta: [data.ingredient?.vegeta || false],
     });
+
+    // Charger les images existantes si l'ingrédient est fourni
+    if (data.ingredient?.images) {
+      this.existingImages = data.ingredient.images.map((path) =>
+      this.imageService.getImageUrl(path)
+      );
+      console.log('Images existantes:', this.existingImages);
+    }
   }
 
   onFileSelected(event: any): void {
@@ -88,18 +100,22 @@ export class IngredientFormComponent {
     this.filePreviews.splice(index, 1);
   }
 
+  removeExistingImage(index: number): void {
+    this.existingImages.splice(index, 1);
+  }
+
   save(): void {
-    console.log(
-      'ingredient-form.component -> submited : ',
-      this.ingredientForm
-    );
+    // console.log(
+    //   'ingredient-form.component -> submited : ',
+    //   this.ingredientForm
+    // );
 
     // Vérification que le formulaire est valide
     if (this.ingredientForm.valid) {
       const formData = new FormData();
-      console.log(
-        'formulaire valide : ', this.ingredientForm.value
-      )
+      // console.log(
+      //   'formulaire valide : ', this.ingredientForm.value
+      // )
       
       // Récupération des valeurs du formulaire et ajout dans formData
       formData.append('name', this.ingredientForm.get('name')?.value);
@@ -114,14 +130,16 @@ export class IngredientFormComponent {
 
       // Ajouter les fichiers sélectionnés (images)
       if (this.selectedFiles.length > 0) {
-        console.log(
-          'image detecté : ',
-          this.selectedFiles
-        );
+        // console.log(
+        //   'image detecté : ',
+        //   this.selectedFiles
+        // );
 
         this.selectedFiles.forEach((image: File) => {
           formData.append('images', image);
         });
+
+        formData.append('existingImages', JSON.stringify(this.existingImages));
       }
 
       if (this.data.ingredient?._id) {
@@ -129,15 +147,15 @@ export class IngredientFormComponent {
       }
 
       // Vérifier le contenu de formData avant de fermer la boîte de dialogue
-      console.log('ingredient-form.component -> formData : ', formData);
-      console.log(
-        'ingredient-form.component -> FormData Keys:',
-        Array.from((formData as any).keys())
-      );
-      console.log(
-        'ingredient-form.component -> FormData Values:',
-        Array.from((formData as any).values())
-      );
+      // console.log('ingredient-form.component -> formData : ', formData);
+      // console.log(
+      //   'ingredient-form.component -> FormData Keys:',
+      //   Array.from((formData as any).keys())
+      // );
+      // console.log(
+      //   'ingredient-form.component -> FormData Values:',
+      //   Array.from((formData as any).values())
+      // );
 
       // Fermer la boîte de dialogue et renvoyer le formData à l'appelant
       this.dialogRef.close(formData);

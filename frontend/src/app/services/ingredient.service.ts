@@ -30,11 +30,6 @@ export class IngredientService {
   }
 
   createIngredient(ingredient: FormData): Observable<Ingredient> {
-    console.log("ingredient.service :", this.apiUrl, ' ', ingredient);
-    console.log('FormData Keys:', Array.from((ingredient as any).keys()));
-    console.log('FormData Values:', Array.from((ingredient as any).values()));
-    console.log('FormData Entries:', Array.from((ingredient as any).entries()));
-
     
     return this.http.post<Ingredient>(this.apiUrl, ingredient);
   }

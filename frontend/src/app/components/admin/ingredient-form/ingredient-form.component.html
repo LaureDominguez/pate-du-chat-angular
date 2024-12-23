@@ -22,24 +22,38 @@
         <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
     </div>
 
+    <div class="existing-images">
+        <h3>Images existantes</h3>
+        <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
+            <mat-grid-tile *ngFor="let image of existingImages; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="image" alt="Existing image" />
+                    <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </mat-grid-tile>
+        </mat-grid-list>
+    </div>
+
     
     <div class="file-upload">
         <label for="imageUpload">Télécharger des image</label>
         <input type="file" multiple (change)="onFileSelected($event)" accept="image/*"/>
     </div>
 
-<div class="previews">
-    <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
-        <mat-grid-tile *ngFor="let preview of filePreviews; let i = index">
-            <mat-card>
-                <img mat-card-image [src]="preview" alt="Image preview" />
-                <button mat-icon-button color="warn" (click)="removeFile(i)">
-                    <mat-icon>delete</mat-icon>
-                </button>
-            </mat-card>
-        </mat-grid-tile>
-    </mat-grid-list>
-</div>
+    <div class="previews">
+        <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
+            <mat-grid-tile *ngFor="let preview of filePreviews; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="preview" alt="Image preview" />
+                    <button mat-icon-button color="warn" (click)="removeFile(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </mat-grid-tile>
+        </mat-grid-list>
+    </div>
 
     <div mat-dialog-actions align="end">
         <button mat-button type="button" (click)="cancel()">Annuler</button>

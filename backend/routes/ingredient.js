@@ -6,8 +6,8 @@ const upload = require('../../middleware/fileUpload');
 // Ajouter un ingredient
 router.post('/', upload.array('images', 10), async (req, res) => {
 	try {
-		console.log('req.body:', req.body);
-		console.log('req.files:', req.files);
+		// console.log('req.body:', req.body);
+		// console.log('req.files:', req.files);
 
 		if (!req.body.name || !req.files) {
 			return res.status(400).json({ error: 'Les données sont incomplètes' });
@@ -32,37 +32,6 @@ router.post('/', upload.array('images', 10), async (req, res) => {
 		res.status(500).send('Erreur serveur');
 	}
 });
-
-
-// router.post('/', upload.array('images', 10), async (req, res) => {
-// 	console.log('Headers:', req.headers);
-// 	console.log('req.body:', req.body);
-// 	console.log('req.files:', req.files);
-
-// 	if (!req.body.name || !req.files) {
-// 		return res.status(400).json({ error: 'Les données sont incomplètes' });
-// 	}
-
-// 	try {
-// 		const { name, supplier, allergens, vegan, vegeta } = req.body;
-// 		const images = req.files.map((file) => file.path);
-
-// 		const newIngredient = new Ingredient({
-// 			name,
-// 			supplier,
-// 			allergens: allergens ? JSON.parse(allergens) : [],
-// 			vegan: JSON.parse(vegan),
-// 			vegeta: JSON.parse(vegeta),
-// 			images: images,
-// 		});
-
-// 		const ingredient = await newIngredient.save();
-// 		res.json(ingredient);
-// 	} catch (error) {
-// 		console.error(error.message);
-// 		res.status(500).send('Server error');
-// 	}
-// });
 
 // Obtenir tous les ingredients
 router.get('/', async (req, res) => {
