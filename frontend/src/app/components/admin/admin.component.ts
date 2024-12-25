@@ -17,6 +17,7 @@ import { ProductFormComponent } from './product-form/product-form.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { error } from 'console';
 import { catchError, tap, throwError } from 'rxjs';
+import { ImageService } from '../../services/image.service';
 
 @Component({
   selector: 'app-admin',
@@ -61,6 +62,7 @@ export class AdminComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private ingredientService: IngredientService,
+    private imageService: ImageService,
     private dialog: MatDialog
   ) {}
 
@@ -133,103 +135,137 @@ export class AdminComponent implements OnInit {
   }
 
   openIngredientForm(ingredient: Ingredient | null): void {
+      const imageUrls =
+        ingredient?.images?.map((imagePath) =>
+          this.imageService.getImageUrl(imagePath)
+        ) || [];
     const dialogRef = this.dialog.open(IngredientFormComponent, {
       width: '400px',
-      data: { ingredient },
+      data: { ingredient, imageUrls },
     });
 
-    dialogRef.afterClosed().subscribe((result: FormData) => {
+    dialogRef.afterClosed().subscribe((result: {
+      ingredientData: any,
+      selectedFiles: File[],
+      removedExistingImages: string[]
+    } | undefined) => {
       if (result) {
-        console.log('admin.component : ', result);
-        console.log('FormData Keys:', Array.from((result as any).keys()));
-        console.log('FormData Values:', Array.from((result as any).values()));
+        // console.log('admin.component -> result : ', result);
         this.handleFormSubmit(result);
+    } else {
+      // console.log('admin.component -> form cancelled');
       }
     });
   }
-  handleFormSubmit(formData: FormData): void {
-    // Récupérer l'ID du FormData
-    const id = formData.get('id');
-    console.log('admin.component -> handleFormSubmit -> ID : ', id);
 
-    if (id && typeof id === 'string' && id !== 'null') {
-      // Si l'ID est une chaîne valide, c'est une modification
-      this.updateIngredient(id, formData);
+  handleFormSubmit(result: {
+    ingredientData: any,
+    selectedFiles: File[],
+    removedExistingImages: string[]
+  }): void {
+    const { ingredientData, selectedFiles } = result;
+    const existingImages = ingredientData.existingImages ?? [];
+    const ingredientId = ingredientData._id;
+
+    // console.log('handleFormSubmit -> enter : ', result);
+
+    // Vérifier et supprimer les images existantes marquées pour suppression
+    if (result.removedExistingImages?.length) {
+      result.removedExistingImages.forEach((imgPath) => {
+        const filename = imgPath.replace('/^/?uploads/?/', '');
+        this.imageService.deleteImage(filename).subscribe(() => {
+          console.log('Image deleted successfully... ou pas');
+        });
+      });
+    }
+
+    // Fusionner les anciennes et nouvelles images
+    const finalImages = [...existingImages];
+    delete ingredientData.existingImages;
+
+    if (selectedFiles.length > 0) {
+      // 1. Uploader les fichiers
+      this.imageService.uploadImages(selectedFiles).subscribe({
+        next: (uploadResponse) => {
+          const newFilePaths = uploadResponse.imagePath;
+
+          // 2. Concaténer avec les images existantes
+          finalImages.push(...newFilePaths); // Ajouter les nouvelles images
+          console.log(
+            'admin.component -> image uploadée, concatenation de finalImages -> finalImages : ',
+            finalImages
+          )
+
+          // 3. Soumettre le formulaire
+          console.log(
+            'admin.component -> soumission du formulaire ',
+            'id: ',
+            ingredientId,
+            'images: ',
+            finalImages,
+            'data: ',
+            ingredientData
+          );
+          this.submitIngredientForm(ingredientId, ingredientData, finalImages);
+        },
+        error: (error) => {
+          console.error(
+            'admin.component -> echec de submitIngredientForm : ',
+            error
+          );
+        },
+      });
     } else {
-      // Sinon, c'est une création
-      this.addIngredient(formData);
+      this.submitIngredientForm(ingredientId, ingredientData, finalImages);
     }
   }
 
-  addIngredient(formData: FormData): void {
-    this.ingredientService.createIngredient(formData).pipe(
-      tap(() => {
-        console.log("Ajout de l'ingrédient :", formData);
-        this.fetchIngredients();
-      }),
-      catchError((error) => {
-        console.error("Erreur lors de l'ajout de l'ingrédient :", error);
-        return throwError(error);
-      })
-    ).subscribe();
+  submitIngredientForm(
+    ingredientId: string | undefined,
+    ingredientData: any,
+    finalImages: string[]
+  ): void {
+    const ingredientPayload = {
+      ...ingredientData,
+      images: finalImages
+    };
+
+    console.log('admin.component -> submitIngredientForm -> ingredientPayload : ', ingredientPayload);
+
+    if (ingredientId) {
+      console.log('id trouvé')
+      this.updateIngredient(ingredientId, ingredientPayload);
+    } else {
+      console.log('id non trouvé')
+      this.addIngredient(ingredientPayload);
+    }
   }
-    
-  //   this.ingredientService.createIngredient(formData).subscribe(
-  //     () => {
-  //       this.fetchIngredients();
-  //       console.log("Ajout de l'ingrédient :", formData);
-  //     },
-  //     (error) => {
-  //       console.error("Erreur lors de l'ajout de l'ingrédient :", error);
-  //     }
-  //   );
-    // }
 
-    // console.log('admin.component -> addIngredient : ', ingredient, ' ', files);
-    // const formData = new FormData();
-    // Object.keys(ingredient).forEach((key) => {
-    //   formData.append(key, (ingredient as any)[key]);
-    //   console.log('admin.component -> ingredients : ' , key, (ingredient as any)[key]);
-    // })
+  addIngredient(ingredientPayload: any): void {
+    delete ingredientPayload._id;
+    console.log('admin.component -> addIngredient -> ingredientPayload : ', ingredientPayload);
 
-    // files.forEach((file) => {
-    //   formData.append('images', file);
-    //   console.log('admin.component -> images : ' , file);
-    // });
-
-    // this.ingredientService.createIngredient(formData).subscribe(() => {
-    //   this.fetchIngredients();
-    //   console.log('admin.component -> fetch : ', formData);
-    // });
-  // }
-
-  updateIngredient(id: string, formData: FormData): void {
-    this.ingredientService.updateIngredient(id, formData).subscribe(
-      () => {
+    this.ingredientService.createIngredient(ingredientPayload).subscribe({
+      next: (res) => {
+        console.log('admin.component -> addIngredient -> res : ', res);
         this.fetchIngredients();
-        console.log("Modification de l'ingrédient :", formData);
       },
-      (error) => {
-        console.error(
-          "Erreur lors de la modification de l'ingrédient :",
-          error
-        );
+      error: (error) => {
+        console.error('admin.component -> addIngredient -> error : ', error);
       }
-    );
-    // const formData = new FormData();
-    // Object.keys(ingredient).forEach((key) => {
-    //   formData.append(key, (ingredient as any)[key]);
-    // })
+    });
+  }
 
-    // files.forEach((file) => {
-    //   formData.append('images', file);
-    // });
-    // this.ingredientService
-    //   .updateIngredient(id, formData)
-    //   .subscribe(() => {
-    //     this.fetchIngredients();
-    //   });
-    // console.log("Modification de l'ingrédient :", ingredient);
+  updateIngredient(id: string, ingredientPayload: any): void {
+    this.ingredientService.updateIngredient(id, ingredientPayload).subscribe({
+      next: (res) => {
+        console.log('admin.component -> updateIngredient -> res : ', res);
+        this.fetchIngredients();
+      },
+      error: (error) => {
+        console.error('admin.component -> updateIngredient -> error : ', error);
+      }
+    })
   }
 
   deleteIngredient(ingredient: Ingredient): void {

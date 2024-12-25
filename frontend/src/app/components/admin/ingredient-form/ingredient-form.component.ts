@@ -10,18 +10,25 @@ import {
   MAT_DIALOG_DATA,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { Ingredient } from '../../../services/ingredient.service';
 import { CommonModule } from '@angular/common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import path from 'path';
-import { ImageService } from '../../../services/image.service';
+export interface Ingredient {
+  _id?: string;
+  name: string;
+  supplier: string;
+  allergens: string[];
+  vegan: boolean;
+  vegeta: boolean;
+  images?: string[];
+}
 
 @Component({
   selector: 'app-ingredient-form',
+  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -40,12 +47,15 @@ export class IngredientFormComponent {
   selectedFiles: File[] = [];
   filePreviews: string[] = [];
   existingImages: string[] = [];
+  removedExistingImages: string[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private imageService: ImageService,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { ingredient: Ingredient | null }
+    @Inject(MAT_DIALOG_DATA) public data: {
+      imageUrls: string[];
+      ingredient: Ingredient | null 
+}
   ) {
     this.ingredientForm = this.fb.group({
       name: [data.ingredient?.name || '', Validators.required],
@@ -57,11 +67,18 @@ export class IngredientFormComponent {
 
     // Charger les images existantes si l'ingrédient est fourni
     if (data.ingredient?.images) {
-      this.existingImages = data.ingredient.images.map((path) =>
-      this.imageService.getImageUrl(path)
-      );
-      console.log('Images existantes:', this.existingImages);
+      this.existingImages = [...data.ingredient.images];
+      console.log('Images existantes :', this.existingImages);
     }
+  }
+
+  ngOnInit(): void {
+    if (this.data.ingredient) {
+      this.ingredientForm.patchValue(this.data.ingredient);
+    }
+
+    // Charger les images pour l'aperçu
+    this.filePreviews = this.data.imageUrls || [];
   }
 
   onFileSelected(event: any): void {
@@ -70,6 +87,7 @@ export class IngredientFormComponent {
 
     if (input.files) {
       const validFiles: File[] = [];
+
       Array.from(input.files).forEach((file) => {
         if (!file.type.startsWith('image/')) {
           alert(`${file.name} n'est pas un fichier image valide.`);
@@ -91,6 +109,7 @@ export class IngredientFormComponent {
       if (validFiles.length !== input.files.length) {
         input.value = '';
       }
+
       this.selectedFiles.push(...validFiles);
     }
   }
@@ -102,63 +121,26 @@ export class IngredientFormComponent {
 
   removeExistingImage(index: number): void {
     this.existingImages.splice(index, 1);
+    const removed = this.existingImages.splice(index, 1)[0];
+    this.removedExistingImages.push(removed);
   }
 
   save(): void {
-    // console.log(
-    //   'ingredient-form.component -> submited : ',
-    //   this.ingredientForm
-    // );
-
-    // Vérification que le formulaire est valide
     if (this.ingredientForm.valid) {
-      const formData = new FormData();
-      // console.log(
-      //   'formulaire valide : ', this.ingredientForm.value
-      // )
-      
-      // Récupération des valeurs du formulaire et ajout dans formData
-      formData.append('name', this.ingredientForm.get('name')?.value);
-      formData.append('supplier', this.ingredientForm.get('supplier')?.value);
-      formData.append('allergens', this.ingredientForm.get('allergens')?.value);
-      formData.append('vegan', this.ingredientForm.get('vegan')?.value);
-      formData.append('vegeta', this.ingredientForm.get('vegeta')?.value);
+      const ingredientData = {
+        _id: this.data.ingredient?._id,
+        name: this.ingredientForm.get('name')?.value,
+        supplier: this.ingredientForm.get('supplier')?.value,
+        allergens: this.ingredientForm.get('allergens')?.value,
+        vegan: this.ingredientForm.get('vegan')?.value,
+        vegeta: this.ingredientForm.get('vegeta')?.value,
+        existingImages: this.existingImages,
+      };
 
-      console.log('FormData Keys:', Array.from((formData as any).keys()));
-      console.log('FormData Values:', Array.from((formData as any).values()));
-
-
-      // Ajouter les fichiers sélectionnés (images)
-      if (this.selectedFiles.length > 0) {
-        // console.log(
-        //   'image detecté : ',
-        //   this.selectedFiles
-        // );
-
-        this.selectedFiles.forEach((image: File) => {
-          formData.append('images', image);
-        });
-
-        formData.append('existingImages', JSON.stringify(this.existingImages));
-      }
-
-      if (this.data.ingredient?._id) {
-        formData.append('id', this.data.ingredient._id);
-      }
-
-      // Vérifier le contenu de formData avant de fermer la boîte de dialogue
-      // console.log('ingredient-form.component -> formData : ', formData);
-      // console.log(
-      //   'ingredient-form.component -> FormData Keys:',
-      //   Array.from((formData as any).keys())
-      // );
-      // console.log(
-      //   'ingredient-form.component -> FormData Values:',
-      //   Array.from((formData as any).values())
-      // );
-
-      // Fermer la boîte de dialogue et renvoyer le formData à l'appelant
-      this.dialogRef.close(formData);
+      this.dialogRef.close({
+        ingredientData,
+        selectedFiles: this.selectedFiles,
+      });
     }
   }
 

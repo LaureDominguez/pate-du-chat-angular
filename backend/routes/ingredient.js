@@ -4,31 +4,42 @@ const Ingredient = require('../models/ingredient');
 const upload = require('../../middleware/fileUpload');
 
 // Ajouter un ingredient
-router.post('/', upload.array('images', 10), async (req, res) => {
+router.post('/', async (req, res) => {
+	console.log('route ingredients -> req.body:', req.body);
 	try {
-		// console.log('req.body:', req.body);
-		// console.log('req.files:', req.files);
+		const { name, supplier, allergens, vegan, vegeta, images } = req.body;
 
-		if (!req.body.name || !req.files) {
-			return res.status(400).json({ error: 'Les données sont incomplètes' });
+    if (!name) {
+			return res
+				.status(400)
+				.json({ error: 'Le champ "name" est obligatoire.' });
 		}
+	if (!Array.isArray(allergens)) {
+		return res
+			.status(400)
+			.json({ error: 'Le champ "allergens" doit être un tableau.' });
+	}
+	if (typeof vegan !== 'boolean' || typeof vegeta !== 'boolean') {
+		return res
+			.status(400)
+			.json({
+				error: 'Les champs "vegan" et "vegeta" doivent être des booléens.',
+			});
+	}
 
-		const { name, supplier, allergens, vegan, vegeta } = req.body;
-		const images = req.files.map((file) => `/uploads/${file.filename}`);
+	const newIngredient = new Ingredient({
+		name,
+		supplier,
+		allergens: allergens || [],
+		vegan: vegan,
+		vegeta: vegeta,
+		images: images || [],
+	});
 
-		const newIngredient = new Ingredient({
-			name,
-			supplier,
-			allergens: allergens ? JSON.parse(allergens) : [],
-			vegan: JSON.parse(vegan),
-			vegeta: JSON.parse(vegeta),
-			images: images,
-		});
-
-		const ingredient = await newIngredient.save();
-		res.json(ingredient);
+	const ingredient = await newIngredient.save();
+	res.json(ingredient);
 	} catch (error) {
-		console.error(error.message);
+		console.error('Erreur lors de l’ajout d’un ingrédient:', error);
 		res.status(500).send('Erreur serveur');
 	}
 });
@@ -65,26 +76,49 @@ router.get('/:id', async (req, res) => {
 });
 
 // Modifier un ingredient
-router.put('/:id', upload.array('images', 10), async (req, res) => {
-	const { name, supplier, allergens, vegan, vegeta } = req.body;
-	const newImagesFile = req.files.map((file) => `/uploads/${file.filename}`);
+router.put('/:id', async (req, res) => {
+	const { name, supplier, allergens, vegan, vegeta, images } = req.body;
+
 	try {
 		const ingredient = await Ingredient.findById(req.params.id);
 		if (!ingredient) {
 			return res.status(404).json({ msg: 'Ingrédient inconnu' });
 		}
 
+		// Validations des champs
+		if (name && typeof name !== 'string') {
+			return res
+				.status(400)
+				.json({ error: 'Le champ "name" doit être une chaîne de caractères.' });
+		}
+		if (allergens && !Array.isArray(allergens)) {
+			return res
+				.status(400)
+				.json({ error: 'Le champ "allergens" doit être un tableau.' });
+		}
+		if (vegan !== undefined && typeof vegan !== 'boolean') {
+			return res
+				.status(400)
+				.json({ error: 'Le champ "vegan" doit être un booléen.' });
+		}
+		if (vegeta !== undefined && typeof vegeta !== 'boolean') {
+			return res
+				.status(400)
+				.json({ error: 'Le champ "vegeta" doit être un booléen.' });
+		}
+
+		// Mise à jour des champs
 		ingredient.name = name || ingredient.name;
-		ingredient.allergens = allergens ? JSON.parse(allergens) : ingredient.allergens;
+		ingredient.supplier = supplier || ingredient.supplier;
+		ingredient.allergens = allergens || ingredient.allergens;
 		ingredient.vegan = vegan !== undefined ? vegan : ingredient.vegan;
 		ingredient.vegeta = vegeta !== undefined ? vegeta : ingredient.vegeta;
-		ingredient.images = [...ingredient.images, ...newImagesFile];
-		ingredient.supplier = supplier || ingredient.supplier;
+		ingredient.images = images || ingredient.images;
 
 		const updatedIngredient = await ingredient.save();
 		res.json(updatedIngredient);
 	} catch (error) {
-		console.error(error.message);
+		console.error('Erreur lors de la mise à jour d’un ingrédient:', error.message);
 		res.status(500).send('Server error');
 	}
 });

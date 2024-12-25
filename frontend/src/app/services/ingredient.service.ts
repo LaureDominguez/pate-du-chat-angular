@@ -29,14 +29,14 @@ export class IngredientService {
     return this.http.get<Ingredient>(url);
   }
 
-  createIngredient(ingredient: FormData): Observable<Ingredient> {
-    
-    return this.http.post<Ingredient>(this.apiUrl, ingredient);
+  createIngredient(payload: any): Observable<Ingredient> {
+    console.log( "ingredient.service -> payload :", payload);
+    return this.http.post<Ingredient>(this.apiUrl, payload);
   }
   
-  updateIngredient(id: string, ingredient: FormData): Observable<Ingredient> {
+  updateIngredient(id: string, payload: any): Observable<Ingredient> {
     const url = `${this.apiUrl}/${id}`;
-    return this.http.put<Ingredient>(url, ingredient);
+    return this.http.put<Ingredient>(url, payload);
   }
 
   deleteIngredient(id: string): Observable<{ message: string }> {

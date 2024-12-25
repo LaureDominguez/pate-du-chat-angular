@@ -5,30 +5,29 @@ const IngredientSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
+	supplier: {
+		type: String,
+	},
 	allergens: [
 		{
 			type: String,
-			required: false,
+			default: [],
 		},
 	],
 	vegan: {
 		type: Boolean,
-		required: true,
+		default: false,
 	},
 	vegeta: {
 		type: Boolean,
-		required: true,
+		default: false,
 	},
 	images: [
 		{
 			type: String,
-			required: false,
-		}
+			default: false,
+		},
 	],
-	supplier: {
-		type: String,
-		required: false,
-	},
 });
 
 module.exports = mongoose.model('Ingredient', IngredientSchema);
