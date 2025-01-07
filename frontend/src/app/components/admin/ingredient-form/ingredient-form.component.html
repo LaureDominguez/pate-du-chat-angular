@@ -17,15 +17,20 @@
         <input matInput formControlName="allergens" />
     </mat-form-field>
 
-    <div>
-        <mat-checkbox formControlName="vegan">Vegan</mat-checkbox>
-        <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
+    <div class="regime">
+        <mat-label>Régime alimentaire</mat-label>
+        <div>
+            <mat-checkbox formControlName="vegan" (change)="onVeganChange($event.checked)">Vegan</mat-checkbox>
+            <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
+        </div>
     </div>
 
-    <div class="existing-images">
-        <h3>Images existantes</h3>
+    <mat-divider></mat-divider>
+
+    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
+        <mat-label>Images existantes</mat-label>
         <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
-            <mat-grid-tile *ngFor="let image of existingImages; let i = index">
+            <mat-grid-tile *ngFor="let image of existingImageUrls; let i = index">
                 <mat-card>
                     <img mat-card-image [src]="image" alt="Existing image" />
                     <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
@@ -36,9 +41,10 @@
         </mat-grid-list>
     </div>
 
+    <mat-divider *ngIf="existingImages.length > 0"></mat-divider>
     
     <div class="file-upload">
-        <label for="imageUpload">Télécharger des image</label>
+        <mat-label for="imageUpload">Télécharger des image</mat-label>
         <input type="file" multiple (change)="onFileSelected($event)" accept="image/*"/>
     </div>
 

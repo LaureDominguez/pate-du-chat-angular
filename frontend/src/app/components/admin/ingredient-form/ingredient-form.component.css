@@ -1,13 +1,35 @@
-.file-upload {
-  margin-bottom: 1rem;
+form {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 40rem;
+  width: 95%;
+  overflow: auto;
+  margin: auto;
 }
-.file-upload label {
-  display: block;
+
+mat-divider {
+  margin: 1rem 0;
+}
+
+mat-label {
   font-weight: bold;
-  margin-bottom: 0.5rem;
 }
+
+.regime div {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.regime mat-label, .file-upload mat-label, .existing-images mat-label {
+  margin: 1rem;
+  line-height: 2rem;
+}
+
 .file-upload input {
   display: block;
+  padding-bottom: 0.5rem;
 }
 
 .previews mat-card, .existing-images mat-card {

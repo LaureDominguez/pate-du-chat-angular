@@ -135,10 +135,10 @@ export class AdminComponent implements OnInit {
   }
 
   openIngredientForm(ingredient: Ingredient | null): void {
-      const imageUrls =
-        ingredient?.images?.map((imagePath) =>
-          this.imageService.getImageUrl(imagePath)
-        ) || [];
+    const imageUrls =
+      ingredient?.images?.map((imagePath) =>
+        this.imageService.getImageUrl(imagePath)
+      ) || [];
     const dialogRef = this.dialog.open(IngredientFormComponent, {
       width: '400px',
       data: { ingredient, imageUrls },
@@ -171,8 +171,10 @@ export class AdminComponent implements OnInit {
 
     // Vérifier et supprimer les images existantes marquées pour suppression
     if (result.removedExistingImages?.length) {
+      console.log('handleFormSubmit -> removedExistingImages : ', result.removedExistingImages);
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
+        console.log('handleFormSubmit -> filename : ', filename);
         this.imageService.deleteImage(filename).subscribe(() => {
           console.log('Image deleted successfully... ou pas');
         });

@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 export interface Ingredient {
   _id?: string;
   name: string;
@@ -38,6 +39,7 @@ export interface Ingredient {
     MatGridListModule,
     MatCardModule,
     MatIconModule,
+    MatDividerModule
   ],
   templateUrl: './ingredient-form.component.html',
   styleUrls: ['./ingredient-form.component.scss'],
@@ -47,6 +49,7 @@ export class IngredientFormComponent {
   selectedFiles: File[] = [];
   filePreviews: string[] = [];
   existingImages: string[] = [];
+  existingImageUrls: string[] = [];
   removedExistingImages: string[] = [];
 
   constructor(
@@ -68,7 +71,9 @@ export class IngredientFormComponent {
     // Charger les images existantes si l'ingrédient est fourni
     if (data.ingredient?.images) {
       this.existingImages = [...data.ingredient.images];
+      this.existingImageUrls = [...data.imageUrls];
       console.log('Images existantes :', this.existingImages);
+      console.log('pouet : ', this.existingImageUrls);
     }
   }
 
@@ -76,9 +81,14 @@ export class IngredientFormComponent {
     if (this.data.ingredient) {
       this.ingredientForm.patchValue(this.data.ingredient);
     }
-
     // Charger les images pour l'aperçu
-    this.filePreviews = this.data.imageUrls || [];
+    // this.filePreviews = this.data.imageUrls || [];
+  }
+
+  onVeganChange(isVeganChecked: boolean): void {
+    if (isVeganChecked) {
+      this.ingredientForm.get('vegeta')?.setValue(true);
+    }
   }
 
   onFileSelected(event: any): void {
@@ -120,13 +130,17 @@ export class IngredientFormComponent {
   }
 
   removeExistingImage(index: number): void {
-    this.existingImages.splice(index, 1);
+    this.existingImageUrls.splice(index, 1);
     const removed = this.existingImages.splice(index, 1)[0];
     this.removedExistingImages.push(removed);
+    console.log('Images supprimées :', this.removedExistingImages);
   }
 
   save(): void {
     if (this.ingredientForm.valid) {
+      if (this.ingredientForm.get('vegan')?.value) {
+        this.ingredientForm.get('vegeta')?.setValue(true);
+      }
       const ingredientData = {
         _id: this.data.ingredient?._id,
         name: this.ingredientForm.get('name')?.value,
@@ -140,6 +154,7 @@ export class IngredientFormComponent {
       this.dialogRef.close({
         ingredientData,
         selectedFiles: this.selectedFiles,
+        removedExistingImages: this.removedExistingImages,
       });
     }
   }

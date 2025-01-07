@@ -38,7 +38,9 @@ export class ImageService {
   }
 
   deleteImage(imagePath: string): Observable<{ message: string }> {
-    const url = `${this.baseUrl}/${imagePath}`;
+    const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
+    const url = `${this.baseUrl}/${cleanPath}`;
+    console.log('image.service :', url);
     return this.http.delete<{ message: string }>(url);
   }
 }
