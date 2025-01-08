@@ -48,7 +48,7 @@
         <input type="file" multiple (change)="onFileSelected($event)" accept="image/*"/>
     </div>
 
-    <div class="previews">
+    <div class="previews" *ngIf="filePreviews.length > 0">
         <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
             <mat-grid-tile *ngFor="let preview of filePreviews; let i = index">
                 <mat-card>

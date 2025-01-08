@@ -150,11 +150,8 @@ export class AdminComponent implements OnInit {
       removedExistingImages: string[]
     } | undefined) => {
       if (result) {
-        // console.log('admin.component -> result : ', result);
         this.handleFormSubmit(result);
-    } else {
-      // console.log('admin.component -> form cancelled');
-      }
+    }
     });
   }
 
@@ -166,8 +163,6 @@ export class AdminComponent implements OnInit {
     const { ingredientData, selectedFiles } = result;
     const existingImages = ingredientData.existingImages ?? [];
     const ingredientId = ingredientData._id;
-
-    // console.log('handleFormSubmit -> enter : ', result);
 
     // Vérifier et supprimer les images existantes marquées pour suppression
     if (result.removedExistingImages?.length) {
@@ -281,6 +276,15 @@ export class AdminComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         console.log('admin.component : ', ingredient._id!);
+        console.log('admin.component : ', result);
+        if (ingredient.images?.length) {
+          for (const image of ingredient.images) {
+            this.imageService.deleteImage(image).subscribe(() => {
+              console.log('Image deleted successfully... ou pas');
+            });
+          }
+        }
+
         this.ingredientService
           .deleteIngredient(ingredient._id!)
           .subscribe(() => {
