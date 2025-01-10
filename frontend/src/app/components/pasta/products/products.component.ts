@@ -5,52 +5,52 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
+
 import { ProductService, Product } from '../../../services/product.service';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatGridListModule } from '@angular/material/grid-list';
-import { ProductCardComponent } from '../product-card/product-card.component';
+import {
+  IngredientService,
+  Ingredient,
+} from '../../../services/ingredient.service';
+
 import { forkJoin, map, Observable, Subject, takeUntil } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import {
-  Ingredient,
-  IngredientService,
-} from '../../../services/ingredient.service';
+import { ProductCardComponent } from '../product-card/product-card.component';
+import { AppModule } from '../../../app.module';
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss'],
+  standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatGridListModule,
+    AppModule,
     ProductCardComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsComponent implements OnInit, OnDestroy {
+  // Observables pour les produits et les ingrédients
   products$: Observable<Product[]> = this.productService.getProducts();
   ingredients$: Observable<Ingredient[]> =
     this.ingredientService.getIngredients();
 
+  // Données locales
   products: Product[] = [];
   ingredients: Ingredient[] = [];
-
   allergensList: string[] = [];
   isVegeta: boolean = true;
   isVegan: boolean = true;
 
+  // Grille d'affichage
   cols: number = 3;
-
-  selectedProduct: Product | null = null;
-  isSelected: boolean = false;
-  showNormalGrid: boolean = true;
-  showSelectedGrid: boolean = false;
-
   grid1: Product[] = [];
   grid2: Product[] = [];
 
+  // Gestion de la sélection
+  selectedProduct: Product | null = null;
+  isSelected: boolean = false;
+
+  // Observable pour la destruction
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -61,12 +61,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Charger les produits et mettre à jour la grille
     this.products$.pipe(takeUntil(this.destroy$)).subscribe((products) => {
       this.products = products;
       this.updateGrid();
     });
 
-    //media queries
+    // Configurer la grille en fonction des tailles d'écran
     this.breakpointObserver
       .observe([
         Breakpoints.XSmall,
@@ -91,12 +92,16 @@ export class ProductsComponent implements OnInit, OnDestroy {
             default:
               return 3;
           }
-        })
+        }),
+        takeUntil(this.destroy$)
       )
-      .subscribe((cols: number) => (this.cols = cols));
+      .subscribe((cols: number) => {
+        this.cols = cols;
+        this.cdRef.markForCheck();
+      });
   }
 
-  // gestion des grilles d'affichage
+  // Sélectionner un produit
   selectProduct(product: Product): void {
     if (!this.products || this.products.length === 0) {
       console.warn('Les produits ne sont pas encore chargés.');
@@ -107,15 +112,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.isSelected = true;
 
     this.updateGrid();
-    // console.log('Produit sélectionné :', product);
     this.getIngredientsForSelectedProduct();
-
-    // console.log('Grille mise à jour après sélection :', this.grid1, this.grid2);
-    this.cdRef.detectChanges();
   }
 
-  //affiche les ingredients
-  getIngredientsForSelectedProduct() {
+  // Récupérer les ingrédients du produit sélectionné
+  private getIngredientsForSelectedProduct(): void {
     if (!this.selectedProduct?.composition) return;
 
     forkJoin(
@@ -131,15 +132,15 @@ export class ProductsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error(
-            'Erreur lors de la récupération des ingrédients:',
+            'Erreur lors de la récupération des ingrédients :',
             error
           );
         },
       });
   }
 
-  // Traiter les ingrédients pour allergènes et régimes alimentaires
-  private processIngredients(ingredients: Ingredient[]) {
+  // Traiter les ingrédients pour déterminer les allergènes et les régimes alimentaires
+  private processIngredients(ingredients: Ingredient[]): void {
     const allergensSet = new Set<string>();
     let isVegeta = true;
     let isVegan = true;
@@ -164,6 +165,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.cdRef.markForCheck();
   }
 
+  // Réinitialiser la sélection
   onCloseClick(): void {
     this.selectedProduct = null;
     this.isSelected = false;
@@ -171,13 +173,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.updateGrid();
   }
 
-  updateGrid(): void {
-    // console.log('Mise à jour de la grille. Produits :', this.products);
-
+  // Mettre à jour la grille d'affichage
+  private updateGrid(): void {
     if (this.selectedProduct) {
       const selectedIndex = this.products.indexOf(this.selectedProduct);
-      // console.log('pouet : ', selectedIndex, " ; ", this.selectedProduct);
-
       this.grid1 = this.products.slice(0, selectedIndex);
       this.grid2 = this.products.slice(selectedIndex + 1);
     } else {
@@ -185,11 +184,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
       this.grid2 = [];
     }
 
-    this.cdRef.detectChanges();
-    // console.log('Grille avant produit sélectionné :', this.grid1);
-    // console.log('Grille après produit sélectionné :', this.grid2);
+    this.cdRef.markForCheck();
   }
 
+  // Détruire les abonnements lors de la destruction du composant
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

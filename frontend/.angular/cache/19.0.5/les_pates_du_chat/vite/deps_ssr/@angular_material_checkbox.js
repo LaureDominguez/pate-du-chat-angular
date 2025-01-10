@@ -1,5 +1,10 @@
 import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
+  CheckboxRequiredValidator,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR
+} from "./chunk-MJFBI55I.js";
+import {
   MatCommonModule,
   MatRipple,
   _CdkPrivateStyleLoader,
@@ -8,11 +13,6 @@ import {
   _StructuralStylesLoader
 } from "./chunk-EJ2VU7KX.js";
 import "./chunk-F5PUH62E.js";
-import {
-  CheckboxRequiredValidator,
-  NG_VALIDATORS,
-  NG_VALUE_ACCESSOR
-} from "./chunk-MJFBI55I.js";
 import "./chunk-I3XTUUN3.js";
 import {
   ANIMATION_MODULE_TYPE,

@@ -1,69 +1,59 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { AsyncPipe, CommonModule } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
 import { Observable } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
+import { AppModule } from '../../app.module';
 
 @Component({
-    selector: 'app-nav',
-    templateUrl: './nav.component.html',
-    styleUrls: ['./nav.component.scss'],
-    imports: [
-        MatToolbarModule,
-        MatButtonModule,
-        MatSidenavModule,
-        MatListModule,
-        MatIconModule,
-        AsyncPipe,
-        CommonModule,
-        RouterLink,
-        RouterOutlet,
-    ]
+  selector: 'app-nav',
+  templateUrl: './nav.component.html',
+  styleUrls: ['./nav.component.scss'],
+  standalone: true,
+  imports: [
+    AppModule,
+    // Module pour les routes
+    RouterModule,
+  ],
 })
-export class NavComponent {
-  private breakpointObserver = inject(BreakpointObserver);
-
+export class NavComponent implements OnInit {
   navItems = [
     { title: 'Accueil', link: '/' },
     { title: 'Les Produits', link: '/products' },
-    // { title: 'La Boutique', link: '/shop' },
-    // { title: 'L\'Atelier', link: '/about' },
+    { title: "L'Atelier", link: '/about' },
+    { title: 'La Boutique', link: '/shop' },
     { title: 'Contact', link: '/contact' },
     { title: 'Gestion du site', link: '/admin' },
   ];
 
-  isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe(Breakpoints.Handset)
-    .pipe(
+  isHandset$: Observable<boolean>;
+  pageTitle: string = '';
+
+  constructor(
+    private breakpointObserver: BreakpointObserver,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {
+    this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
       map((result) => result.matches),
       shareReplay()
     );
-
-  pageTitle: string = '';
-
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {}
-
+  }
   ngOnInit(): void {
+    // Écouter les changements de navigation
     this.router.events
       .pipe(
-        filter((event) => event instanceof NavigationEnd), // On réagit seulement après la fin de la navigation
+        filter((event) => event instanceof NavigationEnd), // Filtrer les événements de navigation
         map(() => {
           let route = this.activatedRoute;
           while (route.firstChild) {
-            route = route.firstChild; // On descend dans les routes enfants si présents
+            route = route.firstChild; // Descendre jusqu'à la route enfant active
           }
-          return route;
-        }),
-        map((route) => route.snapshot.data['title']) // Récupère le titre défini dans la route
+          return route.snapshot.data['title']; // Récupérer le titre
+        })
       )
       .subscribe((title: string) => {
-        this.pageTitle = title; // Mise à jour du titre
+        this.pageTitle = title || 'Les Pâtes du Chat'; // Mettre à jour le titre ou définir un titre par défaut
       });
   }
 }

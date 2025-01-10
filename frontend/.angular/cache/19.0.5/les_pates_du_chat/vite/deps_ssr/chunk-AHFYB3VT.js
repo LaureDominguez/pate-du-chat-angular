@@ -1,5 +1,9 @@
 import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
+  BrowserModule,
+  DomRendererFactory2
+} from "./chunk-3YMKCKW7.js";
+import {
   AUTO_STYLE,
   AnimationGroupPlayer,
   AnimationMetadataType,
@@ -9,10 +13,22 @@ import {
   ɵPRE_STYLE
 } from "./chunk-QA6L3UWB.js";
 import {
+  DOCUMENT
+} from "./chunk-I3XTUUN3.js";
+import {
+  ANIMATION_MODULE_TYPE,
+  Inject,
   Injectable,
+  NgModule,
+  NgZone,
+  RendererFactory2,
   RuntimeError,
+  performanceMarkFeature,
   setClassMetadata,
-  ɵɵdefineInjectable
+  ɵɵdefineInjectable,
+  ɵɵdefineInjector,
+  ɵɵdefineNgModule,
+  ɵɵinject
 } from "./chunk-ERLZJZI2.js";
 import {
   __objRest,
@@ -80,14 +96,6 @@ function invalidExpression(expr) {
 }
 function invalidTransitionAlias(alias) {
   return new RuntimeError(3016, ngDevMode && `The transition alias value "${alias}" is not supported`);
-}
-function validationFailed(errors) {
-  return new RuntimeError(3500, ngDevMode && `animation validation failed:
-${errors.map((err) => err.message).join("\n")}`);
-}
-function buildingFailed(errors) {
-  return new RuntimeError(3501, ngDevMode && `animation building failed:
-${errors.map((err) => err.message).join("\n")}`);
 }
 function triggerBuildFailed(name, errors) {
   return new RuntimeError(3404, ngDevMode && `The animation trigger "${name}" has failed to build due to the following errors:
@@ -338,14 +346,6 @@ var AnimationDriver = class {
 };
 var AnimationStyleNormalizer = class {
 };
-var NoopAnimationStyleNormalizer = class {
-  normalizePropertyName(propertyName, errors) {
-    return propertyName;
-  }
-  normalizeStyleValue(userProvidedProperty, normalizedProperty, value, errors) {
-    return value;
-  }
-};
 var ONE_SECOND = 1e3;
 var SUBSTITUTION_EXPR_START = "{{";
 var SUBSTITUTION_EXPR_END = "}}";
@@ -428,9 +428,6 @@ function normalizeKeyframes(keyframes) {
     return keyframes;
   }
   return keyframes.map((kf) => new Map(Object.entries(kf)));
-}
-function normalizeStyles(styles) {
-  return Array.isArray(styles) ? new Map(...styles) : new Map(styles);
 }
 function setStyles(element, styles, formerStyles) {
   styles.forEach((val, prop) => {
@@ -577,9 +574,6 @@ var WebAnimationsStyleNormalizer = class extends AnimationStyleNormalizer {
 function createListOfWarnings(warnings) {
   const LINE_START2 = "\n - ";
   return `${LINE_START2}${warnings.filter(Boolean).map((warning) => warning).join(LINE_START2)}`;
-}
-function warnValidation(warnings) {
-  (typeof ngDevMode === "undefined" || ngDevMode) && console.warn(`animation validation warnings:${createListOfWarnings(warnings)}`);
 }
 function warnTriggerBuild(name, warnings) {
   (typeof ngDevMode === "undefined" || ngDevMode) && console.warn(`The animation trigger "${name}" has built with the following warnings:${createListOfWarnings(warnings)}`);
@@ -3789,40 +3783,6 @@ var WebAnimationsDriver = class {
     return new WebAnimationsPlayer(element, _keyframes, playerOptions, specialStyles);
   }
 };
-function createEngine(type, doc) {
-  if (type === "noop") {
-    return new AnimationEngine(doc, new NoopAnimationDriver(), new NoopAnimationStyleNormalizer());
-  }
-  return new AnimationEngine(doc, new WebAnimationsDriver(), new WebAnimationsStyleNormalizer());
-}
-var Animation = class {
-  _driver;
-  _animationAst;
-  constructor(_driver, input) {
-    this._driver = _driver;
-    const errors = [];
-    const warnings = [];
-    const ast = buildAnimationAst(_driver, input, errors, warnings);
-    if (errors.length) {
-      throw validationFailed(errors);
-    }
-    if (warnings.length) {
-      warnValidation(warnings);
-    }
-    this._animationAst = ast;
-  }
-  buildTimelines(element, startingStyles, destinationStyles, options, subInstructions) {
-    const start = Array.isArray(startingStyles) ? normalizeStyles(startingStyles) : startingStyles;
-    const dest = Array.isArray(destinationStyles) ? normalizeStyles(destinationStyles) : destinationStyles;
-    const errors = [];
-    subInstructions = subInstructions || new ElementInstructionMap();
-    const result = buildAnimationTimelines(this._driver, element, this._animationAst, ENTER_CLASSNAME, LEAVE_CLASSNAME, start, dest, options, subInstructions, errors);
-    if (errors.length) {
-      throw buildingFailed(errors);
-    }
-    return result;
-  }
-};
 var ANIMATION_PREFIX = "@";
 var DISABLE_ANIMATIONS_FLAG = "@.disabled";
 var BaseAnimationRenderer = class {
@@ -4066,28 +4026,151 @@ var AnimationRendererFactory = class {
   }
 };
 
+// node_modules/@angular/platform-browser/fesm2022/animations.mjs
+var InjectableAnimationEngine = class _InjectableAnimationEngine extends AnimationEngine {
+  // The `ApplicationRef` is injected here explicitly to force the dependency ordering.
+  // Since the `ApplicationRef` should be created earlier before the `AnimationEngine`, they
+  // both have `ngOnDestroy` hooks and `flush()` must be called after all views are destroyed.
+  constructor(doc, driver, normalizer) {
+    super(doc, driver, normalizer);
+  }
+  ngOnDestroy() {
+    this.flush();
+  }
+  static ɵfac = function InjectableAnimationEngine_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _InjectableAnimationEngine)(ɵɵinject(DOCUMENT), ɵɵinject(AnimationDriver), ɵɵinject(AnimationStyleNormalizer));
+  };
+  static ɵprov = ɵɵdefineInjectable({
+    token: _InjectableAnimationEngine,
+    factory: _InjectableAnimationEngine.ɵfac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(InjectableAnimationEngine, [{
+    type: Injectable
+  }], () => [{
+    type: Document,
+    decorators: [{
+      type: Inject,
+      args: [DOCUMENT]
+    }]
+  }, {
+    type: AnimationDriver
+  }, {
+    type: AnimationStyleNormalizer
+  }], null);
+})();
+function instantiateDefaultStyleNormalizer() {
+  return new WebAnimationsStyleNormalizer();
+}
+function instantiateRendererFactory(renderer, engine, zone) {
+  return new AnimationRendererFactory(renderer, engine, zone);
+}
+var SHARED_ANIMATION_PROVIDERS = [{
+  provide: AnimationStyleNormalizer,
+  useFactory: instantiateDefaultStyleNormalizer
+}, {
+  provide: AnimationEngine,
+  useClass: InjectableAnimationEngine
+}, {
+  provide: RendererFactory2,
+  useFactory: instantiateRendererFactory,
+  deps: [DomRendererFactory2, AnimationEngine, NgZone]
+}];
+var BROWSER_ANIMATIONS_PROVIDERS = [{
+  provide: AnimationDriver,
+  useFactory: () => new WebAnimationsDriver()
+}, {
+  provide: ANIMATION_MODULE_TYPE,
+  useValue: "BrowserAnimations"
+}, ...SHARED_ANIMATION_PROVIDERS];
+var BROWSER_NOOP_ANIMATIONS_PROVIDERS = [{
+  provide: AnimationDriver,
+  useClass: NoopAnimationDriver
+}, {
+  provide: ANIMATION_MODULE_TYPE,
+  useValue: "NoopAnimations"
+}, ...SHARED_ANIMATION_PROVIDERS];
+var BrowserAnimationsModule = class _BrowserAnimationsModule {
+  /**
+   * Configures the module based on the specified object.
+   *
+   * @param config Object used to configure the behavior of the `BrowserAnimationsModule`.
+   * @see {@link BrowserAnimationsModuleConfig}
+   *
+   * @usageNotes
+   * When registering the `BrowserAnimationsModule`, you can use the `withConfig`
+   * function as follows:
+   * ```
+   * @NgModule({
+   *   imports: [BrowserAnimationsModule.withConfig(config)]
+   * })
+   * class MyNgModule {}
+   * ```
+   */
+  static withConfig(config) {
+    return {
+      ngModule: _BrowserAnimationsModule,
+      providers: config.disableAnimations ? BROWSER_NOOP_ANIMATIONS_PROVIDERS : BROWSER_ANIMATIONS_PROVIDERS
+    };
+  }
+  static ɵfac = function BrowserAnimationsModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _BrowserAnimationsModule)();
+  };
+  static ɵmod = ɵɵdefineNgModule({
+    type: _BrowserAnimationsModule,
+    exports: [BrowserModule]
+  });
+  static ɵinj = ɵɵdefineInjector({
+    providers: BROWSER_ANIMATIONS_PROVIDERS,
+    imports: [BrowserModule]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(BrowserAnimationsModule, [{
+    type: NgModule,
+    args: [{
+      exports: [BrowserModule],
+      providers: BROWSER_ANIMATIONS_PROVIDERS
+    }]
+  }], null, null);
+})();
+function provideAnimations() {
+  performanceMarkFeature("NgEagerAnimations");
+  return [...BROWSER_ANIMATIONS_PROVIDERS];
+}
+var NoopAnimationsModule = class _NoopAnimationsModule {
+  static ɵfac = function NoopAnimationsModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _NoopAnimationsModule)();
+  };
+  static ɵmod = ɵɵdefineNgModule({
+    type: _NoopAnimationsModule,
+    exports: [BrowserModule]
+  });
+  static ɵinj = ɵɵdefineInjector({
+    providers: BROWSER_NOOP_ANIMATIONS_PROVIDERS,
+    imports: [BrowserModule]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NoopAnimationsModule, [{
+    type: NgModule,
+    args: [{
+      exports: [BrowserModule],
+      providers: BROWSER_NOOP_ANIMATIONS_PROVIDERS
+    }]
+  }], null, null);
+})();
+function provideNoopAnimations() {
+  return [...BROWSER_NOOP_ANIMATIONS_PROVIDERS];
+}
+
 export {
-  getParentElement,
-  validateStyleProperty,
-  validateWebAnimatableStyleProperty,
-  containsElement,
-  invokeQuery,
-  NoopAnimationDriver,
-  AnimationDriver,
-  AnimationStyleNormalizer,
-  NoopAnimationStyleNormalizer,
-  normalizeKeyframes,
-  camelCaseToDashCase,
-  allowPreviousPlayerStylesMerge,
-  WebAnimationsStyleNormalizer,
-  AnimationEngine,
-  WebAnimationsPlayer,
-  WebAnimationsDriver,
-  createEngine,
-  Animation,
-  BaseAnimationRenderer,
-  AnimationRenderer,
-  AnimationRendererFactory
+  InjectableAnimationEngine,
+  BrowserAnimationsModule,
+  provideAnimations,
+  NoopAnimationsModule,
+  provideNoopAnimations
 };
 /*! Bundled license information:
 
@@ -4097,5 +4180,12 @@ export {
    * (c) 2010-2024 Google LLC. https://angular.io/
    * License: MIT
    *)
+
+@angular/platform-browser/fesm2022/animations.mjs:
+  (**
+   * @license Angular v19.0.4
+   * (c) 2010-2024 Google LLC. https://angular.io/
+   * License: MIT
+   *)
 */
-//# sourceMappingURL=chunk-3NYY5XLF.js.map
+//# sourceMappingURL=chunk-AHFYB3VT.js.map

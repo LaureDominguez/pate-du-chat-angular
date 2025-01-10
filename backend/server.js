@@ -39,6 +39,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/images', require('./routes/image'));
 app.use('/api/products', require('./routes/product'));
 app.use('/api/ingredients', require('./routes/ingredient'));
+app.use('/api/categories', require('./routes/category'));
 
 const PORT = process.env.PORT || 5000;
 

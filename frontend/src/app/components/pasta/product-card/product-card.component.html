@@ -1,6 +1,6 @@
 <mat-card class="product-card" [class.selected]="isSelected">
-    <img mat-card-image [src]="product.image || 'pate-R.png'"
-        [alt]="product.image ? product.name : 'Pas d\'image disponible'">
+    <img mat-card-image [src]="product.images || 'pate-R.png'"
+        [alt]="product.images ? product.name : 'Pas d\'image disponible'">
 
     <mat-card-content>
         <h2>{{ product.name }}</h2>

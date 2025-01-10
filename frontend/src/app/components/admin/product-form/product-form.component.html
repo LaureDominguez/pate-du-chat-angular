@@ -1,20 +1,32 @@
-<h2 mat-dialog-title>{{ data.product ? 'Modifier un produit' : 'Ajouter un produit' }}</h2>
+<h2 mat-dialog-title>
+    {{ data.product ? 'Modifier un produit' : 'Ajouter un produit' }}
+</h2>
 <form [formGroup]="productForm" (ngSubmit)="save()">
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Nom</mat-label>
         <input matInput formControlName="name" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Description</mat-label>
-        <textarea matInput formControlName="description"></textarea>
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width">
+    <mat-form-field appearance="fill">
         <mat-label>Catégorie</mat-label>
         <mat-select formControlName="category">
             <mat-option *ngFor="let category of categories" [value]="category">
                 {{ category }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Composition</mat-label>
+        <mat-select formControlName="composition" multiple>
+            <mat-option *ngFor="let ingredient of ingredients" [value]="ingredient._id">
+                {{ ingredient.name }}
             </mat-option>
         </mat-select>
     </mat-form-field>
@@ -24,32 +36,45 @@
         <input matInput type="number" formControlName="price" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Image URL</mat-label>
-        <input matInput formControlName="imageUrl" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Composition (Ingrédients)</mat-label>
-        <!-- <mat-chip-list>
-            <mat-chip *ngFor="let ingredient of productForm.get('composition').value"
-                (removed)="removeIngredient(ingredient)">
-                {{ ingredient.name }}
-                <mat-icon matChipRemove>cancel</mat-icon>
-            </mat-chip>
-            <input [matAutocomplete]="auto" [formControl]="ingredientCtrl" [matChipInputFor]="chipList"
-                (matChipInputTokenEnd)="addIngredient($event)" />
-        </mat-chip-list> -->
-        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectIngredient($event)">
-            <mat-option *ngFor="let ingredient of filteredIngredients" [value]="ingredient">
-                {{ ingredient.name }}
-            </mat-option>
-        </mat-autocomplete>
-    </mat-form-field>
-
-    <div>
-        <mat-checkbox formControlName="stock">En Stock</mat-checkbox>
+    <div class="stock">
+        <mat-checkbox formControlName="stock">En stock</mat-checkbox>
     </div>
+<!-- 
+    <mat-divider></mat-divider>
+    
+    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
+        <mat-label>Images existantes</mat-label>
+        <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
+            <mat-grid-tile *ngFor="let image of existingImageUrls; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="image" alt="Existing image" />
+                    <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </mat-grid-tile>
+        </mat-grid-list>
+    </div>
+    
+    <mat-divider *ngIf="existingImages.length > 0"></mat-divider>
+    
+    <div class="file-upload">
+        <mat-label for="imageUpload">Télécharger des images</mat-label>
+        <input type="file" multiple (change)="onFileSelected($event)" accept="image/*" />
+    </div>
+    
+    <div class="previews" *ngIf="filePreviews.length > 0">
+        <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
+            <mat-grid-tile *ngFor="let preview of filePreviews; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="preview" alt="Image preview" />
+                    <button mat-icon-button color="warn" (click)="removeFile(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </mat-grid-tile>
+        </mat-grid-list>
+    </div> -->
 
     <div mat-dialog-actions align="end">
         <button mat-button type="button" (click)="cancel()">Annuler</button>

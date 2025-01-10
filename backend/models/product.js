@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const ProductSchema = new mongoose.Schema({
-	id: {
-		type: String,
-		required: true,
-	},
 	name: {
 		type: String,
 		required: true,
@@ -28,10 +24,12 @@ const ProductSchema = new mongoose.Schema({
 		type: Boolean,
 		required: true,
 	},
-	imageUrl: {
-		type: String,
-		required: true,
-	},
+	images: [
+		{
+			type: String,
+			default: false,
+		},
+	],
 });
 
 module.exports = mongoose.model('Product', ProductSchema);

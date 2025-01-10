@@ -1,34 +1,27 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatButtonModule } from '@angular/material/button';
+
 import { Product, ProductService } from '../../services/product.service';
-import {
-  Ingredient,
-  IngredientService,
-} from '../../services/ingredient.service';
-import { MatDialog } from '@angular/material/dialog';
-import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
-import { MatIconModule } from '@angular/material/icon';
-import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
-import { ProductFormComponent } from './product-form/product-form.component';
-import { MatChipsModule } from '@angular/material/chips';
-import { error } from 'console';
-import { catchError, tap, throwError } from 'rxjs';
+import { Ingredient, IngredientService, } from '../../services/ingredient.service';
+import { Category, CategoryService } from '../../services/category.service';
 import { ImageService } from '../../services/image.service';
+
+import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
+import { ProductFormComponent } from './product-form/product-form.component';
+import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+
+import { forkJoin } from 'rxjs';
+
+import { MatDialog } from '@angular/material/dialog';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { AdminModule } from './admin.module';
 
 @Component({
   selector: 'app-admin',
+  standalone: true,
   imports: [
-    CommonModule,
-    MatButtonModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatIconModule,
-    MatChipsModule,
+    AdminModule,
   ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
@@ -36,6 +29,7 @@ import { ImageService } from '../../services/image.service';
 export class AdminComponent implements OnInit {
   products = new MatTableDataSource<Product>([]);
   ingredients = new MatTableDataSource<Ingredient>([]);
+  categories = new MatTableDataSource<Category>([]);
 
   displayedProductsColumns: string[] = [
     'name',
@@ -62,6 +56,7 @@ export class AdminComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private ingredientService: IngredientService,
+    private categoryService: CategoryService,
     private imageService: ImageService,
     private dialog: MatDialog
   ) {}
@@ -82,6 +77,16 @@ export class AdminComponent implements OnInit {
     this.ingredients.data = this.ingredients.data; // Idem pour les ingrédients
   }
 
+  ///////////////////////////////////
+  // Catégories
+  ///////////////////////////////////
+
+  fecthCategories(): void {
+    this.categoryService.getCategories().subscribe((categories) => {
+      this.categories.data = categories;
+    });
+  }
+
   ////////////////////////////////////
   // Produits
   ////////////////////////////////////
@@ -93,30 +98,39 @@ export class AdminComponent implements OnInit {
   }
 
   openProductForm(product: Product | null): void {
-    const dialogRef = this.dialog.open(ProductFormComponent, {
-      width: '400px',
-      data: { product },
-    });
+    const categories$ = this.categoryService.getCategories();
+    const ingredients$ = this.ingredientService.getIngredients();
 
-    dialogRef.afterClosed().subscribe((result: Product | null) => {
-      if (result) {
-        if (product) {
-          this.updateProduct(product.id!, result);
-        } else {
-          this.addProduct(result);
-        }
+    forkJoin([categories$, ingredients$]).subscribe(
+      ([categories, ingredients]) => {
+        const imageUrls =
+          product?.images?.map((imagePath) =>
+            this.imageService.getImageUrl(imagePath)
+          ) || [];
+
+        const dialogRef = this.dialog.open(ProductFormComponent, {
+          width: '600px',
+          data: {
+            product,
+            imageUrls,
+            categories: categories,
+            ingredients: ingredients,
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((result: any | undefined) => {
+          if (result) {
+            console.log('pouet :', result);
+          }
+        });
       }
-    });
-  }
-
-  addProduct(product: Product): void {
-    // Logique pour ajouter un ProductService
-    console.log('Ajout du-produit :');
-  }
-
-  updateProduct(id: string, product: Product): void {
-    // Logique pour modifier un produit
-    console.log('Modification du produit :', product);
+    ),
+      (error: any) => {
+        console.error(
+          'Erreur lors du chargement des catégories ou des ingrédients :',
+          error
+        );
+      };
   }
 
   deleteProduct(product: Product): void {
@@ -144,21 +158,27 @@ export class AdminComponent implements OnInit {
       data: { ingredient, imageUrls },
     });
 
-    dialogRef.afterClosed().subscribe((result: {
-      ingredientData: any,
-      selectedFiles: File[],
-      removedExistingImages: string[]
-    } | undefined) => {
-      if (result) {
-        this.handleFormSubmit(result);
-    }
-    });
+    dialogRef.afterClosed().subscribe(
+      (
+        result:
+          | {
+              ingredientData: any;
+              selectedFiles: File[];
+              removedExistingImages: string[];
+            }
+          | undefined
+      ) => {
+        if (result) {
+          this.handleIngredientFormSubmit(result);
+        }
+      }
+    );
   }
 
-  handleFormSubmit(result: {
-    ingredientData: any,
-    selectedFiles: File[],
-    removedExistingImages: string[]
+  handleIngredientFormSubmit(result: {
+    ingredientData: any;
+    selectedFiles: File[];
+    removedExistingImages: string[];
   }): void {
     const { ingredientData, selectedFiles } = result;
     const existingImages = ingredientData.existingImages ?? [];
@@ -166,10 +186,13 @@ export class AdminComponent implements OnInit {
 
     // Vérifier et supprimer les images existantes marquées pour suppression
     if (result.removedExistingImages?.length) {
-      console.log('handleFormSubmit -> removedExistingImages : ', result.removedExistingImages);
+      console.log(
+        'handleIngredientFormSubmit -> removedExistingImages : ',
+        result.removedExistingImages
+      );
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        console.log('handleFormSubmit -> filename : ', filename);
+        console.log('handleIngredientFormSubmit -> filename : ', filename);
         this.imageService.deleteImage(filename).subscribe(() => {
           console.log('Image deleted successfully... ou pas');
         });
@@ -191,7 +214,7 @@ export class AdminComponent implements OnInit {
           console.log(
             'admin.component -> image uploadée, concatenation de finalImages -> finalImages : ',
             finalImages
-          )
+          );
 
           // 3. Soumettre le formulaire
           console.log(
@@ -224,23 +247,29 @@ export class AdminComponent implements OnInit {
   ): void {
     const ingredientPayload = {
       ...ingredientData,
-      images: finalImages
+      images: finalImages,
     };
 
-    console.log('admin.component -> submitIngredientForm -> ingredientPayload : ', ingredientPayload);
+    console.log(
+      'admin.component -> submitIngredientForm -> ingredientPayload : ',
+      ingredientPayload
+    );
 
     if (ingredientId) {
-      console.log('id trouvé')
+      console.log('id trouvé');
       this.updateIngredient(ingredientId, ingredientPayload);
     } else {
-      console.log('id non trouvé')
+      console.log('id non trouvé');
       this.addIngredient(ingredientPayload);
     }
   }
 
   addIngredient(ingredientPayload: any): void {
     delete ingredientPayload._id;
-    console.log('admin.component -> addIngredient -> ingredientPayload : ', ingredientPayload);
+    console.log(
+      'admin.component -> addIngredient -> ingredientPayload : ',
+      ingredientPayload
+    );
 
     this.ingredientService.createIngredient(ingredientPayload).subscribe({
       next: (res) => {
@@ -249,7 +278,7 @@ export class AdminComponent implements OnInit {
       },
       error: (error) => {
         console.error('admin.component -> addIngredient -> error : ', error);
-      }
+      },
     });
   }
 
@@ -261,8 +290,8 @@ export class AdminComponent implements OnInit {
       },
       error: (error) => {
         console.error('admin.component -> updateIngredient -> error : ', error);
-      }
-    })
+      },
+    });
   }
 
   deleteIngredient(ingredient: Ingredient): void {
