@@ -1,1 +1,13 @@
-/*# sourceMappingURL=ingredient-admin.component.css.map */
+table th:nth-child(4), table th:nth-child(5) {
+  width: 10%;
+}
+table td:not(:nth-child(4), :nth-child(5)) {
+  width: 20%;
+}
+table td:nth-child(4), table td:nth-child(5) {
+  width: 10%;
+}
+table td:nth-child(6) {
+  justify-content: center;
+  text-align: center;
+}/*# sourceMappingURL=ingredient-admin.component.css.map */

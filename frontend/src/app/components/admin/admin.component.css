@@ -1,4 +1,11 @@
 @charset "UTF-8";
+.admin-section {
+  padding: 1rem;
+  background-color: var(--surfaceContainer);
+  margin: 1rem;
+  border-radius: 20px;
+}
+
 mat-table {
   table-layout: fixed;
   width: 100%;
@@ -9,18 +16,8 @@ th {
   text-align: center;
 }
 
-.ingredient-table th:nth-child(4), .ingredient-table th:nth-child(5) {
-  width: 10%;
-}
-.ingredient-table td:not(:nth-child(4), :nth-child(5)) {
-  width: 20%;
-}
-.ingredient-table td:nth-child(4), .ingredient-table td:nth-child(5) {
-  width: 10%;
-}
-.ingredient-table td:nth-child(6) {
-  justify-content: center;
-  text-align: center;
+mat-divider {
+  color: var(--surfaceContainerHighest);
 }
 
 .mat-icon.success {
@@ -39,6 +36,12 @@ th {
 .add:hover {
   background-color: var(--primaryFixedDim);
   color: var(--onPrimaryFixedVariant);
+}
+
+.add-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .animated-button {
