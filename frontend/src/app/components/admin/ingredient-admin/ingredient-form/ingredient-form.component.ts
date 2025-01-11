@@ -1,22 +1,8 @@
 import { Component, Inject } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import {
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-  MatDialogModule,
-} from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatInputModule } from '@angular/material/input';
-import { MatGridListModule } from '@angular/material/grid-list';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { AdminModule } from '../../admin.module';
+
 export interface Ingredient {
   _id?: string;
   name: string;
@@ -30,17 +16,7 @@ export interface Ingredient {
 @Component({
   selector: 'app-ingredient-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatGridListModule,
-    MatCardModule,
-    MatIconModule,
-    MatDividerModule
-  ],
+  imports: [AdminModule],
   templateUrl: './ingredient-form.component.html',
   styleUrls: ['./ingredient-form.component.scss'],
 })
@@ -55,10 +31,11 @@ export class IngredientFormComponent {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: {
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
       imageUrls: string[];
-      ingredient: Ingredient | null 
-}
+      ingredient: Ingredient | null;
+    }
   ) {
     this.ingredientForm = this.fb.group({
       name: [data.ingredient?.name || '', Validators.required],
@@ -72,8 +49,8 @@ export class IngredientFormComponent {
     if (data.ingredient?.images) {
       this.existingImages = [...data.ingredient.images];
       this.existingImageUrls = [...data.imageUrls];
-      console.log('Images existantes :', this.existingImages);
-      console.log('pouet : ', this.existingImageUrls);
+      // console.log('Images existantes :', this.existingImages);
+      // console.log('pouet : ', this.existingImageUrls);
     }
   }
 
@@ -81,8 +58,6 @@ export class IngredientFormComponent {
     if (this.data.ingredient) {
       this.ingredientForm.patchValue(this.data.ingredient);
     }
-    // Charger les images pour l'aperçu
-    // this.filePreviews = this.data.imageUrls || [];
   }
 
   onVeganChange(isVeganChecked: boolean): void {
@@ -133,7 +108,7 @@ export class IngredientFormComponent {
     this.existingImageUrls.splice(index, 1);
     const removed = this.existingImages.splice(index, 1)[0];
     this.removedExistingImages.push(removed);
-    console.log('Images supprimées :', this.removedExistingImages);
+    // console.log('Images supprimées :', this.removedExistingImages);
   }
 
   save(): void {

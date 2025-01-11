@@ -1,0 +1,62 @@
+<h2 mat-dialog-title>
+    {{ data.product ? 'Modifier un produit' : 'Ajouter un produit' }}
+</h2>
+<form [formGroup]="productForm" (ngSubmit)="save()">
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+        <mat-label>Catégorie</mat-label>
+        <mat-select formControlName="category">
+            <mat-option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <!-- <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Composition</mat-label> -->
+        <!-- Vérifie si la liste des ingrédients est vide -->
+        <!-- <div *ngIf="productForm.get('composition').value?.length > 0; else noIngredients">
+            <mat-chip-grid #chipList>
+                <mat-chip *ngFor="let ingredient of productForm.get('composition').value" [removable]="true"
+                    (removed)="removeIngredient(ingredient)">
+                    {{ ingredient }}
+                    <button matChipRemove>
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </mat-chip>
+                <input [matChipInputFor]="chipList" [matChipInputSeparatorKeyCodes]="[13, 188]"
+                    (matChipInputTokenEnd)="addIngredient($event)">
+            </mat-chip-grid>
+        </div> -->
+        
+        <!-- Template affiché si la liste des ingrédients est vide -->
+        <!-- <ng-template #noIngredients>
+            <button mat-raised-button color="primary" (click)="openIngredientForm()">
+                Ajouter un ingrédient
+            </button>
+        </ng-template> -->
+    <!-- </mat-form-field> -->
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Prix</mat-label>
+        <input matInput type="number" formControlName="price" />
+    </mat-form-field>
+
+    <div class="stock">
+        <mat-checkbox formControlName="stock">En stock</mat-checkbox>
+    </div>
+
+    <div mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+</form>

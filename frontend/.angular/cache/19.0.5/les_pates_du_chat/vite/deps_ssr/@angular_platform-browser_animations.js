@@ -7,8 +7,8 @@ import {
   provideNoopAnimations
 } from "./chunk-AHFYB3VT.js";
 import "./chunk-3YMKCKW7.js";
-import "./chunk-QA6L3UWB.js";
 import "./chunk-BKALYLS4.js";
+import "./chunk-QA6L3UWB.js";
 import "./chunk-I3XTUUN3.js";
 import {
   ANIMATION_MODULE_TYPE

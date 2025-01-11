@@ -9,21 +9,41 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatOptionModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatListModule } from '@angular/material/list';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
     exports: [
         CommonModule,
-        ReactiveFormsModule,
         FormsModule,
+        ReactiveFormsModule,
 
-        MatTableModule,
-        MatPaginatorModule,
-        MatSortModule,
-        MatIconModule,
+        MatAutocompleteModule,
         MatButtonModule,
-        MatToolbarModule,
-        MatDividerModule,
+        MatCardModule,
+        MatCheckboxModule,
+        MatChipsModule,
         MatDialogModule,
+        MatDividerModule,
+        MatFormFieldModule,
+        MatGridListModule,
+        MatIconModule,
+        MatInputModule,
+        MatListModule,
+        MatOptionModule,
+        MatPaginatorModule,
+        MatSelectModule,
+        MatSortModule,
+        MatTableModule,
+        MatToolbarModule,
     ],
 })
 export class AdminModule {}
