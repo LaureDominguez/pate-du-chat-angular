@@ -53,10 +53,10 @@ mat-divider {
   cursor: pointer;
   transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out; /* Animation pour élargir le bouton */
 }
-.animated-button.edit {
+.animated-button.edit, .animated-button.save {
   color: var(--primary);
 }
-.animated-button.delete {
+.animated-button.delete, .animated-button.cancel {
   color: var(--error);
 }
 
@@ -91,7 +91,11 @@ mat-divider {
   background-color: var(--primaryContainer);
   color: var(--onPrimaryContainer);
 }
-.animated-button:hover.delete {
+.animated-button:hover.save {
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+}
+.animated-button:hover.delete, .animated-button:hover.cancel {
   background-color: var(--error);
   color: var(--onError);
 }

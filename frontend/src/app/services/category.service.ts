@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Category {
-  _id?: string;
+  _id?: string | null;
   name: string;
   description?: string;
 }
@@ -33,8 +33,8 @@ export class CategoryService {
   }
 
   // Mettre à jour une catégorie existante
-  updateCategory(id: string, category: Category): Observable<Category> {
-    const url = `${this.apiUrl}/${id}`;
+  updateCategory(category: Category): Observable<Category> {
+    const url = `${this.apiUrl}/${category._id}`;
     return this.http.put<Category>(url, category);
   }
 

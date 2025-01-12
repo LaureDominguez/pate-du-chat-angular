@@ -1,18 +1,58 @@
 <div class="admin-section">
     <h2>Liste des catégories</h2>
+    
     <table mat-table [dataSource]="categories" matSort #categoriesSort="matSort">
         <!-- Nom Column -->
         <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Nom</th>
-            <td mat-cell *matCellDef="let category">{{ category.name }}</td>
+            <td mat-cell *matCellDef="let category">
+                <!-- Mode normal -->
+                <span *ngIf="editingCategoryId !== category._id">
+                    {{ category.name }}
+                </span>
+                <!-- Mode édition -->
+                <mat-form-field *ngIf="editingCategoryId === category._id" appearance="fill">
+                    <input matInput [(ngModel)]="category.name" placeholder="Nom de la catégorie" (keydown.enter)="saveCategory(category)" />
+                </mat-form-field>
+            </td>
         </ng-container>
 
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let category">
-                <button mat-button (click)="openCategoryForm(category)">Modifier</button>
-                <button mat-button (click)="deleteCategory(category)">Supprimer</button>
+
+                <!-- Edit -->
+                <button mat-button class="animated-button edit" *ngIf="editingCategoryId !== category._id" (click)="editCategory(category._id)">
+                    <div class="content">
+                        <mat-icon class="icon">edit</mat-icon>
+                        <span class="text">Modifier</span>
+                    </div>
+                </button>
+
+                <!-- Save -->
+                <button mat-button class="animated-button save" *ngIf="editingCategoryId === category._id" (click)="saveCategory(category)">
+                    <div class="content">
+                        <mat-icon class="icon">check</mat-icon>
+                        <span class="text">Enregistrer</span>
+                    </div>
+                </button>
+
+                <!-- Delete -->
+                <button mat-button class="animated-button delete" *ngIf="editingCategoryId !== category._id" (click)="deleteCategory(category)">
+                    <div class="content">
+                        <mat-icon class="icon">delete</mat-icon>
+                        <span class="text">Supprimer</span>
+                    </div>
+                </button>
+
+                <!-- Cancel -->
+                <button mat-button class="animated-button cancel" *ngIf="editingCategoryId === category._id" (click)="cancelEdit()">
+                    <div class="content">
+                        <mat-icon class="icon">close</mat-icon>
+                        <span class="text">Annuler</span>
+                    </div>
+                </button>
             </td>
         </ng-container>
 
@@ -24,7 +64,7 @@
     <mat-divider></mat-divider>
 
     <div class="add-button">
-        <button mat-button class="add" (click)="openCategoryForm(null)">Ajouter une catégorie</button>
+        <button mat-button class="add" (click)="addCategory()">Ajouter une catégorie</button>
         <mat-paginator #categoriesPaginator [pageSize]="10"></mat-paginator>
     </div>
 </div>

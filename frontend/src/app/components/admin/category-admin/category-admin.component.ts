@@ -3,6 +3,9 @@ import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
 import { MatPaginator } from '@angular/material/paginator';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+
 
 @Component({
   selector: 'app-category-admin',
@@ -12,12 +15,15 @@ import { MatPaginator } from '@angular/material/paginator';
 })
 export class CategoryAdminComponent implements OnInit {
   categories = new MatTableDataSource<Category>([]);
-
   displayedCategoriesColumns: string[] = ['name', 'actions'];
+  editingCategoryId: string | null = null;
 
   @ViewChild('categoriesPaginator') categoriesPaginator!: MatPaginator;
 
-  constructor(private categoryService: CategoryService) {}
+  constructor(
+    private categoryService: CategoryService,
+    private dialog: MatDialog
+  ) { }
 
   ngOnInit(): void {
     this.fecthCategories();
@@ -34,24 +40,57 @@ export class CategoryAdminComponent implements OnInit {
   }
 
   // Méthodes pour gérer les catégories
-  openCategoryForm(category: { id: string; name: string } | null): void {
-    if (category) {
-      // Logique pour ouvrir un formulaire de modification
-      console.log('Modifier catégorie:', category);
+  //Add
+  addCategory(): void {
+    console.log('Ajouter une nouvelle catégorie');
+    const newCategory: Category = { _id: null, name: '' };
+    this.categories.data = [newCategory, ...this.categories.data];
+  }
+
+  // Edit
+  editCategory(categoryId: string | null): void {
+    this.editingCategoryId = categoryId;
+  }
+
+  cancelEdit(): void {
+    this.editingCategoryId = null;
+    this.fecthCategories();
+  }
+
+  //Save
+  saveCategory(category: Category): void {
+    if (category._id) {
+      // Logique pour mettre à jour la catégorie existante
+      this.categoryService.updateCategory(category).subscribe(() => {
+        console.log('Catégorie mise à jour avec succès');
+        this.fecthCategories();
+        this.cancelEdit();
+      });
     } else {
-      // Logique pour ouvrir un formulaire de création
-      console.log('Créer une nouvelle catégorie');
+      // Logique pour créer une nouvelle catégorie
+      this.categoryService.createCategory(category).subscribe((created) => {
+        console.log('Catégorie crée avec succès');
+        this.fecthCategories();
+        this.cancelEdit();
+      });
     }
   }
 
-  deleteCategory(category: { id: string; name: string }): void {
-    if (
-      confirm(
-        `Êtes-vous sûr de vouloir supprimer la catégorie "${category.name}" ?`
-      )
-    ) {
-      // Logique pour supprimer la catégorie
-      console.log('Supprimer catégorie:', category);
-    }
+  //Delete
+  deleteCategory(category: Category): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        message: `Êtes-vous sûr de vouloir supprimer la catégorie "${category.name}" ?`,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.categoryService.deleteCategory(category._id!).subscribe(() => {
+          console.log('Catégorie supprimée avec succès');
+          this.fecthCategories();
+        });
+      }
+    });
   }
 }
