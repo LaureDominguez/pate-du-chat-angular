@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
-import { CategoryService } from '../../../services/category.service';
+import { Category, CategoryService } from '../../../services/category.service';
+import { Ingredient, IngredientService } from '../../../services/ingredient.service';
+import { Product, ProductService } from '../../../services/product.service';
+import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
-import { IngredientService } from '../../../services/ingredient.service';
-import { ProductService } from '../../../services/product.service';
-import { Product, ProductFormComponent } from './product-form/product-form.component';
 
 import { AdminModule } from '../admin.module';
 import { MatDialog } from '@angular/material/dialog';
@@ -20,7 +20,10 @@ import { MatTableDataSource } from '@angular/material/table';
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
 export class ProductAdminComponent implements OnInit {
-  products = new MatTableDataSource<Product>([]);
+  productsList = new MatTableDataSource<Product>([]);
+  products: Product[] = [];
+  categories: Category[] = [];
+  ingredients: Ingredient[] = [];
 
   displayedProductsColumns: string[] = [
     'name',
@@ -43,59 +46,73 @@ export class ProductAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.fecthProducts();
+    this.fetchCategories();
+    this.fetchIngredients();
   }
 
   ngAfterViewInit(): void {
-    this.products.paginator = this.productsPaginator;
-    this.products.sort = this.productsSort;
-    this.products.data = this.products.data;
+    this.productsList.paginator = this.productsPaginator;
+    this.productsList.sort = this.productsSort;
+    this.productsList.data = this.productsList.data;
   }
 
   fecthProducts(): void {
     this.productService.getProducts().subscribe((products) => {
-      // this.products.data = products;
+      console.log('admin.component -> fecthProducts -> products : ', products);
+      this.products = products;
     });
   }
 
-  
-    openProductForm(product: Product | null): void {
-      const categories$ = this.categoryService.getCategories();
-      const ingredients$ = this.ingredientService.getIngredients();
-  
-      forkJoin([categories$, ingredients$]).subscribe(
-        ([categories, ingredients]) => {
-          const imageUrls =
-            product?.images?.map((imagePath) =>
-              this.imageService.getImageUrl(imagePath)
-            ) || [];
-  
-          const dialogRef = this.dialog.open(ProductFormComponent, {
-            width: '600px',
-            data: {
-              product,
-              imageUrls,
-              categories: categories,
-              ingredients: ingredients,
-            },
-          });
-  
-          dialogRef.afterClosed().subscribe((result: any | undefined) => {
-            if (result) {
-              console.log('pouet :', result);
-            }
-          });
-        }
-      ),
-        (error: any) => {
-          console.error(
-            'Erreur lors du chargement des catégories ou des ingrédients :',
-            error
-          );
-        };
-    }
-  
-    deleteProduct(product: Product): void {
-      // Logique pour supprimer un produit
-      console.log('Suppression du produit :', product);
-    }
+  fetchCategories(): void {
+    this.categoryService.getCategories().subscribe((categories) => {
+      this.categories = categories;
+    });
+  }
+
+  fetchIngredients(): void {
+    this.ingredientService.getIngredients().subscribe((ingredients) => {
+      this.ingredients = ingredients;
+    });
+  }
+
+  openProductForm(product: Product | null): void {
+    const categories$ = this.categoryService.getCategories();
+    const ingredients$ = this.ingredientService.getIngredients();
+
+    forkJoin([categories$, ingredients$]).subscribe(
+      ([categories, ingredients]) => {
+        const imageUrls =
+          product?.images?.map((imagePath) =>
+            this.imageService.getImageUrl(imagePath)
+          ) || [];
+
+        const dialogRef = this.dialog.open(ProductFormComponent, {
+          width: '600px',
+          data: {
+            product,
+            imageUrls,
+            categories: categories,
+            ingredients: ingredients,
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((result: any | undefined) => {
+          if (result) {
+            console.log('pouet :', result);
+          }
+        });
+      }
+    ),
+      (error: any) => {
+        console.error(
+          'Erreur lors du chargement des catégories ou des ingrédients :',
+          error
+        );
+      };
+  }
+
+  deleteProduct(product: Product): void {
+    // Logique pour supprimer un produit
+    console.log('Suppression du produit :', product);
+  }
 }

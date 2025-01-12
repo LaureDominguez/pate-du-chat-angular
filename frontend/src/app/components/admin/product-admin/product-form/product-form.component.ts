@@ -6,16 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Ingredient } from '../../ingredient-admin/ingredient-form/ingredient-form.component';
 import { AdminModule } from '../../admin.module';
 
-export interface Product {
-  _id: string;
-  name: string;
-  category: string;
-  description: string;
-  composition: string[];
-  price: number;
-  images?: string[];
-  stock: boolean;
-}
+
 
 @Component({
   selector: 'app-product-form',
@@ -25,32 +16,27 @@ export interface Product {
   styleUrls: ['./product-form.component.scss'],
 })
 export class ProductFormComponent implements OnInit {
-  productForm: FormGroup;
-  categories: string[] = [];
+  productForm!: FormGroup;
+  categories: any[] = [];
   ingredients: Ingredient[] = [];
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: {
-      product: Product | null;
-      categories: string[];
-      ingredients: Ingredient[];
-      imageUrls: string[];
-    }
+    public data: any
   ) {
-    this.productForm = this.fb.group({
-      name: [data.product?.name || '', Validators.required],
-      category: [data.product?.category || '', Validators.required],
-      description: [data.product?.description || ''],
-      // composition: [data.product?.composition || [], Validators.required],
-      price: [
-        data.product?.price || 0,
-        [Validators.required, Validators.min(0)],
-      ],
-      stock: [data.product?.stock || false],
-    });
+    // this.productForm = this.fb.group({
+    //   name: [data.product?.name || '', Validators.required],
+    //   category: [data.product?.category || data.categories, Validators.required],
+    //   description: [data.product?.description || ''],
+    //   // composition: [data.product?.composition || [], Validators.required],
+    //   price: [
+    //     data.product?.price || 0,
+    //     [Validators.required, Validators.min(0)],
+    //   ],
+    //   stock: [data.product?.stock || false],
+    // });
   }
 
   ngOnInit(): void {
@@ -60,9 +46,22 @@ export class ProductFormComponent implements OnInit {
     this.categories = this.data.categories || [];
     this.ingredients = this.data.ingredients || [];
 
+    this.initForm();
+
     if (this.data.product) {
       this.productForm.patchValue({ ...this.data.product });
     }
+  }
+
+  initForm(): void {
+    this.productForm = this.fb.group({
+      name: [ this.data.product?.name || '', Validators.required],
+      category: [this.data.product?.category || null, Validators.required],
+      description: [this.data.product?.description || ''],
+      // composition: ['', Validators.required],
+      price: [this.data.product?.price || 0, [Validators.required, Validators.min(0)]],
+      stock: [this.data.product?.stock || false],
+    });
   }
 
   save(): void {

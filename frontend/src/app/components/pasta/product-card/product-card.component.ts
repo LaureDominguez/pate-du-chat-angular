@@ -8,7 +8,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { Product } from '../../../services/product.service';
+import { FinalProduct } from '../../../services/product.service';
 import { Ingredient } from '../../../services/ingredient.service';
 
 @Component({
@@ -18,7 +18,7 @@ import { Ingredient } from '../../../services/ingredient.service';
   imports: [CommonModule, MatCardModule],
 })
 export class ProductCardComponent implements OnChanges {
-  @Input() product!: Product;
+  @Input() product!: FinalProduct;
   @Input() ingredients!: Ingredient[];
   @Input() isSelected!: boolean;
   @Output() closeClick: EventEmitter<void> = new EventEmitter<void>();

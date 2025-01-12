@@ -6,7 +6,10 @@ import {
   OnInit,
 } from '@angular/core';
 
-import { ProductService, Product } from '../../../services/product.service';
+import {
+  ProductService,
+  FinalProduct,
+} from '../../../services/product.service';
 import {
   IngredientService,
   Ingredient,
@@ -22,20 +25,17 @@ import { AppModule } from '../../../app.module';
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss'],
   standalone: true,
-  imports: [
-    AppModule,
-    ProductCardComponent,
-  ],
+  imports: [AppModule, ProductCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   // Observables pour les produits et les ingrédients
-  products$: Observable<Product[]> = this.productService.getProducts();
+  products$: Observable<FinalProduct[]> = this.productService.getFinalProducts();
   ingredients$: Observable<Ingredient[]> =
     this.ingredientService.getIngredients();
 
   // Données locales
-  products: Product[] = [];
+  products: FinalProduct[] = [];
   ingredients: Ingredient[] = [];
   allergensList: string[] = [];
   isVegeta: boolean = true;
@@ -43,11 +43,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   // Grille d'affichage
   cols: number = 3;
-  grid1: Product[] = [];
-  grid2: Product[] = [];
+  grid1: FinalProduct[] = [];
+  grid2: FinalProduct[] = [];
 
   // Gestion de la sélection
-  selectedProduct: Product | null = null;
+  selectedProduct: FinalProduct | null = null;
   isSelected: boolean = false;
 
   // Observable pour la destruction
@@ -102,7 +102,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   // Sélectionner un produit
-  selectProduct(product: Product): void {
+  selectProduct(product: FinalProduct): void {
     if (!this.products || this.products.length === 0) {
       console.warn('Les produits ne sont pas encore chargés.');
       return;
