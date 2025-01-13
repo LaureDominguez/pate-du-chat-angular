@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { map, Observable, startWith } from 'rxjs';
 
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
@@ -17,7 +18,11 @@ import { AdminModule } from '../../admin.module';
 })
 export class ProductFormComponent implements OnInit {
   productForm!: FormGroup;
+  ingredientCtrl = new FormControl();
+  filteredIngredients: Observable<Ingredient[]>;
+  
   categories: any[] = [];
+  composition: Ingredient[] = [];
   ingredients: Ingredient[] = [];
 
   constructor(
@@ -26,17 +31,29 @@ export class ProductFormComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: any
   ) {
-    // this.productForm = this.fb.group({
-    //   name: [data.product?.name || '', Validators.required],
-    //   category: [data.product?.category || data.categories, Validators.required],
-    //   description: [data.product?.description || ''],
-    //   // composition: [data.product?.composition || [], Validators.required],
-    //   price: [
-    //     data.product?.price || 0,
-    //     [Validators.required, Validators.min(0)],
-    //   ],
-    //   stock: [data.product?.stock || false],
-    // });
+      this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
+        startWith(''),
+        map(value => this._filteredIngredients(value))
+      )
+  }
+  
+  private _filteredIngredients(value: string): Ingredient[] {
+    const filterValue = value.toLowerCase();
+    return this.ingredients.filter(ingredient => ingredient.name.toLowerCase().includes(filterValue));
+  }
+
+  addIngredient(ingredient: Ingredient): void {
+    if (!this.composition.includes(ingredient)) {
+      this.composition.push(ingredient);
+    }
+    this.ingredientCtrl.setValue('');
+  }
+
+  removeIngredient(ingredient: Ingredient): void {
+    const index = this.composition.indexOf(ingredient);
+    if (index >= 0) {
+      this.composition.splice(index, 1);
+    }
   }
 
   ngOnInit(): void {
