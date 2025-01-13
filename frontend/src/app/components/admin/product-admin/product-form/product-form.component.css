@@ -7,4 +7,8 @@ form {
   width: 95%;
   overflow: auto;
   margin: auto;
+}
+
+mat-option {
+  background-color: var(--surfaceContainerLowest) !important;
 }/*# sourceMappingURL=product-form.component.css.map */

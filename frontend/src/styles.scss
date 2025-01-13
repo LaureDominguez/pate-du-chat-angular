@@ -24,6 +24,7 @@ html, body {
     @include mat.app-background();
     @include mat.all-component-themes($theme);
     @include mat.all-component-typographies($theme);
+    @include mat.all-component-colors($theme);
 }
 
 body {
