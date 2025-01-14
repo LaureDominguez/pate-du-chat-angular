@@ -8,13 +8,17 @@ form {
   overflow: auto;
   margin: auto;
 }
-form input, form textarea {
-  background-color: var(--surfaceContainerLow);
+form mat-form-field {
+  border-radius: 10px;
+  color: var(--onSurface);
+  background-color: var(--surfaceBright);
 }
 
 mat-option {
-  background-color: var(--surfaceContainerLowest) !important;
+  color: var(--onSurface) !important;
+  background-color: var(--surfaceContainer) !important;
 }
 mat-option:hover {
-  background-color: var(--surfaceContainer) !important;
+  color: var(--onPrimaryFixed) !important;
+  background-color: var(--primaryFixed) !important;
 }/*# sourceMappingURL=product-form.component.css.map */

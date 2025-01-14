@@ -7,14 +7,18 @@ form {
     width: 95%;
     overflow: auto;
     margin: auto;
-    input, textarea {
-        background-color: var(--surfaceContainerLow);
+    mat-form-field {
+        border-radius: 10px;
+        color: var(--onSurface);
+        background-color: var(--surfaceBright);
     }
 }
 
 mat-option {
-    background-color: var(--surfaceContainerLowest) !important;
+    color: var(--onSurface) !important;
+    background-color: var(--surfaceContainer) !important;
     &:hover {
-        background-color: var(--surfaceContainer) !important;
+        color: var(--onPrimaryFixed) !important;
+        background-color: var(--primaryFixed) !important;
     }
 }

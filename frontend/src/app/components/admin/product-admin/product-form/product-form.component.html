@@ -27,20 +27,40 @@
     
     <!-- Ingrédients -->
     <mat-form-field>
-        <input type="text" placeholder="Ajouter un ingrédient" aria-label="Ingrédient" matInput
-            [formControl]="ingredientCtrl" [matAutocomplete]="auto">
+        <input 
+        type="text" 
+        placeholder="Ajouter un ingrédient" 
+        aria-label="Ingrédient" 
+        matInput
+            [formControl]="ingredientCtrl" 
+            [matAutocomplete]="auto"
+        />
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)">
+            <!-- Message pour encourager la recherche -->
+            <mat-option *ngIf="!ingredientCtrl.value || ingredientCtrl.value === ''" disabled>
+                Commencez à taper pour rechercher un ingrédient
+            </mat-option>
+            
+            <!-- Affichage des résultats filtrés -->
             <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient">
                 {{ ingredient.name }}
+            </mat-option>
+            
+            <!-- Message pour proposer l'ajout d'un ingrédient -->
+            <mat-option *ngIf="noResults" (click)="openIngredientForm()">
+                Aucun résultat. Cliquez ici pour ajouter un nouvel ingrédient.
             </mat-option>
         </mat-autocomplete>
     </mat-form-field>
 
     <div *ngFor="let ingredient of composition">
-        {{ ingredient.name }}
-        <button mat-icon-button (click)="removeIngredient(ingredient)">
-            <mat-icon>delete</mat-icon>
-        </button>
+        <mat-label>Composition</mat-label>
+        <mat-chip-set>
+            <mat-chip *ngFor="let ingredient of composition">
+                {{ ingredient.name }}
+                <mat-icon matChipRemove (click)="removeIngredient(ingredient)">cancel</mat-icon>
+            </mat-chip>
+        </mat-chip-set>
     </div>
 
 
