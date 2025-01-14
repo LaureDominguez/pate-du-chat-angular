@@ -1,19 +1,28 @@
 table {
-    th:nth-child(4), th:nth-child(5) {
-        justify-content: center;
-        text-align: center;
-        width: 10%;
-    }
+    th:not(:nth-child(4), :nth-child(5)), 
     td:not(:nth-child(4), :nth-child(5)) {
         width: 20%;
     }
+
+    th:nth-child(4), th:nth-child(5), 
     td:nth-child(4), td:nth-child(5) {
         justify-content: center;
         text-align: center;
         width: 10%;
+        ::ng-deep .mat-sort-header-container {
+            text-align: center;
+            justify-content: center !important;
+        }
     }
-    td:nth-child(6) {
+    
+    th:last-child, td:last-child {
         justify-content: center;
         text-align: center;
     }
 }
+
+    .mat-sort-header-container {
+        border: 1px solid black !important;
+        text-align: center;
+        justify-content: center !important;
+    }

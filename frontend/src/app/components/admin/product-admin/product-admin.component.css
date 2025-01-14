@@ -1,1 +1,15 @@
-/*# sourceMappingURL=product-admin.component.css.map */
+table th:first-child, table td:first-child {
+  width: 40%;
+}
+table th:nth-child(3), table th:nth-child(4), table td:nth-child(3), table td:nth-child(4) {
+  justify-content: center;
+  text-align: center;
+  width: 10%;
+}
+table th:nth-child(2), table th:last-child, table td:nth-child(2), table td:last-child {
+  width: 20%;
+}
+table th:last-child, table td:last-child {
+  justify-content: center;
+  text-align: center;
+}/*# sourceMappingURL=product-admin.component.css.map */

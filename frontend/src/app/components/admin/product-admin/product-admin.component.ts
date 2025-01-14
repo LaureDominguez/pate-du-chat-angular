@@ -58,8 +58,9 @@ export class ProductAdminComponent implements OnInit {
 
   fecthProducts(): void {
     this.productService.getProducts().subscribe((products) => {
-      console.log('admin.component -> fecthProducts -> products : ', products);
+      console.log('product-admin.component -> fecthProducts -> products : ', products);
       this.products = products;
+      this.productsList.data = this.products;
     });
   }
 

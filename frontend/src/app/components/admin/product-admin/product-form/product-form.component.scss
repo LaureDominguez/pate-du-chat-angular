@@ -7,8 +7,14 @@ form {
     width: 95%;
     overflow: auto;
     margin: auto;
+    input, textarea {
+        background-color: var(--surfaceContainerLow);
+    }
 }
 
 mat-option {
     background-color: var(--surfaceContainerLowest) !important;
+    &:hover {
+        background-color: var(--surfaceContainer) !important;
+    }
 }

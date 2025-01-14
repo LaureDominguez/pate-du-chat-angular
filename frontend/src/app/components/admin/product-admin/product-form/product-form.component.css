@@ -8,7 +8,13 @@ form {
   overflow: auto;
   margin: auto;
 }
+form input, form textarea {
+  background-color: var(--surfaceContainerLow);
+}
 
 mat-option {
   background-color: var(--surfaceContainerLowest) !important;
+}
+mat-option:hover {
+  background-color: var(--surfaceContainer) !important;
 }/*# sourceMappingURL=product-form.component.css.map */
