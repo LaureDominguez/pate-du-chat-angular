@@ -12,16 +12,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { SharedDataService } from '../../../services/shared-data.service';
 
 @Component({
   selector: 'app-product-admin',
+  standalone: true,
   imports: [AdminModule],
   templateUrl: './product-admin.component.html',
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
 export class ProductAdminComponent implements OnInit {
-  productsList = new MatTableDataSource<Product>([]);
-  products: Product[] = [];
+  products = new MatTableDataSource<Product>([]);
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
 
@@ -37,6 +38,7 @@ export class ProductAdminComponent implements OnInit {
   @ViewChild('productsSort') productsSort!: MatSort;
 
   constructor(
+    private sharedDataService: SharedDataService,
     private productService: ProductService,
     private ingredientService: IngredientService,
     private categoryService: CategoryService,
@@ -45,35 +47,24 @@ export class ProductAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.fecthProducts();
-    this.fetchCategories();
-    this.fetchIngredients();
+    this.loadData();
   }
 
   ngAfterViewInit(): void {
-    this.productsList.paginator = this.productsPaginator;
-    this.productsList.sort = this.productsSort;
-    this.productsList.data = this.productsList.data;
+    this.products.paginator = this.productsPaginator;
+    this.products.sort = this.productsSort;
   }
 
-  fecthProducts(): void {
-    this.productService.getProducts().subscribe((products) => {
-      console.log('product-admin.component -> fecthProducts -> products : ', products);
-      this.products = products;
-      this.productsList.data = this.products;
-    });
-  }
-
-  fetchCategories(): void {
-    this.categoryService.getCategories().subscribe((categories) => {
+  loadData(): void {
+    forkJoin({
+      products: this.productService.getProducts(),
+      categories: this.categoryService.getCategories(),
+      ingredients: this.ingredientService.getIngredients(),
+    }).subscribe(({ products, categories, ingredients }) => {
+      this.products.data = products;
       this.categories = categories;
-    });
-  }
-
-  fetchIngredients(): void {
-    this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients = ingredients;
-    });
+    })
   }
 
   openProductForm(product: Product | null): void {
@@ -97,9 +88,20 @@ export class ProductAdminComponent implements OnInit {
           },
         });
 
-        dialogRef.afterClosed().subscribe((result: any | undefined) => {
+        dialogRef.afterClosed().subscribe((result: any ) => {
           if (result) {
             console.log('pouet :', result);
+            // if (product) {
+            //   // Mise à jour du produit existant
+            //   this.productService.updateProduct(result).subscribe(() => {
+            //     this.loadData();
+            //   });
+            // } else {
+            //   // Création d'un nouveau produit
+            //   this.productService.createProduct(result).subscribe(() => {
+            //     this.loadData();
+            //   });
+            // }
           }
         });
       }
@@ -112,8 +114,15 @@ export class ProductAdminComponent implements OnInit {
       };
   }
 
+  requestOpenIngredientForm(): void {
+    this.sharedDataService.triggerOpenIngredientForm();
+  }
+
   deleteProduct(product: Product): void {
     // Logique pour supprimer un produit
     console.log('Suppression du produit :', product);
+    // this.productService.deleteProduct(product._id).subscribe(() => {
+    //   this.loadData();
+    // });
   }
 }

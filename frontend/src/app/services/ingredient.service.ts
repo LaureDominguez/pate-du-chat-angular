@@ -2,15 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface Ingredient {
-  _id?: string;
-  name: string;
-  supplier: string;
-  allergens: string[];
-  vegan: boolean;
-  vegeta: boolean;
-  images?: string[];
-}
+import { Ingredient } from '../models/ingredient';
 
 @Injectable({
   providedIn: 'root',
@@ -45,3 +37,4 @@ export class IngredientService {
     return this.http.delete<{ message: string }>(url);
   }
 }
+export { Ingredient };

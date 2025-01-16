@@ -16,6 +16,4 @@ import { CategoryAdminComponent } from './category-admin/category-admin.componen
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
 })
-export class AdminComponent {
-
-}
+export class AdminComponent {}

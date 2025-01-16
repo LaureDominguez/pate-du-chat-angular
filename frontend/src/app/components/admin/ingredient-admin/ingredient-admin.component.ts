@@ -11,6 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { SharedDataService } from '../../../services/shared-data.service';
 
 @Component({
   selector: 'app-ingredient-admin',
@@ -37,6 +38,7 @@ export class IngredientAdminComponent implements OnInit {
   @ViewChild('ingredientsSort') ingredientsSort!: MatSort;
 
   constructor(
+    private sharedDataService: SharedDataService,
     private ingredientService: IngredientService,
     private imageService: ImageService,
     private dialog: MatDialog
@@ -44,6 +46,9 @@ export class IngredientAdminComponent implements OnInit {
   
   ngOnInit(): void {
     this.fetchIngredients();
+    this.sharedDataService.openIngredientForm$.subscribe(() => {
+      this.openIngredientForm(null);
+    })
   }
 
   ngAfterViewInit(): void {

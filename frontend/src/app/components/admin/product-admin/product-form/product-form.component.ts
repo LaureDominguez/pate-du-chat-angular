@@ -1,16 +1,20 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { distinctUntilChanged, map, Observable, startWith } from 'rxjs';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { map, Observable, startWith } from 'rxjs';
 
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { Ingredient } from '../../ingredient-admin/ingredient-form/ingredient-form.component';
+import { Ingredient } from '../../../../models/ingredient';
 import { AdminModule } from '../../admin.module';
-
+import { SharedDataService } from '../../../../services/shared-data.service';
 
 @Component({
   selector: 'app-product-form',
-  standalone: true,
   imports: [AdminModule],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss'],
@@ -21,40 +25,33 @@ export class ProductFormComponent implements OnInit {
 
   categories: any[] = [];
   composition: Ingredient[] = [];
-  ingredients: Ingredient[] = [];
-  filteredIngredients: Observable<Ingredient[]> = new Observable<Ingredient[]>();
+  ingredients: any[] = [];
+  filteredIngredients!: Observable<Ingredient[]>;
   noResults: boolean = false;
 
-  constructor (
+  constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ProductFormComponent>,
-    @Inject(MAT_DIALOG_DATA)
-    public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private sharedDataService: SharedDataService
   ) {}
 
   ngOnInit(): void {
     this.categories = this.data.categories || [];
-    this.ingredients = this.data.ingredients || [];
-
     this.initForm();
+    this.setupIngredientAutoComplete();
 
     if (this.data.product) {
       this.productForm.patchValue({ ...this.data.product });
     }
-    
-    this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
-      startWith(''),
-      distinctUntilChanged(),
-      map((value) => this._filteredIngredients(value))
-    );
   }
 
-  initForm(): void {
+  private initForm(): void {
     this.productForm = this.fb.group({
       name: [this.data.product?.name || '', Validators.required],
       category: [this.data.product?.category || null, Validators.required],
       description: [this.data.product?.description || ''],
-      // composition: ['', Validators.required],
+      composition: [this.data.product?.composition || [], Validators.required],
       price: [
         this.data.product?.price || 0,
         [Validators.required, Validators.min(0)],
@@ -63,40 +60,65 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
-  private _filteredIngredients(value: string): Ingredient[] {
-    if (!value || value.trim() === '') {
+  private setupIngredientAutoComplete(): void {
+    const ingredients = this.data.ingredients || [];
+    this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
+      startWith(''),
+      map((value) => this.filterIngredients(value, ingredients))
+    );
+  }
+
+  private filterIngredients(
+    value: string,
+    ingredients: Ingredient[]
+  ): Ingredient[] {
+    const filterValue =
+      typeof value === 'string' ? value.toLowerCase().trim() : '';
+
+    if (!filterValue) {
       this.noResults = false; // Pas de message si le champ est vide
       return [];
     }
-    const filterValue = value.toLowerCase().trim();
 
-    const results = this.ingredients.filter((ingredient) =>
+    const results = ingredients.filter((ingredient) =>
       ingredient.name.toLowerCase().includes(filterValue)
     );
-    // console.log('results : ', results);
 
     this.noResults = results.length === 0;
-    // console.log('noResults : ', this.noResults);
+
+    console.log(
+      'value : ',
+      value,
+      'results : ',
+      results,
+      'noResults : ',
+      this.noResults
+    );
+
     return results;
   }
 
   addIngredient(ingredient: Ingredient): void {
-    if (!this.composition.includes(ingredient)) {
-      this.composition.push(ingredient);
+    const composition = this.productForm.get('composition')?.value || [];
+    if (!composition.some((comp: Ingredient) => comp._id === ingredient._id)) {
+      composition.push(ingredient);
+      this.productForm.get('composition')?.setValue(composition);
     }
-    this.ingredientCtrl.setValue('', { emitEvent: false });
-  }
-
-  removeIngredient(ingredient: Ingredient): void {
-    const index = this.composition.indexOf(ingredient);
-    if (index >= 0) {
-      this.composition.splice(index, 1);
-    }
+    this.ingredientCtrl.setValue('');
   }
 
   openIngredientForm() {
     // Logique pour ouvrir le formulaire ingredient-form
     console.log('Ouverture du formulaire ingredient-form');
+    this.sharedDataService.triggerOpenIngredientForm();
+  }
+
+  removeIngredient(ingredient: Ingredient): void {
+    const composition = this.productForm.get('composition')?.value || [];
+    const updatedComposition = composition.filter(
+      (comp: Ingredient) => comp._id !== ingredient._id
+    );
+    this.productForm.get('composition')?.setValue(updatedComposition);
   }
 
   save(): void {

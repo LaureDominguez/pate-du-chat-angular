@@ -27,13 +27,12 @@
     
     <!-- Ingrédients -->
     <mat-form-field>
+        <mat-label>Ajouter un ingrédient</mat-label>
         <input 
-        type="text" 
-        placeholder="Ajouter un ingrédient" 
-        aria-label="Ingrédient" 
-        matInput
-            [formControl]="ingredientCtrl" 
-            [matAutocomplete]="auto"
+            type="text"
+            matInput
+                [formControl]="ingredientCtrl" 
+                [matAutocomplete]="auto"
         />
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)">
             <!-- Message pour encourager la recherche -->
@@ -53,15 +52,15 @@
         </mat-autocomplete>
     </mat-form-field>
 
-    <div *ngFor="let ingredient of composition">
-        <mat-label>Composition</mat-label>
-        <mat-chip-set>
-            <mat-chip *ngFor="let ingredient of composition">
-                {{ ingredient.name }}
-                <mat-icon matChipRemove (click)="removeIngredient(ingredient)">cancel</mat-icon>
-            </mat-chip>
-        </mat-chip-set>
-    </div>
+    <mat-chip-set>
+        <mat-chip *ngFor="let ingredient of productForm.get('composition')?.value" [removable]="true"
+            (removed)="removeIngredient(ingredient)">
+            {{ ingredient.name }}
+            <button mat-icon-button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+            </button>
+        </mat-chip>
+    </mat-chip-set>
 
 
     <!-- Prix -->
