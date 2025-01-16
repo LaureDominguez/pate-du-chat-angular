@@ -190,6 +190,7 @@ export class IngredientAdminComponent implements OnInit {
       next: (res) => {
         console.log('admin.component -> addIngredient -> res : ', res);
         this.fetchIngredients();
+        // this.sharedDataService.sendCreatedIngredient(res);
       },
       error: (error) => {
         console.error('admin.component -> addIngredient -> error : ', error);

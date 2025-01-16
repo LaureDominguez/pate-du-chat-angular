@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { map, Observable, startWith } from 'rxjs';
 
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 
 import { Ingredient } from '../../../../models/ingredient';
 import { AdminModule } from '../../admin.module';
@@ -31,6 +31,7 @@ export class ProductFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private sharedDataService: SharedDataService
@@ -40,6 +41,10 @@ export class ProductFormComponent implements OnInit {
     this.categories = this.data.categories || [];
     this.initForm();
     this.setupIngredientAutoComplete();
+
+    // this.sharedDataService.ingredientCreated$.subscribe((ingredient) => {
+    //   this.composition.push(ingredient);
+    // })
 
     if (this.data.product) {
       this.productForm.patchValue({ ...this.data.product });

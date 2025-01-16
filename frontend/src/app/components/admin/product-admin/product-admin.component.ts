@@ -116,6 +116,7 @@ export class ProductAdminComponent implements OnInit {
 
   requestOpenIngredientForm(): void {
     this.sharedDataService.triggerOpenIngredientForm();
+
   }
 
   deleteProduct(product: Product): void {
