@@ -12,6 +12,7 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { Ingredient } from '../../../../models/ingredient';
 import { AdminModule } from '../../admin.module';
 import { SharedDataService } from '../../../../services/shared-data.service';
+import { IngredientAdminComponent } from '../../ingredient-admin/ingredient-admin.component';
 
 @Component({
   selector: 'app-product-form',
@@ -42,13 +43,17 @@ export class ProductFormComponent implements OnInit {
     this.initForm();
     this.setupIngredientAutoComplete();
 
-    // this.sharedDataService.ingredientCreated$.subscribe((ingredient) => {
-    //   this.composition.push(ingredient);
-    // })
-
     if (this.data.product) {
       this.productForm.patchValue({ ...this.data.product });
     }
+
+    this.sharedDataService.ingredientCreated$.subscribe((ingredient) => {
+      this.ingredients.push(ingredient);
+      this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
+        startWith(''),
+        map((value) => this.filterIngredients(value, this.ingredients))
+      );
+    });
   }
 
   private initForm(): void {
@@ -103,19 +108,67 @@ export class ProductFormComponent implements OnInit {
     return results;
   }
 
-  addIngredient(ingredient: Ingredient): void {
+  addIngredient(ingredient: Ingredient | 'noResults'): void {
+    console.log('product-form -> addIngredient -> start : ', ingredient);
+
+    if (ingredient === 'noResults') {
+      console.log(
+        'product-form -> addIngredient -> Cannot add "Aucun résultat".'
+      );
+      this.createIngredient();
+      return;
+    }
+
+      // if (!ingredient || typeof ingredient !== 'object') {
+      //   console.warn('product-form -> addIngredient -> Invalid value.');
+      //   return;
+      // }
+
     const composition = this.productForm.get('composition')?.value || [];
     if (!composition.some((comp: Ingredient) => comp._id === ingredient._id)) {
       composition.push(ingredient);
       this.productForm.get('composition')?.setValue(composition);
+      console.log('composition : ', composition);
     }
     this.ingredientCtrl.setValue('');
+    console.log('product-form -> addIngredient -> end : ', composition);
   }
 
-  openIngredientForm() {
-    // Logique pour ouvrir le formulaire ingredient-form
-    console.log('Ouverture du formulaire ingredient-form');
-    this.sharedDataService.triggerOpenIngredientForm();
+  async createIngredient(): Promise<void> {
+    console.log('product-form -> addIngredient -> start');
+
+    try {
+      const newIngredient = await this.openIngredientForm();
+
+      const composition = this.productForm.get('composition')?.value || [];
+      if (
+        !composition.some((comp: Ingredient) => comp._id === newIngredient._id)
+      ) {
+        composition.push(newIngredient);
+        this.productForm.get('composition')?.setValue(composition);
+        console.log('composition : ', composition);
+      }
+      this.ingredientCtrl.setValue('');
+      console.log('product-form -> addIngredient -> end : ', composition);
+    } catch (error) {
+      console.error('product-form -> addIngredient -> error : ', error);
+    }
+  }
+
+  openIngredientForm(): Promise<Ingredient> {
+    console.log('product-form -> openIngredientForm');
+    return new Promise((resolve, reject) => {
+      this.sharedDataService.requestOpenIngredientForm();
+
+      // Écoute l'événement ingredientCreated$ pour récupérer l'ingrédient
+      const subscription = this.sharedDataService.ingredientCreated$.subscribe({
+        next: (ingredient) => {
+          subscription.unsubscribe(); // Arrête l'écoute après réception
+          resolve(ingredient);
+        },
+        error: (err) => reject(err),
+      });
+    });
   }
 
   removeIngredient(ingredient: Ingredient): void {

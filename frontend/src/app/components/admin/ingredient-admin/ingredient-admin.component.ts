@@ -47,6 +47,7 @@ export class IngredientAdminComponent implements OnInit {
   ngOnInit(): void {
     this.fetchIngredients();
     this.sharedDataService.openIngredientForm$.subscribe(() => {
+      console.log('ingredient-admin -> onInit -> openIngredientForm');
       this.openIngredientForm(null);
     })
   }
@@ -64,6 +65,7 @@ export class IngredientAdminComponent implements OnInit {
     }
 
   openIngredientForm(ingredient: Ingredient | null): void {
+    console.log('ingredient-admin -> openIngredientForm : ', ingredient);
     const imageUrls =
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
@@ -190,7 +192,7 @@ export class IngredientAdminComponent implements OnInit {
       next: (res) => {
         console.log('admin.component -> addIngredient -> res : ', res);
         this.fetchIngredients();
-        // this.sharedDataService.sendCreatedIngredient(res);
+        this.sharedDataService.resultIngredientCreated(res);
       },
       error: (error) => {
         console.error('admin.component -> addIngredient -> error : ', error);

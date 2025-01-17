@@ -45,8 +45,8 @@
                 {{ ingredient.name }}
             </mat-option>
             
-            <!-- Message pour proposer l'ajout d'un ingrédient -->
-            <mat-option *ngIf="noResults" (click)="openIngredientForm()">
+            <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->
+            <mat-option *ngIf="noResults" [value]="'noResults'" >
                 Aucun résultat. Cliquez ici pour ajouter un nouvel ingrédient.
             </mat-option>
         </mat-autocomplete>

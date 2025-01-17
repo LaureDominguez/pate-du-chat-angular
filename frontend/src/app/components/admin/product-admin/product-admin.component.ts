@@ -13,6 +13,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedDataService } from '../../../services/shared-data.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-product-admin',
@@ -91,17 +92,17 @@ export class ProductAdminComponent implements OnInit {
         dialogRef.afterClosed().subscribe((result: any ) => {
           if (result) {
             console.log('pouet :', result);
-            // if (product) {
-            //   // Mise à jour du produit existant
-            //   this.productService.updateProduct(result).subscribe(() => {
-            //     this.loadData();
-            //   });
-            // } else {
-            //   // Création d'un nouveau produit
-            //   this.productService.createProduct(result).subscribe(() => {
-            //     this.loadData();
-            //   });
-            // }
+            if (product) {
+              // Mise à jour du produit existant
+              this.productService.updateProduct(result._id, result).subscribe(() => {
+                this.loadData();
+              });
+            } else {
+              // Création d'un nouveau produit
+              this.productService.createProduct(result).subscribe(() => {
+                this.loadData();
+              });
+            }
           }
         });
       }
@@ -114,16 +115,21 @@ export class ProductAdminComponent implements OnInit {
       };
   }
 
-  requestOpenIngredientForm(): void {
-    this.sharedDataService.triggerOpenIngredientForm();
-
-  }
-
   deleteProduct(product: Product): void {
-    // Logique pour supprimer un produit
-    console.log('Suppression du produit :', product);
-    // this.productService.deleteProduct(product._id).subscribe(() => {
-    //   this.loadData();
-    // });
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        message: `Êtes-vous sûr de vouloir supprimer le produit "${product.name}" ?`,
+      },
+    })
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.productService.deleteProduct(product._id!).subscribe(() => {
+          this.loadData();
+        });
+      }
+    })
+
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Ingredient } from '../models/ingredient';
 
 @Injectable({
@@ -7,17 +7,19 @@ import { Ingredient } from '../models/ingredient';
 })
 export class SharedDataService {
   private openIngredientFormSubject = new Subject<void>();
-  openIngredientForm$ = this.openIngredientFormSubject.asObservable();
+  openIngredientForm$ : Observable<void> = this.openIngredientFormSubject.asObservable();
 
-  // Sujet pour transmettre l'ingrédient créé
   private ingredientCreatedSubject = new Subject<Ingredient>();
-  ingredientCreated$ = this.ingredientCreatedSubject.asObservable();
+  ingredientCreated$ : Observable<Ingredient> = this.ingredientCreatedSubject.asObservable();
 
-  triggerOpenIngredientForm() {
+  requestOpenIngredientForm() {
+    console.log('shared-data.service -> request -> requestOpenIngredientForm');
     this.openIngredientFormSubject.next();
   }
 
-  sendCreatedIngredient(ingredient: Ingredient): void {
+  resultIngredientCreated(ingredient: Ingredient) {
+    console.log('shared-data.service -> result -> resultIngredientCreated : ', ingredient);
     this.ingredientCreatedSubject.next(ingredient);
   }
+
 }

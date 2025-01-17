@@ -37,6 +37,7 @@ export class IngredientFormComponent {
       ingredient: Ingredient | null;
     }
   ) {
+    console.log('IngredientFormComponent -> constructor : ' , data);
     this.ingredientForm = this.fb.group({
       name: [data.ingredient?.name || '', Validators.required],
       supplier: [data.ingredient?.supplier || '', Validators.required],
