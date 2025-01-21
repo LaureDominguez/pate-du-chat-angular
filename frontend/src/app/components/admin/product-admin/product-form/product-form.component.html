@@ -25,13 +25,14 @@
         <textarea matInput formControlName="description" rows="3"></textarea>
     </mat-form-field>
     
-    <!-- Ingrédients -->
-    <mat-form-field>
+    <!-- Composition -->
+    <mat-form-field  appearance="fill">
         <mat-label>Ajouter un ingrédient</mat-label>
         <input 
             type="text"
             matInput
                 [formControl]="ingredientCtrl" 
+                formControlName="composition"
                 [matAutocomplete]="auto"
         />
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)">
@@ -52,6 +53,7 @@
         </mat-autocomplete>
     </mat-form-field>
 
+    <!-- Liste des ingrédients -->
     <mat-chip-set>
         <mat-chip *ngFor="let ingredient of productForm.get('composition')?.value" [removable]="true"
             (removed)="removeIngredient(ingredient)">

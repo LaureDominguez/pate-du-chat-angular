@@ -3,9 +3,8 @@ import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
 import { MatPaginator } from '@angular/material/paginator';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-
 
 @Component({
   selector: 'app-category-admin',
@@ -23,7 +22,7 @@ export class CategoryAdminComponent implements OnInit {
   constructor(
     private categoryService: CategoryService,
     private dialog: MatDialog
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.fecthCategories();

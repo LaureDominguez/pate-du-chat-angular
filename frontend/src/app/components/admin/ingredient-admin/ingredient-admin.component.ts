@@ -1,10 +1,13 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 
-import { Ingredient, IngredientService } from '../../../services/ingredient.service';
+import {
+  Ingredient,
+  IngredientService,
+} from '../../../services/ingredient.service';
 import { ImageService } from '../../../services/image.service';
 
 import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 
 import { AdminModule } from '../admin.module';
 import { MatDialog } from '@angular/material/dialog';
@@ -17,10 +20,7 @@ import { SharedDataService } from '../../../services/shared-data.service';
   selector: 'app-ingredient-admin',
   imports: [AdminModule],
   templateUrl: './ingredient-admin.component.html',
-  styleUrls: [
-    './ingredient-admin.component.scss',
-    '../admin.component.scss'
-  ],
+  styleUrls: ['./ingredient-admin.component.scss', '../admin.component.scss'],
 })
 export class IngredientAdminComponent implements OnInit {
   ingredients = new MatTableDataSource<Ingredient>([]);
@@ -42,14 +42,14 @@ export class IngredientAdminComponent implements OnInit {
     private ingredientService: IngredientService,
     private imageService: ImageService,
     private dialog: MatDialog
-  ) { }
-  
+  ) {}
+
   ngOnInit(): void {
     this.fetchIngredients();
     this.sharedDataService.openIngredientForm$.subscribe(() => {
       console.log('ingredient-admin -> onInit -> openIngredientForm');
       this.openIngredientForm(null);
-    })
+    });
   }
 
   ngAfterViewInit(): void {
@@ -57,12 +57,11 @@ export class IngredientAdminComponent implements OnInit {
     this.ingredients.sort = this.ingredientsSort;
   }
 
-  
-    fetchIngredients(): void {
-      this.ingredientService.getIngredients().subscribe((ingredients) => {
-        this.ingredients.data = ingredients;
-      });
-    }
+  fetchIngredients(): void {
+    this.ingredientService.getIngredients().subscribe((ingredients) => {
+      this.ingredients.data = ingredients;
+    });
+  }
 
   openIngredientForm(ingredient: Ingredient | null): void {
     console.log('ingredient-admin -> openIngredientForm : ', ingredient);

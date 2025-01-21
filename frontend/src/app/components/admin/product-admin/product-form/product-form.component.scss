@@ -1,3 +1,7 @@
+::ng-deep .mat-mdc-dialog-surface {
+    background-color: var(--surfaceBright);
+}
+
 form {
     display: flex;
     align-items: stretch;
@@ -11,6 +15,14 @@ form {
         border-radius: 10px;
         color: var(--onSurface);
         background-color: var(--surfaceBright);
+        &:focus-within {
+            color: var(--onSurface);
+            background-color: var(--surfaceContainer);
+        }
+        &.ng-invalid.ng-touched {
+            color: var(--error);
+            background-color: var(--errorContainer);
+        }
     }
 }
 

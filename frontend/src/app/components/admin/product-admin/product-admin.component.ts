@@ -2,7 +2,10 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
-import { Ingredient, IngredientService } from '../../../services/ingredient.service';
+import {
+  Ingredient,
+  IngredientService,
+} from '../../../services/ingredient.service';
 import { Product, ProductService } from '../../../services/product.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
@@ -13,7 +16,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedDataService } from '../../../services/shared-data.service';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-product-admin',
@@ -65,7 +68,7 @@ export class ProductAdminComponent implements OnInit {
       this.products.data = products;
       this.categories = categories;
       this.ingredients = ingredients;
-    })
+    });
   }
 
   openProductForm(product: Product | null): void {
@@ -89,14 +92,16 @@ export class ProductAdminComponent implements OnInit {
           },
         });
 
-        dialogRef.afterClosed().subscribe((result: any ) => {
+        dialogRef.afterClosed().subscribe((result: any) => {
           if (result) {
-            console.log('pouet :', result);
+            console.log('product-admin -> ProductForm -> result :', result);
             if (product) {
               // Mise à jour du produit existant
-              this.productService.updateProduct(result._id, result).subscribe(() => {
-                this.loadData();
-              });
+              this.productService
+                .updateProduct(result._id, result)
+                .subscribe(() => {
+                  this.loadData();
+                });
             } else {
               // Création d'un nouveau produit
               this.productService.createProduct(result).subscribe(() => {
@@ -121,7 +126,7 @@ export class ProductAdminComponent implements OnInit {
       data: {
         message: `Êtes-vous sûr de vouloir supprimer le produit "${product.name}" ?`,
       },
-    })
+    });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
@@ -129,7 +134,6 @@ export class ProductAdminComponent implements OnInit {
           this.loadData();
         });
       }
-    })
-
+    });
   }
 }
