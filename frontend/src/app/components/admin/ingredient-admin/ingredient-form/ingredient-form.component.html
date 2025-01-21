@@ -12,10 +12,14 @@
         <input matInput formControlName="supplier" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill" class="full-width">
+    <div class="allergen-form-field">
         <mat-label>Allergènes</mat-label>
-        <input matInput formControlName="allergens" />
-    </mat-form-field>
+        <div formArrayName="allergens" class="allergen-grid">
+            <mat-checkbox *ngFor="let control of allergens.controls; let i = index" [formControlName]="i">
+                {{ data.allergenesList[i] }}
+            </mat-checkbox>
+        </div>
+    </div>
 
     <div class="regime">
         <mat-label>Régime alimentaire</mat-label>
@@ -42,10 +46,10 @@
     </div>
 
     <mat-divider *ngIf="existingImages.length > 0"></mat-divider>
-    
+
     <div class="file-upload">
-        <mat-label for="imageUpload">Télécharger des image</mat-label>
-        <input type="file" multiple (change)="onFileSelected($event)" accept="image/*"/>
+        <mat-label for="imageUpload">Télécharger des images</mat-label>
+        <input id="imageUpload" type="file" multiple (change)="onFileSelected($event)" accept="image/*" />
     </div>
 
     <div class="previews" *ngIf="filePreviews.length > 0">
@@ -66,4 +70,3 @@
         <button mat-raised-button color="primary" type="submit">Enregistrer</button>
     </div>
 </form>
-

@@ -124,3 +124,36 @@ mat-divider {
     /* Ajustement spécial pour le retour */
     transition: transform 0.8s ease-out, opacity 0.3s ease-out;
 }
+
+
+//////////////////////////////
+/// // Formulaires
+//////////////////////////////
+
+// ::ng-deep .mat-mdc-dialog-surface {
+//     background-color: var(--surfaceBright);
+// }
+
+// form {
+//     display: flex;
+//     align-items: stretch;
+//     flex-direction: column;
+//     justify-content: space-evenly;
+//     height: 40rem;
+//     width: 95%;
+//     overflow: auto;
+//     margin: auto;
+//     mat-form-field {
+//         border-radius: 10px;
+//         color: var(--onSurface);
+//         background-color: var(--surfaceBright);
+//         &:focus-within {
+//             color: var(--onSurface);
+//             background-color: var(--surfaceContainer);
+//         }
+//         &.ng-invalid.ng-touched {
+//             color: var(--error);
+//             background-color: var(--errorContainer);
+//         }
+//     }
+// }

@@ -1,3 +1,7 @@
+::ng-deep .mat-mdc-dialog-surface {
+  background-color: var(--surfaceBright);
+}
+
 form {
   display: flex;
   align-items: stretch;
@@ -8,6 +12,19 @@ form {
   overflow: auto;
   margin: auto;
 }
+form mat-form-field {
+  border-radius: 10px;
+  color: var(--onSurface);
+  background-color: var(--surfaceBright);
+}
+form mat-form-field:focus-within {
+  color: var(--onSurface);
+  background-color: var(--surfaceContainer);
+}
+form mat-form-field.ng-invalid.ng-touched {
+  color: var(--error);
+  background-color: var(--errorContainer);
+}
 
 mat-divider {
   margin: 1rem 0;
@@ -17,12 +34,35 @@ mat-label {
   font-weight: bold;
 }
 
+.allergen-grid {
+  margin-top: 16px;
+  border: 1px solid var(--outlineVariant);
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.allergen-grid mat-checkbox:hover {
+  border-radius: 8px;
+  background-color: var(--surfaceContainer);
+}
+
+.regime {
+  display: flex;
+  align-items: center;
+}
+.regime mat-label {
+  width: 35%;
+  line-height: 2rem;
+  padding: 0 1rem;
+}
 .regime div {
   display: flex;
   justify-content: space-evenly;
+  width: 65%;
 }
 
-.regime mat-label, .file-upload mat-label, .existing-images mat-label {
+.allergen-form-field mat-label, .file-upload mat-label, .existing-images mat-label {
   margin: 1rem;
   line-height: 2rem;
 }

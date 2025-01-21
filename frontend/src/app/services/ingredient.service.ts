@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
 
@@ -9,8 +9,15 @@ import { Ingredient } from '../models/ingredient';
 })
 export class IngredientService {
   private apiUrl = 'http://localhost:5000/api/ingredients';
+  private allergenesUrl = '../assets/data/allergenes.json';
 
   constructor(private http: HttpClient) {}
+
+  getAllergenes(): Observable<string[]> {
+    return this.http
+      .get<{ allergenes: string[] }>(this.allergenesUrl)
+      .pipe(map((data) => data.allergenes));
+  }
 
   getIngredients(): Observable<Ingredient[]> {
     return this.http.get<Ingredient[]>(this.apiUrl);
@@ -22,10 +29,10 @@ export class IngredientService {
   }
 
   createIngredient(payload: any): Observable<Ingredient> {
-    console.log( "ingredient.service -> payload :", payload);
+    console.log('ingredient.service -> payload :', payload);
     return this.http.post<Ingredient>(this.apiUrl, payload);
   }
-  
+
   updateIngredient(id: string, payload: any): Observable<Ingredient> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Ingredient>(url, payload);
@@ -33,7 +40,7 @@ export class IngredientService {
 
   deleteIngredient(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
-    console.log( "ingredient.service :", url);
+    console.log('ingredient.service :', url);
     return this.http.delete<{ message: string }>(url);
   }
 }

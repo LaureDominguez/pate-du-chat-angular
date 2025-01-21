@@ -24,6 +24,7 @@ import { SharedDataService } from '../../../services/shared-data.service';
 })
 export class IngredientAdminComponent implements OnInit {
   ingredients = new MatTableDataSource<Ingredient>([]);
+  allergenesList: string[] = [];
 
   displayedIngredientsColumns: string[] = [
     'name',
@@ -46,10 +47,12 @@ export class IngredientAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchIngredients();
+    this.fetchAllergenes();
     this.sharedDataService.openIngredientForm$.subscribe(() => {
       console.log('ingredient-admin -> onInit -> openIngredientForm');
       this.openIngredientForm(null);
     });
+    console.log('ingredient-admin -> onInit : ', this.allergenesList);
   }
 
   ngAfterViewInit(): void {
@@ -61,17 +64,29 @@ export class IngredientAdminComponent implements OnInit {
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
     });
+    console.log('ingredient-admin -> fetchIngredients : ', this.ingredients.data);
+  }
+
+  fetchAllergenes(): void {
+    this.ingredientService.getAllergenes().subscribe((allergenes) => {
+      this.allergenesList = allergenes;
+    });
+    console.log('ingredient-admin -> fetchAllergenes : ', this.allergenesList);
   }
 
   openIngredientForm(ingredient: Ingredient | null): void {
-    console.log('ingredient-admin -> openIngredientForm : ', ingredient);
+    console.log('ingredient-admin -> openIngredientForm : ', ingredient, this.allergenesList);
     const imageUrls =
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
       ) || [];
     const dialogRef = this.dialog.open(IngredientFormComponent, {
-      width: '400px',
-      data: { ingredient, imageUrls },
+      width: '600px',
+      data: {
+        ingredient: ingredient,
+        allergenesList: this.allergenesList,
+        imageUrls: imageUrls,
+      },
     });
 
     dialogRef.afterClosed().subscribe(

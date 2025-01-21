@@ -26,6 +26,10 @@ form {
     }
 }
 
+mat-label {
+    font-weight: bold;
+}
+
 mat-option {
     color: var(--onSurface) !important;
     background-color: var(--surfaceContainer) !important;

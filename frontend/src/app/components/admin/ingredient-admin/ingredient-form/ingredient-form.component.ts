@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { AdminModule } from '../../admin.module';
 
@@ -35,13 +35,21 @@ export class IngredientFormComponent {
     public data: {
       imageUrls: string[];
       ingredient: Ingredient | null;
+      allergenesList: string[];
     }
   ) {
-    console.log('IngredientFormComponent -> constructor : ' , data);
+    console.log('IngredientFormComponent -> constructor : ', data);
     this.ingredientForm = this.fb.group({
       name: [data.ingredient?.name || '', Validators.required],
       supplier: [data.ingredient?.supplier || '', Validators.required],
-      allergens: [data.ingredient?.allergens || []],
+      // allergens: [data.ingredient?.allergens || []],
+      allergens: this.fb.array(
+        data.allergenesList.map((allergen) =>
+          this.fb.control(
+            data.ingredient?.allergens.includes(allergen) || false
+          )
+        )
+      ),
       vegan: [data.ingredient?.vegan || false],
       vegeta: [data.ingredient?.vegeta || false],
     });
@@ -53,6 +61,10 @@ export class IngredientFormComponent {
       // console.log('Images existantes :', this.existingImages);
       // console.log('pouet : ', this.existingImageUrls);
     }
+  }
+
+  get allergens(): FormArray {
+    return this.ingredientForm.get('allergens') as FormArray;
   }
 
   ngOnInit(): void {
@@ -117,11 +129,18 @@ export class IngredientFormComponent {
       if (this.ingredientForm.get('vegan')?.value) {
         this.ingredientForm.get('vegeta')?.setValue(true);
       }
+
+      const allergenesSelectionnes = this.ingredientForm.get('allergens')
+        ?.value.map((checked: boolean, index: number) =>
+          checked ? this.data.allergenesList[index] : null
+        )
+        .filter((allergene: string | null) => allergene !== null);
+
       const ingredientData = {
         _id: this.data.ingredient?._id,
         name: this.ingredientForm.get('name')?.value,
         supplier: this.ingredientForm.get('supplier')?.value,
-        allergens: this.ingredientForm.get('allergens')?.value,
+        allergens: allergenesSelectionnes,
         vegan: this.ingredientForm.get('vegan')?.value,
         vegeta: this.ingredientForm.get('vegeta')?.value,
         existingImages: this.existingImages,
