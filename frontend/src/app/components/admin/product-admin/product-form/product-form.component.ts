@@ -107,6 +107,18 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  ///////// Methodes private
+  private getCompposition(): Ingredient[] {
+    return this.productForm.get('composition')?.value || [];
+  }
+
+  private setCompposition(composition: Ingredient[]): void {
+    this.productForm.get('composition')?.setValue(composition);
+  }
+
+  ////////////////////////////////////////////////////////////////
+  ////////// Fonctions du formulaire
+
   ////////// Gestion des ingrédients
   /// Ajout d'un ingrédient à la composition du produit
   addIngredient(ingredient: Ingredient | 'noResults'): void {
@@ -127,30 +139,28 @@ export class ProductFormComponent implements OnInit {
       compositionControl?.setValue(composition);
       console.log('composition : ', composition);
     }
-
-    // if (composition.length === 0) {
-    //   compositionControl?.markAllAsTouched();
-    //   compositionControl?.setErrors({ required: true });
-    // } else {
-    //   compositionControl?.setErrors(null);
-    // }
-
     this.ingredientCtrl.setValue('');
     console.log('product-form -> addIngredient -> end : ', composition);
   }
 
   /// Création d'un nouvel ingrédient
-  private createIngredient():void {
+  private createIngredient(): void {
     console.log('product-form -> addIngredient -> start');
-    this.openIngredientForm().then((newIngredient) => {
-      const composition = this.getCompposition();
-      if (!composition.some((comp: Ingredient) => comp._id === newIngredient._id)) {
-        this.setCompposition([...composition, newIngredient]);
-        console.log('composition : ', composition);
-      }
-    }).catch((error) => {
-      console.error('product-form -> addIngredient -> error : ', error);
-    });
+    this.openIngredientForm()
+      .then((newIngredient) => {
+        const composition = this.getCompposition();
+        if (
+          !composition.some(
+            (comp: Ingredient) => comp._id === newIngredient._id
+          )
+        ) {
+          this.setCompposition([...composition, newIngredient]);
+          console.log('composition : ', composition);
+        }
+      })
+      .catch((error) => {
+        console.error('product-form -> addIngredient -> error : ', error);
+      });
   }
 
   private openIngredientForm(): Promise<Ingredient> {
@@ -177,7 +187,7 @@ export class ProductFormComponent implements OnInit {
     this.productForm.get('composition')?.setValue(updatedComposition);
   }
 
-  ////////// Gestion du formulaire
+  ////////// Validation du formulaire
   save(): void {
     if (this.productForm.valid) {
       const productData = { ...this.productForm.value };
@@ -194,16 +204,8 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
+  ////////// Annulation du formulaire
   cancel() {
     this.dialogRef.close();
-  }
-
-  ///////// Methodes private
-  private getCompposition(): Ingredient[] {
-    return this.productForm.get('composition')?.value || [];
-  }
-
-  private setCompposition(composition: Ingredient[]): void {
-    this.productForm.get('composition')?.setValue(composition);
   }
 }

@@ -1,5 +1,6 @@
 ::ng-deep .mat-mdc-dialog-surface {
-    background-color: var(--surfaceBright);
+    background-color: var(--background);
+    color: var(--onBackground);
 }
 
 form {
@@ -13,8 +14,8 @@ form {
     margin: auto;
     mat-form-field {
         border-radius: 10px;
-        color: var(--onSurface);
-        background-color: var(--surfaceBright);
+        background-color: var(--background);
+        color: var(--onBackground);
         &:focus-within {
             color: var(--onSurface);
             background-color: var(--surfaceContainer);
@@ -33,23 +34,6 @@ mat-divider {
 mat-label {
     font-weight: bold;
     flex-shrink: 0;
-}
-
-.allergen-grid {
-    max-height: 150px;
-    overflow: auto;
-    margin-top: 16px;
-    border: 1px solid var(--outlineVariant);
-    border-radius: 8px;
-    padding: 8px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    mat-checkbox {
-        &:hover {
-            border-radius: 8px;
-            background-color: var(--surfaceContainer);
-        }
-    }
 }
 
 .regime {
@@ -75,19 +59,28 @@ mat-label {
     }
 }
 
+.allergen-grid {
+    max-height: 150px;
+    overflow: auto;
+    margin-top: 16px;
+    border: 2px solid var(--surfaceVariant);
+    border-radius: 8px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    mat-checkbox {
+        &:hover {
+            border-radius: 8px;
+            background-color: var(--surfaceContainer);
+        }
+    }
+}
+
+
 .allergen-form-field, .file-upload{
     mat-label {
         margin: 1rem;
         line-height: 2rem;
-    }
-}
-
-.previews, .existing-images {
-    mat-label {
-        margin: 1rem;
-        line-height: 1.5rem;
-        font-style: italic;
-        font-weight: normal;
     }
 }
 
@@ -101,21 +94,31 @@ mat-label {
 }
 
 .previews, .existing-images {
-    max-height: 120px; /* Limite la hauteur du conteneur principal */
-    padding: 0.5rem 0;
+    max-height: 120px;
+    padding: 0.5rem;
+    border: 2px solid var(--surfaceVariant);
+    border-radius: 8px;
     .previews-container {
-        display: flex; /* Active Flexbox pour disposer les cartes en ligne */
-        flex-wrap: nowrap; /* Empêche le retour à la ligne */
-        gap: 16px; /* Espace entre les cartes */
-        overflow-x: auto; /* Active le défilement horizontal */
-        overflow-y: hidden; /* Désactive le défilement vertical */
-        padding-bottom: 5px; /* Ajoute un espace pour le confort visuel */
+        display: flex; 
+        flex-wrap: nowrap; 
+        gap: 16px;
+        overflow-x: auto; 
+        overflow-y: hidden; 
+        padding-bottom: 5px; 
     }
 
     .preview-item {
-        flex: 0 0 auto; /* Empêche les cartes de se rétrécir et garde leur taille fixe */
+        flex: 0 0 auto;
         display: inline-flex;
     }
+
+    mat-label {
+        margin: 1rem;
+        line-height: 1.5rem;
+        font-style: italic;
+        font-weight: normal;
+    }
+
     mat-card {
         position: relative;
         border-radius: 20px;

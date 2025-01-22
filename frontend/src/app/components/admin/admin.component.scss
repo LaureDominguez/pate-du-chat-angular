@@ -15,6 +15,15 @@ th {
     text-align: center;
 }
 
+tr:not(thead tr){
+    background-color: var(--surfaceContainer);
+    transition: background-color 0.3s;
+
+    &:hover{
+        background-color: var(--surfaceVariant);
+    }
+}
+
 mat-divider {
     color: var(--surfaceContainerHighest);
 }

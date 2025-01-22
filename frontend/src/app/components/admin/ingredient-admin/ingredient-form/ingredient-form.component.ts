@@ -1,7 +1,8 @@
 import { Component, Inject } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { AdminModule } from '../../admin.module';
+import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
 
 export interface Ingredient {
   _id?: string;
@@ -30,6 +31,7 @@ export class IngredientFormComponent {
 
   constructor(
     private fb: FormBuilder,
+    private dialog: MatDialog,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -38,7 +40,7 @@ export class IngredientFormComponent {
       allergenesList: string[];
     }
   ) {
-    console.log('IngredientFormComponent -> constructor : ', data);
+    // console.log('IngredientFormComponent -> constructor : ', data);
     this.ingredientForm = this.fb.group({
       name: [data.ingredient?.name || '', Validators.required],
       supplier: [data.ingredient?.supplier || '', Validators.required],
@@ -140,6 +142,13 @@ export class IngredientFormComponent {
         ingredientData,
         selectedFiles: this.selectedFiles,
         removedExistingImages: this.removedExistingImages,
+      });
+    } else {
+      this.ingredientForm.markAllAsTouched();
+      this.dialog.open(ErrorDialogComponent, {
+        data: {
+          message: 'Veuillez remplir tous les champs obligatoires.',
+        },
       });
     }
   }

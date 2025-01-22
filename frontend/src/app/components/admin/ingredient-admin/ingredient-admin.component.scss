@@ -14,15 +14,9 @@ table {
             justify-content: center !important;
         }
     }
-    
+
     th:last-child, td:last-child {
         justify-content: center;
         text-align: center;
     }
 }
-
-    .mat-sort-header-container {
-        border: 1px solid black !important;
-        text-align: center;
-        justify-content: center !important;
-    }

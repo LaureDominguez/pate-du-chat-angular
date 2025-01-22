@@ -49,10 +49,10 @@ export class IngredientAdminComponent implements OnInit {
     this.fetchIngredients();
     this.fetchAllergenes();
     this.sharedDataService.openIngredientForm$.subscribe(() => {
-      console.log('ingredient-admin -> onInit -> openIngredientForm');
+      // console.log('ingredient-admin -> onInit -> openIngredientForm');
       this.openIngredientForm(null);
     });
-    console.log('ingredient-admin -> onInit : ', this.allergenesList);
+    // console.log('ingredient-admin -> onInit : ', this.allergenesList);
   }
 
   ngAfterViewInit(): void {
@@ -64,18 +64,18 @@ export class IngredientAdminComponent implements OnInit {
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
     });
-    console.log('ingredient-admin -> fetchIngredients : ', this.ingredients.data);
+    // console.log('ingredient-admin -> fetchIngredients : ', this.ingredients.data);
   }
 
   fetchAllergenes(): void {
     this.ingredientService.getAllergenes().subscribe((allergenes) => {
       this.allergenesList = allergenes;
     });
-    console.log('ingredient-admin -> fetchAllergenes : ', this.allergenesList);
+    // console.log('ingredient-admin -> fetchAllergenes : ', this.allergenesList);
   }
 
   openIngredientForm(ingredient: Ingredient | null): void {
-    console.log('ingredient-admin -> openIngredientForm : ', ingredient, this.allergenesList);
+    // console.log('ingredient-admin -> openIngredientForm : ', ingredient, this.allergenesList);
     const imageUrls =
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
@@ -117,15 +117,15 @@ export class IngredientAdminComponent implements OnInit {
 
     // Vérifier et supprimer les images existantes marquées pour suppression
     if (result.removedExistingImages?.length) {
-      console.log(
-        'handleIngredientFormSubmit -> removedExistingImages : ',
-        result.removedExistingImages
-      );
+      // console.log(
+      //   'handleIngredientFormSubmit -> removedExistingImages : ',
+      //   result.removedExistingImages
+      // );
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        console.log('handleIngredientFormSubmit -> filename : ', filename);
+        // console.log('handleIngredientFormSubmit -> filename : ', filename);
         this.imageService.deleteImage(filename).subscribe(() => {
-          console.log('Image deleted successfully... ou pas');
+          // console.log('Image deleted successfully... ou pas');
         });
       });
     }
@@ -142,21 +142,21 @@ export class IngredientAdminComponent implements OnInit {
 
           // 2. Concaténer avec les images existantes
           finalImages.push(...newFilePaths); // Ajouter les nouvelles images
-          console.log(
-            'admin.component -> image uploadée, concatenation de finalImages -> finalImages : ',
-            finalImages
-          );
+          // console.log(
+          //   'admin.component -> image uploadée, concatenation de finalImages -> finalImages : ',
+          //   finalImages
+          // );
 
           // 3. Soumettre le formulaire
-          console.log(
-            'admin.component -> soumission du formulaire ',
-            'id: ',
-            ingredientId,
-            'images: ',
-            finalImages,
-            'data: ',
-            ingredientData
-          );
+          // console.log(
+          //   'admin.component -> soumission du formulaire ',
+          //   'id: ',
+          //   ingredientId,
+          //   'images: ',
+          //   finalImages,
+          //   'data: ',
+          //   ingredientData
+          // );
           this.submitIngredientForm(ingredientId, ingredientData, finalImages);
         },
         error: (error) => {
@@ -181,30 +181,30 @@ export class IngredientAdminComponent implements OnInit {
       images: finalImages,
     };
 
-    console.log(
-      'admin.component -> submitIngredientForm -> ingredientPayload : ',
-      ingredientPayload
-    );
+    // console.log(
+    //   'admin.component -> submitIngredientForm -> ingredientPayload : ',
+    //   ingredientPayload
+    // );
 
     if (ingredientId) {
-      console.log('id trouvé');
+      // console.log('id trouvé');
       this.updateIngredient(ingredientId, ingredientPayload);
     } else {
-      console.log('id non trouvé');
+      // console.log('id non trouvé');
       this.addIngredient(ingredientPayload);
     }
   }
 
   addIngredient(ingredientPayload: any): void {
     delete ingredientPayload._id;
-    console.log(
-      'admin.component -> addIngredient -> ingredientPayload : ',
-      ingredientPayload
-    );
+    // console.log(
+    //   'admin.component -> addIngredient -> ingredientPayload : ',
+    //   ingredientPayload
+    // );
 
     this.ingredientService.createIngredient(ingredientPayload).subscribe({
       next: (res) => {
-        console.log('admin.component -> addIngredient -> res : ', res);
+        // console.log('admin.component -> addIngredient -> res : ', res);
         this.fetchIngredients();
         this.sharedDataService.resultIngredientCreated(res);
       },
@@ -217,7 +217,7 @@ export class IngredientAdminComponent implements OnInit {
   updateIngredient(id: string, ingredientPayload: any): void {
     this.ingredientService.updateIngredient(id, ingredientPayload).subscribe({
       next: (res) => {
-        console.log('admin.component -> updateIngredient -> res : ', res);
+        // console.log('admin.component -> updateIngredient -> res : ', res);
         this.fetchIngredients();
       },
       error: (error) => {
@@ -226,6 +226,7 @@ export class IngredientAdminComponent implements OnInit {
     });
   }
 
+  
   deleteIngredient(ingredient: Ingredient): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
@@ -234,25 +235,21 @@ export class IngredientAdminComponent implements OnInit {
       },
     });
 
+    // ajouter une alerte sur la relation avec les img liées
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('admin.component : ', ingredient._id!);
-        console.log('admin.component : ', result);
         if (ingredient.images?.length) {
           for (const image of ingredient.images) {
-            this.imageService.deleteImage(image).subscribe(() => {
-              console.log('Image deleted successfully... ou pas');
-            });
+            this.imageService.deleteImage(image).subscribe();
           }
         }
 
+        // ajouter une alerte sur la relation avec les produits liés
         this.ingredientService
           .deleteIngredient(ingredient._id!)
           .subscribe(() => {
             this.fetchIngredients();
-            console.log('admin.component : ', result);
           });
-        console.log("Suppression de l'ingrédient : ", ingredient);
       }
     });
   }
