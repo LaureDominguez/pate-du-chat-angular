@@ -80,7 +80,7 @@ export class CategoryAdminComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        message: `Êtes-vous sûr de vouloir supprimer la catégorie "${category.name}" ?`,
+        message: `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <span class="bold-text">"${category.name}"</span> ?`,
       },
     });
     dialogRef.afterClosed().subscribe((result) => {

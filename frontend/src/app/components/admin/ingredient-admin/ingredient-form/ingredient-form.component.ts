@@ -42,7 +42,6 @@ export class IngredientFormComponent {
     this.ingredientForm = this.fb.group({
       name: [data.ingredient?.name || '', Validators.required],
       supplier: [data.ingredient?.supplier || '', Validators.required],
-      // allergens: [data.ingredient?.allergens || []],
       allergens: this.fb.array(
         data.allergenesList.map((allergen) =>
           this.fb.control(
@@ -58,19 +57,11 @@ export class IngredientFormComponent {
     if (data.ingredient?.images) {
       this.existingImages = [...data.ingredient.images];
       this.existingImageUrls = [...data.imageUrls];
-      // console.log('Images existantes :', this.existingImages);
-      // console.log('pouet : ', this.existingImageUrls);
     }
   }
 
   get allergens(): FormArray {
     return this.ingredientForm.get('allergens') as FormArray;
-  }
-
-  ngOnInit(): void {
-    if (this.data.ingredient) {
-      this.ingredientForm.patchValue(this.data.ingredient);
-    }
   }
 
   onVeganChange(isVeganChecked: boolean): void {
@@ -121,7 +112,6 @@ export class IngredientFormComponent {
     this.existingImageUrls.splice(index, 1);
     const removed = this.existingImages.splice(index, 1)[0];
     this.removedExistingImages.push(removed);
-    // console.log('Images supprimées :', this.removedExistingImages);
   }
 
   save(): void {

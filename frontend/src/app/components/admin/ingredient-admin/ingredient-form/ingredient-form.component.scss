@@ -27,14 +27,17 @@ form {
 }
 
 mat-divider {
-    margin: 1rem 0;
+    margin: 0.5rem 0;
 }
 
 mat-label {
     font-weight: bold;
+    flex-shrink: 0;
 }
 
 .allergen-grid {
+    max-height: 150px;
+    overflow: auto;
     margin-top: 16px;
     border: 1px solid var(--outlineVariant);
     border-radius: 8px;
@@ -49,10 +52,10 @@ mat-label {
     }
 }
 
-
 .regime {
     display: flex;
     align-items: center;
+    padding-top: 0.5rem;
     mat-label {
         width: 35%;
         line-height: 2rem;
@@ -62,44 +65,88 @@ mat-label {
         display: flex;
         justify-content: space-evenly;
         width: 65%;
+        mat-checkbox {
+            padding-right: 0.5rem;
+            &:hover {
+                border-radius: 8px;
+                background-color: var(--surfaceContainer);
+            }
+        }
     }
 }
 
-.allergen-form-field, .file-upload, .existing-images {
+.allergen-form-field, .file-upload{
     mat-label {
         margin: 1rem;
         line-height: 2rem;
     }
 }
 
+.previews, .existing-images {
+    mat-label {
+        margin: 1rem;
+        line-height: 1.5rem;
+        font-style: italic;
+        font-weight: normal;
+    }
+}
+
+
 .file-upload {
-    input {
-        display: block;
-        padding-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    button {
+        margin: auto;
     }
 }
 
 .previews, .existing-images {
+    max-height: 120px; /* Limite la hauteur du conteneur principal */
+    padding: 0.5rem 0;
+    .previews-container {
+        display: flex; /* Active Flexbox pour disposer les cartes en ligne */
+        flex-wrap: nowrap; /* Empêche le retour à la ligne */
+        gap: 16px; /* Espace entre les cartes */
+        overflow-x: auto; /* Active le défilement horizontal */
+        overflow-y: hidden; /* Désactive le défilement vertical */
+        padding-bottom: 5px; /* Ajoute un espace pour le confort visuel */
+    }
 
+    .preview-item {
+        flex: 0 0 auto; /* Empêche les cartes de se rétrécir et garde leur taille fixe */
+        display: inline-flex;
+    }
     mat-card {
         position: relative;
-        img {
-        width: 100%;
+        border-radius: 20px;
+        width: 100px;
         height: 100px;
-        object-fit: cover;
+        overflow: hidden;
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
-
         button {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background-color: rgba(255, 0, 0, 0.8);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        cursor: pointer;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            mat-icon{
+                font-size: 20px;
+            }
         }
     }
 }
+

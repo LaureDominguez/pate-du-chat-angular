@@ -124,7 +124,7 @@ export class ProductAdminComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        message: `Êtes-vous sûr de vouloir supprimer le produit "${product.name}" ?`,
+        message: `Êtes-vous sûr de vouloir supprimer ce produit : <br> <span class="bold-text">"${product.name}"</span> ?`,
       },
     });
 

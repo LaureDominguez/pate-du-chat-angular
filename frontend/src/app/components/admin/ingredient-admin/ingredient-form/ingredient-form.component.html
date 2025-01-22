@@ -31,38 +31,48 @@
 
     <mat-divider></mat-divider>
 
-    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
-        <mat-label>Images existantes</mat-label>
-        <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
-            <mat-grid-tile *ngFor="let image of existingImageUrls; let i = index">
-                <mat-card>
-                    <img mat-card-image [src]="image" alt="Existing image" />
-                    <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
-                        <mat-icon>delete</mat-icon>
-                    </button>
-                </mat-card>
-            </mat-grid-tile>
-        </mat-grid-list>
-    </div>
-
-    <mat-divider *ngIf="existingImages.length > 0"></mat-divider>
-
     <div class="file-upload">
-        <mat-label for="imageUpload">Télécharger des images</mat-label>
-        <input id="imageUpload" type="file" multiple (change)="onFileSelected($event)" accept="image/*" />
+        <mat-label>Images</mat-label>
+        <button mat-raised-button color="primary"  type="button" (click)="fileInput.click()">
+            <mat-icon>file_upload</mat-icon> Importer une image
+        </button>
+        <input 
+            #fileInput 
+            id="imageUpload" 
+            type="file" 
+            multiple 
+            (change)="onFileSelected($event)" 
+            accept="image/*"
+            style="display: none;" 
+        />
     </div>
 
     <div class="previews" *ngIf="filePreviews.length > 0">
-        <mat-grid-list cols="4" rowHeight="100px" gutterSize="10px">
-            <mat-grid-tile *ngFor="let preview of filePreviews; let i = index">
+        <mat-label *ngIf="existingImageUrls.length > 0">Images à ajouter :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let preview of filePreviews; let i = index">
                 <mat-card>
                     <img mat-card-image [src]="preview" alt="Image preview" />
                     <button mat-icon-button color="warn" (click)="removeFile(i)">
                         <mat-icon>delete</mat-icon>
                     </button>
                 </mat-card>
-            </mat-grid-tile>
-        </mat-grid-list>
+            </div>
+        </div>
+    </div>
+
+    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
+        <mat-label *ngIf="filePreviews.length > 0">Images existantes :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="image" alt="Existing image" />
+                    <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </div>
+        </div>
     </div>
 
     <div mat-dialog-actions align="end">

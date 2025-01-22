@@ -230,7 +230,7 @@ export class IngredientAdminComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        message: `Êtes-vous sûr de vouloir supprimer cet ingrédient : "${ingredient.name}" ?`,
+        message: `Êtes-vous sûr de vouloir supprimer cet ingrédient : <br> <span class="bold-text">"${ingredient.name}"</span> ?`,
       },
     });
 
