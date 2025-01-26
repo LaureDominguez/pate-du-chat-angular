@@ -9,7 +9,7 @@ import {
   MatSelectModule,
   MatSelectTrigger,
   matSelectAnimations
-} from "./chunk-4DT3PUFQ.js";
+} from "./chunk-JXLKMQ4S.js";
 import "./chunk-DUDA6567.js";
 import "./chunk-Q6E74DZ3.js";
 import "./chunk-VKQNNXQK.js";
@@ -22,16 +22,16 @@ import {
   MatSuffix
 } from "./chunk-UUAMLSEE.js";
 import "./chunk-P3H7WFYH.js";
+import "./chunk-ZLHKCI4L.js";
 import {
   MatOptgroup,
   MatOption
 } from "./chunk-D7UDTQSI.js";
 import "./chunk-OMZLIQL3.js";
-import "./chunk-ZLHKCI4L.js";
 import "./chunk-5GKQXQER.js";
 import "./chunk-Q2LTHEMF.js";
-import "./chunk-WSXI74FV.js";
 import "./chunk-LBBSG2YE.js";
+import "./chunk-WSXI74FV.js";
 import "./chunk-NGNUV6BG.js";
 export {
   MAT_SELECT_CONFIG,

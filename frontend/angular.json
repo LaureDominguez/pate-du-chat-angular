@@ -33,7 +33,10 @@
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules"]
             },
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/assets/themes/m3-theme.scss",
+              "src/styles.scss"
+            ],
             "scripts": [],
             "server": "src/main.server.ts",
             "prerender": true,
@@ -96,7 +99,10 @@
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules"]
             },
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/assets/themes/m3-theme.scss",
+              "src/styles.scss"
+            ],
             "scripts": []
           }
         }

@@ -21,6 +21,9 @@ import {
   trigger
 } from "./chunk-P3H7WFYH.js";
 import {
+  NG_VALUE_ACCESSOR
+} from "./chunk-ZLHKCI4L.js";
+import {
   ActiveDescendantKeyManager,
   DOWN_ARROW,
   Directionality,
@@ -48,9 +51,6 @@ import {
   Platform,
   _getEventTarget
 } from "./chunk-OMZLIQL3.js";
-import {
-  NG_VALUE_ACCESSOR
-} from "./chunk-ZLHKCI4L.js";
 import {
   DOCUMENT
 } from "./chunk-5GKQXQER.js";
@@ -104,11 +104,11 @@ import {
   ɵɵtemplate,
   ɵɵviewQuery
 } from "./chunk-Q2LTHEMF.js";
-import "./chunk-WSXI74FV.js";
 import {
   defer,
   merge
 } from "./chunk-LBBSG2YE.js";
+import "./chunk-WSXI74FV.js";
 import {
   Observable,
   Subject,

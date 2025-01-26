@@ -20,7 +20,9 @@ import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.
 
 @Component({
   selector: 'app-product-form',
-  imports: [AdminModule],
+  imports: [
+    AdminModule,
+  ],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss'],
 })
@@ -60,8 +62,8 @@ export class ProductFormComponent implements OnInit {
       category: [product?.category || null, Validators.required],
       description: [product?.description || ''],
       composition: [product?.composition || [], Validators.required],
-      price: [product?.price || 0, [Validators.required, Validators.min(0)]],
-      stock: [product?.stock || false],
+      price: [product?.price || null, [Validators.required, Validators.min(0)]],
+      stock: [product?.stock ? true : false || false],
     });
   }
 
@@ -117,9 +119,11 @@ export class ProductFormComponent implements OnInit {
   }
 
   ////////////////////////////////////////////////////////////////
-  ////////// Fonctions du formulaire
+  ////////// Fonctions du formulaire /////////////////////////////
 
-  ////////// Gestion des ingrédients
+  ////////// Gestion des Catégories ///////////////////
+
+  ////////// Gestion de la Composition ////////////////
   /// Ajout d'un ingrédient à la composition du produit
   addIngredient(ingredient: Ingredient | 'noResults'): void {
     console.log('product-form -> addIngredient -> start : ', ingredient);
@@ -143,7 +147,7 @@ export class ProductFormComponent implements OnInit {
     console.log('product-form -> addIngredient -> end : ', composition);
   }
 
-  /// Création d'un nouvel ingrédient
+  /// Création d'un nouvel ingrédient ///
   private createIngredient(): void {
     console.log('product-form -> addIngredient -> start');
     this.openIngredientForm()
@@ -163,6 +167,7 @@ export class ProductFormComponent implements OnInit {
       });
   }
 
+  /// Ouverture du formulaire de création d'ingrédient du service distant ///
   private openIngredientForm(): Promise<Ingredient> {
     console.log('product-form -> openIngredientForm');
     this.sharedDataService.requestOpenIngredientForm();
@@ -171,7 +176,7 @@ export class ProductFormComponent implements OnInit {
       const subscription = this.sharedDataService.ingredientCreated$.subscribe({
         next: (ingredient) => {
           subscription.unsubscribe(); // Arrête l'écoute après réception
-          resolve(ingredient);
+          resolve(ingredient); // ajout de l'ingrédient à la composition
         },
         error: (err) => reject(err),
       });
@@ -186,6 +191,8 @@ export class ProductFormComponent implements OnInit {
     );
     this.productForm.get('composition')?.setValue(updatedComposition);
   }
+  //////////// Fin de la section Composition /////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
   ////////// Validation du formulaire
   save(): void {

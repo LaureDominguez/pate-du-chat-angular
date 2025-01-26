@@ -19,6 +19,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @NgModule({
     exports: [
@@ -41,6 +42,7 @@ import { MatSelectModule } from '@angular/material/select';
         MatOptionModule,
         MatPaginatorModule,
         MatSelectModule,
+        MatSlideToggleModule,
         MatSortModule,
         MatTableModule,
         MatToolbarModule,

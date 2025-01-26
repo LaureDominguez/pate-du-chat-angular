@@ -1,13 +1,12 @@
 @use '@angular/material' as mat;
-@use './assets/themes/m3-theme';
+@use './assets/themes/m3-theme' as m3;
 
-@include mat.elevation-classes();
-@include mat.app-background();
 
-$theme: m3-theme.$light-theme;
-// @media (prefers-color-scheme: dark) {
-//     $theme: m3-theme.$dark-theme;
-// }
+
+$theme: m3.$light-theme;
+@media (prefers-color-scheme: dark) {
+    $theme: m3.$dark-theme;
+}
 
 
 // vert: #004f12;
@@ -22,9 +21,10 @@ html, body {
 
     @include mat.elevation-classes();
     @include mat.app-background();
-    @include mat.all-component-themes($theme);
-    @include mat.all-component-typographies($theme);
-    @include mat.all-component-colors($theme);
+
+    @include mat.all-component-themes(m3.$light-theme);
+    @include mat.all-component-typographies(m3.$light-theme);
+    @include mat.all-component-colors(m3.$light-theme);
 }
 
 body {
@@ -32,4 +32,3 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     cursor: default;
 }
-

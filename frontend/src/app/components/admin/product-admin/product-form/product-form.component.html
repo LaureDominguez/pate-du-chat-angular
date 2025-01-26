@@ -68,12 +68,20 @@
     <!-- Prix -->
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Prix</mat-label>
-        <input matInput type="number" formControlName="price" />
+        <input 
+            matInput 
+            type="number" 
+            formControlName="price"
+        />
+        <span matSuffix>€</span>
     </mat-form-field>
 
     <!-- Stock -->
     <div class="stock">
-        <mat-checkbox formControlName="stock">En stock</mat-checkbox>
+        <!-- En Stock -->
+        <mat-slide-toggle formControlName="stock" labelPosition="before">
+            En stock
+        </mat-slide-toggle>
     </div>
 
     <!-- Validation -->
