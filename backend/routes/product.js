@@ -4,7 +4,7 @@ const Product = require('../models/product');
 
 // Ajouter un produit
 router.post('/', async (req, res) => {
-	const { name, description, composition, price, images } = req.body;
+	const { name, category, description, composition, price, images } = req.body;
 
 	if (!name) {
 			return res
@@ -20,6 +20,7 @@ router.post('/', async (req, res) => {
 	try {
 		const newProduct = new Product({
 			name,
+			category,
 			description,
 			composition,
 			price,
@@ -46,13 +47,15 @@ router.get('/', async (req, res) => {
 
 // Modifier un produit
 router.put('/:id', async (req, res) => {
+	const { name, category, description, composition, price, images } = req.body;
+
 	try {
-		const { name, description, composition, price, images } = req.body;
 		const product = await Product.findById(req.params.id);
 		if (!product) {
 			return res.status(404).json({ msg: 'Produit inconnu' });
 		}
 		product.name = name;
+		product.category = category;
 		product.description = description;
 		product.composition = composition;
 		product.price = price;

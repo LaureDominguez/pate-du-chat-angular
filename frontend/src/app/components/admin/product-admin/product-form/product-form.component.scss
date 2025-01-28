@@ -1,3 +1,5 @@
+@use '@angular/material' as mat;
+
 ::ng-deep .mat-mdc-dialog-surface {
     background-color: var(--surfaceBright);
 }
@@ -39,24 +41,21 @@ mat-option {
     }
 }
 
-// mat-slide-toggle {
-//     // background-color: red;
+// Customize the entire app. Change :root to your selector if you want to scope the styles.
+.stock {
+    // background-color: pink;
+    @include mat.slide-toggle-overrides((
+        track-outline-color: orange,
+        selected-track-outline-color: green,
+        unselected-icon-color: red,
+        selected-icon-color: blue,
+        handle-surface-color: pink,
+        selected-focus-track-color: yellow,
+        selected-hover-track-color: rgb(247, 45, 45),
+        selected-track-color: rgb(127, 24, 24),
+        unselected-hover-handle-color: orange,
+        label-text-color: rgb(58, 192, 154)
+    ));
+}
 
-// }
 
-// // Styles spécifiques pour le mat-slide-toggle
-// :ng-deep .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb {
-//   background-color: red; // Quand le toggle est activé
-// }
-
-// .mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
-//   background-color: blue; // La "barre" quand activée
-// }
-
-// .mat-slide-toggle .mat-slide-toggle-bar {
-//   background-color: orange; // La "barre" par défaut (désactivée)
-// }
-
-// .mat-slide-toggle .mat-slide-toggle-thumb {
-//   background-color: purple; // Le cercle par défaut
-// }

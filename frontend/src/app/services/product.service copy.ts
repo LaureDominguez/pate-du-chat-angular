@@ -37,11 +37,14 @@ export class ProductService {
   }
 
   createProduct(payload: any): Observable<Product> {
+    console.log('Product.service -> payload :', payload);
     return this.http.post<Product>(this.apiUrl, payload);
   }
 
   updateProduct(id: string, payload: any): Observable<Product> {
     const url = `${this.apiUrl}/${id}`;
+    console.log('Product.service -> payload : ', payload);
+    console.log('Product.service -> url : ', url);
     return this.http.put<Product>(url, payload);
   }
 
@@ -52,3 +55,4 @@ export class ProductService {
   }
 }
 export { FinalProduct, Product };
+

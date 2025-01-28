@@ -75,6 +75,8 @@ export class ProductAdminComponent implements OnInit {
     const categories$ = this.categoryService.getCategories();
     const ingredients$ = this.ingredientService.getIngredients();
 
+
+
     forkJoin([categories$, ingredients$]).subscribe(
       ([categories, ingredients]) => {
         const imageUrls =
@@ -94,11 +96,13 @@ export class ProductAdminComponent implements OnInit {
 
         dialogRef.afterClosed().subscribe((result: any) => {
           if (result) {
-            console.log('product-admin -> ProductForm -> result :', result);
+            // console.log('product-admin -> ProductForm -> result :', result);
+            // console.log('product-admin -> ProductForm -> product :', product);
             if (product) {
+              const updatedId = product._id;
               // Mise à jour du produit existant
               this.productService
-                .updateProduct(result._id, result)
+                .updateProduct(updatedId!, result)
                 .subscribe(() => {
                   this.loadData();
                 });

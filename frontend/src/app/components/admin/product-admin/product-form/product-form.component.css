@@ -37,4 +37,12 @@ mat-option {
 mat-option:hover {
   color: var(--onPrimaryFixed) !important;
   background-color: var(--primaryFixed) !important;
+}
+
+mat-slide-toggle {
+  color: red;
+}
+
+:ng-deep .mat-mdc-slide-toggle {
+  color: green;
 }/*# sourceMappingURL=product-form.component.css.map */
