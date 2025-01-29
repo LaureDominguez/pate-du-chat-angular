@@ -35,7 +35,7 @@
                 formControlName="composition"
                 [matAutocomplete]="auto"
         />
-        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)">
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
             <!-- Message pour encourager la recherche -->
             <mat-option *ngIf="!ingredientCtrl.value || ingredientCtrl.value === ''" disabled>
                 Commencez à taper pour rechercher un ingrédient
@@ -43,7 +43,8 @@
             
             <!-- Affichage des résultats filtrés -->
             <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient">
-                {{ ingredient.name }}
+                <span>{{ ingredient.name }}</span>
+                <mat-icon *ngIf="isIngredientSelected(ingredient)">check</mat-icon>
             </mat-option>
             
             <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->

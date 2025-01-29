@@ -5,7 +5,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { map, Observable, startWith } from 'rxjs';
+import { map, Observable, startWith, tap } from 'rxjs';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
@@ -64,7 +64,10 @@ export class ProductFormComponent implements OnInit {
       stock: [product.stock || false],
     });
 
-    console.log('product-form -> initialized Form -> productForm : ', this.productForm);
+    console.log(
+      'product-form -> initialized Form -> productForm : ',
+      this.productForm
+    );
   }
 
   private loadExistingProduct(): void {
@@ -78,7 +81,10 @@ export class ProductFormComponent implements OnInit {
         this.data.ingredients || []
       );
 
-      product.category = this.mapCategoryIdToObject(product.category, this.categories);
+      product.category = this.mapCategoryIdToObject(
+        product.category,
+        this.categories
+      );
 
       this.productForm.patchValue({ ...product });
     }
@@ -111,15 +117,20 @@ export class ProductFormComponent implements OnInit {
     );
   }
 
+  // Filtrage de la recherche + tri alphabetique
   private filterIngredients(
     value: string,
     ingredients: Ingredient[]
   ): Ingredient[] {
     const filterValue =
       typeof value === 'string' ? value.toLowerCase().trim() : '';
-    const results = ingredients.filter((ingredient) =>
-      ingredient.name.toLowerCase().includes(filterValue)
-    );
+
+    const results = ingredients
+      .filter((ingredient) =>
+        ingredient.name.toLowerCase().includes(filterValue)
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
+
     this.noResults = results.length === 0;
     return results;
   }
@@ -129,6 +140,11 @@ export class ProductFormComponent implements OnInit {
       this.ingredients.push(ingredient);
       this.refreshFilteredIngredients();
     });
+  }
+
+  // Vérifie si un ingrédient fait partie de la composition
+  isIngredientSelected(ingredient: Ingredient): boolean {
+    return this.composition.some((comp) => comp._id === ingredient._id);
   }
 
   private refreshFilteredIngredients(): void {
@@ -148,7 +164,7 @@ export class ProductFormComponent implements OnInit {
     this.productForm.get('composition')?.setValue(composition);
   }
 
-  // Ajout d'un ingrédient à la composition du produit
+  // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'noResults'): void {
     if (ingredient === 'noResults') {
       this.createIngredient();
@@ -168,6 +184,7 @@ export class ProductFormComponent implements OnInit {
       (comp) => comp._id !== ingredient._id
     );
     this.setComposition(updatedComposition);
+    this.ingredientCtrl.setValue('');
   }
 
   // Création d'un nouvel ingrédient
