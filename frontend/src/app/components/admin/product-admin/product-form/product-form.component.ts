@@ -43,7 +43,6 @@ export class ProductFormComponent implements OnInit {
     this.categories = this.data.categories || [];
     this.initForm();
     this.setupIngredientAutoComplete();
-    this.loadExistingProduct();
     this.subscribeToIngredientCreation();
 
     // console.log('product-form -> categories : ', this.categories);
@@ -73,42 +72,11 @@ export class ProductFormComponent implements OnInit {
     );
   }
 
-  private loadExistingProduct(): void {
-    if (this.data.product) {
-      const product = { ...this.data.product };
-
-      // Vérifier si la composition contient des IDs et les transformer en objets complets
-      product.composition = this.mapIngredientIdsToObjects(
-        product.composition,
-        this.data.ingredients || []
-      );
-
-      console.log(
-        'product-form -> loadExistingProduct -> category : ',
-        this.categories
-      );
-
-      this.productForm.patchValue({ ...product });
-      console.log(
-        'product-form -> loadExistingProduct -> productForm : ',
-        this.productForm
-      );
-    }
-  }
 
   compareCategories(category1: Category, category2: Category): boolean {
     return category1 && category2
       ? category1._id === category2._id
       : category1 === category2;
-  }
-
-  private mapIngredientIdsToObjects(
-    ingredientIds: string[],
-    allIngredients: Ingredient[]
-  ): Ingredient[] {
-    return ingredientIds
-      .map((id) => allIngredients.find((ingredient) => ingredient._id === id))
-      .filter((ingredient): ingredient is Ingredient => !!ingredient); // Supprime les null/undefined
   }
 
   ////////// Gestion de l'autocomplétion
