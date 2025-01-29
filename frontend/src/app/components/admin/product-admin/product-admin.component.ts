@@ -57,6 +57,8 @@ export class ProductAdminComponent implements OnInit {
   ngAfterViewInit(): void {
     this.products.paginator = this.productsPaginator;
     this.products.sort = this.productsSort;
+    // console.log('products', this.products);
+    // console.log('categories', this.categories);
   }
 
   loadData(): void {
@@ -74,8 +76,6 @@ export class ProductAdminComponent implements OnInit {
   openProductForm(product: Product | null): void {
     const categories$ = this.categoryService.getCategories();
     const ingredients$ = this.ingredientService.getIngredients();
-
-
 
     forkJoin([categories$, ingredients$]).subscribe(
       ([categories, ingredients]) => {

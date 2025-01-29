@@ -5,7 +5,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { map, Observable, startWith, tap } from 'rxjs';
+import { map, Observable, startWith } from 'rxjs';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
@@ -46,14 +46,17 @@ export class ProductFormComponent implements OnInit {
     this.loadExistingProduct();
     this.subscribeToIngredientCreation();
 
-    console.log('product-form -> categories : ', this.categories);
+    // console.log('product-form -> categories : ', this.categories);
   }
 
   ////////// Initialisation du formulaire
   private initForm(): void {
     const product = this.data.product || {};
 
-    console.log('product-form -> initForm -> product : ', product);
+    console.log(
+      'product-form -> initForm -> product : ',
+      product.category.name
+    );
 
     this.productForm = this.fb.group({
       name: [product.name || '', Validators.required],
@@ -73,7 +76,6 @@ export class ProductFormComponent implements OnInit {
   private loadExistingProduct(): void {
     if (this.data.product) {
       const product = { ...this.data.product };
-      console.log('product-form -> loadExistingProduct -> product : ', product);
 
       // Vérifier si la composition contient des IDs et les transformer en objets complets
       product.composition = this.mapIngredientIdsToObjects(
@@ -81,22 +83,23 @@ export class ProductFormComponent implements OnInit {
         this.data.ingredients || []
       );
 
-      product.category = this.mapCategoryIdToObject(
-        product.category,
+      console.log(
+        'product-form -> loadExistingProduct -> category : ',
         this.categories
       );
 
       this.productForm.patchValue({ ...product });
+      console.log(
+        'product-form -> loadExistingProduct -> productForm : ',
+        this.productForm
+      );
     }
   }
 
-  private mapCategoryIdToObject(
-    categoryId: string,
-    allCategories: Category[]
-  ): Category | null {
-    return (
-      allCategories.find((category) => category._id === categoryId) || null
-    );
+  compareCategories(category1: Category, category2: Category): boolean {
+    return category1 && category2
+      ? category1._id === category2._id
+      : category1 === category2;
   }
 
   private mapIngredientIdsToObjects(
@@ -220,7 +223,7 @@ export class ProductFormComponent implements OnInit {
   save(): void {
     if (this.productForm.valid) {
       const productData = { ...this.productForm.value };
-      console.log('product-form -> save -> productData : ', productData);
+      //console.log('product-form -> save -> productData : ', productData);
       this.dialogRef.close(productData);
     } else {
       this.productForm.markAllAsTouched();

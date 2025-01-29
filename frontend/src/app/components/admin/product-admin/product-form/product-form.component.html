@@ -12,8 +12,8 @@
     <!-- Catégorie -->
     <mat-form-field appearance="fill">
         <mat-label>Catégorie</mat-label>
-        <mat-select formControlName="category">
-            <mat-option *ngFor="let category of categories" [value]="category._id">
+        <mat-select formControlName="category" [compareWith]="compareCategories">
+            <mat-option *ngFor="let category of categories" [value]="category">
                 {{ category.name }}
             </mat-option>
         </mat-select>
@@ -42,7 +42,7 @@
             </mat-option>
             
             <!-- Affichage des résultats filtrés -->
-            <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient">
+            <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient" class="composition">
                 <span>{{ ingredient.name }}</span>
                 <mat-icon *ngIf="isIngredientSelected(ingredient)">check</mat-icon>
             </mat-option>

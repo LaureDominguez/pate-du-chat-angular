@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
 // Obtenir tous les produits
 router.get('/', async (req, res) => {
 	try {
-		const products = await Product.find();
+		const products = await Product.find().populate('category');
 		res.json(products);
 	} catch (error) {
 		console.error(error.message);

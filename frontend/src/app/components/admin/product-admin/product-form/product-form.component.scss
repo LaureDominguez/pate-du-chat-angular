@@ -41,6 +41,11 @@ mat-option {
     }
 }
 
+// Afficher les petites coches des ingrédients selectionnés
+.composition {
+    flex-direction: row-reverse;
+}
+
 // Customize the entire app. Change :root to your selector if you want to scope the styles.
 .stock {
     // background-color: pink;
@@ -56,8 +61,4 @@ mat-option {
         unselected-hover-handle-color: orange,
         label-text-color: rgb(58, 192, 154)
     ));
-}
-
-mat-option {
-    flex-direction: row-reverse;
 }
