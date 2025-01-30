@@ -179,7 +179,7 @@ export class ProductFormComponent implements OnInit {
   save(): void {
     if (this.productForm.valid) {
       const productData = { ...this.productForm.value };
-      console.log('product-form -> save -> productData : ', productData);
+      // console.log('product-form -> save -> productData : ', productData);
       this.dialogRef.close(productData);
     } else {
       this.productForm.markAllAsTouched();

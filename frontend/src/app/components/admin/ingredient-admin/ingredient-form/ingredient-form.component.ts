@@ -3,16 +3,7 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { AdminModule } from '../../admin.module';
 import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
-
-export interface Ingredient {
-  _id?: string;
-  name: string;
-  supplier: string;
-  allergens: string[];
-  vegan: boolean;
-  vegeta: boolean;
-  images?: string[];
-}
+import { Ingredient } from '../../../../models/ingredient';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -65,10 +56,22 @@ export class IngredientFormComponent {
   get allergens(): FormArray {
     return this.ingredientForm.get('allergens') as FormArray;
   }
+  get name() {
+    return this.ingredientForm.get('name');
+  }
+  get supplier() {
+    return this.ingredientForm.get('supplier');
+  }
+  get vegan() {
+    return this.ingredientForm.get('vegan');
+  }
+  get vegeta() {
+    return this.ingredientForm.get('vegeta');
+  }
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
-      this.ingredientForm.get('vegeta')?.setValue(true);
+      this.vegeta?.setValue(true);
     }
   }
 
@@ -81,7 +84,7 @@ export class IngredientFormComponent {
 
       Array.from(input.files).forEach((file) => {
         if (!file.type.startsWith('image/')) {
-          alert(`${file.name} n'est pas un fichier image valide.`);
+          alert(`${file.name} n'est pas une image valide.`);
         } else if (file.size > maxFileSize) {
           alert(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
         } else {
@@ -117,24 +120,24 @@ export class IngredientFormComponent {
   }
 
   save(): void {
-    if (this.ingredientForm.valid) {
-      if (this.ingredientForm.get('vegan')?.value) {
-        this.ingredientForm.get('vegeta')?.setValue(true);
+    if (this.vegan?.valid) {
+      if (this.vegan?.value) {
+        this.vegeta?.setValue(true);
       }
 
-      const allergenesSelectionnes = this.ingredientForm.get('allergens')
-        ?.value.map((checked: boolean, index: number) =>
+      const allergenesSelectionnes = this.allergens?.value
+        .map((checked: boolean, index: number) =>
           checked ? this.data.allergenesList[index] : null
         )
         .filter((allergene: string | null) => allergene !== null);
 
       const ingredientData = {
         _id: this.data.ingredient?._id,
-        name: this.ingredientForm.get('name')?.value,
-        supplier: this.ingredientForm.get('supplier')?.value,
+        name: this.name?.value,
+        supplier: this.supplier?.value,
         allergens: allergenesSelectionnes,
-        vegan: this.ingredientForm.get('vegan')?.value,
-        vegeta: this.ingredientForm.get('vegeta')?.value,
+        vegan: this.vegan?.value,
+        vegeta: this.vegeta?.value,
         existingImages: this.existingImages,
       };
 
