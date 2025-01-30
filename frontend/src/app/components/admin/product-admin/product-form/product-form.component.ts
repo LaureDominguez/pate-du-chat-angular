@@ -155,6 +155,7 @@ export class ProductFormComponent implements OnInit {
         ) {
           this.setComposition([...currentComposition, newIngredient]);
         }
+        this.ingredientCtrl.setValue('');
       })
       .catch((error) => {
         console.error('Erreur lors de la création de l’ingrédient :', error);
