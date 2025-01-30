@@ -16,11 +16,12 @@ export class ProductService {
   //////// Public products
 
   getFinalProducts(): Observable<FinalProduct[]> {
-    return this.http.get<FinalProduct[]>(`${this.apiUrl}`);
+    console.log('Product.service -> getFinalProducts : ', this.apiUrl);
+    return this.http.get<FinalProduct[]>(`${this.apiUrl}?view=full`);
   }
 
   getFinalProductById(id: string): Observable<FinalProduct> {
-    const url = `${this.apiUrl}/${id}`;
+    const url = `${this.apiUrl}/${id}?view=full`;
     return this.http.get<FinalProduct>(url);
   }
 
@@ -42,6 +43,7 @@ export class ProductService {
 
   updateProduct(id: string, payload: any): Observable<Product> {
     const url = `${this.apiUrl}/${id}`;
+    console.log('Product.service -> payload : ', payload);
     return this.http.put<Product>(url, payload);
   }
 

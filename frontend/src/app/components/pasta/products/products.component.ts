@@ -117,26 +117,26 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   // Récupérer les ingrédients du produit sélectionné
   private getIngredientsForSelectedProduct(): void {
-    if (!this.selectedProduct?.composition) return;
+    // if (!this.selectedProduct?.composition) return;
 
-    forkJoin(
-      this.selectedProduct.composition.map((id: string) =>
-        this.ingredientService.getIngredientById(id)
-      )
-    )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (ingredients: Ingredient[]) => {
-          this.ingredients = ingredients;
-          this.processIngredients(ingredients);
-        },
-        error: (error) => {
-          console.error(
-            'Erreur lors de la récupération des ingrédients :',
-            error
-          );
-        },
-      });
+    // forkJoin(
+    //   this.selectedProduct.composition.map((id: string) =>
+    //     this.ingredientService.getIngredientById(id)
+    //   )
+    // )
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe({
+    //     next: (ingredients: Ingredient[]) => {
+    //       this.ingredients = ingredients;
+    //       this.processIngredients(ingredients);
+    //     },
+    //     error: (error) => {
+    //       console.error(
+    //         'Erreur lors de la récupération des ingrédients :',
+    //         error
+    //       );
+    //     },
+    //   });
   }
 
   // Traiter les ingrédients pour déterminer les allergènes et les régimes alimentaires

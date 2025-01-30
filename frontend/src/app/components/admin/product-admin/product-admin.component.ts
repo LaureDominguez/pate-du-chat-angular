@@ -6,7 +6,7 @@ import {
   Ingredient,
   IngredientService,
 } from '../../../services/ingredient.service';
-import { Product, ProductService } from '../../../services/product.service';
+import { FinalProduct, Product, ProductService } from '../../../services/product.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
 
@@ -26,13 +26,16 @@ import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dial
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
 export class ProductAdminComponent implements OnInit {
-  products = new MatTableDataSource<Product>([]);
+  products = new MatTableDataSource<FinalProduct>([]);
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
 
   displayedProductsColumns: string[] = [
     'name',
     'category',
+    'allergens',
+    'vegan',
+    'vegeta',
     'price',
     'stock',
     'actions',
@@ -57,65 +60,55 @@ export class ProductAdminComponent implements OnInit {
   ngAfterViewInit(): void {
     this.products.paginator = this.productsPaginator;
     this.products.sort = this.productsSort;
-    // console.log('products', this.products);
-    // console.log('categories', this.categories);
   }
 
   loadData(): void {
     forkJoin({
-      products: this.productService.getProducts(),
+      products: this.productService.getFinalProducts(),
       categories: this.categoryService.getCategories(),
       ingredients: this.ingredientService.getIngredients(),
     }).subscribe(({ products, categories, ingredients }) => {
       this.products.data = products;
       this.categories = categories;
       this.ingredients = ingredients;
+      console.log('admin.component -> loadData -> products : ', products);
     });
   }
 
   openProductForm(product: Product | null): void {
-    const categories$ = this.categoryService.getCategories();
-    const ingredients$ = this.ingredientService.getIngredients();
+    const imageUrls =
+      product?.images?.map((imagePath) =>
+        this.imageService.getImageUrl(imagePath)
+      ) || [];
 
-    forkJoin([categories$, ingredients$]).subscribe(
-      ([categories, ingredients]) => {
-        const imageUrls =
-          product?.images?.map((imagePath) =>
-            this.imageService.getImageUrl(imagePath)
-          ) || [];
+    const dialogRef = this.dialog.open(ProductFormComponent, {
+      width: '600px',
+      data: {
+        product,
+        imageUrls,
+        categories: this.categories,
+        ingredients: this.ingredients,
+      },
+    });
 
-        const dialogRef = this.dialog.open(ProductFormComponent, {
-          width: '600px',
-          data: {
-            product,
-            imageUrls,
-            categories: categories,
-            ingredients: ingredients,
-          },
-        });
-
-        dialogRef.afterClosed().subscribe((result: any) => {
-          if (result) {
-            // console.log('product-admin -> ProductForm -> result :', result);
-            // console.log('product-admin -> ProductForm -> product :', product);
-            if (product) {
-              const updatedId = product._id;
-              // Mise à jour du produit existant
-              this.productService
-                .updateProduct(updatedId!, result)
-                .subscribe(() => {
-                  this.loadData();
-                });
-            } else {
-              // Création d'un nouveau produit
-              this.productService.createProduct(result).subscribe(() => {
-                this.loadData();
-              });
-            }
-          }
-        });
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        if (product) {
+          const updatedId = product._id;
+          // Mise à jour du produit existant
+          this.productService
+            .updateProduct(updatedId!, result)
+            .subscribe(() => {
+              this.loadData();
+            });
+        } else {
+          // Création d'un nouveau produit
+          this.productService.createProduct(result).subscribe(() => {
+            this.loadData();
+          });
+        }
       }
-    ),
+    }),
       (error: any) => {
         console.error(
           'Erreur lors du chargement des catégories ou des ingrédients :',

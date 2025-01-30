@@ -1,15 +1,17 @@
 table {
-    th:first-child, td:first-child {
-        width: 40%;
-    }
-    th:nth-child(3), th:nth-child(4), td:nth-child(3), td:nth-child(4) {
-        justify-content: center;
+    .mat-column-allergens, 
+    .mat-column-vegan, 
+    .mat-column-vegeta {
+        width: 32px;
+        padding-right: 24px;
         text-align: center;
+    }
+    
+    .mat-column-price, .mat-column-stock {
         width: 10%;
+        text-align: center;
     }
-    th:nth-child(2), th:last-child, td:nth-child(2), td:last-child {
-        width: 20%;
-    }
+    
     th:last-child, td:last-child {
         justify-content: center;
         text-align: center;

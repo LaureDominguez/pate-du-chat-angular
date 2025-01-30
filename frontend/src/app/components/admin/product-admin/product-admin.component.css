@@ -1,13 +1,13 @@
-table th:first-child, table td:first-child {
-  width: 40%;
-}
-table th:nth-child(3), table th:nth-child(4), table td:nth-child(3), table td:nth-child(4) {
-  justify-content: center;
+table .mat-column-allergens,
+table .mat-column-vegan,
+table .mat-column-vegeta {
+  width: 32px;
+  padding-right: 24px;
   text-align: center;
-  width: 10%;
 }
-table th:nth-child(2), table th:last-child, table td:nth-child(2), table td:last-child {
-  width: 20%;
+table .mat-column-price, table .mat-column-stock {
+  width: 10%;
+  text-align: center;
 }
 table th:last-child, table td:last-child {
   justify-content: center;

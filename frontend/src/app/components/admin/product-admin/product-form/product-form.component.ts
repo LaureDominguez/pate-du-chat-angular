@@ -44,18 +44,11 @@ export class ProductFormComponent implements OnInit {
     this.initForm();
     this.setupIngredientAutoComplete();
     this.subscribeToIngredientCreation();
-
-    // console.log('product-form -> categories : ', this.categories);
   }
 
   ////////// Initialisation du formulaire
   private initForm(): void {
     const product = this.data.product || {};
-
-    console.log(
-      'product-form -> initForm -> product : ',
-      product.category.name
-    );
 
     this.productForm = this.fb.group({
       name: [product.name || '', Validators.required],
@@ -65,13 +58,7 @@ export class ProductFormComponent implements OnInit {
       price: [product.price || null, [Validators.required, Validators.min(0)]],
       stock: [product.stock || false],
     });
-
-    console.log(
-      'product-form -> initialized Form -> productForm : ',
-      this.productForm
-    );
   }
-
 
   compareCategories(category1: Category, category2: Category): boolean {
     return category1 && category2
@@ -191,7 +178,7 @@ export class ProductFormComponent implements OnInit {
   save(): void {
     if (this.productForm.valid) {
       const productData = { ...this.productForm.value };
-      //console.log('product-form -> save -> productData : ', productData);
+      console.log('product-form -> save -> productData : ', productData);
       this.dialogRef.close(productData);
     } else {
       this.productForm.markAllAsTouched();
