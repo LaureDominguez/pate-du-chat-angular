@@ -16,7 +16,6 @@ export class ProductService {
   //////// Public products
 
   getFinalProducts(): Observable<FinalProduct[]> {
-    console.log('Product.service -> getFinalProducts : ', this.apiUrl);
     return this.http.get<FinalProduct[]>(`${this.apiUrl}?view=full`);
   }
 

@@ -16,6 +16,7 @@ import { AdminModule } from '../../admin.module';
 import { SharedDataService } from '../../../../services/shared-data.service';
 import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
 import { Category } from '../../../../models/category';
+import { Product } from '../../../../models/product';
 
 @Component({
   selector: 'app-product-form',
@@ -24,46 +25,79 @@ import { Category } from '../../../../models/category';
   styleUrls: ['./product-form.component.scss'],
 })
 export class ProductFormComponent implements OnInit {
-  productForm!: FormGroup;
+  productForm: FormGroup;
   ingredientCtrl = new FormControl();
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
   filteredIngredients!: Observable<Ingredient[]>;
   noResults = false;
 
+  //img services
+  selectedFiles: File[] = [];
+  filePreviews: string[] = [];
+  existingImages: string[] = [];
+  existingImageUrls: string[] = [];
+  removedExistingImages: string[] = [];
+
   constructor(
     private fb: FormBuilder,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
+      imageUrls: string[];
+      product: Product | null;
+      categories: Category[];
+      ingredients: Ingredient[];
+    },
     private sharedDataService: SharedDataService
-  ) {}
+  ){
+    this.productForm = this.fb.group({
+      _id: [data.product?._id || ''],
+      name: [data.product?.name || '', Validators.required],
+      category: [null, Validators.required],
+      description: [data.product?.description || ''],
+      composition: [data.product?.composition || [], Validators.required],
+      price: [
+        data.product?.price || null,
+        [Validators.required, Validators.min(0)],
+      ],
+      stock: [data.product?.stock || false],
+    });
 
+    console.log('admin.component -> productForm init : ', this.productForm);
+
+    if (data.product?.images) {
+      this.existingImages = [...data.product.images];
+      this.existingImageUrls = [...data.imageUrls];
+    }
+  }
   ngOnInit(): void {
-    this.categories = this.data.categories || [];
-    this.initForm();
     this.setupIngredientAutoComplete();
     this.subscribeToIngredientCreation();
-  }
 
-  ////////// Initialisation du formulaire
-  private initForm(): void {
-    const product = this.data.product || {};
+    this.categories = this.data.categories || [];
 
-    this.productForm = this.fb.group({
-      name: [product.name || '', Validators.required],
-      category: [product.category || null, Validators.required],
-      description: [product.description || ''],
-      composition: [product.composition || [], Validators.required],
-      price: [product.price || null, [Validators.required, Validators.min(0)]],
-      stock: [product.stock || false],
-    });
+    // Vérification et correction de product.category
+    const productCategory = this.data.product?.category;
+
+    if (productCategory) {
+      const categoryObj =
+        typeof productCategory === 'string'
+          ? this.categories.find((cat) => cat._id === productCategory) || null
+          : productCategory;
+
+      this.productForm.patchValue({ category: categoryObj });
+    }
+
+    console.log(
+      '✅ Valeur corrigée de productForm.category :',
+      this.productForm.get('category')?.value
+    );
   }
 
   compareCategories(category1: Category, category2: Category): boolean {
-    return category1 && category2
-      ? category1._id === category2._id
-      : category1 === category2;
+    return category1 && category2 ? category1._id === category2._id : false;
   }
 
   ////////// Gestion de l'autocomplétion
@@ -128,7 +162,6 @@ export class ProductFormComponent implements OnInit {
       this.createIngredient();
       return;
     }
-
     const currentComposition = this.composition;
     if (!currentComposition.some((comp) => comp._id === ingredient._id)) {
       this.setComposition([...currentComposition, ingredient]);
@@ -175,12 +208,60 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  /////////// Gestion des images
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const maxFileSize = 10 * 1024 * 1024;
+
+    if (input.files) {
+      const validFiles: File[] = [];
+
+      Array.from(input.files).forEach((file) => {
+        if (!file.type.startsWith('image/')) {
+          alert(`${file.name} n'est pas une image valide.`);
+        } else if (file.size > maxFileSize) {
+          alert(`${file.name} depasse la taille maximale autorisee de 10 Mo.`);
+        } else {
+          validFiles.push(file);
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (reader.result) {
+              this.filePreviews.push(reader.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      if (validFiles.length > 0) {
+        input.value = '';
+        this.selectedFiles.push(...validFiles);
+      }
+    }
+  }
+
+  removeFile(index: number): void {
+    this.selectedFiles.splice(index, 1);
+    this.filePreviews.splice(index, 1);
+  }
+
+  removeExistingImage(index: number): void {
+    this.existingImageUrls.splice(index, 1);
+    const removed = this.existingImages.splice(index, 1)[0];
+    this.removedExistingImages.push(removed);
+  }
+
   ////////// Validation du formulaire
   save(): void {
     if (this.productForm.valid) {
       const productData = { ...this.productForm.value };
-      // console.log('product-form -> save -> productData : ', productData);
-      this.dialogRef.close(productData);
+      console.log('product-form -> save -> productData : ', productData);
+      this.dialogRef.close({
+        productData,
+        selectedFiles: this.selectedFiles,
+        removedExistingImages: this.removedExistingImages,
+      });
     } else {
       this.productForm.markAllAsTouched();
       this.dialog.open(ErrorDialogComponent, {

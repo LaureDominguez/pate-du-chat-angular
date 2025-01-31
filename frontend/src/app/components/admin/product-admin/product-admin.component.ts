@@ -15,7 +15,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { SharedDataService } from '../../../services/shared-data.service';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -45,7 +44,6 @@ export class ProductAdminComponent implements OnInit {
   @ViewChild('productsSort') productsSort!: MatSort;
 
   constructor(
-    private sharedDataService: SharedDataService,
     private productService: ProductService,
     private ingredientService: IngredientService,
     private categoryService: CategoryService,
@@ -71,7 +69,6 @@ export class ProductAdminComponent implements OnInit {
       this.products.data = products;
       this.categories = categories;
       this.ingredients = ingredients;
-      console.log('admin.component -> loadData -> products : ', products);
     });
   }
 
@@ -80,33 +77,31 @@ export class ProductAdminComponent implements OnInit {
       product?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
       ) || [];
+    
+    console.log('admin.component -> openProductForm -> product : ', product);
+    console.log('admin.component -> openProductForm -> categories disponibles : ', this.categories);
 
     const dialogRef = this.dialog.open(ProductFormComponent, {
       width: '600px',
       data: {
-        product,
-        imageUrls,
+        product: product || null,
+        imageUrls: imageUrls,
         categories: this.categories,
         ingredients: this.ingredients,
       },
     });
 
-    dialogRef.afterClosed().subscribe((result: any) => {
+    dialogRef.afterClosed().subscribe((
+      result: {
+        productData: any;
+        selectedFiles: File[];
+        removedExistingImages: string[];
+      }
+      | undefined
+    ) => {
+      console.log('admin.component -> openProductForm -> result : ', result);
       if (result) {
-        if (product) {
-          const updatedId = product._id;
-          // Mise à jour du produit existant
-          this.productService
-            .updateProduct(updatedId!, result)
-            .subscribe(() => {
-              this.loadData();
-            });
-        } else {
-          // Création d'un nouveau produit
-          this.productService.createProduct(result).subscribe(() => {
-            this.loadData();
-          });
-        }
+        this.handleProductFormSubmit(result);
       }
     }),
       (error: any) => {
@@ -116,6 +111,69 @@ export class ProductAdminComponent implements OnInit {
         );
       };
   }
+
+  handleProductFormSubmit(result: {
+    productData: any;
+    selectedFiles: File[];
+    removedExistingImages: string[];
+  }): void {
+    const { productData, selectedFiles } = result;
+    const existingImages = productData.existingImages ?? [];
+    const productId = productData._id;
+
+    console.log('admin.component -> handleProductFormSubmit -> result : ', result);
+
+    if (result.removedExistingImages?.length) {
+      result.removedExistingImages.forEach((imgPath) => {
+        const filename = imgPath.replace('/^/?uploads/?/', '');
+        this.imageService.deleteImage(filename).subscribe(() => { });
+      });
+    }
+
+    const finalImages = [...existingImages];
+    delete productData.existingImages;
+
+    const submitForm = () => {
+      productData.images = finalImages;
+      console.log(
+        'admin.component -> handleProductFormSubmit -> ready to submit -> productData : ',
+        productData
+      );
+      this.submiteProductForm(productData, productId);
+    };
+
+    if (selectedFiles.length > 0) {
+      this.imageService.uploadImages(selectedFiles).subscribe({
+        next: (uploadResponse) => {
+          const newFilePaths = uploadResponse.imagePath;
+          finalImages.push(...newFilePaths);
+        },
+        error: (error) => {
+          console.error("Erreur lors de l'upload des images :", error);
+        },
+        complete: submitForm,
+      });
+    } else {
+      submitForm();
+    }
+  }
+
+  submiteProductForm(
+    productData: any,
+    productId?: string
+  ): void {
+    console.log('admin.component -> submiteProductForm -> productData : ', productData, 'productId : ', productId);
+    if (productId) {
+      this.productService.updateProduct(productId, productData).subscribe(() => {
+        this.loadData();
+      });
+    } else {
+      this.productService.createProduct(productData).subscribe(() => {
+        this.loadData();
+      });
+    }
+  }
+
 
   deleteProduct(product: Product): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {

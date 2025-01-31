@@ -74,6 +74,7 @@ export class IngredientAdminComponent implements OnInit {
     // console.log('ingredient-admin -> fetchAllergenes : ', this.allergenesList);
   }
 
+  // ouvrir le formulaire d'ingrédient
   openIngredientForm(ingredient: Ingredient | null): void {
     // console.log('ingredient-admin -> openIngredientForm : ', ingredient, this.allergenesList);
     const imageUrls =
@@ -106,6 +107,7 @@ export class IngredientAdminComponent implements OnInit {
     );
   }
 
+  // traiter l'upload d'images
   handleIngredientFormSubmit(result: {
     ingredientData: any;
     selectedFiles: File[];
@@ -117,15 +119,9 @@ export class IngredientAdminComponent implements OnInit {
 
     // Vérifier et supprimer les images existantes marquées pour suppression
     if (result.removedExistingImages?.length) {
-      // console.log(
-      //   'handleIngredientFormSubmit -> removedExistingImages : ',
-      //   result.removedExistingImages
-      // );
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        // console.log('handleIngredientFormSubmit -> filename : ', filename);
         this.imageService.deleteImage(filename).subscribe(() => {
-          // console.log('Image deleted successfully... ou pas');
         });
       });
     }
@@ -142,21 +138,6 @@ export class IngredientAdminComponent implements OnInit {
 
           // 2. Concaténer avec les images existantes
           finalImages.push(...newFilePaths); // Ajouter les nouvelles images
-          // console.log(
-          //   'admin.component -> image uploadée, concatenation de finalImages -> finalImages : ',
-          //   finalImages
-          // );
-
-          // 3. Soumettre le formulaire
-          // console.log(
-          //   'admin.component -> soumission du formulaire ',
-          //   'id: ',
-          //   ingredientId,
-          //   'images: ',
-          //   finalImages,
-          //   'data: ',
-          //   ingredientData
-          // );
           this.submitIngredientForm(ingredientId, ingredientData, finalImages);
         },
         error: (error) => {
@@ -171,6 +152,8 @@ export class IngredientAdminComponent implements OnInit {
     }
   }
 
+
+  // soumettre le formulaire aux methodes création ou mise à jour
   submitIngredientForm(
     ingredientId: string | undefined,
     ingredientData: any,
@@ -181,11 +164,6 @@ export class IngredientAdminComponent implements OnInit {
       images: finalImages,
     };
 
-    // console.log(
-    //   'admin.component -> submitIngredientForm -> ingredientPayload : ',
-    //   ingredientPayload
-    // );
-
     if (ingredientId) {
       // console.log('id trouvé');
       this.updateIngredient(ingredientId, ingredientPayload);
@@ -195,12 +173,9 @@ export class IngredientAdminComponent implements OnInit {
     }
   }
 
+  // création d'un nouvel ingrédient
   addIngredient(ingredientPayload: any): void {
     delete ingredientPayload._id;
-    // console.log(
-    //   'admin.component -> addIngredient -> ingredientPayload : ',
-    //   ingredientPayload
-    // );
 
     this.ingredientService.createIngredient(ingredientPayload).subscribe({
       next: (res) => {
@@ -214,10 +189,10 @@ export class IngredientAdminComponent implements OnInit {
     });
   }
 
+  // mise à jour d'un ingrédient
   updateIngredient(id: string, ingredientPayload: any): void {
     this.ingredientService.updateIngredient(id, ingredientPayload).subscribe({
       next: (res) => {
-        // console.log('admin.component -> updateIngredient -> res : ', res);
         this.fetchIngredients();
       },
       error: (error) => {
@@ -226,7 +201,7 @@ export class IngredientAdminComponent implements OnInit {
     });
   }
 
-  
+  // suppression d'un ingrédient
   deleteIngredient(ingredient: Ingredient): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',

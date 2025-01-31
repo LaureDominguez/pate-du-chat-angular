@@ -13,11 +13,13 @@
     <mat-form-field appearance="fill">
         <mat-label>Catégorie</mat-label>
         <mat-select formControlName="category" [compareWith]="compareCategories">
+            <mat-option *ngIf="!categories.length">Aucune catégorie</mat-option>
             <mat-option *ngFor="let category of categories" [value]="category">
                 {{ category.name }}
             </mat-option>
         </mat-select>
     </mat-form-field>
+
 
     <!-- Description -->
     <mat-form-field appearance="fill" class="full-width">
@@ -79,11 +81,52 @@
 
     <!-- Stock -->
     <section class="stock">
-        <!-- En Stock -->
         <mat-slide-toggle formControlName="stock" labelPosition="before">
             En stock
         </mat-slide-toggle>
     </section>
+
+    <mat-divider></mat-divider>
+    
+
+    <!-- Images -->
+    <div class="file-upload">
+        <mat-label>Images</mat-label>
+        <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
+            <mat-icon>file_upload</mat-icon> Importer une image
+        </button>
+        <input #fileInput id="imageUpload" type="file" multiple (change)="onFileSelected($event)" accept="image/*"
+            style="display: none;" />
+    </div>
+    
+    <div class="previews" *ngIf="filePreviews.length > 0">
+        <mat-label *ngIf="existingImageUrls.length > 0">Images à ajouter :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let preview of filePreviews; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="preview" alt="Image preview" />
+                    <button mat-icon-button color="warn" (click)="removeFile(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+    
+    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
+        <mat-label *ngIf="filePreviews.length > 0">Images existantes :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="image" alt="Existing image" />
+                    <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Validation -->
     <div mat-dialog-actions align="end">
