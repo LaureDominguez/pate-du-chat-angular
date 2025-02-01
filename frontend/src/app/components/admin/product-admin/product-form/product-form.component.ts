@@ -63,13 +63,20 @@ export class ProductFormComponent implements OnInit {
         [Validators.required, Validators.min(0)],
       ],
       stock: [data.product?.stock || false],
+      images: [data.product?.images || []],
     });
 
-    console.log('admin.component -> productForm init : ', this.productForm);
+    console.log('product-form -> data : ', data);
+    console.log('product-form -> productForm init : ', this.productForm);
 
     if (data.product?.images) {
       this.existingImages = [...data.product.images];
       this.existingImageUrls = [...data.imageUrls];
+      console.log('product-form -> existingImages : ', this.existingImages);
+      console.log(
+        'product-form -> existingImageUrls : ',
+        this.existingImageUrls
+      );
     }
   }
   ngOnInit(): void {
@@ -89,11 +96,6 @@ export class ProductFormComponent implements OnInit {
 
       this.productForm.patchValue({ category: categoryObj });
     }
-
-    console.log(
-      '✅ Valeur corrigée de productForm.category :',
-      this.productForm.get('category')?.value
-    );
   }
 
   compareCategories(category1: Category, category2: Category): boolean {
@@ -255,8 +257,16 @@ export class ProductFormComponent implements OnInit {
   ////////// Validation du formulaire
   save(): void {
     if (this.productForm.valid) {
-      const productData = { ...this.productForm.value };
+      const productData = {
+        ...this.productForm.value,
+        existingImages: [...this.existingImages],
+      };
       console.log('product-form -> save -> productData : ', productData);
+      console.log('product-form -> save -> selectedFiles : ', this.selectedFiles);
+      console.log(
+        'product-form -> save -> removedExistingImages : ',
+        this.removedExistingImages
+      )
       this.dialogRef.close({
         productData,
         selectedFiles: this.selectedFiles,

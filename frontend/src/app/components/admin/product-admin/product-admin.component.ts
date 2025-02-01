@@ -77,10 +77,6 @@ export class ProductAdminComponent implements OnInit {
       product?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
       ) || [];
-    
-    console.log('admin.component -> openProductForm -> product : ', product);
-    console.log('admin.component -> openProductForm -> categories disponibles : ', this.categories);
-
     const dialogRef = this.dialog.open(ProductFormComponent, {
       width: '600px',
       data: {
@@ -99,7 +95,7 @@ export class ProductAdminComponent implements OnInit {
       }
       | undefined
     ) => {
-      console.log('admin.component -> openProductForm -> result : ', result);
+      console.log('admin.component -> openProductForm closed -> result : ', result);
       if (result) {
         this.handleProductFormSubmit(result);
       }
