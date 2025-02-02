@@ -29,11 +29,12 @@ export class IngredientFormComponent {
       imageUrls: string[];
       ingredient: Ingredient | null;
       allergenesList: string[];
+      searchedValue: string;
     }
   ) {
     // console.log('IngredientFormComponent -> constructor : ', data);
     this.ingredientForm = this.fb.group({
-      name: [data.ingredient?.name || '', Validators.required],
+      name: [data.ingredient?.name || data.searchedValue || '', Validators.required],
       supplier: [data.ingredient?.supplier || '', Validators.required],
       allergens: this.fb.array(
         data.allergenesList.map((allergen) =>

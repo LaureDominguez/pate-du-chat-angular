@@ -21,6 +21,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { A11yModule } from '@angular/cdk/a11y';
 
 @NgModule({
     exports: [
@@ -28,6 +29,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         FormsModule,
         ReactiveFormsModule,
 
+        A11yModule,
         MatAutocompleteModule,
         MatButtonModule,
         MatCardModule,

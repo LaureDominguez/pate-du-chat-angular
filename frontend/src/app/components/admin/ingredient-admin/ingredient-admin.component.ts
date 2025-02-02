@@ -48,11 +48,12 @@ export class IngredientAdminComponent implements OnInit {
   ngOnInit(): void {
     this.fetchIngredients();
     this.fetchAllergenes();
+
     this.sharedDataService.openIngredientForm$.subscribe(() => {
-      // console.log('ingredient-admin -> onInit -> openIngredientForm');
-      this.openIngredientForm(null);
+      this.sharedDataService.searchedIngredient$.subscribe((searchedValue) => {
+        this.openIngredientForm(null, searchedValue);
+      })
     });
-    // console.log('ingredient-admin -> onInit : ', this.allergenesList);
   }
 
   ngAfterViewInit(): void {
@@ -64,19 +65,17 @@ export class IngredientAdminComponent implements OnInit {
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
     });
-    // console.log('ingredient-admin -> fetchIngredients : ', this.ingredients.data);
   }
 
   fetchAllergenes(): void {
     this.ingredientService.getAllergenes().subscribe((allergenes) => {
       this.allergenesList = allergenes;
     });
-    // console.log('ingredient-admin -> fetchAllergenes : ', this.allergenesList);
   }
 
   // ouvrir le formulaire d'ingrédient
-  openIngredientForm(ingredient: Ingredient | null): void {
-    // console.log('ingredient-admin -> openIngredientForm : ', ingredient, this.allergenesList);
+  openIngredientForm(ingredient: Ingredient | null, searchedValue: string = ''): void {
+    console.log('admin.component -> openIngredientForm -> searchedValue : ', searchedValue);
     const imageUrls =
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
@@ -87,6 +86,7 @@ export class IngredientAdminComponent implements OnInit {
         ingredient: ingredient,
         allergenesList: this.allergenesList,
         imageUrls: imageUrls,
+        searchedValue: searchedValue,
       },
     });
 
@@ -165,10 +165,8 @@ export class IngredientAdminComponent implements OnInit {
     };
 
     if (ingredientId) {
-      // console.log('id trouvé');
       this.updateIngredient(ingredientId, ingredientPayload);
     } else {
-      // console.log('id non trouvé');
       this.addIngredient(ingredientPayload);
     }
   }
@@ -179,7 +177,6 @@ export class IngredientAdminComponent implements OnInit {
 
     this.ingredientService.createIngredient(ingredientPayload).subscribe({
       next: (res) => {
-        // console.log('admin.component -> addIngredient -> res : ', res);
         this.fetchIngredients();
         this.sharedDataService.resultIngredientCreated(res);
       },

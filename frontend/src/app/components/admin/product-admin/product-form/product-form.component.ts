@@ -30,6 +30,7 @@ export class ProductFormComponent implements OnInit {
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
   filteredIngredients!: Observable<Ingredient[]>;
+  searchedIngredient: string = '';
   noResults = false;
 
   //img services
@@ -51,7 +52,7 @@ export class ProductFormComponent implements OnInit {
       ingredients: Ingredient[];
     },
     private sharedDataService: SharedDataService
-  ){
+  ) {
     this.productForm = this.fb.group({
       _id: [data.product?._id || ''],
       name: [data.product?.name || '', Validators.required],
@@ -107,7 +108,19 @@ export class ProductFormComponent implements OnInit {
     const ingredients = this.data.ingredients || [];
     this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
       startWith(''),
-      map((value) => this.filterIngredients(value, ingredients))
+      map((value) => {
+        if (typeof value === 'string' && value !== 'noResults')
+          this.searchedIngredient = value.trim();
+        console.log(
+          'product-form -> setupIngredientAutoComplete -> value : ',
+          value
+        );
+        console.log(
+          'product-form -> setupIngredientAutoComplete -> searchedIngredient : ',
+          this.searchedIngredient
+        );
+        return this.filterIngredients(value, ingredients);
+      })
     );
   }
 
@@ -161,7 +174,12 @@ export class ProductFormComponent implements OnInit {
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'noResults'): void {
     if (ingredient === 'noResults') {
-      this.createIngredient();
+      console.log(
+        'product-form -> addIngredient -> noResults : ',
+        this.searchedIngredient
+      );
+
+      this.createIngredient(this.searchedIngredient);
       return;
     }
     const currentComposition = this.composition;
@@ -181,8 +199,8 @@ export class ProductFormComponent implements OnInit {
   }
 
   // Création d'un nouvel ingrédient
-  private createIngredient(): void {
-    this.openIngredientForm()
+  private createIngredient(searchedValue: string): void {
+    this.openIngredientForm(searchedValue)
       .then((newIngredient) => {
         const currentComposition = this.composition;
         if (
@@ -197,8 +215,8 @@ export class ProductFormComponent implements OnInit {
       });
   }
 
-  private openIngredientForm(): Promise<Ingredient> {
-    this.sharedDataService.requestOpenIngredientForm();
+  private openIngredientForm(searchedValue: string): Promise<Ingredient> {
+    this.sharedDataService.requestOpenIngredientForm(searchedValue);
     return new Promise((resolve, reject) => {
       const subscription = this.sharedDataService.ingredientCreated$.subscribe({
         next: (ingredient) => {
@@ -262,11 +280,14 @@ export class ProductFormComponent implements OnInit {
         existingImages: [...this.existingImages],
       };
       console.log('product-form -> save -> productData : ', productData);
-      console.log('product-form -> save -> selectedFiles : ', this.selectedFiles);
+      console.log(
+        'product-form -> save -> selectedFiles : ',
+        this.selectedFiles
+      );
       console.log(
         'product-form -> save -> removedExistingImages : ',
         this.removedExistingImages
-      )
+      );
       this.dialogRef.close({
         productData,
         selectedFiles: this.selectedFiles,

@@ -2,7 +2,7 @@ import { createRequire } from 'module';const require = createRequire(import.meta
 import {
   ScrollingModule,
   ViewportRuler
-} from "./chunk-JS4XQ6B2.js";
+} from "./chunk-M7K3N6QU.js";
 import {
   DataSource,
   _DisposeViewRepeaterStrategy,
@@ -14,7 +14,8 @@ import {
 import {
   Directionality,
   MatCommonModule
-} from "./chunk-YJMPYELJ.js";
+} from "./chunk-DCAQWH7N.js";
+import "./chunk-O5C4E5RZ.js";
 import {
   Platform,
   _isNumberValue

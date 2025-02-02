@@ -11,14 +11,16 @@ import {
 import {
   AnimationCurves,
   AnimationDurations,
+  MatCommonModule,
+  _StructuralStylesLoader
+} from "./chunk-KW3XEMUQ.js";
+import {
   AriaDescriber,
   ENTER,
   FocusMonitor,
-  MatCommonModule,
   SPACE,
-  _CdkPrivateStyleLoader,
-  _StructuralStylesLoader
-} from "./chunk-D7UDTQSI.js";
+  _CdkPrivateStyleLoader
+} from "./chunk-AOANY5P5.js";
 import "./chunk-OMZLIQL3.js";
 import "./chunk-5GKQXQER.js";
 import {

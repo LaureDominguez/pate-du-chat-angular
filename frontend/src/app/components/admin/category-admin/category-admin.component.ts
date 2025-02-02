@@ -1,10 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-category-admin',
@@ -15,9 +16,13 @@ import { MatDialog } from '@angular/material/dialog';
 export class CategoryAdminComponent implements OnInit {
   categories = new MatTableDataSource<Category>([]);
   displayedCategoriesColumns: string[] = ['name', 'actions'];
+  newCategory: Category | null = null;
   editingCategoryId: string | null = null;
+  editingCategory: Category | null = null;
 
   @ViewChild('categoriesPaginator') categoriesPaginator!: MatPaginator;
+  @ViewChild('categoriesSort') categoriesSort!: MatSort;
+  @ViewChild('categoryInput') categoryInput!: ElementRef;
 
   constructor(
     private categoryService: CategoryService,
@@ -30,6 +35,7 @@ export class CategoryAdminComponent implements OnInit {
 
   ngAfterViewInit(): void {
     this.categories.paginator = this.categoriesPaginator;
+    this.categories.sort = this.categoriesSort;
   }
 
   fecthCategories(): void {
@@ -38,37 +44,48 @@ export class CategoryAdminComponent implements OnInit {
     });
   }
 
+  focusInput(): void {
+    setTimeout(() => {
+      this.categoryInput?.nativeElement.focus();
+    });
+  }
+
   // Méthodes pour gérer les catégories
-  //Add
-  addCategory(): void {
-    console.log('Ajouter une nouvelle catégorie');
-    const newCategory: Category = { _id: null, name: '' };
-    this.categories.data = [newCategory, ...this.categories.data];
+
+  startEditing(category: Category | null = null): void {
+    this.editingCategory = category ? { ...category } : { _id: null, name: '' };
+    console.log('editingCategory : ', this.editingCategory);
+    if (!this.editingCategory._id) {
+      console.log('new');
+      this.categories.data = [this.editingCategory, ...this.categories.data];
+    }
+    this.focusInput();
+
   }
 
-  // Edit
-  editCategory(categoryId: string | null): void {
-    this.editingCategoryId = categoryId;
-  }
+  cancelEdit(event?: FocusEvent): void {
+    const relatedTarget = event?.relatedTarget as HTMLElement;
+    if (
+      relatedTarget &&
+      relatedTarget.classList.contains('save')
+    ) { return; }
 
-  cancelEdit(): void {
-    this.editingCategoryId = null;
+    this.editingCategory = null;
     this.fecthCategories();
   }
 
   //Save
   saveCategory(category: Category): void {
+    console.log('category pouet 3 : ', category);
     if (category._id) {
       // Logique pour mettre à jour la catégorie existante
       this.categoryService.updateCategory(category).subscribe(() => {
-        console.log('Catégorie mise à jour avec succès');
         this.fecthCategories();
         this.cancelEdit();
       });
     } else {
       // Logique pour créer une nouvelle catégorie
       this.categoryService.createCategory(category).subscribe((created) => {
-        console.log('Catégorie crée avec succès');
         this.fecthCategories();
         this.cancelEdit();
       });
