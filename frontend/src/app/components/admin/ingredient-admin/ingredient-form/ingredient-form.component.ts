@@ -34,7 +34,10 @@ export class IngredientFormComponent {
   ) {
     // console.log('IngredientFormComponent -> constructor : ', data);
     this.ingredientForm = this.fb.group({
-      name: [data.ingredient?.name || data.searchedValue || '', Validators.required],
+      name: [
+        data.ingredient?.name || data.searchedValue || '',
+        Validators.required,
+      ],
       supplier: [data.ingredient?.supplier || '', Validators.required],
       allergens: this.fb.array(
         data.allergenesList.map((allergen) =>
@@ -57,22 +60,22 @@ export class IngredientFormComponent {
   get allergens(): FormArray {
     return this.ingredientForm.get('allergens') as FormArray;
   }
-  get name() {
-    return this.ingredientForm.get('name');
-  }
-  get supplier() {
-    return this.ingredientForm.get('supplier');
-  }
-  get vegan() {
-    return this.ingredientForm.get('vegan');
-  }
-  get vegeta() {
-    return this.ingredientForm.get('vegeta');
-  }
+  // get name() {
+  //   return this.ingredientForm.get('name');
+  // }
+  // get supplier() {
+  //   return this.ingredientForm.get('supplier');
+  // }
+  // get vegan() {
+  //   return this.ingredientForm.get('vegan');
+  // }
+  // get vegeta() {
+  //   return this.ingredientForm.get('vegeta');
+  // }
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
-      this.vegeta?.setValue(true);
+      this.ingredientForm.get('vegeta')?.setValue(true);
     }
   }
 
@@ -121,40 +124,36 @@ export class IngredientFormComponent {
   }
 
   save(): void {
-    if (this.vegan?.valid) {
-      if (this.vegan?.value) {
-        this.vegeta?.setValue(true);
-      }
-
-      const allergenesSelectionnes = this.allergens?.value
-        .map((checked: boolean, index: number) =>
-          checked ? this.data.allergenesList[index] : null
-        )
-        .filter((allergene: string | null) => allergene !== null);
-
-      const ingredientData = {
-        _id: this.data.ingredient?._id,
-        name: this.name?.value,
-        supplier: this.supplier?.value,
-        allergens: allergenesSelectionnes,
-        vegan: this.vegan?.value,
-        vegeta: this.vegeta?.value,
-        existingImages: this.existingImages,
-      };
-
-      this.dialogRef.close({
-        ingredientData,
-        selectedFiles: this.selectedFiles,
-        removedExistingImages: this.removedExistingImages,
-      });
-    } else {
+    if (!this.ingredientForm.valid) {
       this.ingredientForm.markAllAsTouched();
       this.dialog.open(ErrorDialogComponent, {
-        data: {
-          message: 'Veuillez remplir tous les champs obligatoires.',
-        },
+        data: { message: 'Veuillez remplir tous les champs obligatoires.' },
       });
+      return;
     }
+
+    if (this.ingredientForm.get('vegan')?.value) {
+      this.ingredientForm.get('vegeta')?.setValue(true);
+    }
+
+    const allergenesSelectionnes = this.allergens.value
+      .map((checked: boolean, index: number) =>
+        checked ? this.data.allergenesList[index] : null
+      )
+      .filter((allergene: string | null) => allergene !== null);
+
+    const ingredientData = {
+      _id: this.data.ingredient?._id,
+      ...this.ingredientForm.value,
+      allergens: allergenesSelectionnes,
+      existingImages: this.existingImages,
+    };
+
+    this.dialogRef.close({
+      ingredientData,
+      selectedFiles: this.selectedFiles,
+      removedExistingImages: this.removedExistingImages,
+    });
   }
 
   cancel(): void {

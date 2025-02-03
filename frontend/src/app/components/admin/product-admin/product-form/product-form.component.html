@@ -12,12 +12,31 @@
     <!-- Catégorie -->
     <mat-form-field appearance="fill">
         <mat-label>Catégorie</mat-label>
-        <mat-select formControlName="category" [compareWith]="compareCategories">
-            <mat-option *ngIf="!categories.length">Aucune catégorie</mat-option>
-            <mat-option *ngFor="let category of categories" [value]="category">
+        <input 
+        type="text" 
+        matInput 
+        [formControl]="categoryCtrl" 
+        [matAutocomplete]="categoryAuto"
+        formControlName="category"
+        [value]="categoryCtrl.value?.name || ''" 
+        placeholder="Sélectionner ou ajouter une catégorie" 
+    />
+        <mat-autocomplete #categoryAuto="matAutocomplete" (optionSelected)="addCategory($event.option.value)" hideSingleSelectionIndicator>
+            <!-- Message pour encourager la recherche -->
+            <mat-option *ngIf="!categoryCtrl.value || categoryCtrl.value === ''" disabled>
+                Commencez à taper pour rechercher une catégorie
+            </mat-option>
+            
+            <!-- Affichage des résultats filtrés -->
+            <mat-option *ngFor="let category of filteredCategories | async">
                 {{ category.name }}
             </mat-option>
-        </mat-select>
+            
+            <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->
+            <mat-option *ngIf="categoryNotFound" [value]="'categoryNotFound'" >
+                Aucun résultat. Cliquez ici pour ajouter une nouvelle catégorie.
+            </mat-option>
+        </mat-autocomplete>
     </mat-form-field>
 
 
@@ -33,11 +52,12 @@
         <input 
             type="text"
             matInput
-                [formControl]="ingredientCtrl" 
-                formControlName="composition"
-                [matAutocomplete]="auto"
+            [formControl]="ingredientCtrl" 
+            [matAutocomplete]="ingredientAuto"
+            formControlName="composition"
+            placeholder="Rechercher un ingrédient" 
         />
-        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
+        <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
             <!-- Message pour encourager la recherche -->
             <mat-option *ngIf="!ingredientCtrl.value || ingredientCtrl.value === ''" disabled>
                 Commencez à taper pour rechercher un ingrédient
@@ -50,7 +70,7 @@
             </mat-option>
             
             <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->
-            <mat-option *ngIf="noResults" [value]="'noResults'" >
+            <mat-option *ngIf="ingredientNotFound" [value]="'ingredientNotFound'" >
                 Aucun résultat. Cliquez ici pour ajouter un nouvel ingrédient.
             </mat-option>
         </mat-autocomplete>

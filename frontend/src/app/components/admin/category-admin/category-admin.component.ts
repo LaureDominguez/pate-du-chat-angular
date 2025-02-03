@@ -6,6 +6,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
+import { SharedDataService } from '../../../services/shared-data.service';
 
 @Component({
   selector: 'app-category-admin',
@@ -26,11 +27,16 @@ export class CategoryAdminComponent implements OnInit {
 
   constructor(
     private categoryService: CategoryService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private sharedDataService: SharedDataService
   ) {}
 
   ngOnInit(): void {
     this.fecthCategories();
+    // Écoute les nouvelles catégories envoyées par product-form
+    this.sharedDataService.requestNewCategory$.subscribe((categoryName) => {
+      this.createNewCategory(categoryName);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -60,15 +66,13 @@ export class CategoryAdminComponent implements OnInit {
       this.categories.data = [this.editingCategory, ...this.categories.data];
     }
     this.focusInput();
-
   }
 
   cancelEdit(event?: FocusEvent): void {
     const relatedTarget = event?.relatedTarget as HTMLElement;
-    if (
-      relatedTarget &&
-      relatedTarget.classList.contains('save')
-    ) { return; }
+    if (relatedTarget && relatedTarget.classList.contains('save')) {
+      return;
+    }
 
     this.editingCategory = null;
     this.fecthCategories();
@@ -76,7 +80,6 @@ export class CategoryAdminComponent implements OnInit {
 
   //Save
   saveCategory(category: Category): void {
-    console.log('category pouet 3 : ', category);
     if (category._id) {
       // Logique pour mettre à jour la catégorie existante
       this.categoryService.updateCategory(category).subscribe(() => {
@@ -90,6 +93,25 @@ export class CategoryAdminComponent implements OnInit {
         this.cancelEdit();
       });
     }
+  }
+
+  private createNewCategory(categoryName: string): void {
+    const newCategory: Category = { _id: null, name: categoryName };
+
+    this.categoryService
+      .createCategory(newCategory)
+      .subscribe((createdCategory) => {
+        console.log(
+          'category-admin -> Catégorie créée en DB :',
+          createdCategory
+        );
+
+        // Envoie l'objet complet avec l'ID généré
+        this.sharedDataService.sendCategoryToProductForm(createdCategory);
+
+        // Rafraîchit les catégories dans la liste
+        this.fecthCategories();
+      });
   }
 
   //Delete
