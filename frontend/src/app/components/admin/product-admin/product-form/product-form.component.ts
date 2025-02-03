@@ -136,7 +136,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   private filterCategories(value: string): Category[] {
-    const filterValue = value?.toLowerCase().trim() || '';
+    const filterValue = (typeof value === 'string' ? value: '').toLowerCase().trim();
 
     const results = this.categories
       .filter((category) => category.name.toLowerCase().includes(filterValue))
@@ -204,9 +204,7 @@ export class ProductFormComponent implements OnInit {
     value: string,
     ingredients: Ingredient[]
   ): Ingredient[] {
-    // const filterValue =
-    //   typeof value === 'string' ? value.toLowerCase().trim() : '';
-    const filterValue = value?.toLowerCase().trim() || '';
+    const filterValue = (typeof value === 'string' ? value: '').toLowerCase().trim();
 
     const results = ingredients
       .filter((ingredient) =>
