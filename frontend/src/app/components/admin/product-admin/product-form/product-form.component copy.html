@@ -1,0 +1,110 @@
+<h2 mat-dialog-title>
+    {{ data.product ? 'Modifier un produit' : 'Ajouter un produit' }}
+</h2>
+
+<form [formGroup]="productForm" (ngSubmit)="save()">
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <!-- Catégorie -->
+    <mat-form-field appearance="fill">
+        <mat-label>Catégorie</mat-label>
+        <input 
+            type="text" 
+            matInput 
+            [formControl]="categoryCtrl" 
+            [matAutocomplete]="categoryAuto"
+            placeholder="Sélectionner ou ajouter une catégorie" 
+        />
+        <mat-autocomplete #categoryAuto="matAutocomplete" (optionSelected)="addCategory($event.option.value)">
+            <mat-option *ngFor="let category of filteredCategories | async" [value]="category">
+                {{ category.name }}
+            </mat-option>
+            <mat-option *ngIf="categoryCtrl.value && categoryNotFound" [value]="'categoryNotFound'">
+                Aucun résultat. Cliquez ici pour ajouter une nouvelle catégorie.
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <!-- Ingrédients -->
+    <mat-form-field appearance="fill">
+        <mat-label>Ajouter un ingrédient</mat-label>
+        <input type="text" matInput [formControl]="ingredientCtrl" [matAutocomplete]="ingredientAuto"
+            placeholder="Rechercher un ingrédient" />
+        <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)">
+            <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient">
+                {{ ingredient.name }}
+            </mat-option>
+            <mat-option *ngIf="ingredientCtrl.value && ingredientNotFound" [value]="'ingredientNotFound'">
+                Aucun résultat. Cliquez ici pour ajouter un nouvel ingrédient.
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-chip-set>
+        <mat-chip *ngFor="let ingredient of composition" [removable]="true" (removed)="removeIngredient(ingredient)">
+            {{ ingredient.name }}
+            <button mat-icon-button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+            </button>
+        </mat-chip>
+    </mat-chip-set>
+
+    <!-- Prix -->
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Prix</mat-label>
+        <input matInput type="number" formControlName="price" />
+        <span matSuffix>€</span>
+    </mat-form-field>
+
+    <!-- Stock -->
+    <mat-slide-toggle formControlName="stock">En stock</mat-slide-toggle>
+
+    <mat-divider></mat-divider>
+
+    <!-- Images -->
+    <div class="file-upload">
+        <mat-label>Images</mat-label>
+        <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
+            <mat-icon>file_upload</mat-icon> Importer une image
+        </button>
+        <input #fileInput type="file" multiple (change)="onFileSelected($event)" accept="image/*" hidden />
+    </div>
+
+    <div class="previews" *ngIf="filePreviews.length">
+        <mat-label>Images à ajouter :</mat-label>
+        <div class="previews-container">
+            <mat-card *ngFor="let preview of filePreviews; let i = index">
+                <img mat-card-image [src]="preview" alt="Image preview" />
+                <button mat-icon-button color="warn" (click)="removeFile(i)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </mat-card>
+        </div>
+    </div>
+
+    <div class="existing-images" *ngIf="existingImageUrls.length">
+        <mat-label>Images existantes :</mat-label>
+        <div class="previews-container">
+            <mat-card *ngFor="let image of existingImageUrls; let i = index">
+                <img mat-card-image [src]="image" alt="Existing image" />
+                <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </mat-card>
+        </div>
+    </div>
+
+    <div mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+</form>

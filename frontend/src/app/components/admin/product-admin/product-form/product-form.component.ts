@@ -62,10 +62,13 @@ export class ProductFormComponent implements OnInit {
     },
     private sharedDataService: SharedDataService
   ) {
+    this.categories = data.categories || [];
+    this.ingredients = data.ingredients || [];
+
     this.productForm = this.fb.group({
       _id: [data.product?._id || ''],
       name: [data.product?.name || '', Validators.required],
-      category: [null, Validators.required],
+      category: [data.product?.category || null, Validators.required],
       description: [data.product?.description || ''],
       composition: [data.product?.composition || [], Validators.required],
       price: [
@@ -80,169 +83,142 @@ export class ProductFormComponent implements OnInit {
       this.existingImages = [...data.product.images];
       this.existingImageUrls = [...data.imageUrls];
     }
+
+    this.categoryCtrl.setValue(
+      data.product?.category ? (data.product.category as Category).name : ''
+    );
+    
+    console.log(
+      'ProductFormComponent -> ngOnInit -> categoryCtrl : ',
+      this.categoryCtrl.value
+    );
+
+    
+    console.log('ProductFormComponent -> data : ', data);
+    console.log('ProductFormComponent -> productForm : ', this.productForm);
   }
   ngOnInit(): void {
-    this.setupIngredientAutoComplete();
-    this.subscribeToIngredientCreation();
+    this.setupAutoComplete();
+    this.subscribeToDataUpdates();
 
-    this.setupCategoryAutoComplete();
-    this.subscribeToCategoryCreation();
-    this.categories = this.data.categories || [];
-
-    // Vérification et correction de product.category
-    const productCategory = this.data.product?.category;
-
-    let categoryObj: Category | null = null;
-
-    if (typeof productCategory === 'string') {
-      // Si productCategory est un ID (string), on cherche l'objet complet
-      categoryObj =
-        this.categories.find((cat) => cat._id === productCategory) || null;
-    } else if (
-      productCategory &&
-      typeof productCategory === 'object' &&
-      '_id' in productCategory
-    ) {
-      // Si productCategory est déjà un objet, on vérifie s’il est dans la liste
-      categoryObj =
-        this.categories.find((cat) => cat._id === productCategory._id) ||
-        productCategory;
-    }
-
-    if (categoryObj) {
-      this.productForm.patchValue({ category: categoryObj });
-      this.categoryCtrl.setValue(categoryObj?.name || '');
-    } else {
-      console.warn('⚠️ Catégorie non trouvée dans la liste :', productCategory);
-    }
-
-    console.log('Liste des catégories disponibles :', this.categories);
-    console.log('Produit à modifier :', this.data.product);
-    console.log('Catégorie trouvée pour le produit :', categoryObj);
-
+    // console.log(
+    //   'ProductFormComponent -> ngOnInit -> ingredientCtrl : ',
+    //   this.ingredientCtrl
+    // );
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
+  ////////////////// Innit du formulaire
 
-  ///////////Gestion des categories
-  private setupCategoryAutoComplete(): void {
+  //// AutoComplete
+  private setupAutoComplete(): void {
+    // Categories
     this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
       startWith(''),
       map((value) => {
-        if (typeof value === 'string' && value !== 'categoryNotFound')
+        console.log('value : ', value);
+
+        if (typeof value === 'string' && value !== 'categoryNotFound') {
           this.searchedCategory = value.trim();
-        return this.filterCategories(value);
+          this.categoryNotFound =
+            this.filterItems(value, this.categories).length === 0;
+        }
+        return this.filterItems(value, this.categories);
+      })
+    );
+
+    // Ingredients
+    this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
+      startWith(''),
+      map((value) => {
+        if (typeof value === 'string' && value !== 'ingredientNotFound') {
+          this.searchedIngredient = value.trim();
+          this.ingredientNotFound =
+            this.filterItems(value, this.ingredients).length === 0;
+        }
+        return this.filterItems(value, this.ingredients);
       })
     );
   }
 
-  private filterCategories(value: string): Category[] {
-    const filterValue = (typeof value === 'string' ? value: '').toLowerCase().trim();
-
-    const results = this.categories
-      .filter((category) => category.name.toLowerCase().includes(filterValue))
+  //// Tri alphabetique des données recherchées
+  private filterItems(value: string, list: any[]): any[] {
+    const filterValue = (typeof value === 'string' ? value : '')
+      .toLowerCase()
+      .trim();
+    return list
+      .filter((item) => item.name.toLowerCase().includes(filterValue))
       .sort((a, b) => a.name.localeCompare(b.name));
-
-    this.categoryNotFound = results.length === 0;
-    return results;
   }
 
-  addCategory(category: Category | 'categoryNotFound'): void {
-    if (category === 'categoryNotFound') {
-      console.log('categoryName : ', this.searchedCategory);
-      this.createCategory(this.searchedCategory);
+  //// Ecoute de shared-data
+  private subscribeToDataUpdates(): void {
+    this.sharedDataService.categoryCreated$.subscribe((newCategory) =>
+      this.updateList(newCategory, this.categories, 'category')
+    );
+    this.sharedDataService.ingredientCreated$.subscribe((newIngredient) =>
+      this.updateList(newIngredient, this.ingredients, 'ingredient')
+    );
+  }
+
+  private updateList(
+    newItem: any,
+    list: any[],
+    type: 'category' | 'ingredient'
+  ): void {
+    if (!list.some((item) => item._id === newItem._id)) {
+      list.push(newItem);
+      list.sort((a, b) => a.name.localeCompare(b.name));
     }
+    this.productForm.patchValue({ [type]: newItem });
+    if (type === 'category') {
+      this.categoryCtrl.setValue(newItem.name);
+      console.log('updateList -> categoryCtrl : ', this.categoryCtrl.value);
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////
+  ///////////Gestion des categories
+  addCategory(category: Category | 'categoryNotFound'): void {
+    console.log('category : ', category);
+    if (category === 'categoryNotFound') {
+      this.createCategory(this.searchedCategory);
+    } else {
+      this.productForm.patchValue({ category });
+    }
+    this.categoryCtrl.setValue(
+      category ? (category as Category).name : ''
+    );
+    console.log('addCategory -> categoryCtrl : ', this.categoryCtrl.value);
   }
 
   private createCategory(searchedValue: string): void {
     this.sharedDataService.requestCategoryCreation(searchedValue);
   }
 
-  private subscribeToCategoryCreation(): void {
-    this.sharedDataService.categoryCreated$.subscribe(
-      (newCategory: Category) => {
-        console.log('product-form -> Nouvelle catégorie reçue :', newCategory);
-        this.addNewCategoryToList(newCategory);
-      }
-    );
-  }
-
-  private addNewCategoryToList(newCategory: Category): void {
-    // Ajoute la catégorie seulement si elle n'existe pas déjà
-    if (!this.categories.some((cat) => cat._id === newCategory._id)) {
-      this.categories.push(newCategory);
-    }
-
-    // Trie les catégories alphabétiquement (optionnel)
-    this.categories.sort((a, b) => a.name.localeCompare(b.name));
-
-    // Sélectionne la nouvelle catégorie dans le formulaire
-    this.productForm.patchValue({ category: newCategory });
-    this.categoryCtrl.setValue(newCategory);
-
-    console.log(
-      'product-form -> Nouvelle catégorie ajoutée et sélectionnée :',
-      newCategory
-    );
-  }
-
-  ///////////////////////// Gestion des Ingrédients
-  ////////// Gestion de l'autocomplétion des ingrédients
-  private setupIngredientAutoComplete(): void {
-    const ingredients = this.data.ingredients || [];
-    this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
-      startWith(''),
-      map((value) => {
-        if (typeof value === 'string' && value !== 'ingredientNotFound')
-          this.searchedIngredient = value.trim();
-        return this.filterIngredients(value, ingredients);
-      })
-    );
-  }
-
-  // Filtrage de la recherche + tri alphabetique
-  private filterIngredients(
-    value: string,
-    ingredients: Ingredient[]
-  ): Ingredient[] {
-    const filterValue = (typeof value === 'string' ? value: '').toLowerCase().trim();
-
-    const results = ingredients
-      .filter((ingredient) =>
-        ingredient.name.toLowerCase().includes(filterValue)
-      )
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    this.ingredientNotFound = results.length === 0;
-    return results;
-  }
-
-  private subscribeToIngredientCreation(): void {
-    this.sharedDataService.ingredientCreated$.subscribe((ingredient) => {
-      this.ingredients.push(ingredient);
-      this.refreshFilteredIngredients();
-    });
-  }
-
-  // Vérifie si un ingrédient fait partie de la composition
-  isIngredientSelected(ingredient: Ingredient): boolean {
-    return this.composition.some((comp) => comp._id === ingredient._id);
-  }
-
-  private refreshFilteredIngredients(): void {
-    this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
-      startWith(''),
-      map((value) => this.filterIngredients(value, this.ingredients))
-    );
-    this.ingredientCtrl.setValue('');
-  }
-
+  /////////////////////////////////////////////////////////////////////////////////
   ////////// Gestion des ingrédients
   get composition(): Ingredient[] {
     return this.productForm.get('composition')?.value || [];
   }
 
+  private updateComposition(ingredient: Ingredient, add: boolean): void {
+    const currentComposition = this.composition;
+    this.setComposition(
+      add
+        ? [...currentComposition, ingredient]
+        : currentComposition.filter((comp) => comp._id !== ingredient._id)
+    );
+    this.ingredientCtrl.setValue('');
+  }
+
   private setComposition(composition: Ingredient[]): void {
     this.productForm.get('composition')?.setValue(composition);
+  }
+
+  // Vérifie si un ingrédient fait partie de la composition
+  isIngredientSelected(ingredient: Ingredient): boolean {
+    return this.composition.some((comp) => comp._id === ingredient._id);
   }
 
   // Ajout d'un ingrédient à la composition + gestion des coches
@@ -251,33 +227,18 @@ export class ProductFormComponent implements OnInit {
       this.createIngredient(this.searchedIngredient);
       return;
     }
-    const currentComposition = this.composition;
-    if (!currentComposition.some((comp) => comp._id === ingredient._id)) {
-      this.setComposition([...currentComposition, ingredient]);
+    if (!this.composition.some((comp) => comp._id === ingredient._id)) {
+      this.updateComposition(ingredient, true);
     }
-    this.ingredientCtrl.setValue('');
-  }
-
-  // Suppression d'un ingrédient de la composition
-  removeIngredient(ingredient: Ingredient): void {
-    const updatedComposition = this.composition.filter(
-      (comp) => comp._id !== ingredient._id
-    );
-    this.setComposition(updatedComposition);
-    this.ingredientCtrl.setValue('');
   }
 
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
     this.openIngredientForm(searchedValue)
       .then((newIngredient) => {
-        const currentComposition = this.composition;
-        if (
-          !currentComposition.some((comp) => comp._id === newIngredient._id)
-        ) {
-          this.setComposition([...currentComposition, newIngredient]);
+        if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
+          this.updateComposition(newIngredient, true);
         }
-        this.ingredientCtrl.setValue('');
       })
       .catch((error) => {
         console.error('Erreur lors de la création de l’ingrédient :', error);
@@ -297,31 +258,31 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  // Suppression d'un ingrédient de la composition
+  removeIngredient(ingredient: Ingredient): void {
+    this.updateComposition(ingredient, false);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Gestion des images
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const maxFileSize = 10 * 1024 * 1024;
 
     if (input.files) {
-      const validFiles: File[] = [];
-
-      Array.from(input.files).forEach((file) => {
+      const validFiles = Array.from(input.files).filter((file) => {
         if (!file.type.startsWith('image/')) {
           alert(`${file.name} n'est pas une image valide.`);
-        } else if (file.size > maxFileSize) {
-          alert(`${file.name} depasse la taille maximale autorisee de 10 Mo.`);
-        } else {
-          validFiles.push(file);
-
-          const reader = new FileReader();
-          reader.onload = () => {
-            if (reader.result) {
-              this.filePreviews.push(reader.result as string);
-            }
-          };
-          reader.readAsDataURL(file);
+          return false;
         }
+        if (file.size > maxFileSize) {
+          alert(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
+          return false;
+        }
+        return true;
       });
+
+      validFiles.forEach((file) => this.handleImagePreview(file));
 
       if (validFiles.length > 0) {
         input.value = '';
@@ -330,17 +291,31 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
+  // Gérer la preview
+  private handleImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        this.filePreviews.push(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Retirer une image de la prévieuw
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
     this.filePreviews.splice(index, 1);
   }
 
+  // Retirer une image existante
   removeExistingImage(index: number): void {
     this.existingImageUrls.splice(index, 1);
     const removed = this.existingImages.splice(index, 1)[0];
     this.removedExistingImages.push(removed);
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Validation du formulaire
   save(): void {
     if (this.productForm.valid) {

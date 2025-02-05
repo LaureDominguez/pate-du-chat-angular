@@ -18,17 +18,11 @@
         [formControl]="categoryCtrl" 
         [matAutocomplete]="categoryAuto"
         formControlName="category"
-        [value]="categoryCtrl.value?.name || ''" 
-        placeholder="Sélectionner ou ajouter une catégorie" 
+        placeholder="Rechercher une catégorie" 
     />
-        <mat-autocomplete #categoryAuto="matAutocomplete" (optionSelected)="addCategory($event.option.value)" hideSingleSelectionIndicator>
-            <!-- Message pour encourager la recherche -->
-            <mat-option *ngIf="!categoryCtrl.value || categoryCtrl.value === ''" disabled>
-                Commencez à taper pour rechercher une catégorie
-            </mat-option>
-            
+        <mat-autocomplete #categoryAuto="matAutocomplete" (optionSelected)="addCategory($event.option.value)" hideSingleSelectionIndicator>            
             <!-- Affichage des résultats filtrés -->
-            <mat-option *ngFor="let category of filteredCategories | async">
+            <mat-option *ngFor="let category of filteredCategories | async" [value]="category">
                 {{ category.name }}
             </mat-option>
             
@@ -57,12 +51,7 @@
             formControlName="composition"
             placeholder="Rechercher un ingrédient" 
         />
-        <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
-            <!-- Message pour encourager la recherche -->
-            <mat-option *ngIf="!ingredientCtrl.value || ingredientCtrl.value === ''" disabled>
-                Commencez à taper pour rechercher un ingrédient
-            </mat-option>
-            
+        <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>            
             <!-- Affichage des résultats filtrés -->
             <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient" class="composition">
                 <span>{{ ingredient.name }}</span>
