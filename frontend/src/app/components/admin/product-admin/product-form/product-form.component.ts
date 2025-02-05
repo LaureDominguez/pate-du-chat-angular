@@ -225,6 +225,7 @@ export class ProductFormComponent implements OnInit {
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
+      this.ingredientCtrl.setValue('');
       return;
     }
     if (!this.composition.some((comp) => comp._id === ingredient._id)) {
