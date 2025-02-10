@@ -16,6 +16,7 @@ export class ProductService {
   //////// Public products
 
   getFinalProducts(): Observable<FinalProduct[]> {
+  // console.log('liste des Produits Finaux chargé')
     return this.http.get<FinalProduct[]>(`${this.apiUrl}?view=full`);
   }
 
@@ -28,6 +29,7 @@ export class ProductService {
   //////// Admin products
 
   getProducts(): Observable<Product[]> {
+  // console.log('liste des Produits chargés');
     return this.http.get<Product[]>(this.apiUrl);
   }
 
@@ -42,13 +44,13 @@ export class ProductService {
 
   updateProduct(id: string, payload: any): Observable<Product> {
     const url = `${this.apiUrl}/${id}`;
-    console.log('Product.service -> payload : ', payload);
+  // console.log('Product.service -> payload : ', payload);
     return this.http.put<Product>(url, payload);
   }
 
   deleteProduct(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
-    console.log('Product.service :', url);
+  // console.log('Product.service :', url);
     return this.http.delete<{ message: string }>(url);
   }
 }

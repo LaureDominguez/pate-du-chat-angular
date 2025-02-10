@@ -32,7 +32,15 @@ export class CategoryAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.fecthCategories();
+    // this.fecthCategories();
+    // Écoute les catégories mises à jour via le BehaviorSubject
+    this.categoryService.getCategories().subscribe((categories) => {
+      this.categories.data = categories;
+      // console.log(
+      //   '🔄 Catégories mises à jour en temps réel :',
+      //   this.categories.data
+      // );
+    });
     // Écoute les nouvelles catégories envoyées par product-form
     this.sharedDataService.requestNewCategory$.subscribe((categoryName) => {
       this.createNewCategory(categoryName);
@@ -60,9 +68,9 @@ export class CategoryAdminComponent implements OnInit {
 
   startEditing(category: Category | null = null): void {
     this.editingCategory = category ? { ...category } : { _id: null, name: '' };
-    console.log('editingCategory : ', this.editingCategory);
+  // console.log('editingCategory : ', this.editingCategory);
     if (!this.editingCategory._id) {
-      console.log('new');
+    // console.log('new');
       this.categories.data = [this.editingCategory, ...this.categories.data];
     }
     this.focusInput();
@@ -101,10 +109,10 @@ export class CategoryAdminComponent implements OnInit {
     this.categoryService
       .createCategory(newCategory)
       .subscribe((createdCategory) => {
-        console.log(
-          'category-admin -> Catégorie créée en DB :',
-          createdCategory
-        );
+        // console.log(
+        //   'category-admin -> Catégorie créée en DB :',
+        //   createdCategory
+        // );
 
         // Envoie l'objet complet avec l'ID généré
         this.sharedDataService.sendCategoryToProductForm(createdCategory);

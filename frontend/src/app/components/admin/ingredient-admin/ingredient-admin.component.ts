@@ -46,13 +46,21 @@ export class IngredientAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.fetchIngredients();
+    // this.fetchIngredients();
+    // Écoute les mises à jour des ingrédients via le BehaviorSubject
+    this.ingredientService.getIngredients().subscribe((ingredients) => {
+      this.ingredients.data = ingredients;
+      console.log(
+        '🔄 Ingrédients mis à jour en temps réel :',
+        this.ingredients.data
+      );
+    });
     this.fetchAllergenes();
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
       this.sharedDataService.searchedIngredient$.subscribe((searchedValue) => {
         this.openIngredientForm(null, searchedValue);
-      })
+      });
     });
   }
 
@@ -75,11 +83,15 @@ export class IngredientAdminComponent implements OnInit {
 
   // ouvrir le formulaire d'ingrédient
   openIngredientForm(ingredient: Ingredient | null, searchedValue: string = ''): void {
-    console.log('admin.component -> openIngredientForm -> searchedValue : ', searchedValue);
+    // console.log('admin.component -> openIngredientForm -> searchedValue : ', searchedValue);
+
     const imageUrls =
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
       ) || [];
+
+  // console.log('Images récupérées :', imageUrls);
+
     const dialogRef = this.dialog.open(IngredientFormComponent, {
       width: '600px',
       data: {

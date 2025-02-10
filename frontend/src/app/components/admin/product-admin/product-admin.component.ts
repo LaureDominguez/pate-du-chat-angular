@@ -52,7 +52,21 @@ export class ProductAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadData(); // Charge les données initiales
+
+    // Écoute en temps réel les mises à jour des catégories et ingrédients
+  this.categoryService.categories$.subscribe((categories) => {
+    this.categories = categories;
+    // console.log(
+    //   '🔄 Mise à jour auto - Catégories dans product-admin :',
+    //   this.categories
+    // );
+  });
+
+    this.ingredientService.getIngredients().subscribe((ingredients) => {
+      this.ingredients = ingredients;
+      console.log('🔄 Mise à jour auto - Ingrédients :', this.ingredients);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -61,14 +75,11 @@ export class ProductAdminComponent implements OnInit {
   }
 
   loadData(): void {
-    forkJoin({
-      products: this.productService.getFinalProducts(),
-      categories: this.categoryService.getCategories(),
-      ingredients: this.ingredientService.getIngredients(),
-    }).subscribe(({ products, categories, ingredients }) => {
+    // console.log('product-admin.component -> Chargement des données');
+
+    this.productService.getFinalProducts().subscribe((products) => {
       this.products.data = products;
-      this.categories = categories;
-      this.ingredients = ingredients;
+      // console.log('Produits mis à jour :', this.products.data);
     });
   }
 
@@ -87,19 +98,25 @@ export class ProductAdminComponent implements OnInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((
-      result: {
-        productData: any;
-        selectedFiles: File[];
-        removedExistingImages: string[];
+    dialogRef.afterClosed().subscribe(
+      (
+        result:
+          | {
+              productData: any;
+              selectedFiles: File[];
+              removedExistingImages: string[];
+            }
+          | undefined
+      ) => {
+        // console.log(
+        //   'admin.component -> openProductForm closed -> result : ',
+        //   result
+        // );
+        if (result) {
+          this.handleProductFormSubmit(result);
+        }
       }
-      | undefined
-    ) => {
-      console.log('admin.component -> openProductForm closed -> result : ', result);
-      if (result) {
-        this.handleProductFormSubmit(result);
-      }
-    }),
+    ),
       (error: any) => {
         console.error(
           'Erreur lors du chargement des catégories ou des ingrédients :',
@@ -117,12 +134,15 @@ export class ProductAdminComponent implements OnInit {
     const existingImages = productData.existingImages ?? [];
     const productId = productData._id;
 
-    console.log('admin.component -> handleProductFormSubmit -> result : ', result);
+    // console.log(
+    //   'admin.component -> handleProductFormSubmit -> result : ',
+    //   result
+    // );
 
     if (result.removedExistingImages?.length) {
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        this.imageService.deleteImage(filename).subscribe(() => { });
+        this.imageService.deleteImage(filename).subscribe(() => {});
       });
     }
 
@@ -131,10 +151,10 @@ export class ProductAdminComponent implements OnInit {
 
     const submitForm = () => {
       productData.images = finalImages;
-      console.log(
-        'admin.component -> handleProductFormSubmit -> ready to submit -> productData : ',
-        productData
-      );
+      // console.log(
+      //   'admin.component -> handleProductFormSubmit -> ready to submit -> productData : ',
+      //   productData
+      // );
       this.submiteProductForm(productData, productId);
     };
 
@@ -154,22 +174,25 @@ export class ProductAdminComponent implements OnInit {
     }
   }
 
-  submiteProductForm(
-    productData: any,
-    productId?: string
-  ): void {
-    console.log('admin.component -> submiteProductForm -> productData : ', productData, 'productId : ', productId);
+  submiteProductForm(productData: any, productId?: string): void {
+    // console.log(
+    //   'admin.component -> submiteProductForm -> productData : ',
+    //   productData,
+    //   'productId : ',
+    //   productId
+    // );
     if (productId) {
-      this.productService.updateProduct(productId, productData).subscribe(() => {
-        this.loadData();
-      });
+      this.productService
+        .updateProduct(productId, productData)
+        .subscribe(() => {
+          this.loadData();
+        });
     } else {
       this.productService.createProduct(productData).subscribe(() => {
         this.loadData();
       });
     }
   }
-
 
   deleteProduct(product: Product): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {

@@ -5,7 +5,7 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { map, Observable, startWith } from 'rxjs';
+import { map, Observable, startWith, take } from 'rxjs';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
@@ -87,15 +87,14 @@ export class ProductFormComponent implements OnInit {
     this.categoryCtrl.setValue(
       data.product?.category ? (data.product.category as Category).name : ''
     );
-    
-    console.log(
-      'ProductFormComponent -> ngOnInit -> categoryCtrl : ',
-      this.categoryCtrl.value
-    );
 
-    
-    console.log('ProductFormComponent -> data : ', data);
-    console.log('ProductFormComponent -> productForm : ', this.productForm);
+    // console.log(
+    //   'ProductFormComponent -> ngOnInit -> categoryCtrl : ',
+    //   this.categoryCtrl.value
+    // );
+
+    // console.log('ProductFormComponent -> data : ', data);
+    // console.log('ProductFormComponent -> productForm : ', this.productForm);
   }
   ngOnInit(): void {
     this.setupAutoComplete();
@@ -116,7 +115,7 @@ export class ProductFormComponent implements OnInit {
     this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
       startWith(''),
       map((value) => {
-        console.log('value : ', value);
+      // console.log('value : ', value);
 
         if (typeof value === 'string' && value !== 'categoryNotFound') {
           this.searchedCategory = value.trim();
@@ -173,23 +172,21 @@ export class ProductFormComponent implements OnInit {
     this.productForm.patchValue({ [type]: newItem });
     if (type === 'category') {
       this.categoryCtrl.setValue(newItem.name);
-      console.log('updateList -> categoryCtrl : ', this.categoryCtrl.value);
+    // console.log('updateList -> categoryCtrl : ', this.categoryCtrl.value);
     }
   }
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
   addCategory(category: Category | 'categoryNotFound'): void {
-    console.log('category : ', category);
+  // console.log('category : ', category);
     if (category === 'categoryNotFound') {
       this.createCategory(this.searchedCategory);
     } else {
       this.productForm.patchValue({ category });
     }
-    this.categoryCtrl.setValue(
-      category ? (category as Category).name : ''
-    );
-    console.log('addCategory -> categoryCtrl : ', this.categoryCtrl.value);
+    this.categoryCtrl.setValue(category ? (category as Category).name : '');
+  // console.log('addCategory -> categoryCtrl : ', this.categoryCtrl.value);
   }
 
   private createCategory(searchedValue: string): void {
@@ -209,6 +206,7 @@ export class ProductFormComponent implements OnInit {
         ? [...currentComposition, ingredient]
         : currentComposition.filter((comp) => comp._id !== ingredient._id)
     );
+
     this.ingredientCtrl.setValue('');
   }
 
@@ -248,12 +246,10 @@ export class ProductFormComponent implements OnInit {
 
   private openIngredientForm(searchedValue: string): Promise<Ingredient> {
     this.sharedDataService.requestOpenIngredientForm(searchedValue);
+
     return new Promise((resolve, reject) => {
-      const subscription = this.sharedDataService.ingredientCreated$.subscribe({
-        next: (ingredient) => {
-          subscription.unsubscribe();
-          resolve(ingredient);
-        },
+      this.sharedDataService.ingredientCreated$.pipe(take(1)).subscribe({
+        next: (ingredient) => resolve(ingredient),
         error: (err) => reject(err),
       });
     });
@@ -262,6 +258,12 @@ export class ProductFormComponent implements OnInit {
   // Suppression d'un ingrédient de la composition
   removeIngredient(ingredient: Ingredient): void {
     this.updateComposition(ingredient, false);
+  }
+
+  getIngredientTooltip(ingredient: Ingredient): string {
+    return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
+    Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n
+    Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}`;
   }
 
   /////////////////////////////////////////////////////////////////////////////////
