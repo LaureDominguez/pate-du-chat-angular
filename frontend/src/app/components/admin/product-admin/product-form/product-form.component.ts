@@ -87,23 +87,10 @@ export class ProductFormComponent implements OnInit {
     this.categoryCtrl.setValue(
       data.product?.category ? (data.product.category as Category).name : ''
     );
-
-    // console.log(
-    //   'ProductFormComponent -> ngOnInit -> categoryCtrl : ',
-    //   this.categoryCtrl.value
-    // );
-
-    // console.log('ProductFormComponent -> data : ', data);
-    // console.log('ProductFormComponent -> productForm : ', this.productForm);
   }
   ngOnInit(): void {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
-
-    // console.log(
-    //   'ProductFormComponent -> ngOnInit -> ingredientCtrl : ',
-    //   this.ingredientCtrl
-    // );
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -115,8 +102,6 @@ export class ProductFormComponent implements OnInit {
     this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
       startWith(''),
       map((value) => {
-      // console.log('value : ', value);
-
         if (typeof value === 'string' && value !== 'categoryNotFound') {
           this.searchedCategory = value.trim();
           this.categoryNotFound =
@@ -172,7 +157,6 @@ export class ProductFormComponent implements OnInit {
     this.productForm.patchValue({ [type]: newItem });
     if (type === 'category') {
       this.categoryCtrl.setValue(newItem.name);
-    // console.log('updateList -> categoryCtrl : ', this.categoryCtrl.value);
     }
   }
 
@@ -233,6 +217,10 @@ export class ProductFormComponent implements OnInit {
 
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
+    console.log(
+      '✅ product-form.component -> Demande de création d’un ingrédient'
+    );
+  
     this.openIngredientForm(searchedValue)
       .then((newIngredient) => {
         if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
@@ -245,6 +233,9 @@ export class ProductFormComponent implements OnInit {
   }
 
   private openIngredientForm(searchedValue: string): Promise<Ingredient> {
+        console.log(
+          '✅ product-form.component -> Demande d’ouverture du formulaire ingrédient -> shared-data.service'
+        );
     this.sharedDataService.requestOpenIngredientForm(searchedValue);
 
     return new Promise((resolve, reject) => {

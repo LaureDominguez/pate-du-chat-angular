@@ -22,13 +22,13 @@ export class IngredientService {
   // Charge les ingrédients et met à jour le BehaviorSubject
   private loadIngredients(): void {
     this.http.get<Ingredient[]>(this.apiUrl).subscribe((ingredients) => {
-      console.log('📡 Chargement des ingrédients :', ingredients);
+      // console.log('📡 Chargement des ingrédients :', ingredients);
       this.ingredientsSubject.next(ingredients); // Met à jour les abonnés
     });
   }
 
   getIngredients(): Observable<Ingredient[]> {
-    // console.log('liste des Ingredients chargés');
+    console.log('>>>📡 liste des Ingredients chargés');
     // return this.http.get<Ingredient[]>(this.apiUrl);
     return this.ingredients$;
   }

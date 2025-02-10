@@ -15,6 +15,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedDataService } from '../../../services/shared-data.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-ingredient-admin',
@@ -46,21 +47,42 @@ export class IngredientAdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // this.fetchIngredients();
-    // Écoute les mises à jour des ingrédients via le BehaviorSubject
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
-      console.log(
-        '🔄 Ingrédients mis à jour en temps réel :',
-        this.ingredients.data
-      );
     });
+
     this.fetchAllergenes();
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
-      this.sharedDataService.searchedIngredient$.subscribe((searchedValue) => {
-        this.openIngredientForm(null, searchedValue);
-      });
+      console.log(
+        '🚀 ingredient-admin.component -> Ouverture du formulaire ingrédient détectée'
+      );
+
+      // ✅ Récupération immédiate de la valeur recherchée sans abonnement
+      const searchedValue = this.sharedDataService.getSearchedIngredient();
+      console.log(
+        '📡 ingredient-admin.component -> Valeur recherchée utilisée :',
+        searchedValue
+      );
+
+      this.openIngredientForm(null, searchedValue);
+
+      // Vérifie si un abonnement existe déjà et l'annule
+      // if (this.searchedIngredientSubscription) {
+      //   this.searchedIngredientSubscription.unsubscribe();
+      // }
+
+      // Écoute une seule fois `searchedIngredient$` et ouvre le formulaire
+      // this.searchedIngredientSubscription =
+      //   this.sharedDataService.searchedIngredient$.subscribe(
+      //     (searchedValue) => {
+      //       console.log(
+      //         '📡 ingredient-admin.component -> Valeur recherchée reçue :',
+      //         searchedValue
+      //       );
+      //       this.openIngredientForm(null, searchedValue);
+      //     }
+      // );
     });
   }
 
@@ -69,11 +91,12 @@ export class IngredientAdminComponent implements OnInit {
     this.ingredients.sort = this.ingredientsSort;
   }
 
-  fetchIngredients(): void {
-    this.ingredientService.getIngredients().subscribe((ingredients) => {
-      this.ingredients.data = ingredients;
-    });
-  }
+  // fetchIngredients(): void {
+  //   console.log('POUET')
+  //   this.ingredientService.getIngredients().subscribe((ingredients) => {
+  //     this.ingredients.data = ingredients;
+  //   });
+  // }
 
   fetchAllergenes(): void {
     this.ingredientService.getAllergenes().subscribe((allergenes) => {
@@ -82,15 +105,15 @@ export class IngredientAdminComponent implements OnInit {
   }
 
   // ouvrir le formulaire d'ingrédient
-  openIngredientForm(ingredient: Ingredient | null, searchedValue: string = ''): void {
-    // console.log('admin.component -> openIngredientForm -> searchedValue : ', searchedValue);
-
+  openIngredientForm(
+    ingredient: Ingredient | null,
+    searchedValue: string = ''
+  ): void {
     const imageUrls =
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
       ) || [];
 
-  // console.log('Images récupérées :', imageUrls);
 
     const dialogRef = this.dialog.open(IngredientFormComponent, {
       width: '600px',
@@ -133,8 +156,7 @@ export class IngredientAdminComponent implements OnInit {
     if (result.removedExistingImages?.length) {
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        this.imageService.deleteImage(filename).subscribe(() => {
-        });
+        this.imageService.deleteImage(filename).subscribe(() => {});
       });
     }
 
@@ -164,7 +186,6 @@ export class IngredientAdminComponent implements OnInit {
     }
   }
 
-
   // soumettre le formulaire aux methodes création ou mise à jour
   submitIngredientForm(
     ingredientId: string | undefined,
@@ -189,7 +210,7 @@ export class IngredientAdminComponent implements OnInit {
 
     this.ingredientService.createIngredient(ingredientPayload).subscribe({
       next: (res) => {
-        this.fetchIngredients();
+        // this.fetchIngredients();
         this.sharedDataService.resultIngredientCreated(res);
       },
       error: (error) => {
@@ -202,7 +223,7 @@ export class IngredientAdminComponent implements OnInit {
   updateIngredient(id: string, ingredientPayload: any): void {
     this.ingredientService.updateIngredient(id, ingredientPayload).subscribe({
       next: (res) => {
-        this.fetchIngredients();
+        // this.fetchIngredients();
       },
       error: (error) => {
         console.error('admin.component -> updateIngredient -> error : ', error);
@@ -232,7 +253,7 @@ export class IngredientAdminComponent implements OnInit {
         this.ingredientService
           .deleteIngredient(ingredient._id!)
           .subscribe(() => {
-            this.fetchIngredients();
+            // this.fetchIngredients();
           });
       }
     });

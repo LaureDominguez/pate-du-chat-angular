@@ -60,18 +60,6 @@ export class IngredientFormComponent {
   get allergens(): FormArray {
     return this.ingredientForm.get('allergens') as FormArray;
   }
-  // get name() {
-  //   return this.ingredientForm.get('name');
-  // }
-  // get supplier() {
-  //   return this.ingredientForm.get('supplier');
-  // }
-  // get vegan() {
-  //   return this.ingredientForm.get('vegan');
-  // }
-  // get vegeta() {
-  //   return this.ingredientForm.get('vegeta');
-  // }
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
@@ -132,16 +120,19 @@ export class IngredientFormComponent {
       return;
     }
 
+    // si vegan, alors vegetarian aussi
     if (this.ingredientForm.get('vegan')?.value) {
       this.ingredientForm.get('vegeta')?.setValue(true);
     }
 
+    // si pas d'allergene, alors allergens = false
     const allergenesSelectionnes = this.allergens.value
       .map((checked: boolean, index: number) =>
         checked ? this.data.allergenesList[index] : null
       )
       .filter((allergene: string | null) => allergene !== null);
 
+    // update des donnéess à envoyer après close
     const ingredientData = {
       _id: this.data.ingredient?._id,
       ...this.ingredientForm.value,
@@ -149,6 +140,7 @@ export class IngredientFormComponent {
       existingImages: this.existingImages,
     };
 
+    // envoi des données et fermuture du dialog
     this.dialogRef.close({
       ingredientData,
       selectedFiles: this.selectedFiles,

@@ -7,28 +7,25 @@ import { Category } from '../models/category';
   providedIn: 'root',
 })
 export class SharedDataService {
+  ///////////////////////////////////////////
   /////////////// Categories  ///////////////
-  private requestNewCategorySubject = new Subject<string>(); // Étape 1 : Envoi du nom
+  private requestNewCategorySubject = new Subject<string>();
   requestNewCategory$ = this.requestNewCategorySubject.asObservable();
 
-  private categoryCreatedSubject = new Subject<Category>(); // Étape 2 : Envoi de l'objet complet
+  private categoryCreatedSubject = new Subject<Category>();
   categoryCreated$ = this.categoryCreatedSubject.asObservable();
 
-  // Quand le product-form demande la création d'une catégorie
+  // Demande de création par product-form
   requestCategoryCreation(categoryName: string) {
-  // console.log('shared-data.service -> Demande de création :', categoryName);
     this.requestNewCategorySubject.next(categoryName);
   }
 
-  // Quand category-admin renvoie la catégorie créée en DB
+  // Réponse de category-admin
   sendCategoryToProductForm(category: Category) {
-    // console.log(
-    //   'shared-data.service -> Catégorie créée et renvoyée :',
-    //   category
-    // );
     this.categoryCreatedSubject.next(category);
   }
 
+  ///////////////////////////////////////////
   /////////////// Ingredients ///////////////
   private openIngredientFormSubject = new Subject<void>();
   openIngredientForm$: Observable<void> =
@@ -38,23 +35,26 @@ export class SharedDataService {
   ingredientCreated$: Observable<Ingredient> =
     this.ingredientCreatedSubject.asObservable();
 
-  private searchedIngredientSubject = new BehaviorSubject<string>(''); // Stocke le texte
-  searchedIngredient$ = this.searchedIngredientSubject.asObservable(); // Observable pour récupérer la valeur
+  // Observable pour récupérer la valeur recherchée et préreplire le formulaire
+  private searchedIngredientSubject = new BehaviorSubject<string>('');
+  searchedIngredient$ = this.searchedIngredientSubject.asObservable();
 
+  // Demande de création par product-form
   requestOpenIngredientForm(searchedValue: string) {
-    // console.log(
-    //   'shared-data.service -> request -> requestOpenIngredientForm -> searchedValue : ',
-    //   searchedValue
-    // );
+    console.log('shared-data.service -> request : ', searchedValue);
     this.searchedIngredientSubject.next(searchedValue); // Stocke la valeur recherchée
+    console.log('shared-data.service -> BehaviorSubject');
     this.openIngredientFormSubject.next();
+    console.log('shared-data.service -> openIngredientFormSubject');
   }
 
+  // ✅ Nouvelle méthode pour récupérer la dernière valeur stockée
+  getSearchedIngredient(): string {
+    return this.searchedIngredientSubject.getValue();
+  }
+
+  // Réponse de ingredient-admin
   resultIngredientCreated(ingredient: Ingredient) {
-    // console.log(
-    //   'shared-data.service -> result -> resultIngredientCreated : ',
-    //   ingredient
-    // );
     this.ingredientCreatedSubject.next(ingredient);
   }
 }
