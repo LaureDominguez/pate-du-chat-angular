@@ -19,15 +19,12 @@ export class CategoryService {
   // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
     this.http.get<Category[]>(this.apiUrl).subscribe((categories) => {
-    // console.log('📡 Chargement des catégories :', categories);
       this.categoriesSubject.next(categories); // Met à jour les abonnés
     });
   }
 
   // Récupérer toutes les catégories
   getCategories(): Observable<Category[]> {
-  // console.log('liste des Catégories chargées');
-    // return this.http.get<Category[]>(this.apiUrl);
     return this.categories$;
   }
 
@@ -39,7 +36,6 @@ export class CategoryService {
 
   // Créer une nouvelle catégorie
   createCategory(category: Category): Observable<Category> {
-    // return this.http.post<Category>(this.apiUrl, category);
     return this.http.post<Category>(this.apiUrl, category).pipe(
       tap(() => this.loadCategories()) // Met à jour après création
     );
@@ -48,7 +44,6 @@ export class CategoryService {
   // Mettre à jour une catégorie existante
   updateCategory(category: Category): Observable<Category> {
     const url = `${this.apiUrl}/${category._id}`;
-    // return this.http.put<Category>(url, category);
     return this.http.put<Category>(url, category).pipe(
       tap(() => this.loadCategories()) // Met à jour après modification
     );
@@ -57,7 +52,6 @@ export class CategoryService {
   // Supprimer une catégorie
   deleteCategory(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
-    // return this.http.delete<{ message: string }>(url);
     return this.http.delete<{ message: string }>(url).pipe(
       tap(() => this.loadCategories()) // Met à jour après suppression
     );

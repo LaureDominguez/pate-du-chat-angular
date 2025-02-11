@@ -41,11 +41,8 @@ export class SharedDataService {
 
   // Demande de création par product-form
   requestOpenIngredientForm(searchedValue: string) {
-    console.log('shared-data.service -> request : ', searchedValue);
     this.searchedIngredientSubject.next(searchedValue); // Stocke la valeur recherchée
-    console.log('shared-data.service -> BehaviorSubject');
     this.openIngredientFormSubject.next();
-    console.log('shared-data.service -> openIngredientFormSubject');
   }
 
   // ✅ Nouvelle méthode pour récupérer la dernière valeur stockée

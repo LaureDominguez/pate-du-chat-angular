@@ -5,7 +5,7 @@ const Category = require('../models/category');
 // Récupérer toutes les catégories
 router.get('/', async (req, res) => {
 	try {
-		const categories = await Category.find();
+		const categories = await Category.find().populate('productCount');
 		res.status(200).json(categories);
 	} catch (err) {
 		res

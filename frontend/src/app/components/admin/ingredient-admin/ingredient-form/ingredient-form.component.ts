@@ -36,9 +36,22 @@ export class IngredientFormComponent {
     this.ingredientForm = this.fb.group({
       name: [
         data.ingredient?.name || data.searchedValue || '',
-        Validators.required,
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(50),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿ\s-]+$/),
+        ],
       ],
-      supplier: [data.ingredient?.supplier || '', Validators.required],
+      supplier: [
+        data.ingredient?.supplier || '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(50),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿ\s-]+$/),
+        ],
+      ],
       allergens: this.fb.array(
         data.allergenesList.map((allergen) =>
           this.fb.control(
@@ -61,43 +74,55 @@ export class IngredientFormComponent {
     return this.ingredientForm.get('allergens') as FormArray;
   }
 
+  get name() {
+    return this.ingredientForm.get('name');
+  }
+
+  get supplier() {
+    return this.ingredientForm.get('supplier');
+  }
+
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
       this.ingredientForm.get('vegeta')?.setValue(true);
     }
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////// Gestion des images
   onFileSelected(event: any): void {
     const input = event.target as HTMLInputElement;
     const maxFileSize = 10 * 1024 * 1024;
 
     if (input.files) {
-      const validFiles: File[] = [];
-
-      Array.from(input.files).forEach((file) => {
+      const validFiles = Array.from(input.files).filter((file) => {
         if (!file.type.startsWith('image/')) {
           alert(`${file.name} n'est pas une image valide.`);
+          return false;
         } else if (file.size > maxFileSize) {
           alert(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
-        } else {
-          validFiles.push(file);
-
-          const reader = new FileReader();
-          reader.onload = () => {
-            if (reader.result) {
-              this.filePreviews.push(reader.result as string);
-            }
-          };
-          reader.readAsDataURL(file);
+          return false;
+        }
+        return true;
+      });
+      validFiles.forEach((file) => {
+        this.handleImagePreview(file);
+        if (validFiles.length > 0) {
+          input.value = '';
+          this.selectedFiles.push(...validFiles);
         }
       });
-
-      if (validFiles.length !== input.files.length) {
-        input.value = '';
-      }
-
-      this.selectedFiles.push(...validFiles);
     }
+  }
+  // Gérer la preview
+  private handleImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        this.filePreviews.push(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   removeFile(index: number): void {
@@ -112,10 +137,30 @@ export class IngredientFormComponent {
   }
 
   save(): void {
-    if (!this.ingredientForm.valid) {
-      this.ingredientForm.markAllAsTouched();
+    let formErrors: string[] = [];
+
+    if (this.ingredientForm.get('name')?.hasError('required')) {
+      formErrors.push("Le champ 'Nom' est obligatoire.");
+    }
+    if (this.ingredientForm.get('name')?.hasError('minlength')) {
+      formErrors.push("Le champ 'Nom' doit contenir au moins 2 caractères.");
+    }
+    if (this.ingredientForm.get('name')?.hasError('maxlength')) {
+      formErrors.push("Le champ 'Nom' ne peut pas dépasser 50 caractères.");
+    }
+    if (this.ingredientForm.get('name')?.hasError('pattern')) {
+      formErrors.push(
+        "Le champ 'Nom' ne doit pas contenir de caractères spéciaux."
+      );
+    }
+
+    if (this.ingredientForm.get('supplier')?.hasError('required')) {
+      formErrors.push("Le champ 'Fournisseur' est obligatoire.");
+    }
+
+    if (formErrors.length > 0) {
       this.dialog.open(ErrorDialogComponent, {
-        data: { message: 'Veuillez remplir tous les champs obligatoires.' },
+        data: { message: formErrors.join('<br>') },
       });
       return;
     }

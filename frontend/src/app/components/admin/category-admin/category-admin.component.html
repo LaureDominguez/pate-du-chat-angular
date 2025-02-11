@@ -24,6 +24,16 @@
             </td>
         </ng-container>
 
+        <!-- Nombre de produits -->
+        <ng-container matColumnDef="productCount">
+            <th mat-header-cell *matHeaderCellDef> Produits associés </th>
+            <td mat-cell *matCellDef="let category">
+                <span *ngIf="category.productCount > 0">{{ category.productCount }}</span>
+                <span *ngIf="category.productCount === 0">0</span>
+            </td>
+        </ng-container>
+
+
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>

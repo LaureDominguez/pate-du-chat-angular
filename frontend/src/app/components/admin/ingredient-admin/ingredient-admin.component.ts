@@ -16,6 +16,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { Subscription } from 'rxjs';
+import { ErrorDialogComponent } from '../../dialog/error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-ingredient-admin',
@@ -54,35 +55,8 @@ export class IngredientAdminComponent implements OnInit {
     this.fetchAllergenes();
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
-      console.log(
-        '🚀 ingredient-admin.component -> Ouverture du formulaire ingrédient détectée'
-      );
-
-      // ✅ Récupération immédiate de la valeur recherchée sans abonnement
       const searchedValue = this.sharedDataService.getSearchedIngredient();
-      console.log(
-        '📡 ingredient-admin.component -> Valeur recherchée utilisée :',
-        searchedValue
-      );
-
       this.openIngredientForm(null, searchedValue);
-
-      // Vérifie si un abonnement existe déjà et l'annule
-      // if (this.searchedIngredientSubscription) {
-      //   this.searchedIngredientSubscription.unsubscribe();
-      // }
-
-      // Écoute une seule fois `searchedIngredient$` et ouvre le formulaire
-      // this.searchedIngredientSubscription =
-      //   this.sharedDataService.searchedIngredient$.subscribe(
-      //     (searchedValue) => {
-      //       console.log(
-      //         '📡 ingredient-admin.component -> Valeur recherchée reçue :',
-      //         searchedValue
-      //       );
-      //       this.openIngredientForm(null, searchedValue);
-      //     }
-      // );
     });
   }
 
@@ -90,13 +64,6 @@ export class IngredientAdminComponent implements OnInit {
     this.ingredients.paginator = this.ingredientsPaginator;
     this.ingredients.sort = this.ingredientsSort;
   }
-
-  // fetchIngredients(): void {
-  //   console.log('POUET')
-  //   this.ingredientService.getIngredients().subscribe((ingredients) => {
-  //     this.ingredients.data = ingredients;
-  //   });
-  // }
 
   fetchAllergenes(): void {
     this.ingredientService.getAllergenes().subscribe((allergenes) => {
@@ -113,7 +80,6 @@ export class IngredientAdminComponent implements OnInit {
       ingredient?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
       ) || [];
-
 
     const dialogRef = this.dialog.open(IngredientFormComponent, {
       width: '600px',
@@ -156,7 +122,7 @@ export class IngredientAdminComponent implements OnInit {
     if (result.removedExistingImages?.length) {
       result.removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        this.imageService.deleteImage(filename).subscribe(() => {});
+        this.imageService.deleteImage(filename).subscribe();
       });
     }
 
@@ -175,10 +141,7 @@ export class IngredientAdminComponent implements OnInit {
           this.submitIngredientForm(ingredientId, ingredientData, finalImages);
         },
         error: (error) => {
-          console.error(
-            'admin.component -> echec de submitIngredientForm : ',
-            error
-          );
+          this.showErrorDialog(error.message);
         },
       });
     } else {
@@ -210,11 +173,10 @@ export class IngredientAdminComponent implements OnInit {
 
     this.ingredientService.createIngredient(ingredientPayload).subscribe({
       next: (res) => {
-        // this.fetchIngredients();
         this.sharedDataService.resultIngredientCreated(res);
       },
       error: (error) => {
-        console.error('admin.component -> addIngredient -> error : ', error);
+        this.showErrorDialog(error.message);
       },
     });
   }
@@ -222,12 +184,23 @@ export class IngredientAdminComponent implements OnInit {
   // mise à jour d'un ingrédient
   updateIngredient(id: string, ingredientPayload: any): void {
     this.ingredientService.updateIngredient(id, ingredientPayload).subscribe({
-      next: (res) => {
-        // this.fetchIngredients();
-      },
+      next: (res) => {},
       error: (error) => {
-        console.error('admin.component -> updateIngredient -> error : ', error);
+        this.showErrorDialog(error.message);
       },
+    });
+  }
+
+  // // Fonction pour afficher les erreurs dans une fenêtre modale
+  // private showErrorDialog(messages: string[]): void {
+  //   this.dialog.open(ErrorDialogComponent, {
+  //     data: { message: messages.join('<br>') },
+  //   });
+  // }
+  private showErrorDialog(message: string): void {
+    console.log(message);
+    this.dialog.open(ErrorDialogComponent, {
+      data: { message },
     });
   }
 

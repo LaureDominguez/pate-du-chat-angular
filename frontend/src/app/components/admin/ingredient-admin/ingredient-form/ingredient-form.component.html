@@ -5,11 +5,19 @@
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Nom</mat-label>
         <input matInput formControlName="name" />
+        <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
+        <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Fournisseur</mat-label>
         <input matInput formControlName="supplier" />
+        <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
+        <mat-error *ngIf="supplier?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+        <mat-error *ngIf="supplier?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+        <mat-error *ngIf="supplier?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
     </mat-form-field>
 
     <div class="allergen-form-field">

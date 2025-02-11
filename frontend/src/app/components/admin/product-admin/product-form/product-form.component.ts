@@ -67,13 +67,37 @@ export class ProductFormComponent implements OnInit {
 
     this.productForm = this.fb.group({
       _id: [data.product?._id || ''],
-      name: [data.product?.name || '', Validators.required],
-      category: [data.product?.category || null, Validators.required],
-      description: [data.product?.description || ''],
-      composition: [data.product?.composition || [], Validators.required],
+      name: [
+        data.product?.name || '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(50),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿ\s-]+$/),
+        ],
+      ],
+      category: [
+        data.product?.category ? (data.product.category as Category)._id : '',
+        Validators.required,
+      ],
+      description: [
+        data.product?.description || '',
+        [
+          Validators.maxLength(500),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿ\s.,!?()'"-]+$/),
+        ],
+      ],
+      composition: [
+        data.product?.composition || [],
+        [Validators.required, Validators.minLength(1)],
+      ],
       price: [
         data.product?.price || null,
-        [Validators.required, Validators.min(0)],
+        [
+          Validators.required,
+          Validators.min(0),
+          Validators.pattern(/^\d+(\.\d{1,2})?$/),
+        ],
       ],
       stock: [data.product?.stock || false],
       images: [data.product?.images || []],
@@ -91,6 +115,26 @@ export class ProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
+  }
+
+  get name() {
+    return this.productForm.get('name');
+  }
+
+  get category() {
+    return this.productForm.get('category');
+  }
+
+  get description() {
+    return this.productForm.get('description');
+  }
+
+  get composition(): Ingredient[] {
+    return this.productForm.get('composition')?.value || [];
+  }
+
+  get price() {
+    return this.productForm.get('price');
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -163,14 +207,12 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
   addCategory(category: Category | 'categoryNotFound'): void {
-  // console.log('category : ', category);
     if (category === 'categoryNotFound') {
       this.createCategory(this.searchedCategory);
     } else {
       this.productForm.patchValue({ category });
     }
     this.categoryCtrl.setValue(category ? (category as Category).name : '');
-  // console.log('addCategory -> categoryCtrl : ', this.categoryCtrl.value);
   }
 
   private createCategory(searchedValue: string): void {
@@ -179,9 +221,9 @@ export class ProductFormComponent implements OnInit {
 
   /////////////////////////////////////////////////////////////////////////////////
   ////////// Gestion des ingrédients
-  get composition(): Ingredient[] {
-    return this.productForm.get('composition')?.value || [];
-  }
+  // get composition(): Ingredient[] {
+  //   return this.productForm.get('composition')?.value || [];
+  // }
 
   private updateComposition(ingredient: Ingredient, add: boolean): void {
     const currentComposition = this.composition;
@@ -217,10 +259,6 @@ export class ProductFormComponent implements OnInit {
 
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
-    console.log(
-      '✅ product-form.component -> Demande de création d’un ingrédient'
-    );
-  
     this.openIngredientForm(searchedValue)
       .then((newIngredient) => {
         if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
@@ -233,9 +271,6 @@ export class ProductFormComponent implements OnInit {
   }
 
   private openIngredientForm(searchedValue: string): Promise<Ingredient> {
-        console.log(
-          '✅ product-form.component -> Demande d’ouverture du formulaire ingrédient -> shared-data.service'
-        );
     this.sharedDataService.requestOpenIngredientForm(searchedValue);
 
     return new Promise((resolve, reject) => {
@@ -312,23 +347,93 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Validation du formulaire
   save(): void {
-    if (this.productForm.valid) {
-      const productData = {
-        ...this.productForm.value,
-        existingImages: [...this.existingImages],
-      };
-      this.dialogRef.close({
-        productData,
-        selectedFiles: this.selectedFiles,
-        removedExistingImages: this.removedExistingImages,
-      });
-    } else {
-      this.productForm.markAllAsTouched();
-      this.dialog.open(ErrorDialogComponent, {
-        data: { message: 'Veuillez remplir tous les champs obligatoires.' },
-      });
+    console.log('📋 Formulaire soumis :', this.productForm.value); // LOG ICI 🔍
+    let formErrors: string[] = [];
+
+    Object.keys(this.productForm.controls).forEach((field) => {
+      const errorMsg = this.getErrorMessage(field);
+      if (errorMsg) {
+        formErrors.push(errorMsg);
+      }
+    });
+
+    if (this.composition.length === 0) {
+      formErrors.push('Ajoutez au moins un ingrédient.');
     }
+
+    if (formErrors.length > 0) {
+      this.dialog.open(ErrorDialogComponent, {
+        data: { message: formErrors.join('<br>') },
+      });
+      return;
+    }
+
+    // if (this.productForm.get('stock')?.value) {
+    //   this.productForm.get('stock')?.setValue(true);
+    // }
+
+    const productData = {
+      ...this.productForm.value,
+      category:
+        (this.productForm.value.category as Category)._id ||
+        this.productForm.value.category, // S'assure que l'ID est envoyé
+      existingImages: [...this.existingImages],
+    };
+
+    console.log('📤 Données envoyées :', productData); // LOG ICI 🔍
+    this.dialogRef.close({
+      productData,
+      selectedFiles: this.selectedFiles,
+      removedExistingImages: this.removedExistingImages,
+    });
+    // if (this.productForm.valid) {
+    //   const productData = {
+    //     ...this.productForm.value,
+    //     existingImages: [...this.existingImages],
+    //   };
+    //   this.dialogRef.close({
+    //     productData,
+    //     selectedFiles: this.selectedFiles,
+    //     removedExistingImages: this.removedExistingImages,
+    //   });
+    // } else {
+    //   this.productForm.markAllAsTouched();
+    //   this.dialog.open(ErrorDialogComponent, {
+    //     data: { message: 'Veuillez remplir tous les champs obligatoires.' },
+    //   });
+    // }
   }
+
+  private getErrorMessage(controlName: string): string | null {
+    const control = this.productForm.get(controlName);
+    if (!control || control.valid || !control.errors) return null;
+
+    if (control.hasError('required'))
+      return `Le champ ${controlName} est obligatoire.`;
+    if (control.hasError('minlength'))
+      return `Le champ ${controlName} doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
+    if (control.hasError('maxlength'))
+      return `Le champ ${controlName} ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
+    if (control.hasError('pattern'))
+      return `Le champ ${controlName} contient des caractères non autorisés.`;
+    if (control.hasError('min'))
+      return `Le champ ${controlName} doit être un nombre positif.`;
+
+    return null;
+  }
+
+  // private getFieldLabel(field: string): string {
+  //   const labels: { [key: string]: string } = {
+  //     name: 'Nom du produit',
+  //     category: 'Catégorie',
+  //     description: 'Description',
+  //     composition: 'Composition',
+  //     price: 'Prix',
+  //     stock: 'Stock',
+  //     images: 'Images',
+  //   };
+  //   return labels[field] || field;
+  // }
 
   cancel(): void {
     this.dialogRef.close();

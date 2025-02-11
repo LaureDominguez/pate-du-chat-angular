@@ -7,6 +7,10 @@
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Nom</mat-label>
         <input matInput formControlName="name" />
+        <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
+        <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
     </mat-form-field>
 
     <!-- Catégorie -->
@@ -38,6 +42,8 @@
     <mat-form-field appearance="fill" class="full-width">
         <mat-label>Description</mat-label>
         <textarea matInput formControlName="description" rows="3"></textarea>
+        <mat-error *ngIf="description?.hasError('maxlength')">Maximum 500 caractères.</mat-error>
+        <mat-error *ngIf="description?.hasError('pattern')">Certains caractères ne sont pas autorisés.</mat-error>
     </mat-form-field>
     
     <!-- Composition -->
@@ -51,7 +57,8 @@
             formControlName="composition"
             placeholder="Rechercher un ingrédient" 
         />
-        <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>            
+          <mat-error *ngIf="composition.length === 0">Ajoutez au moins un ingrédient.</mat-error>
+<mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>            
             <!-- Affichage des résultats filtrés -->
             <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient" class="composition">
                 <span>{{ ingredient.name }}</span>
@@ -92,6 +99,9 @@
             formControlName="price"
         />
         <span matSuffix>€</span>
+        <mat-error *ngIf="price?.hasError('required')">Le prix est obligatoire.</mat-error>
+        <mat-error *ngIf="price?.hasError('min')">Le prix doit être un nombre positif.</mat-error>
+        <mat-error *ngIf="price?.hasError('pattern')">Le format du prix est incorrect (ex: 10.99).</mat-error>
     </mat-form-field>
 
     <!-- Stock -->
