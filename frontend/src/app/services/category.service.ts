@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 
 import { Category } from '../models/category';
 
@@ -35,16 +35,19 @@ export class CategoryService {
   }
 
   // Créer une nouvelle catégorie
-  createCategory(category: Category): Observable<Category> {
-    return this.http.post<Category>(this.apiUrl, category).pipe(
+  createCategory(payload: any): Observable<Category> {
+    console.log('🔍 Données envoyées au serveur :', payload);
+    return this.http.post<Category>(this.apiUrl, payload).pipe(
+      catchError(this.handleError),
       tap(() => this.loadCategories()) // Met à jour après création
     );
   }
 
   // Mettre à jour une catégorie existante
-  updateCategory(category: Category): Observable<Category> {
-    const url = `${this.apiUrl}/${category._id}`;
-    return this.http.put<Category>(url, category).pipe(
+  updateCategory(id: string, payload: any): Observable<Category> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.put<Category>(url, payload).pipe(
+      catchError(this.handleError),
       tap(() => this.loadCategories()) // Met à jour après modification
     );
   }
@@ -53,8 +56,33 @@ export class CategoryService {
   deleteCategory(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
+      catchError(this.handleError),
       tap(() => this.loadCategories()) // Met à jour après suppression
     );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Une erreur inconnue est survenue.';
+
+    if (error.status === 400) {
+      if (error.error.errors) {
+        // Express Validator envoie un tableau d'erreurs → on concatène les messages
+        errorMessage = error.error.errors
+          .map((err: any) => err.msg)
+          .join('<br>');
+      } else if (error.error.msg) {
+        // Cas d'une erreur unique (ex: "Cet ingrédient existe déjà.")
+        errorMessage = error.error.msg;
+      } else {
+        errorMessage = 'Requête invalide. Vérifiez vos champs.';
+      }
+    } else if (error.status === 404) {
+      errorMessage = error.error.msg || 'Erreur 404 : Ressource introuvable.';
+    } else if (error.status === 500) {
+      errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
+    }
+
+    return throwError(() => new Error(errorMessage));
   }
 }
 

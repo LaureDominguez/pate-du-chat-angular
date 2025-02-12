@@ -16,6 +16,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
+import { ErrorDialogComponent } from '../../dialog/error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-product-admin',
@@ -54,14 +55,18 @@ export class ProductAdminComponent implements OnInit {
   ngOnInit(): void {
     this.loadData(); // Charge les données initiales
 
-    // Écoute en temps réel les mises à jour des catégories et ingrédients
-  this.categoryService.categories$.subscribe((categories) => {
-    this.categories = categories;
-  });
+  //   this.productService.finalProducts$.subscribe((products) => {
+  //     this.products.data = products;
+  //   });
 
-    this.ingredientService.getIngredients().subscribe((ingredients) => {
-      this.ingredients = ingredients;
-    });
+  //   // Écoute en temps réel les mises à jour des catégories et ingrédients
+  // this.categoryService.categories$.subscribe((categories) => {
+  //   this.categories = categories;
+  // });
+
+  //   this.ingredientService.getIngredients().subscribe((ingredients) => {
+  //     this.ingredients = ingredients;
+  //   });
   }
 
   ngAfterViewInit(): void {
@@ -70,8 +75,21 @@ export class ProductAdminComponent implements OnInit {
   }
 
   loadData(): void {
-    this.productService.getFinalProducts().subscribe((products) => {
+    // this.productService.getFinalProducts().subscribe((products) => {
+    //   this.products.data = products;
+    // });
+
+    this.productService.finalProducts$.subscribe((products) => {
       this.products.data = products;
+    });
+
+    // Écoute en temps réel les mises à jour des catégories et ingrédients
+    this.categoryService.categories$.subscribe((categories) => {
+      this.categories = categories;
+    });
+
+    this.ingredientService.getIngredients().subscribe((ingredients) => {
+      this.ingredients = ingredients;
     });
   }
 
@@ -145,6 +163,7 @@ export class ProductAdminComponent implements OnInit {
         },
         error: (error) => {
           console.error("Erreur lors de l'upload des images :", error);
+          this.showErrorDialog(error.message);
         },
         complete: submitForm,
       });
@@ -159,14 +178,21 @@ export class ProductAdminComponent implements OnInit {
       this.productService
         .updateProduct(productId, productData)
         .subscribe(() => {
-          this.loadData();
+          // this.loadData();
         });
     } else {
       this.productService.createProduct(productData).subscribe(() => {
-        this.loadData();
+        // this.loadData();
       });
     }
   }
+
+    private showErrorDialog(message: string): void {
+      console.log(message);
+      this.dialog.open(ErrorDialogComponent, {
+        data: { message },
+      });
+    }
 
   deleteProduct(product: Product): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -179,7 +205,7 @@ export class ProductAdminComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.productService.deleteProduct(product._id!).subscribe(() => {
-          this.loadData();
+          // this.loadData();
         });
       }
     });

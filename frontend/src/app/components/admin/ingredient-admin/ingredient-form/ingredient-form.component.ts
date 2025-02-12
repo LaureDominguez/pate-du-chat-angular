@@ -139,24 +139,12 @@ export class IngredientFormComponent {
   save(): void {
     let formErrors: string[] = [];
 
-    if (this.ingredientForm.get('name')?.hasError('required')) {
-      formErrors.push("Le champ 'Nom' est obligatoire.");
-    }
-    if (this.ingredientForm.get('name')?.hasError('minlength')) {
-      formErrors.push("Le champ 'Nom' doit contenir au moins 2 caractères.");
-    }
-    if (this.ingredientForm.get('name')?.hasError('maxlength')) {
-      formErrors.push("Le champ 'Nom' ne peut pas dépasser 50 caractères.");
-    }
-    if (this.ingredientForm.get('name')?.hasError('pattern')) {
-      formErrors.push(
-        "Le champ 'Nom' ne doit pas contenir de caractères spéciaux."
-      );
-    }
-
-    if (this.ingredientForm.get('supplier')?.hasError('required')) {
-      formErrors.push("Le champ 'Fournisseur' est obligatoire.");
-    }
+    Object.keys(this.ingredientForm.controls).forEach((field) => {
+      const errorMsg = this.getErrorMessage(field);
+      if (errorMsg) {
+        formErrors.push(errorMsg);
+      }
+    });
 
     if (formErrors.length > 0) {
       this.dialog.open(ErrorDialogComponent, {
@@ -191,6 +179,24 @@ export class IngredientFormComponent {
       selectedFiles: this.selectedFiles,
       removedExistingImages: this.removedExistingImages,
     });
+  }
+
+  private getErrorMessage(controlName: string): string | null {
+    const control = this.ingredientForm.get(controlName);
+    if (!control || control.valid || !control.errors) return null;
+
+    if (control.hasError('required'))
+      return `Le champ ${controlName} est obligatoire.`;
+    if (control.hasError('minlength'))
+      return `Le champ ${controlName} doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
+    if (control.hasError('maxlength'))
+      return `Le champ ${controlName} ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
+    if (control.hasError('pattern'))
+      return `Le champ ${controlName} contient des caractères non autorisés.`;
+    if (control.hasError('min'))
+      return `Le champ ${controlName} doit être un nombre positif.`;
+
+    return null;
   }
 
   cancel(): void {

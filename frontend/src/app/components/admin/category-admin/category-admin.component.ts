@@ -7,6 +7,7 @@ import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dial
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { SharedDataService } from '../../../services/shared-data.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-category-admin',
@@ -17,6 +18,7 @@ import { SharedDataService } from '../../../services/shared-data.service';
 export class CategoryAdminComponent implements OnInit {
   categories = new MatTableDataSource<Category>([]);
   displayedCategoriesColumns: string[] = ['name', 'productCount', 'actions'];
+  categoryForm!: FormGroup;
   newCategory: Category | null = null;
   editingCategoryId: string | null = null;
   editingCategory: Category | null = null;
@@ -27,6 +29,7 @@ export class CategoryAdminComponent implements OnInit {
 
   constructor(
     private categoryService: CategoryService,
+    private fb: FormBuilder,
     private dialog: MatDialog,
     private sharedDataService: SharedDataService
   ) {}
@@ -55,7 +58,19 @@ export class CategoryAdminComponent implements OnInit {
 
   // Méthodes pour gérer les catégories
   startEditing(category: Category | null = null): void {
-      this.editingCategory = category ? { ...category } : { _id: null, name: '' };
+    this.editingCategory = category ? { ...category } : { _id: null, name: '' };
+    
+    this.categoryForm = this.fb.group({
+      name: [
+        this.editingCategory.name,
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(50),
+          Validators.pattern(/^[a-zA-ZÀ-ÿ0-9\s]+$/),
+        ],
+      ],
+    });
     if (!this.editingCategory._id) {
       this.categories.data = [this.editingCategory, ...this.categories.data];
     }
@@ -73,14 +88,23 @@ export class CategoryAdminComponent implements OnInit {
 
   //Save
   saveCategory(category: Category): void {
+    if (this.categoryForm.invalid) {
+      this.categoryForm.markAllAsTouched();
+      return;
+    }
+
+      const newCategory: Category = {
+        name: this.categoryForm.get('name')?.value.trim(), // Nettoyage des espaces
+      };
+
     if (category._id) {
       // Update
-      this.categoryService.updateCategory(category).subscribe(() => {
+      this.categoryService.updateCategory(category._id, newCategory).subscribe(() => {
         this.cancelEdit();
       });
     } else {
       // Create
-      this.categoryService.createCategory(category).subscribe((created) => {
+      this.categoryService.createCategory(newCategory).subscribe(() => {
         this.cancelEdit();
       });
     }

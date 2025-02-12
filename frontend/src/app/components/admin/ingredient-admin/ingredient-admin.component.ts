@@ -105,7 +105,13 @@ export class IngredientAdminComponent implements OnInit {
           this.handleIngredientFormSubmit(result);
         }
       }
-    );
+    ),
+    (error: any) => {
+      console.error(
+        'Erreur lors du chargement des ingrédients :',
+        error
+      );
+    };
   }
 
   // traiter l'upload d'images
@@ -141,6 +147,7 @@ export class IngredientAdminComponent implements OnInit {
           this.submitIngredientForm(ingredientId, ingredientData, finalImages);
         },
         error: (error) => {
+          console.error("Erreur lors de l'upload des images :", error);
           this.showErrorDialog(error.message);
         },
       });

@@ -71,13 +71,13 @@ router.get('/', async (req, res) => {
 // Obtenir un seul produit par son id
 router.get('/:id', async (req, res) => {
 	try {
-		const product = await Product.findById(req.params.id)
-		.populate('category')
+		let product = await Product.findById(req.params.id)
+			.populate('category')
 			.populate('composition');
 
 		if (req.query.view === 'full') {
 			try {
-				products = products.map((product) => {
+				product = product.map((product) => {
 					const allergensSet = new Set();
 					let isVegan = true;
 					let isVegeta = true;
@@ -175,26 +175,10 @@ router.post(
 	],
 	validateRequest,
 	async (req, res) => {
-		console.log('📥 Données reçues par le backend:', req.body); // LOG ICI 🔍
-		// const { name, category, description, composition, price, stock, images } =
-		// 	req.body;
-
-		// if (!name) {
-		// 	return res
-		// 		.status(400)
-		// 		.json({ error: 'Le champ "name" est obligatoire.' });
-		// }
-		// if (!Array.isArray(composition)) {
-		// 	return res
-		// 		.status(400)
-		// 		.json({ error: 'Le champ "composition" doit être un tableau.' });
-		// }
-
 		try {
 			let { name, category, description, composition, price, stock, images } =
 				req.body;
 
-			console.log('🔍 Description avant nettoyage :', description); // LOG ICI
 			// Nettoyage des entrées utilisateur
 			name = sanitize(name);
 			category = sanitize(category);
@@ -203,7 +187,6 @@ router.post(
 			price = sanitize(price);
 			stock = sanitize(stock);
 			images = sanitize(images);
-			console.log('✅ Description après nettoyage :', description); // LOG ICI
 
 			const existingProduct = await Product.findOne({ name });
 			if (existingProduct) {
@@ -277,11 +260,8 @@ router.put(
 	],
 	validateRequest,
 	async (req, res) => {
-		// const { name, category, description, composition, price, stock, images } =
-		// 	req.body;
-
 		try {
-			const { name, category, description, composition, price, stock, images } =
+			let { name, category, description, composition, price, stock, images } =
 				req.body;
 
 			const product = await Product.findById(req.params.id);

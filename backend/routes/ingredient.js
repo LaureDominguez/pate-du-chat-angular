@@ -31,7 +31,7 @@ router.get('/:id', async (req, res) => {
 		if (!ingredient) {
 			return res.status(404).json({ msg: 'Ingrédient non trouvé' });
 		}
-		res.json(ingredient);
+		res.status(200).json(ingredient);
 	} catch (error) {
 		console.error(error.message);
 
@@ -131,7 +131,7 @@ router.put(
 	validateRequest,
 	async (req, res) => {
 		try {
-			const { name, supplier, allergens, vegan, vegeta, images } = req.body;
+			let { name, supplier, allergens, vegan, vegeta, images } = req.body;
 
 			const ingredient = await Ingredient.findById(req.params.id);
 			if (!ingredient) {
@@ -149,7 +149,7 @@ router.put(
 			ingredient.images = sanitize(images) || ingredient.images;
 
 			const updatedIngredient = await ingredient.save();
-			res.json(updatedIngredient);
+			res.status(200).json(updatedIngredient);
 		} catch (error) {
 			console.error(
 				'Erreur lors de la mise à jour de l\'ingrédient:',

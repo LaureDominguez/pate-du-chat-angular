@@ -11,16 +11,30 @@
                     {{ category.name }}
                 </span>
                 <!-- Mode édition -->
-                <mat-form-field *ngIf="editingCategory && editingCategory._id === category._id" appearance="fill">
-                    <input 
-                        #categoryInput
-                        matInput 
-                        [(ngModel)]="category.name" 
-                        placeholder="Nom de la catégorie" 
-                        (keydown.enter)="saveCategory(category)"
-                        (blur)="cancelEdit($event)"
-                    />
-                </mat-form-field>
+                <form *ngIf="editingCategory && editingCategory._id === category._id" [formGroup]="categoryForm">
+                    <mat-form-field appearance="fill">
+                        <input 
+                            #categoryInput
+                            matInput 
+                            formControlName="name"
+                            placeholder="Nom de la catégorie" 
+                            (keydown.enter)="saveCategory(category)"
+                            (blur)="cancelEdit($event)"
+                        />
+                        <mat-error *ngIf="categoryForm.get('name')?.hasError('required')">
+                            Le nom est obligatoire.
+                        </mat-error>
+                        <mat-error *ngIf="categoryForm.get('name')?.hasError('minlength')">
+                            Minimum 2 caractères.
+                        </mat-error>
+                        <mat-error *ngIf="categoryForm.get('name')?.hasError('maxlength')">
+                            Maximum 50 caractères.
+                        </mat-error>
+                        <mat-error *ngIf="categoryForm.get('name')?.hasError('pattern')">
+                            Caractères spéciaux interdits.
+                        </mat-error>
+                    </mat-form-field>
+                </form>
             </td>
         </ng-container>
 
