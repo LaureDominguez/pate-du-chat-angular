@@ -4,9 +4,23 @@ const upload = require('../../middleware/fileUpload');
 const fs = require('fs');
 const path = require('path');
 
+// Recupérer une image
+router.get('/:filename', (req, res) => {
+	const filename = req.params.filename;
+	const filePath = path.join(__dirname, '../../uploads', filename);
+	fs.readFile(filePath, (err, data) => {
+		if (err) {
+			console.error(`Image introuvable : ${filename}`);
+			return res.status(404).json({ error: 'Image introuvable' });
+		}
+		res.setHeader('Content-Type', 'image/jpeg');
+		res.send(data);
+	});
+});
+
 // Ajouter une image
 router.post('/', upload.array('images', 10), (req, res) => {
-    // console.log('route images -> req.files:', req.files);
+    console.log('route images -> req.files:', req.files);
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'Aucune image envoyée' });

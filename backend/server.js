@@ -32,7 +32,11 @@ app.use('/uploads', (req, res, next) => {
 	console.log('Serving static file:', req.url); // Log du fichier demandé
 	next();
 });
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+	setHeaders: (res, filePath) => {
+		res.setHeader('Content-Type', 'image/jpeg'); // Force le bon type MIME
+	}
+}));
 
 
 // Routes
