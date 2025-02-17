@@ -1,9 +1,10 @@
-import { Component, Inject } from '@angular/core';
+import { Component, EventEmitter, Inject, Output } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { AdminModule } from '../../admin.module';
 import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
 import { Ingredient } from '../../../../models/ingredient';
+import { SharedDataService } from '../../../../services/shared-data.service';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -20,8 +21,11 @@ export class IngredientFormComponent {
   existingImageUrls: string[] = [];
   removedExistingImages: string[] = [];
 
+  @Output() downloadImageEvent = new EventEmitter<string>();
+
   constructor(
     private fb: FormBuilder,
+    private sharedDataService: SharedDataService,
     private dialog: MatDialog,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -32,7 +36,6 @@ export class IngredientFormComponent {
       searchedValue: string;
     }
   ) {
-    // console.log('IngredientFormComponent -> constructor : ', data);
     this.ingredientForm = this.fb.group({
       name: [
         data.ingredient?.name || data.searchedValue || '',
@@ -123,6 +126,12 @@ export class IngredientFormComponent {
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  downloadImage(imagePath: string) {
+    console.log('📢 Événement envoyé pour télécharger :', imagePath);
+    const ingredientName = this.data.ingredient?.name || 'Ingredient';
+    this.sharedDataService.emitDownloadImage(imagePath, ingredientName);
   }
 
   removeFile(index: number): void {

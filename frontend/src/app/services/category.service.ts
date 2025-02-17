@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 
-import { Category } from '../models/category';
+import { Category, DEFAULT_CATEGORY } from '../models/category';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CategoryService {
   private apiUrl = 'http://localhost:5000/api/categories';
+
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
   categories$ = this.categoriesSubject.asObservable(); // Observable écoutable
 
@@ -18,9 +19,29 @@ export class CategoryService {
 
   // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
-    this.http.get<Category[]>(this.apiUrl).subscribe((categories) => {
-      this.categoriesSubject.next(categories); // Met à jour les abonnés
-    });
+    console.log('🔍 Chargement des catégories...');
+
+    this.http.get<Category[]>(this.apiUrl).subscribe(
+      (categories) => {
+        console.log("📌 Catégories récupérées depuis l'API :", categories);
+
+        if (!categories || categories.length === 0) {
+          console.warn(
+            "⚠️ Aucune catégorie trouvée, ajout de 'Sans catégorie'"
+          );
+          categories = [DEFAULT_CATEGORY];
+        }
+
+        this.categoriesSubject.next(categories);
+      },
+      (error) => {
+        console.error(
+          '❌ Erreur chiante lors de la récupération des catégories :',
+          error
+        );
+        this.categoriesSubject.next([DEFAULT_CATEGORY]); // Sécurise le frontend pour éviter un crash
+      }
+    );
   }
 
   // Récupérer toutes les catégories
@@ -36,10 +57,15 @@ export class CategoryService {
 
   // Créer une nouvelle catégorie
   createCategory(payload: any): Observable<Category> {
-    console.log('🔍 Données envoyées au serveur :', payload);
     return this.http.post<Category>(this.apiUrl, payload).pipe(
-      catchError(this.handleError),
-      tap(() => this.loadCategories()) // Met à jour après création
+      tap((newCategory) => {
+        // 🔄 Mise à jour locale immédiate avant d'appeler l'API
+        this.categoriesSubject.next([
+          ...this.categoriesSubject.value,
+          newCategory,
+        ]);
+      }),
+      catchError(this.handleError)
     );
   }
 
@@ -47,8 +73,14 @@ export class CategoryService {
   updateCategory(id: string, payload: any): Observable<Category> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Category>(url, payload).pipe(
-      catchError(this.handleError),
-      tap(() => this.loadCategories()) // Met à jour après modification
+      tap((updatedCategory) => {
+        // 🔄 Mise à jour locale des catégories avant rechargement
+        const updatedCategories = this.categoriesSubject.value.map((cat) =>
+          cat._id === id ? updatedCategory : cat
+        );
+        this.categoriesSubject.next(updatedCategories);
+      }),
+      catchError(this.handleError)
     );
   }
 
@@ -56,8 +88,14 @@ export class CategoryService {
   deleteCategory(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
-      catchError(this.handleError),
-      tap(() => this.loadCategories()) // Met à jour après suppression
+      tap(() => {
+        // 🔄 Suppression locale immédiate avant rechargement API
+        const updatedCategories = this.categoriesSubject.value.filter(
+          (cat) => cat._id !== id
+        );
+        this.categoriesSubject.next(updatedCategories);
+      }),
+      catchError(this.handleError)
     );
   }
 
@@ -65,24 +103,16 @@ export class CategoryService {
     let errorMessage = 'Une erreur inconnue est survenue.';
 
     if (error.status === 400) {
-      if (error.error.errors) {
-        // Express Validator envoie un tableau d'erreurs → on concatène les messages
-        errorMessage = error.error.errors
-          .map((err: any) => err.msg)
-          .join('<br>');
-      } else if (error.error.msg) {
-        // Cas d'une erreur unique (ex: "Cet ingrédient existe déjà.")
-        errorMessage = error.error.msg;
-      } else {
-        errorMessage = 'Requête invalide. Vérifiez vos champs.';
-      }
+      errorMessage =
+        error.error.errors?.map((err: any) => err.msg).join('<br>') ||
+        'Requête invalide.';
     } else if (error.status === 404) {
       errorMessage = error.error.msg || 'Erreur 404 : Ressource introuvable.';
     } else if (error.status === 500) {
       errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
     }
 
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => errorMessage);
   }
 }
 

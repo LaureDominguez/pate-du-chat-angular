@@ -8,7 +8,7 @@ import {
   coerceElement,
   coerceNumberProperty,
   normalizePassiveListenerOptions
-} from "./chunk-J362MPM7.js";
+} from "./chunk-GNDNCLDC.js";
 import {
   DOCUMENT
 } from "./chunk-RD7Y7RE2.js";
@@ -2997,4 +2997,4 @@ export {
   A11yModule,
   _IdGenerator
 };
-//# sourceMappingURL=chunk-O5C4E5RZ.js.map
+//# sourceMappingURL=chunk-5NLNW4VM.js.map

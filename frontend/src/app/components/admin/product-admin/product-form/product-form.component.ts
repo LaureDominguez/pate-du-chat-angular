@@ -77,8 +77,7 @@ export class ProductFormComponent implements OnInit {
         ],
       ],
       category: [
-        data.product?.category ? (data.product.category as Category)._id : '',
-        Validators.required,
+        data.product?.category || '',
       ],
       description: [
         data.product?.description || '',
@@ -108,10 +107,12 @@ export class ProductFormComponent implements OnInit {
       this.existingImageUrls = [...data.imageUrls];
     }
 
-    this.categoryCtrl.setValue(
-      data.product?.category ? (data.product.category as Category).name : ''
-    );
+    console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
+
+    this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
+    console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
   }
+
   ngOnInit(): void {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
@@ -206,13 +207,15 @@ export class ProductFormComponent implements OnInit {
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
-  addCategory(category: Category | 'categoryNotFound'): void {
+  addCategory(category: Category | 'categoryNotFound' | null): void {
+    console.log('📋 category :', category);
     if (category === 'categoryNotFound') {
       this.createCategory(this.searchedCategory);
     } else {
-      this.productForm.patchValue({ category });
+      this.productForm.patchValue({ category: category });
+      this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
     }
-    this.categoryCtrl.setValue(category ? (category as Category).name : '');
+    console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   private createCategory(searchedValue: string): void {
@@ -221,10 +224,6 @@ export class ProductFormComponent implements OnInit {
 
   /////////////////////////////////////////////////////////////////////////////////
   ////////// Gestion des ingrédients
-  // get composition(): Ingredient[] {
-  //   return this.productForm.get('composition')?.value || [];
-  // }
-
   private updateComposition(ingredient: Ingredient, add: boolean): void {
     const currentComposition = this.composition;
     this.setComposition(
@@ -238,6 +237,7 @@ export class ProductFormComponent implements OnInit {
 
   private setComposition(composition: Ingredient[]): void {
     this.productForm.get('composition')?.setValue(composition);
+    console.log('📋 Composition :', this.composition); // LOG ICI 🔍
   }
 
   // Vérifie si un ingrédient fait partie de la composition
@@ -368,15 +368,8 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
-    // if (this.productForm.get('stock')?.value) {
-    //   this.productForm.get('stock')?.setValue(true);
-    // }
-
     const productData = {
       ...this.productForm.value,
-      category:
-        (this.productForm.value.category as Category)._id ||
-        this.productForm.value.category, // S'assure que l'ID est envoyé
       existingImages: [...this.existingImages],
     };
 
@@ -386,22 +379,6 @@ export class ProductFormComponent implements OnInit {
       selectedFiles: this.selectedFiles,
       removedExistingImages: this.removedExistingImages,
     });
-    // if (this.productForm.valid) {
-    //   const productData = {
-    //     ...this.productForm.value,
-    //     existingImages: [...this.existingImages],
-    //   };
-    //   this.dialogRef.close({
-    //     productData,
-    //     selectedFiles: this.selectedFiles,
-    //     removedExistingImages: this.removedExistingImages,
-    //   });
-    // } else {
-    //   this.productForm.markAllAsTouched();
-    //   this.dialog.open(ErrorDialogComponent, {
-    //     data: { message: 'Veuillez remplir tous les champs obligatoires.' },
-    //   });
-    // }
   }
 
   private getErrorMessage(controlName: string): string | null {
@@ -421,19 +398,6 @@ export class ProductFormComponent implements OnInit {
 
     return null;
   }
-
-  // private getFieldLabel(field: string): string {
-  //   const labels: { [key: string]: string } = {
-  //     name: 'Nom du produit',
-  //     category: 'Catégorie',
-  //     description: 'Description',
-  //     composition: 'Composition',
-  //     price: 'Prix',
-  //     stock: 'Stock',
-  //     images: 'Images',
-  //   };
-  //   return labels[field] || field;
-  // }
 
   cancel(): void {
     this.dialogRef.close();

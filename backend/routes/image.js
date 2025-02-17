@@ -13,6 +13,7 @@ router.get('/:filename', (req, res) => {
 			console.error(`Image introuvable : ${filename}`);
 			return res.status(404).json({ error: 'Image introuvable' });
 		}
+		res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
 		res.setHeader('Content-Type', 'image/jpeg');
 		res.send(data);
 	});

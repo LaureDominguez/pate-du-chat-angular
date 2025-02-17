@@ -67,6 +67,10 @@ mat-divider {
 .animated-button.delete, .animated-button.cancel {
   color: var(--error);
 }
+.animated-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 .animated-button .content {
   position: relative;

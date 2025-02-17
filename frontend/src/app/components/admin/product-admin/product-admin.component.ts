@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { forkJoin, Subject, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import {
@@ -17,6 +17,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { ErrorDialogComponent } from '../../dialog/error-dialog/error-dialog.component';
+import { DEFAULT_CATEGORY } from '../../../models/category';
 
 @Component({
   selector: 'app-product-admin',
@@ -25,10 +26,12 @@ import { ErrorDialogComponent } from '../../dialog/error-dialog/error-dialog.com
   templateUrl: './product-admin.component.html',
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
-export class ProductAdminComponent implements OnInit {
+export class ProductAdminComponent implements OnInit, OnDestroy {
   products = new MatTableDataSource<FinalProduct>([]);
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
+
+  private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
 
   displayedProductsColumns: string[] = [
     'name',
@@ -54,19 +57,11 @@ export class ProductAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData(); // Charge les données initiales
+  }
 
-  //   this.productService.finalProducts$.subscribe((products) => {
-  //     this.products.data = products;
-  //   });
-
-  //   // Écoute en temps réel les mises à jour des catégories et ingrédients
-  // this.categoryService.categories$.subscribe((categories) => {
-  //   this.categories = categories;
-  // });
-
-  //   this.ingredientService.getIngredients().subscribe((ingredients) => {
-  //     this.ingredients = ingredients;
-  //   });
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   ngAfterViewInit(): void {
@@ -75,25 +70,34 @@ export class ProductAdminComponent implements OnInit {
   }
 
   loadData(): void {
-    // this.productService.getFinalProducts().subscribe((products) => {
-    //   this.products.data = products;
-    // });
+    this.productService.finalProducts$
+      .pipe(takeUntil(this.unsubscribe$)) // Nettoie les souscriptions à la destruction du composant
+      .subscribe((products) => {
+        this.products.data = products.map((product) => ({
+          ...product,
+          category: product.category ? product.category : DEFAULT_CATEGORY,
+        }));
+        console.log('🚀 Produits finaux mis à jour :', products);
+      });
 
-    this.productService.finalProducts$.subscribe((products) => {
-      this.products.data = products;
-    });
+    this.categoryService.categories$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((categories) => {
+        this.categories = categories;
+        console.log('🚀 Catégories mises à jour :', categories);
+      });
 
-    // Écoute en temps réel les mises à jour des catégories et ingrédients
-    this.categoryService.categories$.subscribe((categories) => {
-      this.categories = categories;
-    });
-
-    this.ingredientService.getIngredients().subscribe((ingredients) => {
-      this.ingredients = ingredients;
-    });
+    this.ingredientService.ingredients$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((ingredients) => {
+        this.ingredients = ingredients;
+        // console.log('🚀 Ingrédients mis à jour :', ingredients);
+        this.productService.loadFinalProducts(); // Rafraîchir les produits **UNE SEULE FOIS**
+      });
   }
 
   openProductForm(product: Product | null): void {
+    console.log('🔍 Chargement des catégories et des ingrédients...');
     const imageUrls =
       product?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
@@ -173,7 +177,7 @@ export class ProductAdminComponent implements OnInit {
   }
 
   submiteProductForm(productData: any, productId?: string): void {
-    console.log('🚀 Envoi du produit au backend :', productData); // LOG ICI 🔍
+    console.log('🚀 Envoi du produit youpi au backend :', productData); // LOG ICI 🔍
     if (productId) {
       this.productService
         .updateProduct(productId, productData)
@@ -187,12 +191,12 @@ export class ProductAdminComponent implements OnInit {
     }
   }
 
-    private showErrorDialog(message: string): void {
-      console.log(message);
-      this.dialog.open(ErrorDialogComponent, {
-        data: { message },
-      });
-    }
+  private showErrorDialog(message: string): void {
+    console.log(message);
+    this.dialog.open(ErrorDialogComponent, {
+      data: { message },
+    });
+  }
 
   deleteProduct(product: Product): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {

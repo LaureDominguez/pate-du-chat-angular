@@ -131,11 +131,24 @@ mat-label {
             object-fit: cover;
             display: block;
         }
-        button {
+        div{
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(255, 0, 0, 0.8);
+            top: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            :first-child {
+                background-color: color-mix(in srgb, var(--error) 70%, transparent);
+            }
+            :last-child {
+                background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
+
+            }
+        }
+        button {
+            // background-color: rgba(255, 0, 0, 0.8);
             color: white;
             border: none;
             border-radius: 50%;

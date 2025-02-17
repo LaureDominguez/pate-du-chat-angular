@@ -15,13 +15,20 @@ const validateRequest = (req, res, next) => {
 // Récupérer toutes les catégories
 router.get('/', async (req, res) => {
 	try {
+    	console.log('🔍 API /categories appelée');
 		const categories = await Category.find().populate('productCount');
+
+		console.log('📌 Catégories trouvées :', categories);
+		if (!categories || categories.length === 0) {
+				console.warn('⚠️ Aucune catégorie trouvée en base !');
+		}
+		
 		res.status(200).json(categories);
 	} catch (err) {
-		console.error(error.message);
+		console.error(err.message);
 		res
 			.status(500)
-			.json({ error: 'Erreur lors de la récupération des catégories.' });
+			.json({ error: 'Erreur youpi lors de la récupération des catégories.' });
 	}
 });
 
@@ -34,10 +41,10 @@ router.get('/:id', async (req, res) => {
 		}
 		res.status(200).json(category);
 	} catch (err) {
-		console.error(error.message);
+		console.error(err.message);
 		res
 			.status(500)
-			.json({ error: 'Erreur lors de la récupération de la catégorie.' });
+			.json({ error: 'Erreur bidule lors de la récupération de la catégorie.' });
 	}
 });
 
@@ -121,7 +128,7 @@ router.put(
 	} catch (err) {
 			console.error(
 				'Erreur lors de la mise à jour de la catégorie:',
-				error.message
+				err.message
 			);
 		res.status(500).send('Erreur serveur');
 	}
@@ -136,8 +143,8 @@ router.delete('/:id', async (req, res) => {
 		}
 		res.status(200).json({ message: 'Catégorie supprimée avec succès.' });
 	} catch (err) {
-		console.error(error.message);
-		if (error.kind === 'ObjectId') {
+		console.error(err.message);
+		if (err.kind === 'ObjectId') {
 			return res.status(404).json({ msg: 'ID invalide' });
 		}
 		res.status(500).send('Erreur serveur');

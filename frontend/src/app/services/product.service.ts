@@ -1,16 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
 
 import { FinalProduct, Product } from '../models/product';
+import { DEFAULT_CATEGORY } from '../models/category';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductService {
   private apiUrl = 'http://localhost:5000/api/products';
+
   private productSubject = new BehaviorSubject<Product[]>([]);
   products$ = this.productSubject.asObservable(); // Observable écoutable
+
   private finalProductSubject = new BehaviorSubject<FinalProduct[]>([]);
   finalProducts$ = this.finalProductSubject.asObservable(); // Observable écoutable
 
@@ -22,10 +25,17 @@ export class ProductService {
   ////////////////////////
   //////// Public products
 
-  private loadFinalProducts(): void {
-    this.http.get<FinalProduct[]>(`${this.apiUrl}?view=full`).subscribe((products) => {
-      this.finalProductSubject.next(products); // Met à jour les abonnés
-    });
+  loadFinalProducts(): void {
+    this.http
+      .get<FinalProduct[]>(`${this.apiUrl}?view=full`).pipe(
+        map((products) => products.map((product) => ({
+          ...product,
+          category: product.category ? product.category : DEFAULT_CATEGORY,
+        })))
+      )
+      .subscribe((products) => {
+        this.finalProductSubject.next(products); // Met à jour les abonnés
+      });
   }
 
   getFinalProducts(): Observable<FinalProduct[]> {
@@ -34,14 +44,26 @@ export class ProductService {
 
   getFinalProductById(id: string): Observable<FinalProduct> {
     const url = `${this.apiUrl}/${id}?view=full`;
-    return this.http.get<FinalProduct>(url);
+    return this.http.get<FinalProduct>(url).pipe(
+      map((product) => ({
+        ...product,
+        category: product.category ? product.category : DEFAULT_CATEGORY,
+      }))
+    );
   }
 
   ////////////////////////
   //////// Admin products
 
-  private loadProducts(): void {
-    this.http.get<Product[]>(this.apiUrl).subscribe((products) => {
+  loadProducts(): void {
+    this.http.get<Product[]>(this.apiUrl).pipe(
+      map((products) =>
+        products.map((product) => ({
+          ...product,
+          category: product.category ? product.category : DEFAULT_CATEGORY,
+        }))
+      )
+    ).subscribe((products) => {
       this.productSubject.next(products); // Met à jour les abonnés
     });
   }
@@ -52,7 +74,24 @@ export class ProductService {
 
   getProductById(id: string): Observable<Product> {
     const url = `${this.apiUrl}/${id}`;
-    return this.http.get<Product>(url);
+    return this.http.get<Product>(url).pipe(
+      map((product) => ({
+        ...product,
+        category: product.category ? product.category : DEFAULT_CATEGORY,
+      }))
+    );
+  }
+
+  getProductsByIngredient(ingredientId: string): Observable<Product[]> {
+    const url = `${this.apiUrl}/by-ingredient/${ingredientId}`;
+    return this.http.get<Product[]>(url).pipe(
+      map((products) =>
+        products.map((product) => ({
+          ...product,
+          category: product.category ? product.category : DEFAULT_CATEGORY,
+        }))
+      )
+    );
   }
 
   createProduct(payload: any): Observable<Product> {

@@ -54,7 +54,13 @@
             <td mat-cell *matCellDef="let category">
 
                 <!-- Edit -->
-                <button mat-button class="animated-button edit" *ngIf="!editingCategory || editingCategory._id !== category._id" (click)="startEditing(category)">
+                <button 
+                    mat-button 
+                    class="animated-button edit" 
+                    *ngIf="!editingCategory || editingCategory._id !== category._id" 
+                    (click)="startEditing(category)"
+                    [disabled]="isDefaultCategory(category)"
+                >
                     <div class="content">
                         <mat-icon class="icon">edit</mat-icon>
                         <span class="text">Modifier</span>
@@ -62,7 +68,13 @@
                 </button>
 
                 <!-- Save -->
-                <button mat-button class="animated-button save" *ngIf="editingCategory && editingCategory._id === category._id" (click)="saveCategory(category)">
+                <button 
+                    mat-button 
+                    class="animated-button save" 
+                    *ngIf="editingCategory && editingCategory._id === category._id" 
+                    (click)="saveCategory(category)"
+                    [disabled]="isDefaultCategory(category)"
+                >
                     <div class="content">
                         <mat-icon class="icon">check</mat-icon>
                         <span class="text">Enregistrer</span>
@@ -70,7 +82,13 @@
                 </button>
 
                 <!-- Delete -->
-                <button mat-button class="animated-button delete" *ngIf="!editingCategory || editingCategory._id !== category._id" (click)="deleteCategory(category)">
+                <button 
+                    mat-button 
+                    class="animated-button delete" 
+                    *ngIf="!editingCategory || editingCategory._id !== category._id" 
+                    (click)="deleteCategory(category)"
+                    [disabled]="isDefaultCategory(category)"
+                >
                     <div class="content">
                         <mat-icon class="icon">delete</mat-icon>
                         <span class="text">Supprimer</span>
@@ -78,7 +96,13 @@
                 </button>
 
                 <!-- Cancel -->
-                <button mat-button class="animated-button cancel" *ngIf="editingCategory && editingCategory._id === category._id" (click)="cancelEdit()">
+                <button 
+                    mat-button 
+                    class="animated-button cancel" 
+                    *ngIf="editingCategory && editingCategory._id === category._id" 
+                    (click)="cancelEdit()"
+                    [disabled]="isDefaultCategory(category)"
+                >
                     <div class="content">
                         <mat-icon class="icon">close</mat-icon>
                         <span class="text">Annuler</span>

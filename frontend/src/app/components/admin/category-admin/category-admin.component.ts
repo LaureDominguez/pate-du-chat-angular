@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
@@ -8,6 +8,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DEFAULT_CATEGORY } from '../../../models/category';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-category-admin',
@@ -15,13 +17,19 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   templateUrl: './category-admin.component.html',
   styleUrls: ['./category-admin.component.scss', '../admin.component.scss'],
 })
-export class CategoryAdminComponent implements OnInit {
+export class CategoryAdminComponent implements OnInit, OnDestroy {
   categories = new MatTableDataSource<Category>([]);
   displayedCategoriesColumns: string[] = ['name', 'productCount', 'actions'];
   categoryForm!: FormGroup;
   newCategory: Category | null = null;
   editingCategoryId: string | null = null;
   editingCategory: Category | null = null;
+
+  isDefaultCategory(category: Category): boolean {
+    return category._id === DEFAULT_CATEGORY._id;
+  }
+
+  private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
 
   @ViewChild('categoriesPaginator') categoriesPaginator!: MatPaginator;
   @ViewChild('categoriesSort') categoriesSort!: MatSort;
@@ -36,13 +44,25 @@ export class CategoryAdminComponent implements OnInit {
 
   ngOnInit(): void {
     // Écoute les catégories mises à jour via le BehaviorSubject
-    this.categoryService.getCategories().subscribe((categories) => {
-      this.categories.data = categories;
-    });
+    this.categoryService.getCategories()
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((categories) => {
+        if (!categories.some((cat) => cat._id === DEFAULT_CATEGORY._id)) {
+          categories.unshift(DEFAULT_CATEGORY);
+        }
+        this.categories.data = categories;
+      });
     // Écoute les nouvelles catégories envoyées par product-form
-    this.sharedDataService.requestNewCategory$.subscribe((categoryName) => {
-      this.createNewCategory(categoryName);
-    });
+    this.sharedDataService.requestNewCategory$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((categoryName) => {
+        this.createNewCategory(categoryName);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   ngAfterViewInit(): void {
@@ -58,8 +78,12 @@ export class CategoryAdminComponent implements OnInit {
 
   // Méthodes pour gérer les catégories
   startEditing(category: Category | null = null): void {
+    if (category && this.isDefaultCategory(category)) {
+      console.log('❌ Ne pas éditer "Sans catégorie"');
+      return; // ❌ Ne pas éditer "Sans catégorie"
+    }
     this.editingCategory = category ? { ...category } : { _id: null, name: '' };
-    
+
     this.categoryForm = this.fb.group({
       name: [
         this.editingCategory.name,
@@ -93,15 +117,17 @@ export class CategoryAdminComponent implements OnInit {
       return;
     }
 
-      const newCategory: Category = {
-        name: this.categoryForm.get('name')?.value.trim(), // Nettoyage des espaces
-      };
+    const newCategory: Category = {
+      name: this.categoryForm.get('name')?.value.trim(), // Nettoyage des espaces
+    };
 
     if (category._id) {
       // Update
-      this.categoryService.updateCategory(category._id, newCategory).subscribe(() => {
-        this.cancelEdit();
-      });
+      this.categoryService
+        .updateCategory(category._id, newCategory)
+        .subscribe(() => {
+          this.cancelEdit();
+        });
     } else {
       // Create
       this.categoryService.createCategory(newCategory).subscribe(() => {
@@ -124,6 +150,10 @@ export class CategoryAdminComponent implements OnInit {
 
   //Delete
   deleteCategory(category: Category): void {
+    if (this.isDefaultCategory(category)) {
+      console.log('❌ Ne pas supprimer "Sans catégorie"');
+      return; // ❌ Ne pas supprimer "Sans catégorie"
+    }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -132,8 +162,7 @@ export class CategoryAdminComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.categoryService.deleteCategory(category._id!).subscribe(() => {
-        });
+        this.categoryService.deleteCategory(category._id!).subscribe(() => {});
       }
     });
   }

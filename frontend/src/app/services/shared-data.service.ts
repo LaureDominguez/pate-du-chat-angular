@@ -3,9 +3,15 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Ingredient } from '../models/ingredient';
 import { Category } from '../models/category';
 
+interface DownloadImageData {
+  imagePath: string;
+  objectName: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
+
 export class SharedDataService {
   ///////////////////////////////////////////
   /////////////// Categories  ///////////////
@@ -45,7 +51,7 @@ export class SharedDataService {
     this.openIngredientFormSubject.next();
   }
 
-  // ✅ Nouvelle méthode pour récupérer la dernière valeur stockée
+  // Récupérer la valeur recherchée
   getSearchedIngredient(): string {
     return this.searchedIngredientSubject.getValue();
   }
@@ -53,5 +59,16 @@ export class SharedDataService {
   // Réponse de ingredient-admin
   resultIngredientCreated(ingredient: Ingredient) {
     this.ingredientCreatedSubject.next(ingredient);
+  }
+
+  ///////////////////////////////////////////
+  //////////////// Images ///////////////////
+  private downloadImageSubject = new BehaviorSubject<DownloadImageData | null>(
+    null
+  );
+  downloadImage$ = this.downloadImageSubject.asObservable();
+
+  emitDownloadImage(imagePath: string, objectName: string) {
+    this.downloadImageSubject.next({ imagePath, objectName });
   }
 }

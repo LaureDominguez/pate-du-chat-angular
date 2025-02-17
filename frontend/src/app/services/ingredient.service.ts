@@ -11,7 +11,6 @@ export class IngredientService {
   private apiUrl = 'http://localhost:5000/api/ingredients';
   private allergenesUrl = '../assets/data/allergenes.json';
 
-  // Stockage local des ingrédients
   private ingredientsSubject = new BehaviorSubject<Ingredient[]>([]);
   ingredients$ = this.ingredientsSubject.asObservable(); // Observable écoutable
 

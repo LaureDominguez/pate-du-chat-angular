@@ -1,7 +1,9 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Product = require('../models/product');
+const { DEFAULT_CATEGORY } = require('../models/category');
 const sanitize = require('mongo-sanitize');
 
 const validateRequest = (req, res, next) => {
@@ -12,6 +14,9 @@ const validateRequest = (req, res, next) => {
 	next();
 };
 
+// Vérifier si un ObjectId est valide
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
 // Obtenir tous les produits
 router.get('/', async (req, res) => {
 	try {
@@ -19,65 +24,15 @@ router.get('/', async (req, res) => {
 			.populate('category')
 			.populate('composition');
 
+		// Appliquer "Sans catégorie" aux produits sans catégorie
+		// products = products.map((product) => ({
+		// 	...product,
+		// 	category: product.category || DEFAULT_CATEGORY,
+		// }));
+
 		if (req.query.view === 'full') {
 			try {
 				products = products.map((product) => {
-					const allergensSet = new Set();
-					let isVegan = true;
-					let isVegeta = true;
-
-					if (product.composition) {
-						product.composition.forEach((ingredient) => {
-							if (ingredient.allergens) {
-								ingredient.allergens.forEach((allergen) => {
-									allergensSet.add(allergen);
-								});
-							}
-							if (!ingredient.vegan) {
-								isVegan = false;
-							}
-							if (!ingredient.vegeta) {
-								isVegeta = false;
-							}
-						});
-					} else {
-						isVegan = false;
-						isVegeta = false;
-					}
-
-					return {
-						...product.toObject(),
-						allergens: Array.from(allergensSet),
-						vegan: isVegan,
-						vegeta: isVegeta,
-					};
-				});
-			} catch (error) {
-                console.error("Erreur lors du mapping des produits:", error);
-                return res.status(500).json({ message: "Erreur lors du traitement des produits." });
-            }
-		}
-		res.status(200).json(products);
-	} catch (error) {
-		console.error('Erreur serveur:', error);
-		res
-			.status(500)
-			.json({
-				message: 'Erreur serveur lors de la récupération des produits.',
-			});
-	}
-});
-
-// Obtenir un seul produit par son id
-router.get('/:id', async (req, res) => {
-	try {
-		let product = await Product.findById(req.params.id)
-			.populate('category')
-			.populate('composition');
-
-		if (req.query.view === 'full') {
-			try {
-				product = product.map((product) => {
 					const allergensSet = new Set();
 					let isVegan = true;
 					let isVegeta = true;
@@ -115,16 +70,84 @@ router.get('/:id', async (req, res) => {
 					.json({ message: 'Erreur lors du traitement des produits.' });
 			}
 		}
+		res.status(200).json(products);
+	} catch (error) {
+		console.error('Erreur serveur:', error);
+		res
+			.status(500)
+			.json({
+				message: 'Erreur serveur lors de la récupération des produits.',
+			});
+	}
+});
+
+// Obtenir les produits par ingrédient
+router.get('/by-ingredient/:id', async (req, res) => {
+	if (!isValidObjectId(req.params.id)) {
+		return res.status(400).json({ message: 'ID ingrédient invalide' });
+	}
+
+	try {
+		let products = await Product.find({ composition: req.params.id })
+			.populate('category')
+			.populate('composition');
 		
+		// // Appliquer "Sans catégorie" si nécessaire
+		// products = products.map((product) => ({
+		// 	...product,
+		// 	category: product.category || DEFAULT_CATEGORY,
+		// }));
+
+		res.status(200).json(products);
+	} catch (error) {
+		console.error(error.message);
+		res.status(500).send('Erreur serveur');
+	}
+});
+
+router.get('/:id', async (req, res) => {
+	if (!isValidObjectId(req.params.id)) {
+		return res.status(400).json({ message: 'ID produit invalide' });
+	}
+
+	try {
+		let product = await Product.findById(req.params.id)
+			.populate('category')
+			.populate('composition');
+
 		if (!product) {
-		return res.status(404).json({ message: 'Produit non trouvé' });
+			return res.status(404).json({ message: 'Produit non trouvé' });
 		}
+
+		// // Appliquer "Sans catégorie" si la catégorie est absente
+		// product = {
+		// 	...product,
+		// 	category: product.category || DEFAULT_CATEGORY,
+		// };
+
+		// Si "view=full", calculer les allergènes et régimes alimentaires
+		if (req.query.view === 'full') {
+			const allergensSet = new Set();
+			let isVegan = true;
+			let isVegeta = true;
+
+			product.composition.forEach((ingredient) => {
+				ingredient.allergens?.forEach((allergen) => allergensSet.add(allergen));
+				if (!ingredient.vegan) isVegan = false;
+				if (!ingredient.vegeta) isVegeta = false;
+			});
+
+			product = {
+				...product,
+				allergens: Array.from(allergensSet),
+				vegan: isVegan,
+				vegeta: isVegeta,
+			};
+		}
+
 		res.json(product);
 	} catch (error) {
 		console.error(error.message);
-		if (error.kind === 'ObjectId') {
-		return res.status(404).json({ message: 'ID invalide' });
-		}
 		res.status(500).send('Erreur serveur');
 	}
 });
@@ -147,9 +170,15 @@ router.post(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
 		check('category')
-			.trim()
-			.notEmpty()
-			.withMessage('Le champ "catégorie" est obligatoire.'),
+			.custom((value) => {
+                if (!value || !value._id) {
+                    throw new Error('Le champ "catégorie" est obligatoire.');
+                }
+                if (!mongoose.Types.ObjectId.isValid(value._id)) {
+                    throw new Error('Le champ "catégorie" doit être un ID MongoDB valide.');
+                }
+                return true;
+            }),
 		check('description')
 			.optional()
 			.trim()
@@ -174,19 +203,23 @@ router.post(
 			.withMessage('Le champ "stock" doit être un booléen.'),
 	],
 	validateRequest,
-	async (req, res) => {
+	async (req, res, next) => {
 		try {
 			let { name, category, description, composition, price, stock, images } =
 				req.body;
 
 			// Nettoyage des entrées utilisateur
 			name = sanitize(name);
-			category = sanitize(category);
+			// category = sanitize(category);
 			description = sanitize(description);
 			composition = sanitize(composition);
 			price = sanitize(price);
 			stock = sanitize(stock);
 			images = sanitize(images);
+
+			category = category && mongoose.Types.ObjectId.isValid(category._id)
+                ? sanitize(category._id) 
+                : DEFAULT_CATEGORY._id;
 
 			const existingProduct = await Product.findOne({ name });
 			if (existingProduct) {
@@ -229,9 +262,17 @@ router.put(
 			),
 		check('category')
 			.optional()
-			.trim()
-			.notEmpty()
-			.withMessage('Le champ "catégorie" est obligatoire.'),
+			.custom((value) => {
+				if (!value || !value._id) {
+					throw new Error('Le champ "catégorie" est obligatoire.');
+				}
+				if (!mongoose.Types.ObjectId.isValid(value._id)) {
+					throw new Error(
+						'Le champ "catégorie" doit être un ID MongoDB valide.'
+					);
+				}
+				return true;
+			}),
 		check('description')
 			.optional()
 			.trim()
@@ -270,12 +311,16 @@ router.put(
 			}
 
 			product.name = sanitize(name) || product.name;
-			product.category = sanitize(category) || product.category;
+			// product.category = sanitize(category) || product.category;
 			product.description = sanitize(description) || product.description;
 			product.composition = sanitize(composition) || product.composition;
 			product.price = sanitize(price) || product.price;
 			product.stock = sanitize(stock) || product.stock;
 			product.images = sanitize(images) || product.images;
+
+			product.category = category && mongoose.Types.ObjectId.isValid(category._id)
+                ? sanitize(category._id)
+                : DEFAULT_CATEGORY._id;
 
 			const updatedProduct = await product.save();
 			res.json(updatedProduct);

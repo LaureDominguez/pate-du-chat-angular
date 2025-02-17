@@ -75,9 +75,14 @@
             <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
                 <mat-card>
                     <img mat-card-image [src]="image" alt="Existing image" />
-                    <button mat-icon-button color="warn" (click)="removeExistingImage(i)">
-                        <mat-icon>delete</mat-icon>
-                    </button>
+                    <div>
+                        <button mat-icon-button (click)="removeExistingImage(i)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="downloadImage(image)">
+                            <mat-icon>download</mat-icon>
+                        </button>
+                    </div>
                 </mat-card>
             </div>
         </div>
