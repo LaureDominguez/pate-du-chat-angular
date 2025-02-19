@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, Subject, tap, throwError } from 'rxjs';
 
 import { FinalProduct, Product } from '../models/product';
 import { DEFAULT_CATEGORY } from '../models/category';
+import { SharedDataService } from './shared-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +18,10 @@ export class ProductService {
   private finalProductSubject = new BehaviorSubject<FinalProduct[]>([]);
   finalProducts$ = this.finalProductSubject.asObservable(); // Observable écoutable
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private sharedDataService: SharedDataService
+  ) {
     this.loadProducts(); // Charger les produits au démarrage
     this.loadFinalProducts(); // Charger les produits finaux au démarrage
   }
@@ -97,7 +101,10 @@ export class ProductService {
   createProduct(payload: any): Observable<Product> {
     return this.http.post<Product>(this.apiUrl, payload).pipe(
       catchError(this.handleError),
-      tap(() => this.loadFinalProducts()) // Recharge la liste après création
+      tap(() => {
+        this.loadFinalProducts()
+        this.sharedDataService.notifyProductUpdate();
+      }) // Recharge la liste après création
     );
   }
 
@@ -105,7 +112,10 @@ export class ProductService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Product>(url, payload).pipe(
       catchError(this.handleError),
-      tap(() => this.loadFinalProducts()) // Recharge la liste après création
+      tap(() => {
+        this.loadFinalProducts()
+        this.sharedDataService.notifyProductUpdate();
+      }) // Recharge la liste après création
     );
   }
 
@@ -113,7 +123,10 @@ export class ProductService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
       catchError(this.handleError),
-      tap(() => this.loadFinalProducts())
+      tap(() => {
+        this.loadFinalProducts()
+        this.sharedDataService.notifyProductUpdate();
+      })
     );
   }
 

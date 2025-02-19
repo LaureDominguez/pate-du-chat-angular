@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 
 import { Category, DEFAULT_CATEGORY } from '../models/category';
+import { SharedDataService } from './shared-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,8 +14,15 @@ export class CategoryService {
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
   categories$ = this.categoriesSubject.asObservable(); // Observable écoutable
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private sharedDataService: SharedDataService
+  ) {
     this.loadCategories(); // Charger les catégories au démarrage
+
+    this.sharedDataService.productListUpdate$.subscribe(() => {
+      this.loadCategories();
+    });
   }
 
   // Charge les catégories et met à jour le BehaviorSubject
@@ -30,6 +38,10 @@ export class CategoryService {
             "⚠️ Aucune catégorie trouvée, ajout de 'Sans catégorie'"
           );
           categories = [DEFAULT_CATEGORY];
+        } else {
+                  categories = categories.sort((a, b) =>
+          a._id === DEFAULT_CATEGORY._id ? -1 : b._id === DEFAULT_CATEGORY._id ? 1 : 0
+          );
         }
 
         this.categoriesSubject.next(categories);
@@ -60,10 +72,11 @@ export class CategoryService {
     return this.http.post<Category>(this.apiUrl, payload).pipe(
       tap((newCategory) => {
         // 🔄 Mise à jour locale immédiate avant d'appeler l'API
-        this.categoriesSubject.next([
-          ...this.categoriesSubject.value,
-          newCategory,
-        ]);
+        // this.categoriesSubject.next([
+        //   ...this.categoriesSubject.value,
+        //   newCategory,
+        // ]);
+        this.loadCategories();
       }),
       catchError(this.handleError)
     );

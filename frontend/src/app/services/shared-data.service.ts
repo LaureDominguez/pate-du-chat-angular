@@ -11,7 +11,6 @@ interface DownloadImageData {
 @Injectable({
   providedIn: 'root',
 })
-
 export class SharedDataService {
   ///////////////////////////////////////////
   /////////////// Categories  ///////////////
@@ -59,6 +58,15 @@ export class SharedDataService {
   // Réponse de ingredient-admin
   resultIngredientCreated(ingredient: Ingredient) {
     this.ingredientCreatedSubject.next(ingredient);
+  }
+
+  ///////////////////////////////////////////
+  //////////////// Produits /////////////////
+  private productListUpdateSubject = new Subject<void>();
+  productListUpdate$ = this.productListUpdateSubject.asObservable();
+
+  notifyProductUpdate() {
+    this.productListUpdateSubject.next();
   }
 
   ///////////////////////////////////////////
