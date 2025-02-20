@@ -2,6 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator');
 const router = express.Router();
 const Category = require('../models/category');
+const Product = require('../models/product');
 const sanitize = require('mongo-sanitize');
 
 const validateRequest = (req, res, next) => {
@@ -137,11 +138,47 @@ router.put(
 // Supprimer une catégorie
 router.delete('/:id', async (req, res) => {
 	try {
-		const category = await Category.findByIdAndDelete(req.params.id);
-		if (!category) {
-			return res.status(404).json({ msg: 'Catégorie non trouvée.' });
+		const categoryId = req.params.id;
+		console.log('🚮 Catégorie supprimée :', categoryId);
+		const DEFAULT_CATEGORY_ID = '65a123456789abcd12345678';
+		console.log('🚮 Catégorie par défaut :', DEFAULT_CATEGORY_ID);
+
+		if (!categoryId) {
+			return res.status(404).json({ msg: 'ID inconnu.' });
 		}
-		res.status(200).json({ message: 'Catégorie supprimée avec succès.' });
+
+		if (categoryId === DEFAULT_CATEGORY_ID) {
+			return res
+				.status(400)
+				.json({ msg: 'Impossible de supprimer cette catégorie.' });
+		}
+
+		// Vérifier combien de produits sont associés à cette catégorie
+		const category = await Category.findById(categoryId).populate(
+			'productCount'
+		);
+		console.log('🔍 Nombre de produits associés à la catégorie :', category);
+
+		if (!category) {
+			return res.status(404).json({ msg: 'Catégorie introuvable.' });
+		}
+
+		if (category.productCount > 0) {
+			await Product.updateMany(
+				{ category: category._id },
+				{ category: DEFAULT_CATEGORY_ID }
+			)
+			console.log('🔄 Produits déplacés vers la catégorie par défaut.');
+		}
+
+		await Category.findByIdAndDelete(req.params.id);
+
+		console.log(`✅ Catégorie supprimée : ${category.name}`);
+
+		res.status(200).json({
+			message: 'Catégorie supprimée avec succès.',
+			reassignDone: category.productCount > 0,
+		});
 	} catch (err) {
 		console.error(err.message);
 		if (err.kind === 'ObjectId') {

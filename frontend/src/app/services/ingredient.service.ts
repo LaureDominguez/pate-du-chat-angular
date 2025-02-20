@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
+import { SharedDataService } from './shared-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,8 +15,15 @@ export class IngredientService {
   private ingredientsSubject = new BehaviorSubject<Ingredient[]>([]);
   ingredients$ = this.ingredientsSubject.asObservable(); // Observable écoutable
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private sharedDataService: SharedDataService
+  ) {
     this.loadIngredients(); // Charger les ingrédients au démarrage
+
+    this.sharedDataService.ingredientListUpdate$.subscribe(() => {
+      this.loadIngredients();
+    });
   }
 
   // Charge les ingrédients et met à jour le BehaviorSubject

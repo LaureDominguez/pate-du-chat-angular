@@ -154,16 +154,40 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       console.log('❌ Ne pas supprimer "Sans catégorie"');
       return; // ❌ Ne pas supprimer "Sans catégorie"
     }
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        message: `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <span class="bold-text">"${category.name}"</span> ?`,
-      },
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.categoryService.deleteCategory(category._id!).subscribe(() => {});
-      }
-    });
+
+    if (category.productCount && category.productCount > 0) {
+      console.log('pouet : ', category.productCount);
+
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          message: `Cette catégorie contient <span class="bold-text"> ${category.productCount} produit(s)</span>. <br>
+          Êtes-vous sûr de vouloir supprimer la catégorie : <br>
+          <span class="bold-text">"${category.name}" ?`,
+        },
+      });
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+
+          console.log('pouet supprimé : ', category.productCount);
+          this.categoryService
+            .deleteCategory(category._id!)
+            .subscribe(() => {});
+        }
+      });
+    } else {
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          message: `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <span class="bold-text">"${category.name}"</span> ?`,
+        },
+      });
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.categoryService.deleteCategory(category._id!).subscribe(() => {});
+        }
+      });
+    }
   }
+
 }

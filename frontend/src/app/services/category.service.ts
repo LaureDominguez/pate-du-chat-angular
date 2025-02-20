@@ -20,6 +20,10 @@ export class CategoryService {
   ) {
     this.loadCategories(); // Charger les catégories au démarrage
 
+    this.sharedDataService.categoryListUpdate$.subscribe(() => {
+      this.loadCategories();
+    });
+
     this.sharedDataService.productListUpdate$.subscribe(() => {
       this.loadCategories();
     });
@@ -29,31 +33,38 @@ export class CategoryService {
   private loadCategories(): void {
     console.log('🔍 Chargement des catégories...');
 
-    this.http.get<Category[]>(this.apiUrl).subscribe(
-      (categories) => {
-        console.log("📌 Catégories récupérées depuis l'API :", categories);
-
-        if (!categories || categories.length === 0) {
-          console.warn(
-            "⚠️ Aucune catégorie trouvée, ajout de 'Sans catégorie'"
+    this.http
+      .get<Category[]>(this.apiUrl)
+      .pipe(
+        tap((categories) => {
+          if (!categories || categories.length === 0) {
+            console.warn(
+              "⚠️ Aucune catégorie trouvée, ajout de 'Sans catégorie'"
+            );
+            categories = [DEFAULT_CATEGORY];
+          } else {
+            categories = categories.sort((a, b) =>
+              a._id === DEFAULT_CATEGORY._id
+                ? -1
+                : b._id === DEFAULT_CATEGORY._id
+                ? 1
+                : 0
+            );
+          }
+          this.categoriesSubject.next(categories);
+        }),
+        catchError((error) => {
+          console.error(
+            '❌ Erreur lors de la récupération des catégories :',
+            error
           );
-          categories = [DEFAULT_CATEGORY];
-        } else {
-                  categories = categories.sort((a, b) =>
-          a._id === DEFAULT_CATEGORY._id ? -1 : b._id === DEFAULT_CATEGORY._id ? 1 : 0
+          this.categoriesSubject.next([DEFAULT_CATEGORY]); // Sécurise le frontend pour éviter un crash
+          return throwError(
+            () => new Error('Erreur lors du chargement des catégories')
           );
-        }
-
-        this.categoriesSubject.next(categories);
-      },
-      (error) => {
-        console.error(
-          '❌ Erreur chiante lors de la récupération des catégories :',
-          error
-        );
-        this.categoriesSubject.next([DEFAULT_CATEGORY]); // Sécurise le frontend pour éviter un crash
-      }
-    );
+        })
+      )
+      .subscribe(); // ✅ Permet de déclencher l'observable sans utiliser `.subscribe()` directement dans le callback
   }
 
   // Récupérer toutes les catégories
@@ -70,13 +81,8 @@ export class CategoryService {
   // Créer une nouvelle catégorie
   createCategory(payload: any): Observable<Category> {
     return this.http.post<Category>(this.apiUrl, payload).pipe(
-      tap((newCategory) => {
-        // 🔄 Mise à jour locale immédiate avant d'appeler l'API
-        // this.categoriesSubject.next([
-        //   ...this.categoriesSubject.value,
-        //   newCategory,
-        // ]);
-        this.loadCategories();
+      tap(() => {
+        this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
       }),
       catchError(this.handleError)
     );
@@ -86,12 +92,8 @@ export class CategoryService {
   updateCategory(id: string, payload: any): Observable<Category> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Category>(url, payload).pipe(
-      tap((updatedCategory) => {
-        // 🔄 Mise à jour locale des catégories avant rechargement
-        const updatedCategories = this.categoriesSubject.value.map((cat) =>
-          cat._id === id ? updatedCategory : cat
-        );
-        this.categoriesSubject.next(updatedCategories);
+      tap(() => {
+        this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
       }),
       catchError(this.handleError)
     );
@@ -102,11 +104,7 @@ export class CategoryService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
       tap(() => {
-        // 🔄 Suppression locale immédiate avant rechargement API
-        const updatedCategories = this.categoriesSubject.value.filter(
-          (cat) => cat._id !== id
-        );
-        this.categoriesSubject.next(updatedCategories);
+        this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
       }),
       catchError(this.handleError)
     );

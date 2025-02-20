@@ -14,6 +14,9 @@ interface DownloadImageData {
 export class SharedDataService {
   ///////////////////////////////////////////
   /////////////// Categories  ///////////////
+  private categoryListUpdateSubject = new Subject<void>();
+  categoryListUpdate$ = this.categoryListUpdateSubject.asObservable();
+
   private requestNewCategorySubject = new Subject<string>();
   requestNewCategory$ = this.requestNewCategorySubject.asObservable();
 
@@ -30,8 +33,16 @@ export class SharedDataService {
     this.categoryCreatedSubject.next(category);
   }
 
+  // Notifier les abonnés de la mise à jour
+  notifyCategoryUpdate() {
+    this.categoryListUpdateSubject.next();
+  }
+
   ///////////////////////////////////////////
   /////////////// Ingredients ///////////////
+  private ingredientListUpdateSubject = new Subject<void>();
+  ingredientListUpdate$ = this.ingredientListUpdateSubject.asObservable();
+
   private openIngredientFormSubject = new Subject<void>();
   openIngredientForm$: Observable<void> =
     this.openIngredientFormSubject.asObservable();
@@ -60,11 +71,17 @@ export class SharedDataService {
     this.ingredientCreatedSubject.next(ingredient);
   }
 
+  // Notifier les abonnés de la mise à jour
+  notifyIngredientUpdate() {
+    this.ingredientListUpdateSubject.next();
+  }
+
   ///////////////////////////////////////////
   //////////////// Produits /////////////////
   private productListUpdateSubject = new Subject<void>();
   productListUpdate$ = this.productListUpdateSubject.asObservable();
 
+  // Notifier les abonnés de la mise à jour
   notifyProductUpdate() {
     this.productListUpdateSubject.next();
   }

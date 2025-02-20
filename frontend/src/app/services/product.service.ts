@@ -24,6 +24,21 @@ export class ProductService {
   ) {
     this.loadProducts(); // Charger les produits au démarrage
     this.loadFinalProducts(); // Charger les produits finaux au démarrage
+
+    this.sharedDataService.productListUpdate$.subscribe(() => {
+      this.loadProducts();
+      this.loadFinalProducts();
+    });
+
+    this.sharedDataService.categoryListUpdate$.subscribe(() => {
+      this.loadProducts();
+      this.loadFinalProducts();
+    });
+
+    this.sharedDataService.ingredientListUpdate$.subscribe(() => {
+      this.loadProducts();
+      this.loadFinalProducts();
+    });
   }
 
   ////////////////////////
