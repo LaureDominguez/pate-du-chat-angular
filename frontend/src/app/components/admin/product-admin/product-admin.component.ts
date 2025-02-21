@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { first, firstValueFrom, forkJoin, Subject, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import {
@@ -208,19 +208,72 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   ///////////////////////////////////////////////////////////////
   // Suppression d'un produit
   deleteProduct(product: Product): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        message: `Êtes-vous sûr de vouloir supprimer ce produit : <br> <span class="bold-text">"${product.name}"</span> ?`,
-      },
-    });
+    if (!product.images || product.images.length === 0) {
+      this.confirmDeleteProduct(product);
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.productService.deleteProduct(product._id!).subscribe(() => {
-          // this.loadData();
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          message: `Le produit <br> <span class="bold-text">"${product.name}"</span> a <span class="bold-text">${product.images.length}</span> image(s). <br> Voulez-vous les télécharger avant suppression ?`,
+          confirmButtonText: 'Ignorer',
+          cancelButtonText: 'Annuler',
+          extraButton: 'Télécharger',
+        },
+      })
+      .afterClosed()
+      .subscribe((result) => {
+        switch (result) {
+          case 'cancel':
+            return;
+          case 'extra':
+            this.downloadProductImages(product);
+            break;
+          case 'confirm':
+            break;
+          default:
+            break;
+        }
+        // ✅ Suppression des images avant suppression de l’ingrédient
+        product.images?.forEach((imageUrl) => {
+          const filename = imageUrl.replace('/^/?uploads/?/', '');
+          this.imageService.deleteImage(filename).subscribe();
         });
-      }
-    });
+        // ✅ Suppression finale de l’ingrédient
+        this.confirmDeleteProduct(product);
+      });
+  }
+
+  // >> Télécharger les images avant suppression
+  private downloadProductImages(product: Product): void {
+    if (product.images?.length) {
+      product.images.forEach((imageUrl) => {
+        this.imageService.downloadImage(imageUrl, product.name);
+      });
+    }
+  }
+
+  private async confirmDeleteProduct(product: Product): Promise<void> {
+    try {
+      await firstValueFrom(this.productService.deleteProduct(product._id!));
+
+      this.dialog.open(InfoDialogComponent, {
+        width: '400px',
+        data: {
+          message: `Le produit <br> <span class="bold-text">"${product.name}"</span> a bien été supprimé.`,
+          type: 'success',
+        },
+      });
+    } catch (error) {
+      this.dialog.open(InfoDialogComponent, {
+        width: '400px',
+        data: {
+          message: `Une erreur est survenue lors de la suppression du produit :<br> <span class="bold-text">"${product.name}"</span>`,
+          type: 'error',
+        }
+      });
+    }
   }
 }

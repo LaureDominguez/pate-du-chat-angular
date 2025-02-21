@@ -227,7 +227,7 @@ export class IngredientAdminComponent implements OnInit {
 
       const result = await firstValueFrom(dialogRef.afterClosed());
 
-      console.log('result', result);
+      // console.log('result', result);
 
       if (result === 'cancel') return;
 
@@ -247,18 +247,17 @@ export class IngredientAdminComponent implements OnInit {
 
   // >> Vérifier les images avant suppression
   checkIngredientImages(ingredient: Ingredient): void {
-    if (!ingredient.images) {
-      // ✅ Pas d'images, on passe directement à la suppression
-      console.log("✅ Pas d'images, on passe directement à la suppression");
+    // ✅ Pas d'images, on passe directement à la suppression
+    if (!ingredient.images || ingredient.images.length === 0) {
       this.confirmIngredientDeletion(ingredient);
       return;
     }
-
+    // ✅ L'ingrédient a des images, afficher la boîte de dialogue de confirmation
     this.dialog
       .open(ConfirmDialogComponent, {
         width: '400px',
         data: {
-          message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a <span class="bold-text">${ingredient.images.length} image(s) associée(s)</span>.<br> Voulez-vous les télécharger avant suppression ?`,
+          message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a <span class="bold-text">${ingredient.images?.length} image(s) associée(s)</span>.<br> Voulez-vous les télécharger avant suppression ?`,
           confirmButtonText: 'Ignorer',
           cancelButtonText: 'Annuler',
           extraButton: 'Télécharger',
@@ -266,27 +265,24 @@ export class IngredientAdminComponent implements OnInit {
       })
       .afterClosed()
       .subscribe((result) => {
-        console.log('result', result);
-
-        if (result) {
-          switch (result) {
-            case 'cancel':
-              return;
-            case 'extra':
-              this.downloadIngredientImages(ingredient);
-              break;
-            // case 'confirm':
-            //   break;
-            default:
-              break;
-          }
+        // console.log('result', result);
+        switch (result) {
+          case 'cancel':
+            return;
+          case 'extra':
+            this.downloadIngredientImages(ingredient);
+            break;
+          case 'confirm':
+            break;
+          default:
+            break;
         }
-        // Vérifier et supprimer les images existantes marquées pour suppression
-
+        // ✅ Suppression des images avant suppression de l’ingrédient
         ingredient.images?.forEach((imgPath) => {
           const filename = imgPath.replace('/^/?uploads/?/', '');
           this.imageService.deleteImage(filename).subscribe();
         });
+        // ✅ Suppression finale de l’ingrédient
         this.confirmIngredientDeletion(ingredient);
       });
   }
@@ -295,17 +291,13 @@ export class IngredientAdminComponent implements OnInit {
   private downloadIngredientImages(ingredient: Ingredient): void {
     if (ingredient.images?.length) {
       ingredient.images.forEach((imageUrl) => {
-        console.log('imageUrl', imageUrl);
         this.imageService.downloadImage(imageUrl, ingredient.name);
-        // this.sharedDataService.emitDownloadImage(imageUrl, ingredient.name);
       });
     }
   }
 
   // >> Confirmation de la suppression
-  private async confirmIngredientDeletion(
-    ingredient: Ingredient
-  ): Promise<void> {
+  private async confirmIngredientDeletion(ingredient: Ingredient): Promise<void> {
     try {
       await firstValueFrom(
         this.ingredientService.deleteIngredient(ingredient._id!)
@@ -322,7 +314,7 @@ export class IngredientAdminComponent implements OnInit {
         width: '400px',
         data: {
           message:
-            'Erreur lors de la suppression de l’ingrédient :<br><span class="bold-text">"${ingredient.name}"</span>.',
+            'Une erreur est survenue lors de la suppression de l’ingrédient :<br><span class="bold-text">"${ingredient.name}"</span>.',
           type: 'error',
         },
       });
