@@ -16,7 +16,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { firstValueFrom } from 'rxjs';
-import { ErrorDialogComponent } from '../../dialog/error-dialog/error-dialog.component';
+import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { ProductService } from '../../../services/product.service';
 
 @Component({
@@ -124,98 +124,80 @@ export class IngredientAdminComponent implements OnInit {
       };
   }
 
-  // traiter l'upload d'images
   handleIngredientFormSubmit(result: {
     ingredientData: any;
     selectedFiles: File[];
     removedExistingImages: string[];
   }): void {
-    const { ingredientData, selectedFiles } = result;
-    const existingImages = ingredientData.existingImages ?? [];
+    const { ingredientData, selectedFiles, removedExistingImages } = result;
     const ingredientId = ingredientData._id;
+    const existingImages = ingredientData.existingImages ?? [];
+    const finalImages = [...existingImages];
 
-    // Vérifier et supprimer les images existantes marquées pour suppression
-    if (result.removedExistingImages?.length) {
-      result.removedExistingImages.forEach((imgPath) => {
+    delete ingredientData.existingImages;
+
+    // 1️⃣ Supprimer les images marquées pour suppression
+    if (removedExistingImages?.length) {
+      removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
         this.imageService.deleteImage(filename).subscribe();
       });
     }
 
-    // Fusionner les anciennes et nouvelles images
-    const finalImages = [...existingImages];
-    delete ingredientData.existingImages;
-
+    // 2️⃣ Vérifier s’il y a des nouvelles images à uploader
     if (selectedFiles.length > 0) {
-      // 1. Uploader les fichiers
       this.imageService.uploadImages(selectedFiles).subscribe({
         next: (uploadResponse) => {
-          const newFilePaths = uploadResponse.imagePath;
-
-          // 2. Concaténer avec les images existantes
-          finalImages.push(...newFilePaths); // Ajouter les nouvelles images
-          this.submitIngredientForm(ingredientId, ingredientData, finalImages);
+          finalImages.push(...uploadResponse.imagePath); // Ajouter les nouvelles images
         },
         error: (error) => {
-          console.error("Erreur lors de l'upload des images :", error);
           this.showErrorDialog(error.message);
+        },
+        complete: () => {
+          this.submitIngredientForm(ingredientId, {
+            ...ingredientData,
+            images: finalImages,
+          });
         },
       });
     } else {
-      this.submitIngredientForm(ingredientId, ingredientData, finalImages);
+      this.submitIngredientForm(ingredientId, {
+        ...ingredientData,
+        images: finalImages,
+      });
     }
   }
 
-  // soumettre le formulaire aux methodes création ou mise à jour
-  submitIngredientForm(
-    ingredientId: string | undefined,
-    ingredientData: any,
-    finalImages: string[]
-  ): void {
-    const ingredientPayload = {
-      ...ingredientData,
-      images: finalImages,
-    };
-
+  // 3️⃣ Soumettre le formulaire (création ou mise à jour)
+  submitIngredientForm(ingredientId?: string, ingredientData?: any): void {
     if (ingredientId) {
-      this.updateIngredient(ingredientId, ingredientPayload);
+      this.ingredientService
+        .updateIngredient(ingredientId, ingredientData)
+        .subscribe({
+          error: (error) => {
+            this.showErrorDialog(error.message);
+          },
+        });
     } else {
-      this.addIngredient(ingredientPayload);
+      this.ingredientService.createIngredient(ingredientData).subscribe({
+        next: (res) => {
+          this.sharedDataService.resultIngredientCreated(res);
+        },
+        error: (error) => {
+          this.showErrorDialog(error.message);
+        },
+      });
     }
   }
 
-  // création d'un nouvel ingrédient
-  addIngredient(ingredientPayload: any): void {
-    delete ingredientPayload._id;
-
-    this.ingredientService.createIngredient(ingredientPayload).subscribe({
-      next: (res) => {
-        this.sharedDataService.resultIngredientCreated(res);
-      },
-      error: (error) => {
-        this.showErrorDialog(error.message);
-      },
+  // Afficher les erreurs dans une fenêtre modale
+  private showErrorDialog(message: string, type = 'error'): void {
+    this.dialog.open(InfoDialogComponent, {
+      data: { message, type },
     });
   }
 
-  // mise à jour d'un ingrédient
-  updateIngredient(id: string, ingredientPayload: any): void {
-    this.ingredientService.updateIngredient(id, ingredientPayload).subscribe({
-      next: (res) => {},
-      error: (error) => {
-        this.showErrorDialog(error.message);
-      },
-    });
-  }
-
-  // // Fonction pour afficher les erreurs dans une fenêtre modale
-  private showErrorDialog(message: string): void {
-    console.log(message);
-    this.dialog.open(ErrorDialogComponent, {
-      data: { message },
-    });
-  }
-
+  ///////////////////////////////////////////////////////////////
   // suppression d'un ingrédient
   deleteIngredient(ingredient: Ingredient): void {
     this.checkIngredientInProducts(ingredient);
@@ -230,29 +212,34 @@ export class IngredientAdminComponent implements OnInit {
         this.productService.getProductsByIngredient(ingredient._id!)
       );
 
-      if (products.length > 0) {
-        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-          width: '400px',
-          data: {
-            message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> est utilisé dans <span class="bold-text">${products.length} produit(s)</span>.<br> Voulez-vous quand même le supprimer ?`,
-          },
-        });
+      const isUsedInProducts = products.length > 0;
+      let message = `Êtes-vous sûr de vouloir supprimer cet ingrédient : <br> <span class="bold-text">"${ingredient.name}"</span> ?`;
 
-        const result = await firstValueFrom(dialogRef.afterClosed());
-
-        if (result) {
-          this.checkIngredientImages(ingredient);
-        }
-      } else {
-        this.checkIngredientImages(ingredient);
+      if (isUsedInProducts) {
+        message = `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> est utilisé dans <span class="bold-text">${products.length} produit(s)</span>.<br> Voulez-vous quand même le supprimer ?`;
       }
+
+      // Affichage de la confirmation utilisateur
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: { message },
+      });
+
+      const result = await firstValueFrom(dialogRef.afterClosed());
+
+      console.log('result', result);
+
+      if (result === 'cancel') return;
+
+      this.checkIngredientImages(ingredient);
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des produits :', error);
-      this.dialog.open(ErrorDialogComponent, {
+      this.dialog.open(InfoDialogComponent, {
         width: '400px',
         data: {
           message:
             'Erreur lors de la vérification des produits liés à cet ingrédient.',
+          type: 'error',
         },
       });
     }
@@ -260,68 +247,83 @@ export class IngredientAdminComponent implements OnInit {
 
   // >> Vérifier les images avant suppression
   checkIngredientImages(ingredient: Ingredient): void {
-    if (ingredient.images?.length) {
-      this.dialog
-        .open(ConfirmDialogComponent, {
-          width: '400px',
-          data: {
-            message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a <span class="bold-text">${ingredient.images.length} image(s) associée(s)</span>.<br> Voulez-vous les télécharger avant suppression ?`,
-          },
-        })
-        .afterClosed()
-        .subscribe((result) => {
-          if (result) {
-            this.downloadIngredientImages(ingredient);
-            console.log('Images :', ingredient.images);
-          }
-          // Vérifier et supprimer les images existantes marquées pour suppression
-          
-            ingredient.images?.forEach((imgPath) => {
-              const filename = imgPath.replace('/^/?uploads/?/', '');
-              this.imageService.deleteImage(filename).subscribe();
-            });
-          this.confirmIngredientDeletion(ingredient);
-        });
-    } else {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    if (!ingredient.images) {
+      // ✅ Pas d'images, on passe directement à la suppression
+      console.log("✅ Pas d'images, on passe directement à la suppression");
+      this.confirmIngredientDeletion(ingredient);
+      return;
+    }
+
+    this.dialog
+      .open(ConfirmDialogComponent, {
         width: '400px',
         data: {
-          message: `Êtes-vous sûr de vouloir supprimer cet ingrédient : <br> <span class="bold-text">"${ingredient.name}"</span> ?`,
+          message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a <span class="bold-text">${ingredient.images.length} image(s) associée(s)</span>.<br> Voulez-vous les télécharger avant suppression ?`,
+          confirmButtonText: 'Ignorer',
+          cancelButtonText: 'Annuler',
+          extraButton: 'Télécharger',
         },
-      });
-      dialogRef.afterClosed().subscribe((result) => {
+      })
+      .afterClosed()
+      .subscribe((result) => {
+        console.log('result', result);
+
         if (result) {
-          this.confirmIngredientDeletion(ingredient);
+          switch (result) {
+            case 'cancel':
+              return;
+            case 'extra':
+              this.downloadIngredientImages(ingredient);
+              break;
+            // case 'confirm':
+            //   break;
+            default:
+              break;
+          }
         }
+        // Vérifier et supprimer les images existantes marquées pour suppression
+
+        ingredient.images?.forEach((imgPath) => {
+          const filename = imgPath.replace('/^/?uploads/?/', '');
+          this.imageService.deleteImage(filename).subscribe();
+        });
+        this.confirmIngredientDeletion(ingredient);
       });
-    }
   }
 
   // >> Télécharger les images avant suppression
   private downloadIngredientImages(ingredient: Ingredient): void {
     if (ingredient.images?.length) {
       ingredient.images.forEach((imageUrl) => {
+        console.log('imageUrl', imageUrl);
         this.imageService.downloadImage(imageUrl, ingredient.name);
+        // this.sharedDataService.emitDownloadImage(imageUrl, ingredient.name);
       });
     }
   }
 
   // >> Confirmation de la suppression
-  private async confirmIngredientDeletion(ingredient: Ingredient): Promise<void> {
+  private async confirmIngredientDeletion(
+    ingredient: Ingredient
+  ): Promise<void> {
     try {
-      await firstValueFrom(this.ingredientService.deleteIngredient(ingredient._id!));
-      this.dialog.open(ConfirmDialogComponent, {
+      await firstValueFrom(
+        this.ingredientService.deleteIngredient(ingredient._id!)
+      );
+      this.dialog.open(InfoDialogComponent, {
         width: '400px',
         data: {
           message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a bien été supprimé.`,
+          type: 'success',
         },
       });
     } catch (error) {
-      this.dialog.open(ErrorDialogComponent, {
+      this.dialog.open(InfoDialogComponent, {
         width: '400px',
         data: {
           message:
             'Erreur lors de la suppression de l’ingrédient :<br><span class="bold-text">"${ingredient.name}"</span>.',
+          type: 'error',
         },
       });
     }

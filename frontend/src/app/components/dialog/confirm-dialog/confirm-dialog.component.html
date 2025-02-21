@@ -3,6 +3,13 @@
     <p [innerHTML]="data.message"></p>
 </div>
 <div mat-dialog-actions>
-    <button mat-button (click)="onCancel()">Annuler</button>
-    <button mat-button (click)="onConfirm()">Confirmer</button>
+    <button mat-button (click)="onCancel()">
+        {{ data.cancelButtonText || 'Annuler' }}
+    </button>
+    <button *ngIf="data.extraButton" mat-button (click)="onExtra()">
+        {{ data.extraButton }}
+    </button>
+    <button mat-button (click)="onConfirm()">
+        {{ data.confirmButtonText || 'Confirmer' }}
+    </button>
 </div>

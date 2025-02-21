@@ -12,7 +12,7 @@ import {
   MatDialog,
 } from '@angular/material/dialog';
 import { SharedDataService } from '../../../../services/shared-data.service';
-import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
+import { ErrorDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Category } from '../../../../models/category';
 import { Ingredient } from '../../../../models/ingredient';
 import { Product } from '../../../../models/product';

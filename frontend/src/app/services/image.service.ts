@@ -34,7 +34,7 @@ export class ImageService {
 
   getImageUrl(imagePath: string): string {
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
-    return `${this.uploadUrl}/${cleanPath}`;
+    return `${this.baseUrl}/${cleanPath}`;
   }
 
   async downloadImage(
@@ -67,7 +67,7 @@ export class ImageService {
 
       // 🔥 Construction de l’URL API backend correcte
       const url = `${this.baseUrl}/${cleanPath}`;
-      console.log('📥 Téléchargement de l’image depuis:', url);
+      // console.log('📥 Téléchargement de l’image depuis:', url);
 
       // 🔥 Téléchargement de l’image
       const blob = await lastValueFrom(
@@ -96,31 +96,6 @@ export class ImageService {
       console.error('❌ Erreur lors du téléchargement de l’image:', error);
     }
   }
-
-  // async downloadImage(imagePath: string, customFilename: string): Promise<void> {
-  //   const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
-  //   const url = `${this.baseUrl}/${cleanPath}`;
-
-  //   try {
-  //     const blob = await lastValueFrom(this.http.get(url, { responseType: 'blob' }));
-
-  //     const a = document.createElement('a');
-  //     const objectUrl = URL.createObjectURL(blob);
-
-  //     const extension = cleanPath.split('.').pop();
-  //     const timestamp = Date.now();
-  //     const filename = `${customFilename}_${timestamp}.${extension}`;
-
-  //     a.href = objectUrl;
-  //     a.download = filename; // Nom du fichier
-  //     a.click();
-  //     URL.revokeObjectURL(objectUrl);
-
-  //     console.log(`✅ Image téléchargée : ${filename}`);
-  //   } catch (error) {
-  //     console.error('❌ Erreur lors du téléchargement de l’image:', error);
-  //   }
-  // }
 
   deleteImage(imagePath: string): Observable<{ message: string }> {
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');

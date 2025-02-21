@@ -6,7 +6,11 @@ import {
   Ingredient,
   IngredientService,
 } from '../../../services/ingredient.service';
-import { FinalProduct, Product, ProductService } from '../../../services/product.service';
+import {
+  FinalProduct,
+  Product,
+  ProductService,
+} from '../../../services/product.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
 
@@ -16,7 +20,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-import { ErrorDialogComponent } from '../../dialog/error-dialog/error-dialog.component';
+import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { DEFAULT_CATEGORY } from '../../../models/category';
 
 @Component({
@@ -77,14 +81,14 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           ...product,
           category: product.category ? product.category : DEFAULT_CATEGORY,
         }));
-        console.log('🚀 Produits finaux mis à jour :', products);
+        // console.log('🚀 Produits finaux mis à jour :', products);
       });
 
     this.categoryService.categories$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categories) => {
         this.categories = categories;
-        console.log('🚀 Catégories mises à jour :', categories);
+        // console.log('🚀 Catégories mises à jour :', categories);
       });
 
     this.ingredientService.ingredients$
@@ -97,7 +101,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   }
 
   openProductForm(product: Product | null): void {
-    console.log('🔍 Chargement des catégories et des ingrédients...');
+    // console.log('🔍 Chargement des catégories et des ingrédients...');
     const imageUrls =
       product?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
@@ -140,64 +144,69 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     selectedFiles: File[];
     removedExistingImages: string[];
   }): void {
-    const { productData, selectedFiles } = result;
-    const existingImages = productData.existingImages ?? [];
+    const { productData, selectedFiles, removedExistingImages } = result;
     const productId = productData._id;
+    const existingImages = productData.existingImages ?? [];
+    const finalImages = [...existingImages];
 
-    if (result.removedExistingImages?.length) {
-      result.removedExistingImages.forEach((imgPath) => {
+    delete productData.existingImages;
+
+    // 1️⃣ Supprimer les images marquées pour suppression
+    if (removedExistingImages.length) {
+      removedExistingImages.forEach((imgPath) => {
         const filename = imgPath.replace('/^/?uploads/?/', '');
-        this.imageService.deleteImage(filename).subscribe(() => {});
+        this.imageService.deleteImage(filename).subscribe();
       });
     }
 
-    const finalImages = [...existingImages];
-    delete productData.existingImages;
-
-    const submitForm = () => {
-      productData.images = finalImages;
-      this.submiteProductForm(productData, productId);
-    };
-
+    // 2️⃣ Vérifier s’il y a des nouvelles images à uploader
     if (selectedFiles.length > 0) {
       this.imageService.uploadImages(selectedFiles).subscribe({
         next: (uploadResponse) => {
-          const newFilePaths = uploadResponse.imagePath;
-          finalImages.push(...newFilePaths);
+          finalImages.push(...uploadResponse.imagePath);
         },
         error: (error) => {
           console.error("Erreur lors de l'upload des images :", error);
           this.showErrorDialog(error.message);
         },
-        complete: submitForm,
+        complete: () => {
+          this.submitProductForm(productId, {
+            ...productData,
+            images: finalImages,
+          });
+        },
       });
     } else {
-      submitForm();
+      this.submitProductForm(productId, {
+        ...productData,
+        images: finalImages,
+      });
     }
   }
 
-  submiteProductForm(productData: any, productId?: string): void {
-    console.log('🚀 Envoi du produit youpi au backend :', productData); // LOG ICI 🔍
+  // 3️⃣ Soumettre le formulaire (création ou mise à jour)
+  submitProductForm(productId?: string, productData?: any): void {
+    console.log('🚀 Envoi du produit au backend :', productData); // LOG ICI 🔍
     if (productId) {
-      this.productService
-        .updateProduct(productId, productData)
-        .subscribe(() => {
-          // this.loadData();
-        });
+      this.productService.updateProduct(productId, productData).subscribe({
+        error: (error) => this.showErrorDialog(error.message, 'error'),
+      });
     } else {
-      this.productService.createProduct(productData).subscribe(() => {
-        // this.loadData();
+      this.productService.createProduct(productData).subscribe({
+        error: (error) => this.showErrorDialog(error.message, 'error'),
       });
     }
   }
 
-  private showErrorDialog(message: string): void {
-    console.log(message);
-    this.dialog.open(ErrorDialogComponent, {
-      data: { message },
+  // Afficher les erreurs dans une fenêtre modale
+  private showErrorDialog(message: string, type = 'error'): void {
+    this.dialog.open(InfoDialogComponent, {
+      data: { message, type },
     });
   }
 
+  ///////////////////////////////////////////////////////////////
+  // Suppression d'un produit
   deleteProduct(product: Product): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',

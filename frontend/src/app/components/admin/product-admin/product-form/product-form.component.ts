@@ -13,7 +13,7 @@ import {
 } from '@angular/material/dialog';
 import { AdminModule } from '../../admin.module';
 import { SharedDataService } from '../../../../services/shared-data.service';
-import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
+import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Category } from '../../../../models/category';
 import { Ingredient } from '../../../../models/ingredient';
 import { Product } from '../../../../models/product';
@@ -76,9 +76,7 @@ export class ProductFormComponent implements OnInit {
           Validators.pattern(/^[a-zA-Z0-9À-ÿ\s-]+$/),
         ],
       ],
-      category: [
-        data.product?.category || '',
-      ],
+      category: [data.product?.category || ''],
       description: [
         data.product?.description || '',
         [
@@ -105,12 +103,16 @@ export class ProductFormComponent implements OnInit {
     if (data.product?.images) {
       this.existingImages = [...data.product.images];
       this.existingImageUrls = [...data.imageUrls];
+
+      console.log('📋 Images existantes :', this.existingImages); // LOG ICI 🔍
+      console.log('📋 URLs des images existantes :', this.existingImageUrls); // LOG ICI 🔍
+      console.log('data : ', data); // LOG ICI 🔍
     }
 
     console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
 
     this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
-    console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
+    // console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   ngOnInit(): void {
@@ -322,6 +324,7 @@ export class ProductFormComponent implements OnInit {
 
   // Gérer la preview
   private handleImagePreview(file: File): void {
+    console.log('📋 Fichier sélectionné :', file); // LOG ICI 🔍
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result) {
@@ -329,6 +332,12 @@ export class ProductFormComponent implements OnInit {
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  downloadImage(imageUrl: string): void {
+    console.log('📢 Événement envoyé pour télécharger :', imageUrl);
+    const productName = this.data.product?.name || 'Produit';
+    this.sharedDataService.emitDownloadImage(imageUrl, productName);
   }
 
   // Retirer une image de la prévieuw
@@ -362,8 +371,8 @@ export class ProductFormComponent implements OnInit {
     }
 
     if (formErrors.length > 0) {
-      this.dialog.open(ErrorDialogComponent, {
-        data: { message: formErrors.join('<br>') },
+      this.dialog.open(InfoDialogComponent, {
+        data: { message: formErrors.join('<br>'), type: 'error' },
       });
       return;
     }

@@ -31,7 +31,7 @@ export class CategoryService {
 
   // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
-    console.log('🔍 Chargement des catégories...');
+    // console.log('🔍 Chargement des catégories...');
 
     this.http
       .get<Category[]>(this.apiUrl)

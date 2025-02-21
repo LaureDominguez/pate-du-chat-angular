@@ -183,7 +183,8 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
         },
       });
       dialogRef.afterClosed().subscribe((result) => {
-        if (result) {
+        if (result === 'confirm') {
+          // console.log('pouet supprimé : ', result);
           this.categoryService.deleteCategory(category._id!).subscribe(() => {});
         }
       });

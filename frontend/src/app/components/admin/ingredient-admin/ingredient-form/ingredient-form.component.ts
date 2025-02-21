@@ -1,8 +1,12 @@
 import { Component, EventEmitter, Inject, Output } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialog,
+} from '@angular/material/dialog';
 import { AdminModule } from '../../admin.module';
-import { ErrorDialogComponent } from '../../../dialog/error-dialog/error-dialog.component';
+import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Ingredient } from '../../../../models/ingredient';
 import { SharedDataService } from '../../../../services/shared-data.service';
 
@@ -128,7 +132,7 @@ export class IngredientFormComponent {
     reader.readAsDataURL(file);
   }
 
-  downloadImage(imagePath: string) {
+  downloadImage(imagePath: string): void {
     console.log('📢 Événement envoyé pour télécharger :', imagePath);
     const ingredientName = this.data.ingredient?.name || 'Ingredient';
     this.sharedDataService.emitDownloadImage(imagePath, ingredientName);
@@ -156,8 +160,11 @@ export class IngredientFormComponent {
     });
 
     if (formErrors.length > 0) {
-      this.dialog.open(ErrorDialogComponent, {
-        data: { message: formErrors.join('<br>') },
+      this.dialog.open(InfoDialogComponent, {
+        data: {
+          message: formErrors.join('<br>'),
+          type: 'error',
+        },
       });
       return;
     }
