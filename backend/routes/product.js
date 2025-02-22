@@ -314,7 +314,8 @@ router.put(
 			// product.category = sanitize(category) || product.category;
 			product.description = sanitize(description) || product.description;
 			product.composition = sanitize(composition) || product.composition;
-			product.price = sanitize(price) || product.price;
+			// product.price = sanitize(price) || product.price;
+			product.price = price !== undefined ? sanitize(price) : product.price;
 			product.stock = sanitize(stock) || product.stock;
 			product.images = sanitize(images) || product.images;
 

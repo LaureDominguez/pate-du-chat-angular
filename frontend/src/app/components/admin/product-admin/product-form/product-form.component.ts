@@ -89,7 +89,7 @@ export class ProductFormComponent implements OnInit {
         [Validators.required, Validators.minLength(1)],
       ],
       price: [
-        data.product?.price || null,
+        data.product?.price ?? 0,
         [
           Validators.required,
           Validators.min(0),
