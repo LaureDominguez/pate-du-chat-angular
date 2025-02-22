@@ -4,6 +4,8 @@ import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 
 import { Category, DEFAULT_CATEGORY } from '../models/category';
 import { SharedDataService } from './shared-data.service';
+import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Injectable({
   providedIn: 'root',
@@ -14,9 +16,11 @@ export class CategoryService {
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
   categories$ = this.categoriesSubject.asObservable(); // Observable écoutable
 
+
   constructor(
     private http: HttpClient,
-    private sharedDataService: SharedDataService
+    private sharedDataService: SharedDataService,
+    private dialog: MatDialog
   ) {
     this.loadCategories(); // Charger les catégories au démarrage
 
@@ -31,8 +35,6 @@ export class CategoryService {
 
   // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
-    // console.log('🔍 Chargement des catégories...');
-
     this.http
       .get<Category[]>(this.apiUrl)
       .pipe(
@@ -64,7 +66,7 @@ export class CategoryService {
           );
         })
       )
-      .subscribe(); // ✅ Permet de déclencher l'observable sans utiliser `.subscribe()` directement dans le callback
+      .subscribe();
   }
 
   // Récupérer toutes les catégories
@@ -84,7 +86,7 @@ export class CategoryService {
       tap(() => {
         this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
       }),
-      catchError(this.handleError)
+      catchError(this.handleError.bind(this))
     );
   }
 
@@ -95,7 +97,7 @@ export class CategoryService {
       tap(() => {
         this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
       }),
-      catchError(this.handleError)
+      catchError(this.handleError.bind(this))
     );
   }
 
@@ -106,7 +108,7 @@ export class CategoryService {
       tap(() => {
         this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
       }),
-      catchError(this.handleError)
+      catchError(this.handleError.bind(this))
     );
   }
 
@@ -114,16 +116,19 @@ export class CategoryService {
     let errorMessage = 'Une erreur inconnue est survenue.';
 
     if (error.status === 400) {
-      errorMessage =
-        error.error.errors?.map((err: any) => err.msg).join('<br>') ||
-        'Requête invalide.';
+      errorMessage = error.error.msg || 'Requête invalide.';
     } else if (error.status === 404) {
       errorMessage = error.error.msg || 'Erreur 404 : Ressource introuvable.';
     } else if (error.status === 500) {
       errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
     }
 
-    return throwError(() => errorMessage);
+    this.dialog.open(InfoDialogComponent, {
+      width: '400px',
+      data: { message: errorMessage, type: 'error' },
+    });
+
+    return throwError(() => new Error(errorMessage));
   }
 }
 

@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 		console.error(err.message);
 		res
 			.status(500)
-			.json({ error: 'Erreur youpi lors de la récupération des catégories.' });
+			.json({ error: 'Erreur lors de la récupération des catégories.' });
 	}
 });
 
@@ -70,21 +70,23 @@ router.post(
 	async (req, res) => {
 	try {
 		let { name } = req.body;
-		
-		// Nettoyage des entrées utilisateur
 		name = sanitize(name);
 
 		const existingCategory = await Category.findOne({ name });
+
 		if (existingCategory) {
 			return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
 		}
 
 		const newCategory = new Category({ name });
-
 		const category = await newCategory.save();
+
 		res.status(201).json(category);
 	} catch (err) {
-		console.error('Erreur lors de l’ajout de la catégorie.');
+		console.error('Erreur lors de l’ajout de la catégorie: ', err);
+		if (err.code === 11000) {
+			return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
+		}
 		res.status(500).json({ error: 'Erreur serveur' });
 	}
 });
@@ -94,8 +96,9 @@ router.put(
 	'/:id',
 	[
 		check('name')
-			.optional()
 			.trim()
+			.notEmpty()
+			.withMessage('Le champ "nom" est obligatoire.')
 			.isLength({ min: 2, max: 50 })
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
@@ -107,33 +110,37 @@ router.put(
 	],
 	validateRequest,
 	async (req, res) => {
-	try {
-		let { name } = req.body;
+		try {
+			let { name } = req.body;
+			name = sanitize(name);
 
-		const category = await Category.findById(req.params.id);
-		if (!category) {
-			return res.status(404).json({ msg: 'Catégorie non trouvée.' });
-		}
+			const category = await Category.findById(req.params.id);
+			if (!category) {
+				return res.status(404).json({ msg: 'Catégorie non trouvée.' });
+			}
 
-		// Nettoyage des entrées utilisateur
-		category.name = sanitize(name) || category.name;
+			const existingCategory = await Category.findOne({ name });
+			if (existingCategory && existingCategory._id.toString() !== req.params.id) {
+				return res.status(400).json({ msg: 'Une autre catégorie porte déjà ce nom.' });
+			}
 
-		const updatedCategory = await category.save();
+			// Nettoyage des entrées utilisateur
+			category.name = name;
+			const updatedCategory = await category.save();
 
-		// const updatedCategory = await Category.findByIdAndUpdate(
-		// 	req.params.id,
-		// 	{ name, description },
-		// 	{ new: true } // Retourne la catégorie mise à jour
-		// );
-		res.status(200).json(updatedCategory);
-	} catch (err) {
+			res.status(200).json(updatedCategory);
+		} catch (err) {
 			console.error(
 				'Erreur lors de la mise à jour de la catégorie:',
 				err.message
 			);
-		res.status(500).send('Erreur serveur');
+			if (err.code === 11000) {
+				return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
+			}
+			res.status(500).send('Erreur serveur');
+		}
 	}
-});
+);
 
 // Supprimer une catégorie
 router.delete('/:id', async (req, res) => {

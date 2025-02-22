@@ -24,12 +24,6 @@ router.get('/', async (req, res) => {
 			.populate('category')
 			.populate('composition');
 
-		// Appliquer "Sans catégorie" aux produits sans catégorie
-		// products = products.map((product) => ({
-		// 	...product,
-		// 	category: product.category || DEFAULT_CATEGORY,
-		// }));
-
 		if (req.query.view === 'full') {
 			try {
 				products = products.map((product) => {
@@ -91,12 +85,6 @@ router.get('/by-ingredient/:id', async (req, res) => {
 		let products = await Product.find({ composition: req.params.id })
 			.populate('category')
 			.populate('composition');
-		
-		// // Appliquer "Sans catégorie" si nécessaire
-		// products = products.map((product) => ({
-		// 	...product,
-		// 	category: product.category || DEFAULT_CATEGORY,
-		// }));
 
 		res.status(200).json(products);
 	} catch (error) {
@@ -118,12 +106,6 @@ router.get('/:id', async (req, res) => {
 		if (!product) {
 			return res.status(404).json({ message: 'Produit non trouvé' });
 		}
-
-		// // Appliquer "Sans catégorie" si la catégorie est absente
-		// product = {
-		// 	...product,
-		// 	category: product.category || DEFAULT_CATEGORY,
-		// };
 
 		// Si "view=full", calculer les allergènes et régimes alimentaires
 		if (req.query.view === 'full') {
