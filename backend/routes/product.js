@@ -299,7 +299,12 @@ router.put(
 			}
 
 			const existingProduct = await Product.findOne({ name });
-			if (existingProduct && existingProduct._id !== product._id) {
+			if (
+				existingProduct &&
+				existingProduct._id.toString() !== product._id.toString()
+			) {
+				console.log('📋 existingProduct :', existingProduct);
+				console.log('📋 product :', product);
 				return res
 					.status(400)
 					.json({ msg: 'Un autre produit porte déjà ce nom.' });

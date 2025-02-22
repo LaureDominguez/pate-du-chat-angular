@@ -14,8 +14,8 @@ module.exports = (app) => {
 
 	// Logger toutes les requêtes entrantes
 	app.use((req, res, next) => {
-		console.log(`🔍 [Request] ${req.method} ${req.url}`);
-		console.log('Headers:', req.headers);
+		// console.log(`🔍 [Request] ${req.method} ${req.url}`);
+		// console.log('Headers:', req.headers);
 		next();
 	});
 
@@ -25,7 +25,7 @@ module.exports = (app) => {
 
 	// Servir les fichiers statiques (uploads)
 	app.use('/uploads', (req, res, next) => {
-		console.log('📂 [Static] Serving file:', req.url);
+		// console.log('📂 [Static] Serving file:', req.url);
 		next();
 	});
 

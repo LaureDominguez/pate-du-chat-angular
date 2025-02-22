@@ -21,7 +21,7 @@ router.get('/:filename', (req, res) => {
 
 // Ajouter une image
 router.post('/', upload.array('images', 10), (req, res) => {
-    console.log('route images -> req.files:', req.files);
+    // console.log('route images -> req.files:', req.files);
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'Aucune image envoyée' });
@@ -44,7 +44,7 @@ router.delete('/:filename', (req, res) => {
 	const filename = req.params.filename;
     const filePath = path.join(__dirname, '../../uploads', filename);
     
-    console.log('route images -> delete -> req.files:', req.files);
+    // console.log('route images -> delete -> req.files:', req.files);
 
 	// Vérifier si le fichier existe avant de le supprimer
 	fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -62,7 +62,7 @@ router.delete('/:filename', (req, res) => {
 					.json({ error: "Erreur lors de la suppression de l'image" });
 			}
 
-			console.log(`Image supprimée : ${filename}`);
+			// console.log(`Image supprimée : ${filename}`);
 			return res.status(200).json({ message: 'Image supprimée avec succès' });
 		});
 	});

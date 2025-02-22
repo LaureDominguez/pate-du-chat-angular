@@ -16,10 +16,10 @@ const validateRequest = (req, res, next) => {
 // Récupérer toutes les catégories
 router.get('/', async (req, res) => {
 	try {
-    	console.log('🔍 API /categories appelée');
+    	// console.log('🔍 API /categories appelée');
 		const categories = await Category.find().populate('productCount');
 
-		console.log('📌 Catégories trouvées :', categories);
+		// console.log('📌 Catégories trouvées :', categories);
 		if (!categories || categories.length === 0) {
 				console.warn('⚠️ Aucune catégorie trouvée en base !');
 		}
@@ -146,9 +146,9 @@ router.put(
 router.delete('/:id', async (req, res) => {
 	try {
 		const categoryId = req.params.id;
-		console.log('🚮 Catégorie supprimée :', categoryId);
+		// console.log('🚮 Catégorie supprimée :', categoryId);
 		const DEFAULT_CATEGORY_ID = '65a123456789abcd12345678';
-		console.log('🚮 Catégorie par défaut :', DEFAULT_CATEGORY_ID);
+		// console.log('🚮 Catégorie par défaut :', DEFAULT_CATEGORY_ID);
 
 		if (!categoryId) {
 			return res.status(404).json({ msg: 'ID inconnu.' });
@@ -164,7 +164,7 @@ router.delete('/:id', async (req, res) => {
 		const category = await Category.findById(categoryId).populate(
 			'productCount'
 		);
-		console.log('🔍 Nombre de produits associés à la catégorie :', category);
+		// console.log('🔍 Nombre de produits associés à la catégorie :', category);
 
 		if (!category) {
 			return res.status(404).json({ msg: 'Catégorie introuvable.' });
@@ -175,12 +175,12 @@ router.delete('/:id', async (req, res) => {
 				{ category: category._id },
 				{ category: DEFAULT_CATEGORY_ID }
 			)
-			console.log('🔄 Produits déplacés vers la catégorie par défaut.');
+			// console.log('🔄 Produits déplacés vers la catégorie par défaut.');
 		}
 
 		await Category.findByIdAndDelete(req.params.id);
 
-		console.log(`✅ Catégorie supprimée : ${category.name}`);
+		// console.log(`✅ Catégorie supprimée : ${category.name}`);
 
 		res.status(200).json({
 			message: 'Catégorie supprimée avec succès.',
