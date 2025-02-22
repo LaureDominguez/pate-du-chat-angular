@@ -52,7 +52,7 @@
     @include layout-common.fill();
   }
 
-  &:focus .mat-focus-indicator::before {
+  &:focus > .mat-focus-indicator::before {
     content: '';
   }
 }
@@ -71,19 +71,19 @@
       @include token-utils.create-token-slot(background-color, disabled-state-layer-color);
     }
 
-    &:hover .mat-mdc-button-persistent-ripple::before {
+    &:hover > .mat-mdc-button-persistent-ripple::before {
       @include token-utils.create-token-slot(opacity, hover-state-layer-opacity);
     }
 
     &.cdk-program-focused,
     &.cdk-keyboard-focused,
     &.mat-mdc-button-disabled-interactive:focus {
-      .mat-mdc-button-persistent-ripple::before {
+      > .mat-mdc-button-persistent-ripple::before {
         @include token-utils.create-token-slot(opacity, focus-state-layer-opacity);
       }
     }
 
-    &:active .mat-mdc-button-persistent-ripple::before {
+    &:active > .mat-mdc-button-persistent-ripple::before {
       @include token-utils.create-token-slot(opacity, pressed-state-layer-opacity);
     }
   }

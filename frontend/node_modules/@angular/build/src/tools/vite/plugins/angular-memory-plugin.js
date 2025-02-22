@@ -14,9 +14,11 @@ exports.createAngularMemoryPlugin = createAngularMemoryPlugin;
 const node_assert_1 = __importDefault(require("node:assert"));
 const promises_1 = require("node:fs/promises");
 const node_path_1 = require("node:path");
+const node_url_1 = require("node:url");
 const load_esm_1 = require("../../../utils/load-esm");
 const ANGULAR_PREFIX = '/@ng/';
 const VITE_FS_PREFIX = '/@fs/';
+const FILE_PROTOCOL = 'file:';
 async function createAngularMemoryPlugin(options) {
     const { virtualProjectRoot, outputFiles, external } = options;
     const { normalizePath } = await (0, load_esm_1.loadEsmModule)('vite');
@@ -29,8 +31,15 @@ async function createAngularMemoryPlugin(options) {
                 return;
             }
             // For SSR with component HMR, pass through as a virtual module
-            if (ssr && source.startsWith(ANGULAR_PREFIX)) {
-                return '\0' + source;
+            if (ssr && source.startsWith(FILE_PROTOCOL) && source.includes(ANGULAR_PREFIX)) {
+                // Vite will resolve these these files example:
+                // `file:///@ng/component?c=src%2Fapp%2Fapp.component.ts%40AppComponent&t=1737017253850`
+                const sourcePath = (0, node_url_1.fileURLToPath)(source);
+                const sourceWithoutRoot = normalizePath('/' + (0, node_path_1.relative)(virtualProjectRoot, sourcePath));
+                if (sourceWithoutRoot.startsWith(ANGULAR_PREFIX)) {
+                    const [, query] = source.split('?', 2);
+                    return `\0${sourceWithoutRoot}?${query}`;
+                }
             }
             // Prevent vite from resolving an explicit external dependency (`externalDependencies` option)
             if (external?.includes(source)) {
@@ -38,26 +47,16 @@ async function createAngularMemoryPlugin(options) {
                 // `/@id/${source}` but is currently closer to a raw external than a resolved file path.
                 return source;
             }
-            if (importer) {
-                if (source[0] === '.' && normalizePath(importer).startsWith(virtualProjectRoot)) {
+            if (importer && source[0] === '.') {
+                const normalizedImporter = normalizePath(importer);
+                if (normalizedImporter.startsWith(virtualProjectRoot)) {
                     // Remove query if present
-                    const [importerFile] = importer.split('?', 1);
+                    const [importerFile] = normalizedImporter.split('?', 1);
                     source = '/' + (0, node_path_1.join)((0, node_path_1.dirname)((0, node_path_1.relative)(virtualProjectRoot, importerFile)), source);
-                }
-                else if (!ssr &&
-                    source[0] === '/' &&
-                    importer.endsWith('index.html') &&
-                    normalizePath(importer).startsWith(virtualProjectRoot)) {
-                    // This is only needed when using SSR and `angularSsrMiddleware` (old style) to correctly resolve
-                    // .js files when using lazy-loading.
-                    // Remove query if present
-                    const [importerFile] = importer.split('?', 1);
-                    source =
-                        '/' + (0, node_path_1.join)((0, node_path_1.dirname)((0, node_path_1.relative)(virtualProjectRoot, importerFile)), (0, node_path_1.basename)(source));
                 }
             }
             const [file] = source.split('?', 1);
-            if (outputFiles.has(file)) {
+            if (outputFiles.has(normalizePath(file))) {
                 return (0, node_path_1.join)(virtualProjectRoot, source);
             }
         },
@@ -67,14 +66,14 @@ async function createAngularMemoryPlugin(options) {
                 // Extract component identifier (first character is rollup virtual module null)
                 const requestUrl = new URL(id.slice(1), 'http://localhost');
                 const componentId = requestUrl.searchParams.get('c');
-                return (componentId && options.templateUpdates?.get(componentId)) ?? '';
+                return (componentId && options.templateUpdates?.get(encodeURIComponent(componentId))) ?? '';
             }
             const [file] = id.split('?', 1);
             const relativeFile = '/' + normalizePath((0, node_path_1.relative)(virtualProjectRoot, file));
             const codeContents = outputFiles.get(relativeFile)?.contents;
             if (codeContents === undefined) {
                 if (relativeFile.endsWith('/node_modules/vite/dist/client/client.mjs')) {
-                    return options.skipViteClient ? '' : loadViteClientCode(file);
+                    return loadViteClientCode(file, options.disableViteTransport);
                 }
                 return undefined;
             }
@@ -97,9 +96,9 @@ async function createAngularMemoryPlugin(options) {
  * @param file The absolute path to the Vite client code.
  * @returns
  */
-async function loadViteClientCode(file) {
+async function loadViteClientCode(file, disableViteTransport = false) {
     const originalContents = await (0, promises_1.readFile)(file, 'utf-8');
-    const updatedContents = originalContents.replace(`"You can also disable this overlay by setting ",
+    let updatedContents = originalContents.replace(`"You can also disable this overlay by setting ",
       h("code", { part: "config-option-name" }, "server.hmr.overlay"),
       " to ",
       h("code", { part: "config-option-value" }, "false"),
@@ -107,5 +106,11 @@ async function loadViteClientCode(file) {
       h("code", { part: "config-file-name" }, hmrConfigName),
       "."`, '');
     (0, node_assert_1.default)(originalContents !== updatedContents, 'Failed to update Vite client error overlay text.');
+    if (disableViteTransport) {
+        const previousUpdatedContents = updatedContents;
+        updatedContents = updatedContents.replace('transport.connect(handleMessage)', '');
+        (0, node_assert_1.default)(previousUpdatedContents !== updatedContents, 'Failed to update Vite client WebSocket disable.');
+        updatedContents = updatedContents.replace('console.debug("[vite] connecting...")', '');
+    }
     return updatedContents;
 }
