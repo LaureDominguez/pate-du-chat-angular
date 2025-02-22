@@ -4,14 +4,15 @@ import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [NavComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  constructor(private themeService: ThemeService) { }
+  title = 'les_pates_du_chat';
   
+  constructor(private themeService: ThemeService) {}
+
   ngOnInit() {
     this.themeService.loadTheme().subscribe((theme) => {
       this.themeService.applyTheme(theme.schemes.light);

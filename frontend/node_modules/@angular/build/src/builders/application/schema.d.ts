@@ -118,6 +118,12 @@ export interface Schema {
      */
     outputHashing?: OutputHashing;
     /**
+     * Defines the build output target. 'static': Generates a static site for deployment on any
+     * static hosting service. 'server': Produces an application designed for deployment on a
+     * server that supports server-side rendering (SSR).
+     */
+    outputMode?: OutputMode;
+    /**
      * Specify the output path relative to workspace root.
      */
     outputPath: OutputPathUnion;
@@ -147,6 +153,10 @@ export interface Schema {
      * Global scripts to be included in the build.
      */
     scripts?: ScriptElement[];
+    /**
+     * Security features to protect against XSS and other common attacks
+     */
+    security?: Security;
     /**
      * The full path for the server entry point to the application, relative to the current
      * workspace.
@@ -394,6 +404,15 @@ export declare enum OutputHashing {
     None = "none"
 }
 /**
+ * Defines the build output target. 'static': Generates a static site for deployment on any
+ * static hosting service. 'server': Produces an application designed for deployment on a
+ * server that supports server-side rendering (SSR).
+ */
+export declare enum OutputMode {
+    Server = "server",
+    Static = "static"
+}
+/**
  * Specify the output path relative to workspace root.
  */
 export type OutputPathUnion = OutputPathClass | string;
@@ -450,6 +469,31 @@ export interface ScriptClass {
     input: string;
 }
 /**
+ * Security features to protect against XSS and other common attacks
+ */
+export interface Security {
+    /**
+     * Enables automatic generation of a hash-based Strict Content Security Policy
+     * (https://web.dev/articles/strict-csp#choose-hash) based on scripts in index.html. Will
+     * default to true once we are out of experimental/preview phases.
+     */
+    autoCsp?: AutoCspUnion;
+}
+/**
+ * Enables automatic generation of a hash-based Strict Content Security Policy
+ * (https://web.dev/articles/strict-csp#choose-hash) based on scripts in index.html. Will
+ * default to true once we are out of experimental/preview phases.
+ */
+export type AutoCspUnion = boolean | AutoCspClass;
+export interface AutoCspClass {
+    /**
+     * Include the `unsafe-eval` directive (https://web.dev/articles/strict-csp#remove-eval) in
+     * the auto-CSP. Please only enable this if you are absolutely sure that you need to, as
+     * allowing calls to eval will weaken the XSS defenses provided by the auto-CSP.
+     */
+    unsafeEval?: boolean;
+}
+/**
  * Generates a service worker configuration.
  */
 export type ServiceWorker = boolean | string;
@@ -485,6 +529,37 @@ export interface SsrClass {
      * The server entry-point that when executed will spawn the web server.
      */
     entry?: string;
+    /**
+     * Specifies the platform for which the server bundle is generated. This affects the APIs
+     * and modules available in the server-side code.
+     *
+     * - `node`:  (Default) Generates a bundle optimized for Node.js environments.
+     * - `neutral`: Generates a platform-neutral bundle suitable for environments like edge
+     * workers, and other serverless platforms. This option avoids using Node.js-specific APIs,
+     * making the bundle more portable.
+     *
+     * Please note that this feature does not provide polyfills for Node.js modules.
+     * Additionally, it is experimental, and the schematics may undergo changes in future
+     * versions.
+     */
+    experimentalPlatform?: ExperimentalPlatform;
+}
+/**
+ * Specifies the platform for which the server bundle is generated. This affects the APIs
+ * and modules available in the server-side code.
+ *
+ * - `node`:  (Default) Generates a bundle optimized for Node.js environments.
+ * - `neutral`: Generates a platform-neutral bundle suitable for environments like edge
+ * workers, and other serverless platforms. This option avoids using Node.js-specific APIs,
+ * making the bundle more portable.
+ *
+ * Please note that this feature does not provide polyfills for Node.js modules.
+ * Additionally, it is experimental, and the schematics may undergo changes in future
+ * versions.
+ */
+export declare enum ExperimentalPlatform {
+    Neutral = "neutral",
+    Node = "node"
 }
 /**
  * Options to pass to style preprocessors.
@@ -494,6 +569,32 @@ export interface StylePreprocessorOptions {
      * Paths to include. Paths will be resolved to workspace root.
      */
     includePaths?: string[];
+    /**
+     * Options to pass to the sass preprocessor.
+     */
+    sass?: Sass;
+}
+/**
+ * Options to pass to the sass preprocessor.
+ */
+export interface Sass {
+    /**
+     * A set of deprecations to treat as fatal. If a deprecation warning of any provided type is
+     * encountered during compilation, the compiler will error instead. If a Version is
+     * provided, then all deprecations that were active in that compiler version will be treated
+     * as fatal.
+     */
+    fatalDeprecations?: string[];
+    /**
+     * A set of future deprecations to opt into early. Future deprecations passed here will be
+     * treated as active by the compiler, emitting warnings as necessary.
+     */
+    futureDeprecations?: string[];
+    /**
+     * A set of active deprecations to ignore. If a deprecation warning of any provided type is
+     * encountered during compilation, the compiler will ignore it instead.
+     */
+    silenceDeprecations?: string[];
 }
 export type StyleElement = StyleClass | string;
 export interface StyleClass {

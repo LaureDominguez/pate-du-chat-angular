@@ -29,6 +29,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.execute = execute;
 const private_1 = require("@angular/build/private");
@@ -37,6 +40,7 @@ const build_webpack_1 = require("@angular-devkit/build-webpack");
 const promises_1 = require("node:fs/promises");
 const path = __importStar(require("node:path"));
 const rxjs_1 = require("rxjs");
+const webpack_1 = __importDefault(require("webpack"));
 const configs_1 = require("../../tools/webpack/configs");
 const helpers_1 = require("../../tools/webpack/utils/helpers");
 const stats_1 = require("../../tools/webpack/utils/stats");
@@ -146,7 +150,18 @@ async function initialize(options, context, webpackConfigurationTransform) {
         // We use the platform to determine the JavaScript syntax output.
         wco.buildOptions.supportedBrowsers ??= [];
         wco.buildOptions.supportedBrowsers.push(...browserslist('maintained node versions'));
-        return [getPlatformServerExportsConfig(wco), (0, configs_1.getCommonConfig)(wco), (0, configs_1.getStylesConfig)(wco)];
+        return [
+            getPlatformServerExportsConfig(wco),
+            (0, configs_1.getCommonConfig)(wco),
+            (0, configs_1.getStylesConfig)(wco),
+            {
+                plugins: [
+                    new webpack_1.default.DefinePlugin({
+                        'ngServerMode': true,
+                    }),
+                ],
+            },
+        ];
     });
     if (options.deleteOutputPath) {
         await (0, utils_1.deleteOutputDir)(context.workspaceRoot, originalOutputPath);
@@ -183,13 +198,16 @@ function getPlatformServerExportsConfig(wco) {
     // Only add `@angular/platform-server` exports when it is installed.
     // In some cases this builder is used when `@angular/platform-server` is not installed.
     // Example: when using `@nguniversal/common/clover` which does not need `@angular/platform-server`.
-    return (0, helpers_1.isPlatformServerInstalled)(wco.root)
+    return (0, helpers_1.isPackageInstalled)(wco.root, '@angular/platform-server')
         ? {
             module: {
                 rules: [
                     {
                         loader: require.resolve('./platform-server-exports-loader'),
                         include: [path.resolve(wco.root, wco.buildOptions.main)],
+                        options: {
+                            angularSSRInstalled: (0, helpers_1.isPackageInstalled)(wco.root, '@angular/ssr'),
+                        },
                     },
                 ],
             },

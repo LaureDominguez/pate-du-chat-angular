@@ -1,0 +1,48 @@
+::ng-deep .mat-mdc-dialog-surface {
+  background-color: var(--surfaceBright);
+}
+
+form {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 40rem;
+  width: 95%;
+  overflow: auto;
+  margin: auto;
+}
+form mat-form-field {
+  border-radius: 10px;
+  color: var(--onSurface);
+  background-color: var(--surfaceBright);
+}
+form mat-form-field:focus-within {
+  color: var(--onSurface);
+  background-color: var(--surfaceContainer);
+}
+form mat-form-field.ng-invalid.ng-touched {
+  color: var(--error);
+  background-color: var(--errorContainer);
+}
+
+mat-label {
+  font-weight: bold;
+}
+
+mat-option {
+  color: var(--onSurface) !important;
+  background-color: var(--surfaceContainer) !important;
+}
+mat-option:hover {
+  color: var(--onPrimaryFixed) !important;
+  background-color: var(--primaryFixed) !important;
+}
+
+mat-slide-toggle {
+  color: red;
+}
+
+:ng-deep .mat-mdc-slide-toggle {
+  color: green;
+}/*# sourceMappingURL=product-form.component.css.map */

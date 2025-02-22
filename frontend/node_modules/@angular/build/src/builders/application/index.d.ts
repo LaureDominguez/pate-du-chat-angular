@@ -6,7 +6,6 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { BuilderContext, BuilderOutput } from '@angular-devkit/architect';
-import type { Plugin } from 'esbuild';
 import { BuildOutputFile } from '../../tools/esbuild/bundler-context';
 import { ApplicationBuilderExtensions, ApplicationBuilderInternalOptions } from './options';
 import { Result } from './results';
@@ -26,21 +25,6 @@ export interface ApplicationBuilderOutput extends BuilderOutput {
  * Builds an application using the `application` builder with the provided
  * options.
  *
- * Usage of the `plugins` parameter is NOT supported and may cause unexpected
- * build output or build failures.
- *
- * @experimental Direct usage of this function is considered experimental.
- *
- * @param options The options defined by the builder's schema to use.
- * @param context An Architect builder context instance.
- * @param plugins An array of plugins to apply to the main code bundling.
- * @returns The build output results of the build.
- */
-export declare function buildApplication(options: ApplicationBuilderOptions, context: BuilderContext, plugins?: Plugin[]): AsyncIterable<ApplicationBuilderOutput>;
-/**
- * Builds an application using the `application` builder with the provided
- * options.
- *
  * Usage of the `extensions` parameter is NOT supported and may cause unexpected
  * build output or build failures.
  *
@@ -52,5 +36,5 @@ export declare function buildApplication(options: ApplicationBuilderOptions, con
  * @returns The build output results of the build.
  */
 export declare function buildApplication(options: ApplicationBuilderOptions, context: BuilderContext, extensions?: ApplicationBuilderExtensions): AsyncIterable<ApplicationBuilderOutput>;
-declare const _default: import("../../../../../angular_devkit/architect/src/internal").Builder<ApplicationBuilderOptions & import("../../../../../angular_devkit/core/src").JsonObject>;
+declare const _default: import("../../../../../angular_devkit/architect/src/internal").Builder<ApplicationBuilderOptions & import("../../../../../angular_devkit/core").JsonObject>;
 export default _default;

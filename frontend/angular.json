@@ -13,6 +13,9 @@
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
+      "i18n": {
+        "sourceLocale": "fr"
+      },
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
@@ -33,7 +36,10 @@
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules"]
             },
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/assets/themes/m3-theme.scss",
+              "src/styles.scss"
+            ],
             "scripts": [],
             "server": "src/main.server.ts",
             "prerender": true,
@@ -96,11 +102,17 @@
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules"]
             },
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/assets/themes/m3-theme.scss",
+              "src/styles.scss"
+            ],
             "scripts": []
           }
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "0005ef2e-09b9-45a6-8017-ffc32acb3016"
   }
 }

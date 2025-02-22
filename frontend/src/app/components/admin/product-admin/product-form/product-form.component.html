@@ -1,0 +1,159 @@
+<h2 mat-dialog-title>
+    {{ data.product ? 'Modifier un produit' : 'Ajouter un produit' }}
+</h2>
+
+<form [formGroup]="productForm" (ngSubmit)="save()">
+    <!-- Nom -->
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="name" />
+        <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
+        <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
+    </mat-form-field>
+
+    <!-- Catégorie -->
+    <mat-form-field appearance="fill">
+        <mat-label>Catégorie</mat-label>
+        <input 
+            type="text" 
+            matInput 
+            [formControl]="categoryCtrl" 
+            [matAutocomplete]="categoryAuto"
+            formControlName="category" 
+            placeholder="Rechercher une catégorie" 
+        />
+        <mat-autocomplete #categoryAuto="matAutocomplete" (optionSelected)="addCategory($event.option.value)"
+            hideSingleSelectionIndicator>
+            <!-- Affichage des résultats filtrés -->
+            <mat-option *ngFor="let category of filteredCategories | async" [value]="category">
+                {{ category.name }}
+            </mat-option>
+
+            <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->
+            <mat-option *ngIf="categoryNotFound" [value]="'categoryNotFound'">
+                Aucun résultat. Cliquez ici pour ajouter une nouvelle catégorie.
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+
+
+    <!-- Description -->
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+        <mat-error *ngIf="description?.hasError('maxlength')">Maximum 500 caractères.</mat-error>
+        <mat-error *ngIf="description?.hasError('pattern')">Certains caractères ne sont pas autorisés.</mat-error>
+    </mat-form-field>
+
+    <!-- Composition -->
+    <mat-form-field appearance="fill">
+        <mat-label>Ajouter un ingrédient</mat-label>
+        <input type="text" matInput [formControl]="ingredientCtrl" [matAutocomplete]="ingredientAuto"
+            formControlName="composition" placeholder="Rechercher un ingrédient" />
+        <mat-error *ngIf="composition.length === 0">Ajoutez au moins un ingrédient.</mat-error>
+        <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)"
+            hideSingleSelectionIndicator>
+            <!-- Affichage des résultats filtrés -->
+            <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient" class="composition">
+                <span>{{ ingredient.name }}</span>
+                <mat-icon *ngIf="isIngredientSelected(ingredient)">check</mat-icon>
+            </mat-option>
+
+            <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->
+            <mat-option *ngIf="ingredientNotFound" [value]="'ingredientNotFound'">
+                Aucun résultat. Cliquez ici pour ajouter un nouvel ingrédient.
+            </mat-option>
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <!-- Liste des ingrédients -->
+    <mat-chip-set>
+        <mat-chip *ngFor="let ingredient of composition" [removable]="true" (removed)="removeIngredient(ingredient)"
+            [matTooltip]="getIngredientTooltip(ingredient)" matTooltipPosition="below" matTooltipClass="custom-tooltip">
+            {{ ingredient.name }}
+            <button mat-icon-button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+            </button>
+        </mat-chip>
+    </mat-chip-set>
+
+
+    <!-- Prix -->
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Prix</mat-label>
+        <input matInput type="number" formControlName="price" />
+        <span matSuffix>€</span>
+        <mat-error *ngIf="price?.hasError('required')">Le prix est obligatoire.</mat-error>
+        <mat-error *ngIf="price?.hasError('min')">Le prix doit être un nombre positif ou égale à 0.</mat-error>
+        <mat-error *ngIf="price?.hasError('pattern')">Le format du prix est incorrect (ex: 10.99).</mat-error>
+    </mat-form-field>
+
+    <!-- Stock -->
+    <section class="stock">
+        <mat-slide-toggle formControlName="stock" labelPosition="before">
+            En stock
+        </mat-slide-toggle>
+    </section>
+
+    <mat-divider></mat-divider>
+
+
+    <!-- Images -->
+    <div class="file-upload">
+        <mat-label>Images</mat-label>
+        <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
+            <mat-icon>file_upload</mat-icon> Importer une image
+        </button>
+        <input 
+            #fileInput 
+            id="imageUpload" 
+            type="file" 
+            multiple 
+            (change)="onFileSelected($event)" 
+            accept="image/*"
+            style="display: none;" 
+        />
+    </div>
+
+    <div class="previews" *ngIf="filePreviews.length > 0">
+        <mat-label *ngIf="existingImageUrls.length > 0">Images à ajouter :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let preview of filePreviews; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="preview" alt="Image preview" />
+                    <button mat-icon-button color="warn" (click)="removeFile(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+
+    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
+        <mat-label *ngIf="filePreviews.length > 0">Images existantes :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="image" alt="Existing image" />
+                    <div>
+                        <button mat-icon-button (click)="removeExistingImage(i)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="downloadImage(image)">
+                            <mat-icon>download</mat-icon>
+                        </button>
+                    </div>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Validation -->
+    <div mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+</form>

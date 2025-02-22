@@ -1,0 +1,19 @@
+table {
+    .mat-column-allergens, 
+    .mat-column-vegan, 
+    .mat-column-vegeta {
+        width: 32px;
+        padding-right: 24px;
+        text-align: center;
+    }
+    
+    .mat-column-price, .mat-column-stock {
+        width: 10%;
+        text-align: center;
+    }
+    
+    th:last-child, td:last-child {
+        justify-content: center;
+        text-align: center;
+    }
+}

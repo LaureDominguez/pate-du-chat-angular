@@ -18,9 +18,10 @@ const load_result_cache_1 = require("./load-result-cache");
 const utils_1 = require("./utils");
 var BuildOutputFileType;
 (function (BuildOutputFileType) {
-    BuildOutputFileType[BuildOutputFileType["Browser"] = 1] = "Browser";
-    BuildOutputFileType[BuildOutputFileType["Media"] = 2] = "Media";
-    BuildOutputFileType[BuildOutputFileType["Server"] = 3] = "Server";
+    BuildOutputFileType[BuildOutputFileType["Browser"] = 0] = "Browser";
+    BuildOutputFileType[BuildOutputFileType["Media"] = 1] = "Media";
+    BuildOutputFileType[BuildOutputFileType["ServerApplication"] = 2] = "ServerApplication";
+    BuildOutputFileType[BuildOutputFileType["ServerRoot"] = 3] = "ServerRoot";
     BuildOutputFileType[BuildOutputFileType["Root"] = 4] = "Root";
 })(BuildOutputFileType || (exports.BuildOutputFileType = BuildOutputFileType = {}));
 /**
@@ -124,12 +125,13 @@ class BundlerContext {
      * All builds use the `write` option with a value of `false` to allow for the output files
      * build result array to be populated.
      *
+     * @param force If true, always rebundle.
      * @returns If output files are generated, the full esbuild BuildResult; if not, the
      * warnings and errors for the attempted build.
      */
-    async bundle() {
+    async bundle(force) {
         // Return existing result if present
-        if (this.#esbuildResult) {
+        if (!force && this.#esbuildResult) {
             return this.#esbuildResult;
         }
         const result = await this.#performBundle();
@@ -138,6 +140,7 @@ class BundlerContext {
         }
         return result;
     }
+    // eslint-disable-next-line max-lines-per-function
     async #performBundle() {
         // Create esbuild options if not present
         if (this.#esbuildOptions === undefined) {
@@ -164,12 +167,6 @@ class BundlerContext {
             else {
                 // For non-incremental builds, perform a single build
                 result = await (0, esbuild_1.build)(this.#esbuildOptions);
-            }
-            if (this.#platformIsServer) {
-                for (const entry of Object.values(result.metafile.outputs)) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    entry['ng-platform-server'] = true;
-                }
             }
         }
         catch (failure) {
@@ -215,6 +212,7 @@ class BundlerContext {
                 warnings: result.warnings,
             };
         }
+        const { 'ng-platform-server': isPlatformServer = false, 'ng-ssr-entry-bundle': isSsrEntryBundle = false, } = result.metafile;
         // Find all initial files
         const initialFiles = new Map();
         for (const outputFile of result.outputFiles) {
@@ -235,7 +233,7 @@ class BundlerContext {
                         name,
                         type,
                         entrypoint: true,
-                        serverFile: this.#platformIsServer,
+                        serverFile: isPlatformServer,
                         depth: 0,
                     };
                     if (!this.initialFilter || this.initialFilter(record)) {
@@ -263,7 +261,7 @@ class BundlerContext {
                         type: initialImport.kind === 'import-rule' ? 'style' : 'script',
                         entrypoint: false,
                         external: initialImport.external,
-                        serverFile: this.#platformIsServer,
+                        serverFile: isPlatformServer,
                         depth: entryRecord.depth + 1,
                     };
                     if (!this.initialFilter || this.initialFilter(record)) {
@@ -280,6 +278,7 @@ class BundlerContext {
         for (const { imports } of Object.values(result.metafile.outputs)) {
             for (const importData of imports) {
                 if (!importData.external ||
+                    utils_1.SERVER_GENERATED_EXTERNALS.has(importData.path) ||
                     (importData.kind !== 'import-statement' &&
                         importData.kind !== 'dynamic-import' &&
                         importData.kind !== 'require-call')) {
@@ -295,22 +294,32 @@ class BundlerContext {
             if (!/\.([cm]?js|css|wasm)(\.map)?$/i.test(file.path)) {
                 fileType = BuildOutputFileType.Media;
             }
+            else if (isPlatformServer) {
+                fileType = isSsrEntryBundle
+                    ? BuildOutputFileType.ServerRoot
+                    : BuildOutputFileType.ServerApplication;
+            }
             else {
-                fileType = this.#platformIsServer
-                    ? BuildOutputFileType.Server
-                    : BuildOutputFileType.Browser;
+                fileType = BuildOutputFileType.Browser;
             }
             return (0, utils_1.convertOutputFile)(file, fileType);
         });
+        let externalConfiguration = this.#esbuildOptions.external;
+        if (isPlatformServer && externalConfiguration) {
+            externalConfiguration = externalConfiguration.filter((dep) => !utils_1.SERVER_GENERATED_EXTERNALS.has(dep));
+            if (!externalConfiguration.length) {
+                externalConfiguration = undefined;
+            }
+        }
         // Return the successful build results
         return {
             ...result,
             outputFiles,
             initialFiles,
             externalImports: {
-                [this.#platformIsServer ? 'server' : 'browser']: externalImports,
+                [isPlatformServer ? 'server' : 'browser']: externalImports,
             },
-            externalConfiguration: this.#esbuildOptions.external,
+            externalConfiguration,
             errors: undefined,
         };
     }
@@ -327,9 +336,6 @@ class BundlerContext {
                 }
             }
         }
-    }
-    get #platformIsServer() {
-        return this.#esbuildOptions?.platform === 'node';
     }
     /**
      * Invalidate a stored bundler result based on the previous watch files

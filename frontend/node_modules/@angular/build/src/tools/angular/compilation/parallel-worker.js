@@ -33,11 +33,11 @@ async function initialize(request) {
             stylesheetRequests.get(requestId)?.[0](value);
         }
     });
-    const { compilerOptions, referencedFiles } = await compilation.initialize(request.tsconfig, {
+    const { compilerOptions, referencedFiles, externalStylesheets, templateUpdates } = await compilation.initialize(request.tsconfig, {
         fileReplacements: request.fileReplacements,
         sourceFileCache,
         modifiedFiles: sourceFileCache.modifiedFiles,
-        transformStylesheet(data, containingFile, stylesheetFile) {
+        transformStylesheet(data, containingFile, stylesheetFile, order, className) {
             const requestId = (0, node_crypto_1.randomUUID)();
             const resultPromise = new Promise((resolve, reject) => stylesheetRequests.set(requestId, [resolve, reject]));
             request.stylesheetPort.postMessage({
@@ -45,6 +45,8 @@ async function initialize(request) {
                 data,
                 containingFile,
                 stylesheetFile,
+                order,
+                className,
             });
             return resultPromise;
         },
@@ -69,6 +71,8 @@ async function initialize(request) {
         return result?.transformedOptions ?? compilerOptions;
     });
     return {
+        externalStylesheets,
+        templateUpdates,
         referencedFiles,
         // TODO: Expand? `allowJs`, `isolatedModules`, `sourceMap`, `inlineSourceMap` are the only fields needed currently.
         compilerOptions: {

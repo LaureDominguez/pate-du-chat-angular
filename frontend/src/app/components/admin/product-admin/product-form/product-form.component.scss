@@ -1,0 +1,169 @@
+@use '@angular/material' as mat;
+
+::ng-deep .mat-mdc-dialog-surface {
+    background-color: var(--surfaceBright);
+}
+
+form {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: 40rem;
+    width: 95%;
+    overflow: auto;
+    margin: auto;
+    mat-form-field {
+        border-radius: 10px;
+        color: var(--onSurface);
+        background-color: var(--surfaceBright);
+        &:focus-within {
+            color: var(--onSurface);
+            background-color: var(--surfaceContainer);
+        }
+        &.ng-invalid.ng-touched {
+            color: var(--error);
+            background-color: var(--errorContainer);
+        }
+    }
+}
+
+mat-label {
+    font-weight: bold;
+}
+
+mat-option {
+    color: var(--onSurface) !important;
+    background-color: var(--surfaceContainer) !important;
+    &:hover {
+        color: var(--onPrimaryFixed) !important;
+        background-color: var(--primaryFixed) !important;
+    }
+}
+
+// Afficher les petites coches des ingrédients selectionnés
+.composition {
+    flex-direction: row-reverse;
+}
+
+::ng-deep .custom-tooltip {
+    white-space: pre-line;
+    ::after {
+        font-weight: bold;
+    }
+    @include mat.tooltip-overrides((
+        container-color: var(--surfaceContainer),
+        supporting-text-color: var(--onSurface)
+    ));
+}
+
+// Customize the entire app. Change :root to your selector if you want to scope the styles.
+.stock {
+    // background-color: pink;
+    @include mat.slide-toggle-overrides((
+        track-outline-color: orange,
+        selected-track-outline-color: green,
+        unselected-icon-color: red,
+        selected-icon-color: blue,
+        handle-surface-color: pink,
+        selected-focus-track-color: yellow,
+        selected-hover-track-color: rgb(247, 45, 45),
+        selected-track-color: rgb(127, 24, 24),
+        unselected-hover-handle-color: orange,
+        label-text-color: rgb(58, 192, 154)
+    ));
+}
+
+
+//// images 
+.file-upload{
+    mat-label {
+        margin: 1rem;
+        line-height: 2rem;
+    }
+}
+
+
+.file-upload {
+    display: flex;
+    align-items: center;
+    button {
+        margin: auto;
+    }
+}
+
+.previews, .existing-images {
+    max-height: 120px;
+    padding: 0.5rem;
+    border: 2px solid var(--surfaceVariant);
+    border-radius: 8px;
+    .previews-container {
+        display: flex; 
+        flex-wrap: nowrap; 
+        gap: 16px;
+        overflow-x: auto; 
+        overflow-y: hidden; 
+        padding-bottom: 5px; 
+    }
+
+    .preview-item {
+        flex: 0 0 auto;
+        display: inline-flex;
+    }
+
+    mat-label {
+        margin: 1rem;
+        line-height: 1.5rem;
+        font-style: italic;
+        font-weight: normal;
+    }
+
+    mat-card {
+        position: relative;
+        border-radius: 20px;
+        width: 100px;
+        height: 100px;
+        overflow: hidden;
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        div{
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            :first-child {
+                background-color: color-mix(in srgb, var(--error) 70%, transparent);
+            }
+            :last-child {
+                background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
+
+            }
+        }
+        button {
+            // position: absolute;
+            // top: 5px;
+            // right: 5px;
+            // background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            mat-icon{
+                font-size: 20px;
+            }
+        }
+    }
+}

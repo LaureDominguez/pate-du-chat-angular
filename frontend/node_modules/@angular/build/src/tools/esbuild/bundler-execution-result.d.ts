@@ -7,6 +7,7 @@
  */
 import type { Message, PartialMessage } from 'esbuild';
 import type { ChangedFiles } from '../../tools/esbuild/watcher';
+import type { ComponentStylesheetBundler } from './angular/component-stylesheets';
 import type { SourceFileCache } from './angular/source-file-cache';
 import type { BuildOutputFile, BuildOutputFileType, BundlerContext } from './bundler-context';
 export interface BuildOutputAsset {
@@ -14,39 +15,52 @@ export interface BuildOutputAsset {
     destination: string;
 }
 export interface RebuildState {
-    rebuildContexts: BundlerContext[];
+    rebuildContexts: {
+        typescriptContexts: BundlerContext[];
+        otherContexts: BundlerContext[];
+    };
+    componentStyleBundler: ComponentStylesheetBundler;
     codeBundleCache?: SourceFileCache;
     fileChanges: ChangedFiles;
     previousOutputHashes: Map<string, string>;
+    templateUpdates?: Map<string, string>;
 }
 export interface ExternalResultMetadata {
     implicitBrowser: string[];
     implicitServer: string[];
     explicit: string[];
 }
+export type PrerenderedRoutesRecord = Record<string, {
+    headers?: Record<string, string>;
+}>;
 /**
  * Represents the result of a single builder execute call.
  */
 export declare class ExecutionResult {
     private rebuildContexts;
+    private componentStyleBundler;
     private codeBundleCache?;
+    readonly templateUpdates?: Map<string, string> | undefined;
     outputFiles: BuildOutputFile[];
     assetFiles: BuildOutputAsset[];
     errors: (Message | PartialMessage)[];
-    prerenderedRoutes: string[];
+    prerenderedRoutes: PrerenderedRoutesRecord;
     warnings: (Message | PartialMessage)[];
     logs: string[];
     externalMetadata?: ExternalResultMetadata;
     extraWatchFiles: string[];
     htmlIndexPath?: string;
     htmlBaseHref?: string;
-    constructor(rebuildContexts: BundlerContext[], codeBundleCache?: SourceFileCache | undefined);
+    constructor(rebuildContexts: {
+        typescriptContexts: BundlerContext[];
+        otherContexts: BundlerContext[];
+    }, componentStyleBundler: ComponentStylesheetBundler, codeBundleCache?: SourceFileCache | undefined, templateUpdates?: Map<string, string> | undefined);
     addOutputFile(path: string, content: string | Uint8Array, type: BuildOutputFileType): void;
     addAssets(assets: BuildOutputAsset[]): void;
     addLog(value: string): void;
     addError(error: PartialMessage | string): void;
     addErrors(errors: (PartialMessage | string)[]): void;
-    addPrerenderedRoutes(routes: string[]): void;
+    addPrerenderedRoutes(routes: PrerenderedRoutesRecord): void;
     addWarning(error: PartialMessage | string): void;
     addWarnings(errors: (PartialMessage | string)[]): void;
     /**
@@ -64,10 +78,10 @@ export declare class ExecutionResult {
         success: boolean;
         outputFiles: BuildOutputFile[];
         assetFiles: BuildOutputAsset[];
-        errors: (Message | PartialMessage)[];
+        errors: (PartialMessage | Message)[];
         externalMetadata: ExternalResultMetadata | undefined;
     };
-    get watchFiles(): string[];
+    get watchFiles(): Readonly<string[]>;
     createRebuildState(fileChanges: ChangedFiles): RebuildState;
     findChangedFiles(previousOutputHashes: Map<string, string>): Set<string>;
     dispose(): Promise<void>;

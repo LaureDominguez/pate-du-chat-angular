@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.I18nInliner = void 0;
 const node_assert_1 = __importDefault(require("node:assert"));
-const piscina_1 = __importDefault(require("piscina"));
+const worker_pool_1 = require("../../utils/worker-pool");
 const bundler_context_1 = require("./bundler-context");
 const utils_1 = require("./utils");
 /**
@@ -36,7 +36,8 @@ class I18nInliner {
         const files = new Map();
         const pendingMaps = [];
         for (const file of options.outputFiles) {
-            if (file.type === bundler_context_1.BuildOutputFileType.Root) {
+            if (file.type === bundler_context_1.BuildOutputFileType.Root || file.type === bundler_context_1.BuildOutputFileType.ServerRoot) {
+                // Skip also the server entry-point.
                 // Skip stats and similar files.
                 continue;
             }
@@ -74,7 +75,7 @@ class I18nInliner {
             }
         }
         this.#localizeFiles = files;
-        this.#workerPool = new piscina_1.default({
+        this.#workerPool = new worker_pool_1.WorkerPool({
             filename: require.resolve('./i18n-inliner-worker'),
             maxThreads,
             // Extract options to ensure only the named options are serialized and sent to the worker
@@ -83,7 +84,6 @@ class I18nInliner {
                 shouldOptimize: options.shouldOptimize,
                 files,
             },
-            recordTiming: false,
         });
     }
     /**

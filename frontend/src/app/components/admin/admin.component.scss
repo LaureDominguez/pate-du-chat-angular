@@ -1,0 +1,172 @@
+.admin-section {
+    padding: 1rem;
+    background-color: var(--surfaceContainer);
+    margin: 1rem;
+    border-radius: 20px;
+}
+
+mat-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+th {
+    font-weight: bold;
+    text-align: center;
+}
+
+tr:not(thead tr){
+    background-color: var(--surfaceContainer);
+    transition: background-color 0.3s;
+
+    &:hover{
+        background-color: var(--surfaceVariant);
+    }
+}
+
+mat-divider {
+    color: var(--surfaceContainerHighest);
+}
+
+.mat-icon {
+    &.success { 
+        color: var(--tertiaryContainer);
+    }
+    &.error {
+        color: var(--error);
+    }
+}
+
+/////////////////////////////
+/// // Boutons
+//////////////////////////////
+
+// Add button
+.add {
+    margin-left: 0.5rem;
+    background-color: var(--primaryContainer);
+    color: var(--onPrimaryContainer);
+    transition: all 0.3s ease-in;
+    &:hover {
+        background-color: var(--primaryFixedDim);
+        color: var(--onPrimaryFixedVariant);
+    }
+}
+
+.add-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+// Actions buttons
+.animated-button {
+    position: relative;
+    overflow: hidden;
+    width: 60px; /* Taille de base */
+    height: 40px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out; /* Animation pour élargir le bouton */
+    &.edit, &.save {
+        color: var(--primary);
+    }
+    &.delete, &.cancel {
+        color: var(--error);
+    }
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+.animated-button .content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.animated-button .icon {
+    position: absolute;
+    left: 50%; /* Centre l'icône */
+    transform: translateX(-50%);
+    transition: transform 0.5s ease-in;
+}
+
+.animated-button .text {
+    position: absolute;
+    left: 50%; /* Hors de la vue à droite */
+    opacity: 0; /* Invisible de base */
+    transition: transform 0.2s ease-out, opacity 0.8s ease-in-out;
+    white-space: nowrap; /* Empêche le texte de sauter à la ligne */
+}
+
+.animated-button:hover {
+    &.edit {
+        background-color: var(--primaryContainer);
+        color: var(--onPrimaryContainer);
+    }
+    
+    &.save {
+        background-color: var(--primaryContainer);
+        color: var(--onPrimaryContainer);
+    }
+    &.delete, &.cancel {
+        background-color: var(--error);
+        color: var(--onError);
+    }
+    width: 50%; /* Taille élargie */
+}
+
+.animated-button:hover .icon {
+    color: white;
+    transform: translateX(90%); /* Déplace l'icône vers la droite */
+}
+
+.animated-button:hover .text {
+    color: white;
+    transform: translateX(-70%); /* Déplace le texte vers la gauche */
+    opacity: 1; /* Rend le texte visible */
+    transition: transform 0.5s ease-out, opacity 0.3s ease-out; /* Disparition rapide */
+}
+
+.animated-button .text {
+    /* Ajustement spécial pour le retour */
+    transition: transform 0.8s ease-out, opacity 0.3s ease-out;
+}
+
+
+//////////////////////////////
+/// // Formulaires
+//////////////////////////////
+
+// ::ng-deep .mat-mdc-dialog-surface {
+//     background-color: var(--surfaceBright);
+// }
+
+// form {
+//     display: flex;
+//     align-items: stretch;
+//     flex-direction: column;
+//     justify-content: space-evenly;
+//     height: 40rem;
+//     width: 95%;
+//     overflow: auto;
+//     margin: auto;
+//     mat-form-field {
+//         border-radius: 10px;
+//         color: var(--onSurface);
+//         background-color: var(--surfaceBright);
+//         &:focus-within {
+//             color: var(--onSurface);
+//             background-color: var(--surfaceContainer);
+//         }
+//         &.ng-invalid.ng-touched {
+//             color: var(--error);
+//             background-color: var(--errorContainer);
+//         }
+//     }
+// }

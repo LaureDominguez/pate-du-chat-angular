@@ -6,6 +6,29 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeBuild = executeBuild;
 const source_file_cache_1 = require("../../tools/esbuild/angular/source-file-cache");
@@ -19,13 +42,14 @@ const utils_1 = require("../../tools/esbuild/utils");
 const bundle_calculator_1 = require("../../utils/bundle-calculator");
 const environment_options_1 = require("../../utils/environment-options");
 const resolve_assets_1 = require("../../utils/resolve-assets");
+const manifest_1 = require("../../utils/server-rendering/manifest");
 const supported_browsers_1 = require("../../utils/supported-browsers");
-const chunk_optimizer_1 = require("./chunk-optimizer");
 const execute_post_bundle_1 = require("./execute-post-bundle");
 const i18n_1 = require("./i18n");
 const setup_bundling_1 = require("./setup-bundling");
+// eslint-disable-next-line max-lines-per-function
 async function executeBuild(options, context, rebuildState) {
-    const { projectRoot, workspaceRoot, i18nOptions, optimizationOptions, assets, cacheOptions, prerenderOptions, ssrOptions, verbose, colors, jsonLogs, } = options;
+    const { projectRoot, workspaceRoot, i18nOptions, optimizationOptions, assets, cacheOptions, serverEntryPoint, baseHref, ssrOptions, verbose, colors, jsonLogs, } = options;
     // TODO: Consider integrating into watch mode. Would require full rebuild on target changes.
     const browsers = (0, supported_browsers_1.getSupportedBrowsers)(projectRoot, context.logger);
     // Load active translations if inlining
@@ -34,18 +58,64 @@ async function executeBuild(options, context, rebuildState) {
         await (0, i18n_1.loadActiveTranslations)(context, i18nOptions);
     }
     // Reuse rebuild state or create new bundle contexts for code and global stylesheets
-    let bundlerContexts = rebuildState?.rebuildContexts;
-    const codeBundleCache = rebuildState?.codeBundleCache ??
-        new source_file_cache_1.SourceFileCache(cacheOptions.enabled ? cacheOptions.path : undefined);
-    if (bundlerContexts === undefined) {
-        bundlerContexts = (0, setup_bundling_1.setupBundlerContexts)(options, browsers, codeBundleCache);
+    let bundlerContexts;
+    let componentStyleBundler;
+    let codeBundleCache;
+    let bundlingResult;
+    let templateUpdates;
+    if (rebuildState) {
+        bundlerContexts = rebuildState.rebuildContexts;
+        componentStyleBundler = rebuildState.componentStyleBundler;
+        codeBundleCache = rebuildState.codeBundleCache;
+        templateUpdates = rebuildState.templateUpdates;
+        // Reset template updates for new rebuild
+        templateUpdates?.clear();
+        const allFileChanges = rebuildState.fileChanges.all;
+        // Bundle all contexts that do not require TypeScript changed file checks.
+        // These will automatically use cached results based on the changed files.
+        bundlingResult = await bundler_context_1.BundlerContext.bundleAll(bundlerContexts.otherContexts, allFileChanges);
+        // Check the TypeScript code bundling cache for changes. If invalid, force a rebundle of
+        // all TypeScript related contexts.
+        const forceTypeScriptRebuild = codeBundleCache?.invalidate(allFileChanges);
+        const typescriptResults = [];
+        for (const typescriptContext of bundlerContexts.typescriptContexts) {
+            typescriptContext.invalidate(allFileChanges);
+            const result = await typescriptContext.bundle(forceTypeScriptRebuild);
+            typescriptResults.push(result);
+        }
+        bundlingResult = bundler_context_1.BundlerContext.mergeResults([bundlingResult, ...typescriptResults]);
     }
-    let bundlingResult = await bundler_context_1.BundlerContext.bundleAll(bundlerContexts, rebuildState?.fileChanges.all);
+    else {
+        const target = (0, utils_1.transformSupportedBrowsersToTargets)(browsers);
+        codeBundleCache = new source_file_cache_1.SourceFileCache(cacheOptions.enabled ? cacheOptions.path : undefined);
+        componentStyleBundler = (0, setup_bundling_1.createComponentStyleBundler)(options, target);
+        if (options.templateUpdates) {
+            templateUpdates = new Map();
+        }
+        bundlerContexts = (0, setup_bundling_1.setupBundlerContexts)(options, target, codeBundleCache, componentStyleBundler, templateUpdates);
+        // Bundle everything on initial build
+        bundlingResult = await bundler_context_1.BundlerContext.bundleAll([
+            ...bundlerContexts.typescriptContexts,
+            ...bundlerContexts.otherContexts,
+        ]);
+    }
+    // Update any external component styles if enabled and rebuilding.
+    // TODO: Only attempt rebundling of invalidated styles once incremental build results are supported.
+    if (rebuildState && options.externalRuntimeStyles) {
+        componentStyleBundler.invalidate(rebuildState.fileChanges.all);
+        const componentResults = await componentStyleBundler.bundleAllFiles(true, true);
+        bundlingResult = bundler_context_1.BundlerContext.mergeResults([bundlingResult, ...componentResults]);
+    }
     if (options.optimizationOptions.scripts && environment_options_1.shouldOptimizeChunks) {
-        bundlingResult = await (0, profiling_1.profileAsync)('OPTIMIZE_CHUNKS', () => (0, chunk_optimizer_1.optimizeChunks)(bundlingResult, options.sourcemapOptions.scripts ? !options.sourcemapOptions.hidden || 'hidden' : false));
+        const { optimizeChunks } = await Promise.resolve().then(() => __importStar(require('./chunk-optimizer')));
+        bundlingResult = await (0, profiling_1.profileAsync)('OPTIMIZE_CHUNKS', () => optimizeChunks(bundlingResult, options.sourcemapOptions.scripts ? !options.sourcemapOptions.hidden || 'hidden' : false));
     }
-    const executionResult = new bundler_execution_result_1.ExecutionResult(bundlerContexts, codeBundleCache);
+    const executionResult = new bundler_execution_result_1.ExecutionResult(bundlerContexts, componentStyleBundler, codeBundleCache, templateUpdates);
     executionResult.addWarnings(bundlingResult.warnings);
+    // Add used external component style referenced files to be watched
+    if (options.externalRuntimeStyles) {
+        executionResult.extraWatchFiles.push(...componentStyleBundler.collectReferencedFiles());
+    }
     // Return if the bundling has errors
     if (bundlingResult.errors) {
         executionResult.addErrors(bundlingResult.errors);
@@ -104,6 +174,14 @@ async function executeBuild(options, context, rebuildState) {
         executionResult.htmlIndexPath = options.indexHtmlOptions.output;
         executionResult.htmlBaseHref = options.baseHref;
     }
+    // Create server app engine manifest
+    if (serverEntryPoint) {
+        executionResult.addOutputFile(manifest_1.SERVER_APP_ENGINE_MANIFEST_FILENAME, (0, manifest_1.generateAngularServerAppEngineManifest)(i18nOptions, baseHref), bundler_context_1.BuildOutputFileType.ServerRoot);
+    }
+    // Override auto-CSP settings if we are serving through Vite middleware.
+    if (context.builder.builderName === 'dev-server' && options.security) {
+        options.security.autoCsp = false;
+    }
     // Perform i18n translation inlining if enabled
     if (i18nOptions.shouldInline) {
         const result = await (0, i18n_1.inlineI18n)(options, executionResult, initialFiles);
@@ -121,10 +199,7 @@ async function executeBuild(options, context, rebuildState) {
         executionResult.outputFiles.push(...result.additionalOutputFiles);
         executionResult.assetFiles.push(...result.additionalAssets);
     }
-    if (prerenderOptions) {
-        const prerenderedRoutes = executionResult.prerenderedRoutes;
-        executionResult.addOutputFile('prerendered-routes.json', JSON.stringify({ routes: prerenderedRoutes }, null, 2), bundler_context_1.BuildOutputFileType.Root);
-    }
+    executionResult.addOutputFile('prerendered-routes.json', JSON.stringify({ routes: executionResult.prerenderedRoutes }, null, 2), bundler_context_1.BuildOutputFileType.Root);
     // Write metafile if stats option is enabled
     if (options.stats) {
         executionResult.addOutputFile('stats.json', JSON.stringify(metafile, null, 2), bundler_context_1.BuildOutputFileType.Root);

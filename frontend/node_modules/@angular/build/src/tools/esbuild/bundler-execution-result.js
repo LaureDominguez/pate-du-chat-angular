@@ -15,20 +15,24 @@ const utils_1 = require("./utils");
  */
 class ExecutionResult {
     rebuildContexts;
+    componentStyleBundler;
     codeBundleCache;
+    templateUpdates;
     outputFiles = [];
     assetFiles = [];
     errors = [];
-    prerenderedRoutes = [];
+    prerenderedRoutes = {};
     warnings = [];
     logs = [];
     externalMetadata;
     extraWatchFiles = [];
     htmlIndexPath;
     htmlBaseHref;
-    constructor(rebuildContexts, codeBundleCache) {
+    constructor(rebuildContexts, componentStyleBundler, codeBundleCache, templateUpdates) {
         this.rebuildContexts = rebuildContexts;
+        this.componentStyleBundler = componentStyleBundler;
         this.codeBundleCache = codeBundleCache;
+        this.templateUpdates = templateUpdates;
     }
     addOutputFile(path, content, type) {
         this.outputFiles.push((0, utils_1.createOutputFile)(path, content, type));
@@ -53,9 +57,13 @@ class ExecutionResult {
         }
     }
     addPrerenderedRoutes(routes) {
-        this.prerenderedRoutes.push(...routes);
+        Object.assign(this.prerenderedRoutes, routes);
         // Sort the prerendered routes.
-        this.prerenderedRoutes.sort((a, b) => a.localeCompare(b));
+        const sortedObj = {};
+        for (const key of Object.keys(this.prerenderedRoutes).sort()) {
+            sortedObj[key] = this.prerenderedRoutes[key];
+        }
+        this.prerenderedRoutes = sortedObj;
     }
     addWarning(error) {
         if (typeof error === 'string') {
@@ -95,26 +103,27 @@ class ExecutionResult {
         };
     }
     get watchFiles() {
-        // Bundler contexts internally normalize file dependencies
-        const files = this.rebuildContexts.flatMap((context) => [...context.watchFiles]);
-        if (this.codeBundleCache?.referencedFiles) {
+        const { typescriptContexts, otherContexts } = this.rebuildContexts;
+        return [
+            // Bundler contexts internally normalize file dependencies.
+            ...typescriptContexts.flatMap((context) => [...context.watchFiles]),
+            ...otherContexts.flatMap((context) => [...context.watchFiles]),
             // These files originate from TS/NG and can have POSIX path separators even on Windows.
             // To ensure path comparisons are valid, all these paths must be normalized.
-            files.push(...this.codeBundleCache.referencedFiles.map(node_path_1.normalize));
-        }
-        if (this.codeBundleCache?.loadResultCache) {
-            // Load result caches internally normalize file dependencies
-            files.push(...this.codeBundleCache.loadResultCache.watchFiles);
-        }
-        return files.concat(this.extraWatchFiles);
+            ...(this.codeBundleCache?.referencedFiles?.map(node_path_1.normalize) ?? []),
+            // The assets source files.
+            ...this.assetFiles.map(({ source }) => source),
+            ...this.extraWatchFiles,
+        ];
     }
     createRebuildState(fileChanges) {
-        this.codeBundleCache?.invalidate([...fileChanges.modified, ...fileChanges.removed]);
         return {
             rebuildContexts: this.rebuildContexts,
             codeBundleCache: this.codeBundleCache,
+            componentStyleBundler: this.componentStyleBundler,
             fileChanges,
             previousOutputHashes: new Map(this.outputFiles.map((file) => [file.path, file.hash])),
+            templateUpdates: this.templateUpdates,
         };
     }
     findChangedFiles(previousOutputHashes) {
@@ -128,7 +137,11 @@ class ExecutionResult {
         return changed;
     }
     async dispose() {
-        await Promise.allSettled(this.rebuildContexts.map((context) => context.dispose()));
+        await Promise.allSettled([
+            ...this.rebuildContexts.typescriptContexts.map((context) => context.dispose()),
+            ...this.rebuildContexts.otherContexts.map((context) => context.dispose()),
+            this.componentStyleBundler.dispose(),
+        ]);
     }
 }
 exports.ExecutionResult = ExecutionResult;

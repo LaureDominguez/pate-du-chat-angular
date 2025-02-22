@@ -1,0 +1,156 @@
+::ng-deep .mat-mdc-dialog-surface {
+  background-color: var(--background);
+  color: var(--onBackground);
+}
+
+form {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 40rem;
+  width: 95%;
+  overflow: auto;
+  margin: auto;
+}
+form mat-form-field {
+  border-radius: 10px;
+  background-color: var(--background);
+  color: var(--onBackground);
+}
+form mat-form-field:focus-within {
+  color: var(--onSurface);
+  background-color: var(--surfaceContainer);
+}
+form mat-form-field.ng-invalid.ng-touched {
+  color: var(--error);
+  background-color: var(--errorContainer);
+}
+
+mat-divider {
+  margin: 0.5rem 0;
+}
+
+mat-label {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.regime {
+  display: flex;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+.regime mat-label {
+  width: 35%;
+  line-height: 2rem;
+  padding: 0 1rem;
+}
+.regime div {
+  display: flex;
+  justify-content: space-evenly;
+  width: 65%;
+}
+.regime div mat-checkbox {
+  padding-right: 0.5rem;
+}
+.regime div mat-checkbox:hover {
+  border-radius: 8px;
+  background-color: var(--surfaceContainer);
+}
+
+.allergen-grid {
+  max-height: 150px;
+  overflow: auto;
+  margin-top: 16px;
+  border: 2px solid var(--surfaceVariant);
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.allergen-grid mat-checkbox:hover {
+  border-radius: 8px;
+  background-color: var(--surfaceContainer);
+}
+
+.allergen-form-field mat-label, .file-upload mat-label {
+  margin: 1rem;
+  line-height: 2rem;
+}
+
+.file-upload {
+  display: flex;
+  align-items: center;
+}
+.file-upload button {
+  margin: auto;
+}
+
+.previews, .existing-images {
+  max-height: 120px;
+  padding: 0.5rem;
+  border: 2px solid var(--surfaceVariant);
+  border-radius: 8px;
+}
+.previews .previews-container, .existing-images .previews-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 5px;
+}
+.previews .preview-item, .existing-images .preview-item {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+.previews mat-label, .existing-images mat-label {
+  margin: 1rem;
+  line-height: 1.5rem;
+  font-style: italic;
+  font-weight: normal;
+}
+.previews mat-card, .existing-images mat-card {
+  position: relative;
+  border-radius: 20px;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+}
+.previews mat-card img, .existing-images mat-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.previews mat-card div, .existing-images mat-card div {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.previews mat-card div :first-child, .existing-images mat-card div :first-child {
+  background-color: color-mix(in srgb, var(--error) 70%, transparent);
+}
+.previews mat-card div :last-child, .existing-images mat-card div :last-child {
+  background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
+}
+.previews mat-card button, .existing-images mat-card button {
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.previews mat-card button mat-icon, .existing-images mat-card button mat-icon {
+  font-size: 20px;
+}/*# sourceMappingURL=ingredient-form.component.css.map */

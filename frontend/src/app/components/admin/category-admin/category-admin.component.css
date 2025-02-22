@@ -1,0 +1,7 @@
+table th:not(:first-child), table td:not(:first-child) {
+  justify-content: center;
+  text-align: center;
+}
+table th:last-child, table td:last-child {
+  width: 20%;
+}/*# sourceMappingURL=category-admin.component.css.map */

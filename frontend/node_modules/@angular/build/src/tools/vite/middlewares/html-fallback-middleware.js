@@ -10,7 +10,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.angularHtmlFallbackMiddleware = angularHtmlFallbackMiddleware;
 const utils_1 = require("../utils");
 const ALLOWED_FALLBACK_METHODS = Object.freeze(['GET', 'HEAD']);
-function angularHtmlFallbackMiddleware(req, res, next) {
+function angularHtmlFallbackMiddleware(req, _res, next) {
     // Similar to how it is handled in vite
     // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/server/middlewares/htmlFallback.ts#L15C19-L15C45
     if (!req.method || !ALLOWED_FALLBACK_METHODS.includes(req.method)) {

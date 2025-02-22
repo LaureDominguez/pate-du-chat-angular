@@ -3,6 +3,10 @@
  */
 export interface Schema {
     /**
+     * Create an application that does not utilize zone.js.
+     */
+    experimentalZoneless?: boolean;
+    /**
      * Include styles inline in the root component.ts file. Only CSS styles can be included
      * inline. Default is false, meaning that an external styles file is created and referenced
      * in the root component.ts file.
@@ -34,6 +38,11 @@ export interface Schema {
      * Creates an application with routing enabled.
      */
     routing?: boolean;
+    /**
+     * Creates a server application using the Server Routing and App Engine APIs (Developer
+     * Preview).
+     */
+    serverRouting?: boolean;
     /**
      * Skip installing dependency packages.
      */

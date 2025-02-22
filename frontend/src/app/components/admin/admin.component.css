@@ -1,1 +1,130 @@
-/*# sourceMappingURL=admin.component.css.map */
+@charset "UTF-8";
+.admin-section {
+  padding: 1rem;
+  background-color: var(--surfaceContainer);
+  margin: 1rem;
+  border-radius: 20px;
+}
+
+mat-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+th {
+  font-weight: bold;
+  text-align: center;
+}
+
+tr:not(thead tr) {
+  background-color: var(--surfaceContainer);
+  transition: background-color 0.3s;
+}
+tr:not(thead tr):hover {
+  background-color: var(--surfaceVariant);
+}
+
+mat-divider {
+  color: var(--surfaceContainerHighest);
+}
+
+.mat-icon.success {
+  color: var(--tertiaryContainer);
+}
+.mat-icon.error {
+  color: var(--error);
+}
+
+.add {
+  margin-left: 0.5rem;
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+  transition: all 0.3s ease-in;
+}
+.add:hover {
+  background-color: var(--primaryFixedDim);
+  color: var(--onPrimaryFixedVariant);
+}
+
+.add-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.animated-button {
+  position: relative;
+  overflow: hidden;
+  width: 60px; /* Taille de base */
+  height: 40px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out; /* Animation pour élargir le bouton */
+}
+.animated-button.edit, .animated-button.save {
+  color: var(--primary);
+}
+.animated-button.delete, .animated-button.cancel {
+  color: var(--error);
+}
+.animated-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.animated-button .content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.animated-button .icon {
+  position: absolute;
+  left: 50%; /* Centre l'icône */
+  transform: translateX(-50%);
+  transition: transform 0.5s ease-in;
+}
+
+.animated-button .text {
+  position: absolute;
+  left: 50%; /* Hors de la vue à droite */
+  opacity: 0; /* Invisible de base */
+  transition: transform 0.2s ease-out, opacity 0.8s ease-in-out;
+  white-space: nowrap; /* Empêche le texte de sauter à la ligne */
+}
+
+.animated-button:hover {
+  width: 50%; /* Taille élargie */
+}
+.animated-button:hover.edit {
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+}
+.animated-button:hover.save {
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+}
+.animated-button:hover.delete, .animated-button:hover.cancel {
+  background-color: var(--error);
+  color: var(--onError);
+}
+
+.animated-button:hover .icon {
+  color: white;
+  transform: translateX(90%); /* Déplace l'icône vers la droite */
+}
+
+.animated-button:hover .text {
+  color: white;
+  transform: translateX(-70%); /* Déplace le texte vers la gauche */
+  opacity: 1; /* Rend le texte visible */
+  transition: transform 0.5s ease-out, opacity 0.3s ease-out; /* Disparition rapide */
+}
+
+.animated-button .text {
+  /* Ajustement spécial pour le retour */
+  transition: transform 0.8s ease-out, opacity 0.3s ease-out;
+}/*# sourceMappingURL=admin.component.css.map */

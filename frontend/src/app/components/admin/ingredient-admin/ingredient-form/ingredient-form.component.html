@@ -1,0 +1,97 @@
+<h2 mat-dialog-title>
+    {{ data.ingredient ? 'Modifier un ingrédient' : 'Ajouter un ingrédient' }}
+</h2>
+<form [formGroup]="ingredientForm" (ngSubmit)="save()">
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="name" />
+        <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
+        <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+        <mat-error *ngIf="name?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Fournisseur</mat-label>
+        <input matInput formControlName="supplier" />
+        <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
+        <mat-error *ngIf="supplier?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+        <mat-error *ngIf="supplier?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+        <mat-error *ngIf="supplier?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
+    </mat-form-field>
+
+    <div class="allergen-form-field">
+        <mat-label>Allergènes</mat-label>
+        <div formArrayName="allergens" class="allergen-grid">
+            <mat-checkbox *ngFor="let control of allergens.controls; let i = index" [formControlName]="i">
+                {{ data.allergenesList[i] }}
+            </mat-checkbox>
+        </div>
+    </div>
+
+    <div class="regime">
+        <mat-label>Régime alimentaire</mat-label>
+        <div>
+            <mat-checkbox formControlName="vegan" (change)="onVeganChange($event.checked)">Vegan</mat-checkbox>
+            <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    
+    <!-- Images -->
+    <div class="file-upload">
+        <mat-label>Images</mat-label>
+        <button mat-raised-button color="primary"  type="button" (click)="fileInput.click()">
+            <mat-icon>file_upload</mat-icon> Importer une image
+        </button>
+        <input 
+            #fileInput 
+            id="imageUpload" 
+            type="file" 
+            multiple 
+            (change)="onFileSelected($event)" 
+            accept="image/*"
+            style="display: none;" 
+        />
+    </div>
+
+    <div class="previews" *ngIf="filePreviews.length > 0">
+        <mat-label *ngIf="existingImageUrls.length > 0">Images à ajouter :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let preview of filePreviews; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="preview" alt="Image preview" />
+                    <button mat-icon-button color="warn" (click)="removeFile(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+
+    <div class="existing-images" *ngIf="existingImageUrls.length > 0">
+        <mat-label *ngIf="filePreviews.length > 0">Images existantes :</mat-label>
+        <div class="previews-container">
+            <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
+                <mat-card>
+                    <img mat-card-image [src]="image" alt="Existing image" />
+                    <div>
+                        <button mat-icon-button (click)="removeExistingImage(i)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="downloadImage(image)">
+                            <mat-icon>download</mat-icon>
+                        </button>
+                    </div>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+
+    <div mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+</form>

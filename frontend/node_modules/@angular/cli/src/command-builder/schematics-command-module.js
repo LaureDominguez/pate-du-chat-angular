@@ -357,7 +357,7 @@ let SchematicsCommandModule = (() => {
             return 0;
         }
         getProjectName() {
-            const { workspace, logger } = this.context;
+            const { workspace } = this.context;
             if (!workspace) {
                 return undefined;
             }

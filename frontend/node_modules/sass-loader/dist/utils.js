@@ -519,7 +519,8 @@ function getModernWebpackImporter(loaderContext, implementation, loadPaths) {
         });
         return {
           contents,
-          syntax
+          syntax,
+          sourceMapUrl: canonicalUrl
         };
       } catch (err) {
         return null;
@@ -598,6 +599,8 @@ function getCompileFn(loaderContext, implementation, apiType) {
               webpackCompiler.hooks.shutdown.tap("sass-loader", () => {
                 compiler.dispose();
               });
+            } else {
+              compiler.dispose();
             }
           }
           return sassModernCompilers.get(webpackCompiler).compileStringAsync(data, rest);
@@ -690,16 +693,15 @@ function normalizeSourceMap(map, rootContext) {
 function errorFactory(error) {
   let message;
   if (error.formatted) {
-    message = error.formatted.replace(/^Error: /, "");
+    message = error.formatted.replace(/^(.+)?Error: /, "");
   } else {
     // Keep original error if `sassError.formatted` is unavailable
-    ({
-      message
-    } = error);
+    message = (error.message || error.toString()).replace(/^(.+)?Error: /, "");
   }
   const obj = new Error(message, {
     cause: error
   });
+  obj.name = error.name;
   obj.stack = null;
   return obj;
 }

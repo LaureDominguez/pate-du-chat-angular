@@ -39,10 +39,10 @@ const node_assert_1 = __importDefault(require("node:assert"));
 const promises_1 = require("node:fs/promises");
 const node_module_1 = require("node:module");
 const node_path_1 = require("node:path");
-const angular_memory_plugin_1 = require("../../tools/vite/angular-memory-plugin");
-const i18n_locale_plugin_1 = require("../../tools/vite/i18n-locale-plugin");
-const id_prefix_plugin_1 = require("../../tools/vite/id-prefix-plugin");
-const utils_1 = require("../../utils");
+const plugins_1 = require("../../tools/vite/plugins");
+const utils_1 = require("../../tools/vite/utils");
+const utils_2 = require("../../utils");
+const environment_options_1 = require("../../utils/environment-options");
 const load_esm_1 = require("../../utils/load-esm");
 const results_1 = require("../application/results");
 const internal_1 = require("./internal");
@@ -66,23 +66,17 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
     }
     // TODO: Adjust architect to not force a JsonObject derived return type
     const browserOptions = (await context.validateOptions(rawBrowserOptions, builderName));
-    if (browserOptions.prerender || browserOptions.ssr) {
+    if (browserOptions.prerender || (browserOptions.outputMode && browserOptions.server)) {
         // Disable prerendering if enabled and force SSR.
         // This is so instead of prerendering all the routes for every change, the page is "prerendered" when it is requested.
-        browserOptions.prerender = false;
-        // Avoid bundling and processing the ssr entry-point as this is not used by the dev-server.
-        browserOptions.ssr = true;
-        // https://nodejs.org/api/process.html#processsetsourcemapsenabledval
-        process.setSourceMapsEnabled(true);
-        if (browserOptions.progress !== false) {
-            // This is a workaround for https://github.com/angular/angular-cli/issues/28336, which is caused by the interaction between `zone.js` and `listr2`.
-            process.once('SIGINT', () => {
-                process.kill(process.pid);
-            });
-        }
+        browserOptions.prerender = undefined;
+        browserOptions.ssr ||= true;
     }
     // Set all packages as external to support Vite's prebundle caching
     browserOptions.externalPackages = serverOptions.prebundle;
+    // Disable generating a full manifest with routes.
+    // This is done during runtime when using the dev-server.
+    browserOptions.partialSSRBuild = true;
     // The development server currently only supports a single locale when localizing.
     // This matches the behavior of the Webpack-based development server but could be expanded in the future.
     if (browserOptions.localize === true ||
@@ -94,7 +88,19 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
         // When localization is enabled with a single locale, force a flat path to maintain behavior with the existing Webpack-based dev server.
         browserOptions.forceI18nFlatOutput = true;
     }
-    const { vendor: thirdPartySourcemaps } = (0, utils_1.normalizeSourceMaps)(browserOptions.sourceMap ?? false);
+    const { vendor: thirdPartySourcemaps, scripts: scriptsSourcemaps } = (0, utils_2.normalizeSourceMaps)(browserOptions.sourceMap ?? false);
+    if (scriptsSourcemaps && browserOptions.server) {
+        // https://nodejs.org/api/process.html#processsetsourcemapsenabledval
+        process.setSourceMapsEnabled(true);
+    }
+    // Enable to support component style hot reloading (`NG_HMR_CSTYLES=0` can be used to disable selectively)
+    browserOptions.externalRuntimeStyles =
+        serverOptions.liveReload && serverOptions.hmr && environment_options_1.useComponentStyleHmr;
+    // Enable to support component template hot replacement (`NG_HMR_TEMPLATE=1` can be used to enable)
+    browserOptions.templateUpdates = !!serverOptions.liveReload && environment_options_1.useComponentTemplateHmr;
+    if (browserOptions.templateUpdates) {
+        context.logger.warn('Experimental support for component template hot replacement has been enabled via the "NG_HMR_TEMPLATE" environment variable.');
+    }
     // Setup the prebundling transformer that will be shared across Vite prebundling requests
     const prebundleTransformer = new internal_1.JavaScriptTransformer(
     // Always enable JIT linking to support applications built with and without AOT.
@@ -116,6 +122,8 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
         explicitBrowser: [],
         explicitServer: [],
     };
+    const componentStyles = new Map();
+    const templateUpdates = new Map();
     // Add cleanup logic via a builder teardown.
     let deferred;
     context.addTeardown(async () => {
@@ -125,20 +133,30 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
     });
     // TODO: Switch this to an architect schedule call when infrastructure settings are supported
     for await (const result of builderAction(browserOptions, context, extensions?.buildPlugins)) {
+        if (result.kind === results_1.ResultKind.Failure) {
+            if (result.errors.length && server) {
+                hadError = true;
+                server.ws.send({
+                    type: 'error',
+                    err: {
+                        message: result.errors[0].text,
+                        stack: '',
+                        loc: result.errors[0].location ?? undefined,
+                    },
+                });
+            }
+            continue;
+        }
+        // Clear existing error overlay on successful result
+        if (hadError && server) {
+            hadError = false;
+            // Send an empty update to clear the error overlay
+            server.ws.send({
+                'type': 'update',
+                updates: [],
+            });
+        }
         switch (result.kind) {
-            case results_1.ResultKind.Failure:
-                if (result.errors.length && server) {
-                    hadError = true;
-                    server.hot.send({
-                        type: 'error',
-                        err: {
-                            message: result.errors[0].text,
-                            stack: '',
-                            loc: result.errors[0].location ?? undefined,
-                        },
-                    });
-                }
-                continue;
             case results_1.ResultKind.Full:
                 if (result.detail?.['htmlIndexPath']) {
                     htmlIndexPath = result.detail['htmlIndexPath'];
@@ -157,8 +175,10 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
                         assetFiles.set('/' + normalizePath(outputPath), normalizePath(file.inputPath));
                     }
                 }
+                // Clear stale template updates on code rebuilds
+                templateUpdates.clear();
                 // Analyze result files for changes
-                analyzeResultFiles(normalizePath, htmlIndexPath, result.files, generatedFiles);
+                analyzeResultFiles(normalizePath, htmlIndexPath, result.files, generatedFiles, componentStyles);
                 break;
             case results_1.ResultKind.Incremental:
                 (0, node_assert_1.default)(server, 'Builder must provide an initial full build before incremental results.');
@@ -166,27 +186,28 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
                 break;
             case results_1.ResultKind.ComponentUpdate:
                 (0, node_assert_1.default)(serverOptions.hmr, 'Component updates are only supported with HMR enabled.');
-                // TODO: Implement support -- application builder currently does not use
-                break;
+                (0, node_assert_1.default)(server, 'Builder must provide an initial full build before component update results.');
+                for (const componentUpdate of result.updates) {
+                    if (componentUpdate.type === 'template') {
+                        templateUpdates.set(componentUpdate.id, componentUpdate.content);
+                        server.ws.send('angular:component-update', {
+                            id: componentUpdate.id,
+                            timestamp: Date.now(),
+                        });
+                    }
+                }
+                context.logger.info('Component update sent to client(s).');
+                continue;
             default:
                 context.logger.warn(`Unknown result kind [${result.kind}] provided by build.`);
                 continue;
-        }
-        // Clear existing error overlay on successful result
-        if (hadError && server) {
-            hadError = false;
-            // Send an empty update to clear the error overlay
-            server.hot.send({
-                'type': 'update',
-                updates: [],
-            });
         }
         // To avoid disconnecting the array objects from the option, these arrays need to be mutated instead of replaced.
         let requiresServerRestart = false;
         if (result.detail?.['externalMetadata']) {
             const { implicitBrowser, implicitServer, explicit } = result.detail['externalMetadata'];
-            const implicitServerFiltered = implicitServer.filter((m) => removeNodeJsBuiltinModules(m) && removeAbsoluteUrls(m));
-            const implicitBrowserFiltered = implicitBrowser.filter(removeAbsoluteUrls);
+            const implicitServerFiltered = implicitServer.filter((m) => !(0, node_module_1.isBuiltin)(m) && !isAbsoluteUrl(m));
+            const implicitBrowserFiltered = implicitBrowser.filter((m) => !isAbsoluteUrl(m));
             if (browserOptions.ssr && serverOptions.prebundle !== false) {
                 const previousImplicitServer = new Set(externalMetadata.implicitServer);
                 // Restart the server to force SSR dep re-optimization when a dependency has been added.
@@ -199,7 +220,7 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
             externalMetadata.implicitServer.length = 0;
             externalMetadata.implicitBrowser.length = 0;
             externalMetadata.explicitBrowser.push(...explicit);
-            externalMetadata.explicitServer.push(...explicit, ...nodeJsBuiltinModules);
+            externalMetadata.explicitServer.push(...explicit, ...node_module_1.builtinModules);
             externalMetadata.implicitServer.push(...implicitServerFiltered);
             externalMetadata.implicitBrowser.push(...implicitBrowserFiltered);
             // The below needs to be sorted as Vite uses these options are part of the hashing invalidation algorithm.
@@ -214,11 +235,13 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
             server.config.server.fs.allow = [
                 ...new Set([...server.config.server.fs.allow, ...assetFiles.values()]),
             ];
-            handleUpdate(normalizePath, generatedFiles, server, serverOptions, context.logger);
             if (requiresServerRestart) {
                 // Restart the server to force SSR dep re-optimization when a dependency has been added.
                 // This is a workaround for: https://github.com/vitejs/vite/issues/14896
                 await server.restart();
+            }
+            else {
+                await handleUpdate(normalizePath, generatedFiles, server, serverOptions, context.logger, componentStyles);
             }
         }
         else {
@@ -241,15 +264,25 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
             const polyfills = Array.isArray((browserOptions.polyfills ??= []))
                 ? browserOptions.polyfills
                 : [browserOptions.polyfills];
+            let ssrMode = plugins_1.ServerSsrMode.NoSsr;
+            if (browserOptions.outputMode &&
+                typeof browserOptions.ssr === 'object' &&
+                browserOptions.ssr.entry) {
+                ssrMode = plugins_1.ServerSsrMode.ExternalSsrMiddleware;
+            }
+            else if (browserOptions.ssr) {
+                ssrMode = plugins_1.ServerSsrMode.InternalSsrMiddleware;
+            }
+            if (browserOptions.progress !== false && ssrMode !== plugins_1.ServerSsrMode.NoSsr) {
+                // This is a workaround for https://github.com/angular/angular-cli/issues/28336, which is caused by the interaction between `zone.js` and `listr2`.
+                process.once('SIGINT', () => {
+                    process.kill(process.pid);
+                });
+            }
             // Setup server and start listening
-            const serverConfiguration = await setupServer(serverOptions, generatedFiles, assetFiles, browserOptions.preserveSymlinks, externalMetadata, !!browserOptions.ssr, prebundleTransformer, target, (0, internal_1.isZonelessApp)(polyfills), browserOptions.loader, extensions?.middleware, transformers?.indexHtml, thirdPartySourcemaps);
+            const serverConfiguration = await setupServer(serverOptions, generatedFiles, assetFiles, browserOptions.preserveSymlinks, externalMetadata, ssrMode, prebundleTransformer, target, (0, internal_1.isZonelessApp)(polyfills), componentStyles, templateUpdates, browserOptions.loader, browserOptions.define, extensions?.middleware, transformers?.indexHtml, thirdPartySourcemaps);
             server = await createServer(serverConfiguration);
             await server.listen();
-            if (browserOptions.ssr && serverOptions.prebundle !== false) {
-                // Warm up the SSR request and begin optimizing dependencies.
-                // Without this, Vite will only start optimizing SSR modules when the first request is made.
-                void server.warmupRequest('./main.server.mjs', { ssr: true });
-            }
             const urls = server.resolvedUrls;
             if (urls && (urls.local.length || urls.network.length)) {
                 serverUrl = new URL(urls.local[0] ?? urls.network[0]);
@@ -263,7 +296,8 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
                         key: 'r',
                         description: 'force reload browser',
                         action(server) {
-                            server.hot.send({
+                            componentStyles.forEach((record) => record.used?.clear());
+                            server.ws.send({
                                 type: 'full-reload',
                                 path: '*',
                             });
@@ -281,47 +315,84 @@ async function* serveWithVite(serverOptions, builderName, builderAction, context
     }
     await new Promise((resolve) => (deferred = resolve));
 }
-function handleUpdate(normalizePath, generatedFiles, server, serverOptions, logger) {
+async function handleUpdate(normalizePath, generatedFiles, server, serverOptions, logger, componentStyles) {
     const updatedFiles = [];
+    let destroyAngularServerAppCalled = false;
     // Invalidate any updated files
-    for (const [file, record] of generatedFiles) {
-        if (record.updated) {
-            updatedFiles.push(file);
-            const updatedModules = server.moduleGraph.getModulesByFile(normalizePath((0, node_path_1.join)(server.config.root, file)));
-            updatedModules?.forEach((m) => server?.moduleGraph.invalidateModule(m));
+    for (const [file, { updated, type }] of generatedFiles) {
+        if (!updated) {
+            continue;
         }
+        if (type === internal_1.BuildOutputFileType.ServerApplication && !destroyAngularServerAppCalled) {
+            // Clear the server app cache
+            // This must be done before module invalidation.
+            const { ɵdestroyAngularServerApp } = (await server.ssrLoadModule('/main.server.mjs'));
+            ɵdestroyAngularServerApp();
+            destroyAngularServerAppCalled = true;
+        }
+        updatedFiles.push(file);
+        const updatedModules = server.moduleGraph.getModulesByFile(normalizePath((0, node_path_1.join)(server.config.root, file)));
+        updatedModules?.forEach((m) => server.moduleGraph.invalidateModule(m));
     }
     if (!updatedFiles.length) {
         return;
     }
-    if (serverOptions.liveReload || serverOptions.hmr) {
+    if (serverOptions.hmr) {
         if (updatedFiles.every((f) => f.endsWith('.css'))) {
+            let requiresReload = false;
             const timestamp = Date.now();
-            server.hot.send({
-                type: 'update',
-                updates: updatedFiles.map((filePath) => {
-                    return {
-                        type: 'css-update',
-                        timestamp,
-                        path: filePath,
-                        acceptedPath: filePath,
-                    };
-                }),
+            const updates = updatedFiles.flatMap((filePath) => {
+                // For component styles, an HMR update must be sent for each one with the corresponding
+                // component identifier search parameter (`ngcomp`). The Vite client code will not keep
+                // the existing search parameters when it performs an update and each one must be
+                // specified explicitly. Typically, there is only one each though as specific style files
+                // are not typically reused across components.
+                const record = componentStyles.get(filePath);
+                if (record) {
+                    if (record.reload) {
+                        // Shadow DOM components currently require a full reload.
+                        // Vite's CSS hot replacement does not support shadow root searching.
+                        requiresReload = true;
+                        return [];
+                    }
+                    return Array.from(record.used ?? []).map((id) => {
+                        return {
+                            type: 'css-update',
+                            timestamp,
+                            path: `${filePath}?ngcomp` + (typeof id === 'string' ? `=${id}` : ''),
+                            acceptedPath: filePath,
+                        };
+                    });
+                }
+                return {
+                    type: 'css-update',
+                    timestamp,
+                    path: filePath,
+                    acceptedPath: filePath,
+                };
             });
-            logger.info('HMR update sent to client(s).');
-            return;
+            if (!requiresReload) {
+                server.ws.send({
+                    type: 'update',
+                    updates,
+                });
+                logger.info('HMR update sent to client(s).');
+                return;
+            }
         }
     }
     // Send reload command to clients
     if (serverOptions.liveReload) {
-        server.hot.send({
+        // Clear used component tracking on full reload
+        componentStyles.forEach((record) => record.used?.clear());
+        server.ws.send({
             type: 'full-reload',
             path: '*',
         });
         logger.info('Page reload sent to client(s).');
     }
 }
-function analyzeResultFiles(normalizePath, htmlIndexPath, resultFiles, generatedFiles) {
+function analyzeResultFiles(normalizePath, htmlIndexPath, resultFiles, generatedFiles, componentStyles) {
     const seen = new Set(['/index.html']);
     for (const [outputPath, file] of Object.entries(resultFiles)) {
         if (file.origin === 'disk') {
@@ -344,6 +415,8 @@ function analyzeResultFiles(normalizePath, htmlIndexPath, resultFiles, generated
                 contents: file.contents,
                 servable,
                 size: file.contents.byteLength,
+                hash: file.hash,
+                type: file.type,
                 updated: false,
             });
             continue;
@@ -362,18 +435,32 @@ function analyzeResultFiles(normalizePath, htmlIndexPath, resultFiles, generated
             size: file.contents.byteLength,
             hash: file.hash,
             updated: true,
+            type: file.type,
             servable,
         });
+        // Record any external component styles
+        if (filePath.endsWith('.css') && /^\/[a-f0-9]{64}\.css$/.test(filePath)) {
+            const componentStyle = componentStyles.get(filePath);
+            if (componentStyle) {
+                componentStyle.rawContent = file.contents;
+            }
+            else {
+                componentStyles.set(filePath, {
+                    rawContent: file.contents,
+                });
+            }
+        }
     }
     // Clear stale output files
     for (const file of generatedFiles.keys()) {
         if (!seen.has(file)) {
             generatedFiles.delete(file);
+            componentStyles.delete(file);
         }
     }
 }
-async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks, externalMetadata, ssr, prebundleTransformer, target, zoneless, prebundleLoaderExtensions, extensionMiddleware, indexHtmlTransformer, thirdPartySourcemaps = false) {
-    const proxy = await (0, utils_1.loadProxyConfiguration)(serverOptions.workspaceRoot, serverOptions.proxyConfig);
+async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks, externalMetadata, ssrMode, prebundleTransformer, target, zoneless, componentStyles, templateUpdates, prebundleLoaderExtensions, define, extensionMiddleware, indexHtmlTransformer, thirdPartySourcemaps = false) {
+    const proxy = await (0, utils_2.loadProxyConfiguration)(serverOptions.workspaceRoot, serverOptions.proxyConfig);
     // dynamically import Vite for ESM compatibility
     const { normalizePath } = await (0, load_esm_1.loadEsmModule)('vite');
     // Path will not exist on disk and only used to provide separate path for Vite requests
@@ -407,12 +494,24 @@ async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks,
             preserveSymlinks,
         },
         server: {
+            warmup: {
+                ssrFiles: ['./main.server.mjs', './server.mjs'],
+            },
             port: serverOptions.port,
             strictPort: true,
             host: serverOptions.host,
             open: serverOptions.open,
             headers: serverOptions.headers,
-            proxy,
+            // Disable the websocket if live reload is disabled (false/undefined are the only valid values)
+            ws: serverOptions.liveReload === false && serverOptions.hmr === false ? false : undefined,
+            // When server-side rendering (SSR) is enabled togather with SSL and Express is being used,
+            // we must configure Vite to use HTTP/1.1.
+            // This is necessary because Express does not support HTTP/2.
+            // We achieve this by defining an empty proxy.
+            // See: https://github.com/vitejs/vite/blob/c4b532cc900bf988073583511f57bd581755d5e3/packages/vite/src/node/http.ts#L106
+            proxy: serverOptions.ssl && ssrMode === plugins_1.ServerSsrMode.ExternalSsrMiddleware
+                ? (proxy ?? {})
+                : proxy,
             cors: {
                 // Allow preflight requests to be proxied.
                 preflightContinue: true,
@@ -439,7 +538,7 @@ async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks,
             noExternal: /.*/,
             // Exclude any Node.js built in module and provided dependencies (currently build defined externals)
             external: externalMetadata.explicitServer,
-            optimizeDeps: getDepOptimizationConfig({
+            optimizeDeps: (0, utils_1.getDepOptimizationConfig)({
                 // Only enable with caching since it causes prebundle dependencies to be cached
                 disabled: serverOptions.prebundle === false,
                 // Exclude any explicitly defined dependencies (currently build defined externals and node.js built-ins)
@@ -452,25 +551,32 @@ async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks,
                 target,
                 loader: prebundleLoaderExtensions,
                 thirdPartySourcemaps,
+                define,
             }),
         },
         plugins: [
-            (0, i18n_locale_plugin_1.createAngularLocaleDataPlugin)(),
-            (0, angular_memory_plugin_1.createAngularMemoryPlugin)({
-                workspaceRoot: serverOptions.workspaceRoot,
-                virtualProjectRoot,
+            (0, plugins_1.createAngularLocaleDataPlugin)(),
+            (0, plugins_1.createAngularSetupMiddlewaresPlugin)({
                 outputFiles,
                 assets,
-                ssr,
-                external: externalMetadata.explicitBrowser,
                 indexHtmlTransformer,
                 extensionMiddleware,
-                normalizePath,
+                componentStyles,
+                templateUpdates,
+                ssrMode,
             }),
-            (0, id_prefix_plugin_1.createRemoveIdPrefixPlugin)(externalMetadata.explicitBrowser),
+            (0, plugins_1.createRemoveIdPrefixPlugin)(externalMetadata.explicitBrowser),
+            await (0, plugins_1.createAngularSsrTransformPlugin)(serverOptions.workspaceRoot),
+            await (0, plugins_1.createAngularMemoryPlugin)({
+                virtualProjectRoot,
+                outputFiles,
+                templateUpdates,
+                external: externalMetadata.explicitBrowser,
+                skipViteClient: serverOptions.liveReload === false && serverOptions.hmr === false,
+            }),
         ],
         // Browser only optimizeDeps. (This does not run for SSR dependencies).
-        optimizeDeps: getDepOptimizationConfig({
+        optimizeDeps: (0, utils_1.getDepOptimizationConfig)({
             // Only enable with caching since it causes prebundle dependencies to be cached
             disabled: serverOptions.prebundle === false,
             // Exclude any explicitly defined dependencies (currently build defined externals)
@@ -483,6 +589,7 @@ async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks,
             zoneless,
             loader: prebundleLoaderExtensions,
             thirdPartySourcemaps,
+            define,
         }),
     };
     if (serverOptions.ssl) {
@@ -503,44 +610,14 @@ async function setupServer(serverOptions, outputFiles, assets, preserveSymlinks,
     }
     return configuration;
 }
-function getDepOptimizationConfig({ disabled, exclude, include, target, zoneless, prebundleTransformer, ssr, loader, thirdPartySourcemaps, }) {
-    const plugins = [
-        {
-            name: `angular-vite-optimize-deps${ssr ? '-ssr' : ''}${thirdPartySourcemaps ? '-vendor-sourcemap' : ''}`,
-            setup(build) {
-                build.onLoad({ filter: /\.[cm]?js$/ }, async (args) => {
-                    return {
-                        contents: await prebundleTransformer.transformFile(args.path),
-                        loader: 'js',
-                    };
-                });
-            },
-        },
-    ];
-    return {
-        // Exclude any explicitly defined dependencies (currently build defined externals)
-        exclude,
-        // NB: to disable the deps optimizer, set optimizeDeps.noDiscovery to true and optimizeDeps.include as undefined.
-        // Include all implict dependencies from the external packages internal option
-        include: disabled ? undefined : include,
-        noDiscovery: disabled,
-        // Add an esbuild plugin to run the Angular linker on dependencies
-        esbuildOptions: {
-            // Set esbuild supported targets.
-            target,
-            supported: (0, internal_1.getFeatureSupport)(target, zoneless),
-            plugins,
-            loader,
-            resolveExtensions: ['.mjs', '.js', '.cjs'],
-        },
-    };
-}
-const nodeJsBuiltinModules = new Set(node_module_1.builtinModules);
-/** Remove any Node.js builtin modules to avoid Vite's prebundling from processing them as files. */
-function removeNodeJsBuiltinModules(value) {
-    return !nodeJsBuiltinModules.has(value);
-}
-/** Remove any absolute URLs (http://, https://, //) to avoid Vite's prebundling from processing them as files. */
-function removeAbsoluteUrls(value) {
-    return !/^(?:https?:)?\/\//.test(value);
+/**
+ * Checks if the given value is an absolute URL.
+ *
+ * This function helps in avoiding Vite's prebundling from processing absolute URLs (http://, https://, //) as files.
+ *
+ * @param value - The URL or path to check.
+ * @returns `true` if the value is not an absolute URL; otherwise, `false`.
+ */
+function isAbsoluteUrl(value) {
+    return /^(?:https?:)?\/\//.test(value);
 }

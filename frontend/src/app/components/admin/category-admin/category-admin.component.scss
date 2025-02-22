@@ -1,0 +1,9 @@
+table {
+    th:not(:first-child), td:not(:first-child) {
+        justify-content: center;
+        text-align: center;
+    }
+    th:last-child, td:last-child {
+        width: 20%;
+    }
+}
