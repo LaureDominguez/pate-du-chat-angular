@@ -199,13 +199,16 @@ router.post(
 			stock = sanitize(stock);
 			images = sanitize(images);
 
-			category = category && mongoose.Types.ObjectId.isValid(category._id)
-                ? sanitize(category._id) 
-                : DEFAULT_CATEGORY._id;
+			category =
+				category && mongoose.Types.ObjectId.isValid(category._id)
+					? sanitize(category._id)
+					: DEFAULT_CATEGORY._id;
 
 			const existingProduct = await Product.findOne({ name });
 			if (existingProduct) {
-				return res.status(400).json({ msg: 'Ce produit existe déjà.' });
+				return res
+					.status(400)
+					.json({ msg: 'Un autre produit porte déjà ce nom.' });
 			}
 
 			const newProduct = new Product({
@@ -220,8 +223,11 @@ router.post(
 
 			const product = await newProduct.save();
 			res.status(201).json(product);
-		} catch (error) {
-			console.error(error.message);
+		} catch (err) {
+			console.error('Erreur lors de la mise à jour du produit:', err.message);
+			if (err.code === 11000) {
+				return res.status(400).json({ msg: 'Ce produit existe déjà.' });
+			}
 			res.status(500).send('Server error');
 		}
 	}
@@ -292,6 +298,13 @@ router.put(
 				return res.status(404).json({ msg: 'Produit inconnu' });
 			}
 
+			const existingProduct = await Product.findOne({ name });
+			if (existingProduct && existingProduct._id !== product._id) {
+				return res
+					.status(400)
+					.json({ msg: 'Un autre produit porte déjà ce nom.' });
+			}
+
 			product.name = sanitize(name) || product.name;
 			// product.category = sanitize(category) || product.category;
 			product.description = sanitize(description) || product.description;
@@ -306,11 +319,11 @@ router.put(
 
 			const updatedProduct = await product.save();
 			res.json(updatedProduct);
-		} catch (error) {
-			console.error(
-				'Erreur lors de la mise à jour d’un produit: ',
-				error.message
-			);
+		} catch (err) {
+			console.error('Erreur lors de la mise à jour du produit:', err.message);
+			if (err.code === 11000) {
+				return res.status(400).json({ msg: 'Ce produit existe déjà.' });
+			}
 			res.status(500).send('Erreur serveur');
 		}
 	}

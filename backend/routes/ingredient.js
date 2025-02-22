@@ -99,8 +99,11 @@ router.post(
 
 			const ingredient = await newIngredient.save();
 			res.status(201).json(ingredient);
-		} catch (error) {
-			console.error('Erreur lors de l’ajout d’un ingrédient:', error);
+		} catch (err) {
+			console.error('Erreur lors de l’ajout d’un ingrédient:', err);
+			if (err.code === 11000) {
+				return res.status(400).json({ msg: 'Cet ingrédient existe déjà.' });
+			}
 			res.status(500).send('Erreur serveur');
 		}
 	}
@@ -138,6 +141,13 @@ router.put(
 				return res.status(404).json({ msg: 'Ingrédient inconnu' });
 			}
 
+			const existingIngredient = await Ingredient.findOne({ name });
+			if (existingIngredient && existingIngredient._id.toString() !== req.params.id) {
+				return res
+					.status(400)
+					.json({ msg: 'Un autre ingrédient porte déjà ce nom.' });
+			}
+
 			// Mise à jour des champs
 			ingredient.name = sanitize(name) || ingredient.name;
 			ingredient.supplier = sanitize(supplier) || ingredient.supplier;
@@ -155,6 +165,9 @@ router.put(
 				'Erreur lors de la mise à jour de l\'ingrédient:',
 				error.message
 			);
+			if (err.code === 11000) {
+				return res.status(400).json({ msg: 'Cet ingrédient existe déjà.' });
+			}
 			res.status(500).send('Erreur serveur');
 		}
 	}

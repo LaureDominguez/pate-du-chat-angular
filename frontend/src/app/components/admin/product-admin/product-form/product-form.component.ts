@@ -390,20 +390,31 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  private fieldLabels: { [key: string]: string } = {
+    name: 'Nom',
+    category: 'Catégorie',
+    description: 'Description',
+    composition: 'Composition',
+    price: 'Prix',
+    stock: 'Stock',
+  };
+
   private getErrorMessage(controlName: string): string | null {
     const control = this.productForm.get(controlName);
     if (!control || control.valid || !control.errors) return null;
 
-    if (control.hasError('required'))
-      return `Le champ ${controlName} est obligatoire.`;
-    if (control.hasError('minlength'))
-      return `Le champ ${controlName} doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
-    if (control.hasError('maxlength'))
-      return `Le champ ${controlName} ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
-    if (control.hasError('pattern'))
-      return `Le champ ${controlName} contient des caractères non autorisés.`;
-    if (control.hasError('min'))
-      return `Le champ ${controlName} doit être un nombre positif.`;
+  const label = this.fieldLabels[controlName] || controlName;
+
+  if (control.hasError('required'))
+    return `Le champ "${label}" est obligatoire.`;
+  if (control.hasError('minlength'))
+    return `Le champ "${label}" doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
+  if (control.hasError('maxlength'))
+    return `Le champ "${label}" ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
+  if (control.hasError('pattern'))
+    return `Le champ "${label}" contient des caractères non autorisés.`;
+  if (control.hasError('min'))
+    return `Le champ "${label}" doit être un nombre positif.`;
 
     return null;
   }

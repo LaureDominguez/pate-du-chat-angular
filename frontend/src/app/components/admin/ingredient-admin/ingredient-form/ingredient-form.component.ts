@@ -197,20 +197,30 @@ export class IngredientFormComponent {
     });
   }
 
+  private fieldLabels: { [key: string]: string } = {
+    name: 'Nom',
+    supplier: 'Fournisseur',
+    allergens: 'Allergènes',
+    vegan: 'Vegan',
+    vegeta: 'Végétarien',
+  };
+
   private getErrorMessage(controlName: string): string | null {
     const control = this.ingredientForm.get(controlName);
     if (!control || control.valid || !control.errors) return null;
 
+    const label = this.fieldLabels[controlName] || controlName;
+
     if (control.hasError('required'))
-      return `Le champ ${controlName} est obligatoire.`;
+      return `Le champ "${label}" est obligatoire.`;
     if (control.hasError('minlength'))
-      return `Le champ ${controlName} doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
+      return `Le champ "${label}" doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
     if (control.hasError('maxlength'))
-      return `Le champ ${controlName} ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
+      return `Le champ "${label}" ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
     if (control.hasError('pattern'))
-      return `Le champ ${controlName} contient des caractères non autorisés.`;
+      return `Le champ "${label}" contient des caractères non autorisés.`;
     if (control.hasError('min'))
-      return `Le champ ${controlName} doit être un nombre positif.`;
+      return `Le champ "${label}" doit être un nombre positif.`;
 
     return null;
   }
