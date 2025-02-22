@@ -12,7 +12,6 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.1.7",
-    "@angular/build": "^19.1.8",
     "@angular/cdk": "^19.1.5",
     "@angular/common": "^19.1.7",
     "@angular/compiler": "^19.1.7",
@@ -44,7 +43,6 @@
     "esbuild": "^0.25.0",
     "jasmine-core": "~5.1.0",
     "rollup": "^4.24.0",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.1"
+    "typescript": "^5.7.3"
   }
 }

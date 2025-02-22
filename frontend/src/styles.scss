@@ -24,7 +24,7 @@ html, body {
 
     @include mat.all-component-themes(m3.$light-theme);
     @include mat.all-component-typographies(m3.$light-theme);
-    @include mat.all-component-colors(m3.$light-theme);
+    // @include mat.all-component-colors(m3.$light-theme);
 }
 
 body {

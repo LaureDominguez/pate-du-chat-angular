@@ -37,7 +37,7 @@
               "includePaths": ["node_modules"]
             },
             "styles": [
-              "src/assets/themes/m3-theme.scss",
+              // "src/assets/themes/m3-theme.scss",
               "src/styles.scss"
             ],
             "scripts": [],
@@ -103,7 +103,7 @@
               "includePaths": ["node_modules"]
             },
             "styles": [
-              "src/assets/themes/m3-theme.scss",
+              // "src/assets/themes/m3-theme.scss",
               "src/styles.scss"
             ],
             "scripts": []
