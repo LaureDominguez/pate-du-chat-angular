@@ -9,7 +9,7 @@ import { MatSort } from '@angular/material/sort';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DEFAULT_CATEGORY } from '../../../models/category';
-import { Subject, takeUntil } from 'rxjs';
+import { catchError, of, Subject, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-category-admin',
@@ -108,6 +108,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       return;
     }
     this.editingCategory = null;
+    this.categories.data = this.categories.data.filter(cat => cat._id !== null);
   }
 
   //Save
@@ -121,24 +122,37 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       name: this.categoryForm.get('name')?.value.trim(), // Nettoyage des espaces
     };
 
-    if (category._id) {
-      // Update
-      this.categoryService
-        .updateCategory(category._id, newCategory)
-        .subscribe(() => {
+    const request$ = category._id
+      ? this.categoryService.updateCategory(category._id, newCategory)
+      : this.categoryService.createCategory(newCategory);
+
+    request$
+      .pipe(
+        tap(() => this.cancelEdit()),
+        catchError(() => {
           this.cancelEdit();
-        });
-    } else {
-      // Create
-      this.categoryService.createCategory(newCategory).subscribe({
-        next: () => {
-          this.cancelEdit();
-        },
-        error: (error) => {
-          this.categories.data = this.categories.data.filter(cat => cat._id !== null);
-        }
-      });
-    }
+          return of(null);
+        })
+      )
+      .subscribe();
+    // if (category._id) {
+    //   // Update
+    //   this.categoryService
+    //     .updateCategory(category._id, newCategory)
+    //     .subscribe(() => {
+    //       this.cancelEdit();
+    //     });
+    // } else {
+    //   // Create
+    //   this.categoryService.createCategory(newCategory).subscribe({
+    //     next: () => {
+    //       this.cancelEdit();
+    //     },
+    //     error: (error) => {
+    //       this.cancelEdit();
+    //     }
+    //   });
+    // }
   }
 
   // Création depuis product-Form
