@@ -61,7 +61,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -103,7 +103,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),

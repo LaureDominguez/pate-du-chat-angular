@@ -147,28 +147,28 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
-		check('category')
-			.custom((value) => {
-                if (!value || !value._id) {
-                    throw new Error('Le champ "catégorie" est obligatoire.');
-                }
-                if (!mongoose.Types.ObjectId.isValid(value._id)) {
-                    throw new Error('Le champ "catégorie" doit être un ID MongoDB valide.');
-                }
-                return true;
-            }),
+		check('category').custom((value) => {
+			if (!value || !value._id) {
+				throw new Error('Le champ "catégorie" est obligatoire.');
+			}
+			if (!mongoose.Types.ObjectId.isValid(value._id)) {
+				throw new Error('Le champ "catégorie" doit être un ID MongoDB valide.');
+			}
+			return true;
+		}),
 		check('description')
 			.optional()
 			.trim()
 			.isLength({ max: 500 })
+			.if(check('description').notEmpty())
 			.withMessage(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿ\s.,!?()'"-]*$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -244,7 +244,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -268,6 +268,7 @@ router.put(
 			.withMessage(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
+			.if(check('description').notEmpty())
 			.matches(/^[a-zA-Z0-9À-ÿ\s.,!?()'"-]*$/)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
@@ -319,9 +320,10 @@ router.put(
 			product.stock = sanitize(stock) || product.stock;
 			product.images = sanitize(images) || product.images;
 
-			product.category = category && mongoose.Types.ObjectId.isValid(category._id)
-                ? sanitize(category._id)
-                : DEFAULT_CATEGORY._id;
+			product.category =
+				category && mongoose.Types.ObjectId.isValid(category._id)
+					? sanitize(category._id)
+					: DEFAULT_CATEGORY._id;
 
 			const updatedProduct = await product.save();
 			res.json(updatedProduct);

@@ -73,7 +73,7 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿ\s-]+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
       category: [data.product?.category || ''],
@@ -81,7 +81,7 @@ export class ProductFormComponent implements OnInit {
         data.product?.description || '',
         [
           Validators.maxLength(500),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿ\s.,!?()'"-]+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
         ],
       ],
       composition: [
@@ -172,15 +172,69 @@ export class ProductFormComponent implements OnInit {
     );
   }
 
-  //// Tri alphabetique des données recherchées
+  //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
-    const filterValue = (typeof value === 'string' ? value : '')
-      .toLowerCase()
-      .trim();
+    if (!value) return list;
+
+    // Normaliser la valeur recherchée
+    const normalizedValue = this.normalizeString(value);
+
     return list
-      .filter((item) => item.name.toLowerCase().includes(filterValue))
+      .filter((item) =>
+        this.normalizeString(item.name).includes(normalizedValue)
+      )
       .sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  //// Fonction de normalisation des accents et ligatures
+  private normalizeString(str: string): string {
+    if (typeof str !== 'string') return ''; // Vérifie que c'est bien une string, sinon retourne une chaîne vide
+
+    return str
+      .normalize('NFD') // Décompose les caractères accentués (ex: Œ → O + E, É → E + ´)
+      .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+      .toLowerCase() // Convertit en minuscules
+      .trim(); // Supprime les espaces inutiles
+  }
+
+  // //// AutoComplete
+  // private setupAutoComplete(): void {
+  //   // Categories
+  //   this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
+  //     startWith(''),
+  //     map((value) => {
+  //       if (typeof value === 'string' && value !== 'categoryNotFound') {
+  //         this.searchedCategory = value.trim();
+  //         this.categoryNotFound =
+  //           this.filterItems(value, this.categories).length === 0;
+  //       }
+  //       return this.filterItems(value, this.categories);
+  //     })
+  //   );
+
+  //   // Ingredients
+  //   this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
+  //     startWith(''),
+  //     map((value) => {
+  //       if (typeof value === 'string' && value !== 'ingredientNotFound') {
+  //         this.searchedIngredient = value.trim();
+  //         this.ingredientNotFound =
+  //           this.filterItems(value, this.ingredients).length === 0;
+  //       }
+  //       return this.filterItems(value, this.ingredients);
+  //     })
+  //   );
+  // }
+
+  // //// Tri alphabetique des données recherchées
+  // private filterItems(value: string, list: any[]): any[] {
+  //   const filterValue = (typeof value === 'string' ? value : '')
+  //     .toLowerCase()
+  //     .trim();
+  //   return list
+  //     .filter((item) => item.name.toLowerCase().includes(filterValue))
+  //     .sort((a, b) => a.name.localeCompare(b.name));
+  // }
 
   //// Ecoute de shared-data
   private subscribeToDataUpdates(): void {
@@ -403,18 +457,18 @@ export class ProductFormComponent implements OnInit {
     const control = this.productForm.get(controlName);
     if (!control || control.valid || !control.errors) return null;
 
-  const label = this.fieldLabels[controlName] || controlName;
+    const label = this.fieldLabels[controlName] || controlName;
 
-  if (control.hasError('required'))
-    return `Le champ "${label}" est obligatoire.`;
-  if (control.hasError('minlength'))
-    return `Le champ "${label}" doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
-  if (control.hasError('maxlength'))
-    return `Le champ "${label}" ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
-  if (control.hasError('pattern'))
-    return `Le champ "${label}" contient des caractères non autorisés.`;
-  if (control.hasError('min'))
-    return `Le champ "${label}" doit être un nombre positif.`;
+    if (control.hasError('required'))
+      return `Le champ "${label}" est obligatoire.`;
+    if (control.hasError('minlength'))
+      return `Le champ "${label}" doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
+    if (control.hasError('maxlength'))
+      return `Le champ "${label}" ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
+    if (control.hasError('pattern'))
+      return `Le champ "${label}" contient des caractères non autorisés.`;
+    if (control.hasError('min'))
+      return `Le champ "${label}" doit être un nombre positif.`;
 
     return null;
   }

@@ -91,7 +91,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-ZÀ-ÿ0-9\s]+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
     });

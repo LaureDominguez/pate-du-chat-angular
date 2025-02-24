@@ -55,20 +55,31 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
-		),
+			),
 		check('supplier')
 			.trim()
-			.notEmpty().withMessage('Le champ "fournisseur" est obligatoire.')
+			.notEmpty()
+			.withMessage('Le champ "fournisseur" est obligatoire.')
 			.isLength({ min: 2, max: 50 })
-			.withMessage('Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.')
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
-			.withMessage('Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'),
-		check('allergens').isArray().withMessage('Le champ "allergènes" doit être un tableau.'),
-		check('vegan').isBoolean().withMessage('Le champ "vegan" doit être un booléen.'),
-		check('vegeta').isBoolean().withMessage('Le champ "végétarien" doit être un booléen.'),
+			.withMessage(
+				'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			.withMessage(
+				'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
+			),
+		check('allergens')
+			.isArray()
+			.withMessage('Le champ "allergènes" doit être un tableau.'),
+		check('vegan')
+			.isBoolean()
+			.withMessage('Le champ "vegan" doit être un booléen.'),
+		check('vegeta')
+			.isBoolean()
+			.withMessage('Le champ "végétarien" doit être un booléen.'),
 	],
 	validateRequest,
 	async (req, res) => {
@@ -117,19 +128,36 @@ router.put(
 			.optional()
 			.trim()
 			.isLength({ min: 2, max: 50 })
-			.withMessage('Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.')
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
-			.withMessage('Le champ "nom" ne doit pas contenir de caractères spéciaux.'),
+			.withMessage(
+				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			.withMessage(
+				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
+			),
 		check('supplier')
 			.optional()
 			.trim()
 			.isLength({ min: 2, max: 50 })
-			.withMessage('Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.')
-			.matches(/^[a-zA-Z0-9À-ÿ\s-]+$/)
-			.withMessage('Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'),
-		check('allergens').optional().isArray().withMessage('Le champ "allergènes" doit être un tableau.'),
-		check('vegan').optional().isBoolean().withMessage('Le champ "vegan" doit être un booléen.'),
-		check('vegeta').optional().isBoolean().withMessage('Le champ "végétarien" doit être un booléen.'),
+			.withMessage(
+				'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			.withMessage(
+				'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
+			),
+		check('allergens')
+			.optional()
+			.isArray()
+			.withMessage('Le champ "allergènes" doit être un tableau.'),
+		check('vegan')
+			.optional()
+			.isBoolean()
+			.withMessage('Le champ "vegan" doit être un booléen.'),
+		check('vegeta')
+			.optional()
+			.isBoolean()
+			.withMessage('Le champ "végétarien" doit être un booléen.'),
 	],
 	validateRequest,
 	async (req, res) => {
@@ -142,7 +170,10 @@ router.put(
 			}
 
 			const existingIngredient = await Ingredient.findOne({ name });
-			if (existingIngredient && existingIngredient._id.toString() !== req.params.id) {
+			if (
+				existingIngredient &&
+				existingIngredient._id.toString() !== req.params.id
+			) {
 				return res
 					.status(400)
 					.json({ msg: 'Un autre ingrédient porte déjà ce nom.' });
@@ -162,7 +193,7 @@ router.put(
 			res.status(200).json(updatedIngredient);
 		} catch (error) {
 			console.error(
-				'Erreur lors de la mise à jour de l\'ingrédient:',
+				"Erreur lors de la mise à jour de l'ingrédient:",
 				error.message
 			);
 			if (err.code === 11000) {
