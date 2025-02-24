@@ -8,6 +8,7 @@ export interface Product {
     description?: string;
     composition?: (string | Ingredient)[];
     price: number;
+    priceType: 'piece' | 'kg';
     stock: boolean;
     images?: string[];
 }

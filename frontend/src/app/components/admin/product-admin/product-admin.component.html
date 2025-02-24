@@ -54,7 +54,10 @@
             <th mat-header-cell *matHeaderCellDef>Prix</th>
             <td mat-cell *matCellDef="let product">
                 {{ product.price === 0 ? 'Gratuit' : (product.price | currency:'EUR':'symbol')}}
+                / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}
             </td>
+            <!-- <td>{{ product.price }} € / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}</td> -->
+
         </ng-container>
 
         <!-- Stock Column -->

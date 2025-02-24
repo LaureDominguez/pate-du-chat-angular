@@ -180,6 +180,9 @@ router.post(
 		check('price')
 			.isFloat({ min: 0 })
 			.withMessage('Le champ "prix" doit être un nombre positif.'),
+		check('priceType')
+			.isIn(['piece', 'kg'])
+			.withMessage('Le type de prix doit être "piece" ou "kg".'),
 		check('stock')
 			.isBoolean()
 			.withMessage('Le champ "stock" doit être un booléen.'),
@@ -187,7 +190,7 @@ router.post(
 	validateRequest,
 	async (req, res, next) => {
 		try {
-			let { name, category, description, composition, price, stock, images } =
+			let { name, category, description, composition, price, priceType, stock, images } =
 				req.body;
 
 			// Nettoyage des entrées utilisateur
@@ -196,6 +199,7 @@ router.post(
 			description = sanitize(description);
 			composition = sanitize(composition);
 			price = sanitize(price);
+			priceType = sanitize(priceType);
 			stock = sanitize(stock);
 			images = sanitize(images);
 
@@ -217,6 +221,7 @@ router.post(
 				description,
 				composition,
 				price,
+				priceType,
 				stock,
 				images,
 			});
@@ -283,6 +288,10 @@ router.put(
 			.optional()
 			.isFloat({ min: 0 })
 			.withMessage('Le champ "prix" doit être un nombre positif.'),
+		check('priceType')
+			.optional()
+			.isIn(['piece', 'kg'])
+			.withMessage('Le type de prix doit être "piece" ou "kg".'),
 		check('stock')
 			.optional()
 			.isBoolean()
@@ -291,7 +300,7 @@ router.put(
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name, category, description, composition, price, stock, images } =
+			let { name, category, description, composition, price, priceType, stock, images } =
 				req.body;
 
 			const product = await Product.findById(req.params.id);
@@ -317,6 +326,7 @@ router.put(
 			product.composition = sanitize(composition) || product.composition;
 			// product.price = sanitize(price) || product.price;
 			product.price = price !== undefined ? sanitize(price) : product.price;
+			product.priceType = sanitize(priceType) || product.priceType;
 			product.stock = sanitize(stock) || product.stock;
 			product.images = sanitize(images) || product.images;
 

@@ -96,6 +96,13 @@ export class ProductFormComponent implements OnInit {
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
         ],
       ],
+      priceType: [
+        data.product?.priceType || '',
+        [
+          Validators.required,
+          Validators.pattern(/^(piece|kg)$/)
+        ],
+      ],
       stock: [data.product?.stock || false],
       images: [data.product?.images || []],
     });

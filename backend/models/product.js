@@ -24,6 +24,12 @@ const ProductSchema = new mongoose.Schema({
 		required: true,
 		min: 0,
 	},
+	priceType: {
+		type: String,
+		enum: ['piece', 'kg'],
+		required: true,
+		default: 'piece',
+	},
 	stock: {
 		type: Boolean,
 		default: false,

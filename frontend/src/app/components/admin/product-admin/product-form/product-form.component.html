@@ -90,6 +90,15 @@
         <mat-error *ngIf="price?.hasError('pattern')">Le format du prix est incorrect (ex: 10.99).</mat-error>
     </mat-form-field>
 
+    <mat-form-field appearance="outline">
+        <mat-label>Type de prix</mat-label>
+        <mat-select formControlName="priceType">
+            <mat-option value="piece">À la pièce</mat-option>
+            <mat-option value="kg">Au kg</mat-option>
+        </mat-select>
+    </mat-form-field>
+
+
     <!-- Stock -->
     <section class="stock">
         <mat-slide-toggle formControlName="stock" labelPosition="before">
