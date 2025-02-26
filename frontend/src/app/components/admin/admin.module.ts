@@ -22,6 +22,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { A11yModule } from '@angular/cdk/a11y';
+import { MatRadioModule } from '@angular/material/radio';
+import {MatButtonToggleModule} from '@angular/material/button-toggle'
 
 @NgModule({
     exports: [
@@ -32,6 +34,7 @@ import { A11yModule } from '@angular/cdk/a11y';
         A11yModule,
         MatAutocompleteModule,
         MatButtonModule,
+        MatButtonToggleModule,
         MatCardModule,
         MatCheckboxModule,
         MatChipsModule,
@@ -44,6 +47,7 @@ import { A11yModule } from '@angular/cdk/a11y';
         MatListModule,
         MatOptionModule,
         MatPaginatorModule,
+        MatRadioModule,
         MatSelectModule,
         MatSlideToggleModule,
         MatSortModule,

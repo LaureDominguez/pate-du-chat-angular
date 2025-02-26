@@ -50,8 +50,14 @@
     <!-- Composition -->
     <mat-form-field appearance="fill">
         <mat-label>Ajouter un ingrédient</mat-label>
-        <input type="text" matInput [formControl]="ingredientCtrl" [matAutocomplete]="ingredientAuto"
-            formControlName="composition" placeholder="Rechercher un ingrédient" />
+        <input 
+            type="text" 
+            matInput 
+            [formControl]="ingredientCtrl" 
+            [matAutocomplete]="ingredientAuto"
+            formControlName="composition" 
+            placeholder="Rechercher un ingrédient" 
+        />
         <mat-error *ngIf="composition.length === 0">Ajoutez au moins un ingrédient.</mat-error>
         <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="addIngredient($event.option.value)"
             hideSingleSelectionIndicator>

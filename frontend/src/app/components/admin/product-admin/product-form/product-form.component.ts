@@ -204,45 +204,6 @@ export class ProductFormComponent implements OnInit {
       .trim(); // Supprime les espaces inutiles
   }
 
-  // //// AutoComplete
-  // private setupAutoComplete(): void {
-  //   // Categories
-  //   this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
-  //     startWith(''),
-  //     map((value) => {
-  //       if (typeof value === 'string' && value !== 'categoryNotFound') {
-  //         this.searchedCategory = value.trim();
-  //         this.categoryNotFound =
-  //           this.filterItems(value, this.categories).length === 0;
-  //       }
-  //       return this.filterItems(value, this.categories);
-  //     })
-  //   );
-
-  //   // Ingredients
-  //   this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
-  //     startWith(''),
-  //     map((value) => {
-  //       if (typeof value === 'string' && value !== 'ingredientNotFound') {
-  //         this.searchedIngredient = value.trim();
-  //         this.ingredientNotFound =
-  //           this.filterItems(value, this.ingredients).length === 0;
-  //       }
-  //       return this.filterItems(value, this.ingredients);
-  //     })
-  //   );
-  // }
-
-  // //// Tri alphabetique des données recherchées
-  // private filterItems(value: string, list: any[]): any[] {
-  //   const filterValue = (typeof value === 'string' ? value : '')
-  //     .toLowerCase()
-  //     .trim();
-  //   return list
-  //     .filter((item) => item.name.toLowerCase().includes(filterValue))
-  //     .sort((a, b) => a.name.localeCompare(b.name));
-  // }
-
   //// Ecoute de shared-data
   private subscribeToDataUpdates(): void {
     this.sharedDataService.categoryCreated$.subscribe((newCategory) =>

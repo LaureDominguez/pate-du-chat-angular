@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Inject, Output } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
@@ -9,6 +9,7 @@ import { AdminModule } from '../../admin.module';
 import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Ingredient } from '../../../../models/ingredient';
 import { SharedDataService } from '../../../../services/shared-data.service';
+import { map, Observable, startWith } from 'rxjs';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -27,6 +28,12 @@ export class IngredientFormComponent {
 
   @Output() downloadImageEvent = new EventEmitter<string>();
 
+  allIngredients: Ingredient[] = [];
+  filteredSubIngredients!: Observable<Ingredient[]>;
+  selectedSubIngredients: Ingredient[] = [];
+  subIngredientNotFound: boolean = false;
+  subIngredientCtrl = new FormControl();
+
   constructor(
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
@@ -38,6 +45,7 @@ export class IngredientFormComponent {
       ingredient: Ingredient | null;
       allergenesList: string[];
       searchedValue: string;
+      ingredients: Ingredient[];
     }
   ) {
     this.ingredientForm = this.fb.group({
@@ -50,6 +58,7 @@ export class IngredientFormComponent {
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
+      bio: [data.ingredient?.bio || false],
       supplier: [
         data.ingredient?.supplier || '',
         [
@@ -59,6 +68,8 @@ export class IngredientFormComponent {
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
+      type: [data.ingredient?.type || 'simple'],
+      subIngredients: [data.ingredient?.subIngredients || []],
       allergens: this.fb.array(
         data.allergenesList.map((allergen) =>
           this.fb.control(
@@ -70,11 +81,71 @@ export class IngredientFormComponent {
       vegeta: [data.ingredient?.vegeta || false],
     });
 
+    this.allIngredients = data.ingredients || [];
+
     // Charger les images existantes si l'ingrédient est fourni
     if (data.ingredient?.images) {
       this.existingImages = [...data.ingredient.images];
       this.existingImageUrls = [...data.imageUrls];
     }
+
+    if (data.ingredient?.subIngredients) {
+      this.selectedSubIngredients = [...data.ingredient.subIngredients];
+    }
+  }
+
+  ngOnInit(): void {
+    this.setupAutoComplete();
+  }
+
+  // ✅ Recherche d'ingrédients avec autocomplete
+  private setupAutoComplete(): void {
+    this.filteredSubIngredients = this.subIngredientCtrl.valueChanges.pipe(
+      startWith(''),
+      map((value) => {
+        const results = this._filterIngredients(value);
+        this.subIngredientNotFound = results.length === 0; // ✅ Gestion du message "Aucun ingrédient trouvé"
+        return results;
+      })
+    );
+  }
+
+  private _filterIngredients(value: string): Ingredient[] {
+    const filterValue = value ? value.toLowerCase().trim() : '';
+    return this.allIngredients.filter(
+      (ing) =>
+        ing.name.toLowerCase().includes(filterValue) &&
+        !this.selectedSubIngredients.some((i) => i._id === ing._id)
+    );
+  }
+  // ✅ Ajouter un sous-ingrédient
+  addSubIngredient(ingredient: Ingredient): void {
+    if (!this.selectedSubIngredients.includes(ingredient)) {
+      this.selectedSubIngredients.push(ingredient);
+      this.subIngredientCtrl.setValue(''); // Réinitialise le champ de recherche
+    }
+  }
+
+  // ✅ Supprimer un sous-ingrédient
+  removeSubIngredient(ingredient: Ingredient): void {
+    const index = this.selectedSubIngredients.indexOf(ingredient);
+    if (index >= 0) {
+      this.selectedSubIngredients.splice(index, 1);
+    }
+  }
+
+  // ✅ Vérifier si un ingrédient est déjà sélectionné
+  isSubIngredientSelected(ingredient: Ingredient): boolean {
+    return this.selectedSubIngredients.some(
+      (ing) => ing._id === ingredient._id
+    );
+  }
+
+  // ✅ Gestion du tooltip des ingrédients
+  getIngredientTooltip(ingredient: Ingredient): string {
+    return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
+    Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n
+    Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}`;
   }
 
   get allergens(): FormArray {
@@ -186,6 +257,7 @@ export class IngredientFormComponent {
       _id: this.data.ingredient?._id,
       ...this.ingredientForm.value,
       allergens: allergenesSelectionnes,
+      subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
       existingImages: this.existingImages,
     };
 

@@ -83,8 +83,6 @@ export class IngredientAdminComponent implements OnInit {
   downloadIngredientImage(imagePath: string, ingredientName: string) {
     this.imageService.downloadImage(imagePath, ingredientName);
   }
-
-  // ouvrir le formulaire d'ingrédient
   openIngredientForm(
     ingredient: Ingredient | null,
     searchedValue: string = ''
@@ -94,34 +92,37 @@ export class IngredientAdminComponent implements OnInit {
         this.imageService.getImageUrl(imagePath)
       ) || [];
 
-    const dialogRef = this.dialog.open(IngredientFormComponent, {
-      width: '600px',
-      data: {
-        ingredient: ingredient,
-        allergenesList: this.allergenesList,
-        imageUrls: imageUrls,
-        searchedValue: searchedValue,
-      },
-    });
+    // Récupérer tous les ingrédients disponibles pour permettre la sélection des sous-ingrédients
+    this.ingredientService.getIngredients().subscribe((allIngredients) => {
+      const ingredients = allIngredients; // ✅ Déclaration explicite avant l'utilisation
 
-    dialogRef.afterClosed().subscribe(
-      (
-        result:
-          | {
-              ingredientData: any;
-              selectedFiles: File[];
-              removedExistingImages: string[];
-            }
-          | undefined
-      ) => {
-        if (result) {
-          this.handleIngredientFormSubmit(result);
+      const dialogRef = this.dialog.open(IngredientFormComponent, {
+        width: '600px',
+        data: {
+          ingredient: ingredient,
+          allergenesList: this.allergenesList,
+          imageUrls: imageUrls,
+          searchedValue: searchedValue,
+          ingredients: ingredients, // ✅ Passage des ingrédients disponibles
+        },
+      });
+
+      dialogRef.afterClosed().subscribe(
+        (
+          result:
+            | {
+                ingredientData: any;
+                selectedFiles: File[];
+                removedExistingImages: string[];
+              }
+            | undefined
+        ) => {
+          if (result) {
+            this.handleIngredientFormSubmit(result);
+          }
         }
-      }
-    ),
-      (error: any) => {
-        console.error('Erreur lors du chargement des ingrédients :', error);
-      };
+      );
+    });
   }
 
   handleIngredientFormSubmit(result: {
@@ -297,7 +298,9 @@ export class IngredientAdminComponent implements OnInit {
   }
 
   // >> Confirmation de la suppression
-  private async confirmIngredientDeletion(ingredient: Ingredient): Promise<void> {
+  private async confirmIngredientDeletion(
+    ingredient: Ingredient
+  ): Promise<void> {
     try {
       await firstValueFrom(
         this.ingredientService.deleteIngredient(ingredient._id!)

@@ -1,3 +1,5 @@
+@use '@angular/material' as mat;
+
 ::ng-deep .mat-mdc-dialog-surface {
     background-color: var(--background);
     color: var(--onBackground);
@@ -13,7 +15,8 @@ form {
     overflow: auto;
     margin: auto;
     mat-form-field {
-        border-radius: 10px;
+        border-radius: 5px;
+        width: 100%;
         background-color: var(--background);
         color: var(--onBackground);
         &:focus-within {
@@ -27,21 +30,162 @@ form {
     }
 }
 
-mat-divider {
-    margin: 0.5rem 0;
-}
-
 mat-label {
     font-weight: bold;
     flex-shrink: 0;
 }
 
+.header-fields{
+    display: flex;
+    flex-direction: column;
+
+    // Nom + label BIO
+    .name{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        mat-form-field {
+            flex-grow: 1;
+        }
+        mat-slide-toggle {
+            margin: 1rem;
+            flex-shrink: 0;
+        }
+        // background-color: pink;
+        @include mat.slide-toggle-overrides((
+            track-outline-color: var(--outlineVariant), //border unselected
+            selected-track-outline-color: var(--outlineVariant), //border selected
+
+            unselected-icon-color: var(--onSecondaryContainer), //icon unselected
+            selected-icon-color: var(--onTertiaryFixedVariant), //icon selected
+
+            handle-surface-color: var(--tertiaryFixedDim), //handle selected
+            unselected-handle-color: var(--secondaryContainer), //handle unselected
+            unselected-hover-handle-color: var(--secondaryContainer), //handle unselected hover
+
+            label-text-weight: 600,
+        ));
+    }
+}
+
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.type{
+    @include mat.button-toggle-overrides((
+        background-color: var(--surfaceContainer),
+        selected-state-background-color: var(--primaryFixed),
+    ));
+}
+
+.dynamic-fields{
+    display: grid;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: height 0.3s ease-out;
+
+    &.simple-active{
+        height: 280px;
+    }
+
+    &.compose-active{
+        height: auto;
+    }
+
+    .dynamic-block {
+        width: 100%;
+        opacity: 0;
+        transition: all 0.3s ease-out;
+    }
+
+    .simple {
+        @extend .dynamic-block;
+        transform: translateX(-100%);
+        &.animation {
+            opacity: 1;
+            transform: translateX(0);
+            animation: slideInLeft 0.3s ease-out;           
+        }
+    }
+
+    .compose {
+        @extend .dynamic-block;
+        transform: translateX(100%);
+        &.animation {
+            opacity: 1;
+            transform: translateX(0);
+            animation: slideInRight 0.3s ease-out;
+        }
+    }
+}
+
+
+mat-option {
+    color: var(--onSurface) !important;
+    background-color: var(--surfaceContainer) !important;
+    &:hover {
+        color: var(--onPrimaryFixed) !important;
+        background-color: var(--primaryFixed) !important;
+    }
+}
+
+
+// Liste des allergènes
+.allergen-form-field{
+    padding-top: 0.5rem;
+}
+.allergen-grid {
+    max-height: 150px;
+    overflow: auto;
+    margin-top: 0.5rem;
+    border: 2px solid var(--outlineVariant);
+    border-radius: 8px;
+    padding: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    mat-checkbox {
+        &:hover {
+            border-radius: 8px;
+            background-color: var(--surfaceContainer);
+        }
+    }
+}
+
+.allergen-form-field, .file-upload, .type{
+    mat-label {
+        margin: 1rem;
+        line-height: 2rem;
+    }
+}
+
+// Régime allimentaire (vege / vegan)
 .regime {
     display: flex;
     align-items: center;
     padding-top: 0.5rem;
     mat-label {
-        width: 35%;
+        width: 150px;
         line-height: 2rem;
         padding: 0 1rem;
     }
@@ -59,32 +203,25 @@ mat-label {
     }
 }
 
-.allergen-grid {
-    max-height: 150px;
-    overflow: auto;
-    margin-top: 16px;
-    border: 2px solid var(--surfaceVariant);
-    border-radius: 8px;
-    padding: 8px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    mat-checkbox {
-        &:hover {
-            border-radius: 8px;
-            background-color: var(--surfaceContainer);
-        }
-    }
+.empty-message {
+    color: var(--outline);
+    font-style: italic;
+    text-align: center;
+    margin-top: 8px;
 }
 
 
-.allergen-form-field, .file-upload{
-    mat-label {
-        margin: 1rem;
-        line-height: 2rem;
-    }
+mat-divider {
+    margin: 0.5rem 0;
 }
 
+// Gestion des images
+.images-fields {
+    // background-color: red;
+    flex-grow: 1;
+    flex-shrink: 0;
 
+}
 .file-upload {
     display: flex;
     align-items: center;
@@ -141,28 +278,21 @@ mat-label {
             justify-content: space-around;
             :first-child {
                 background-color: color-mix(in srgb, var(--error) 70%, transparent);
+                color: white;
             }
             :last-child {
                 background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
-
+                color: white;
             }
         }
-        button {
-            // background-color: rgba(255, 0, 0, 0.8);
+        .delete{
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: color-mix(in srgb, var(--error) 70%, transparent);
             color: white;
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            cursor: pointer;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            mat-icon{
-                font-size: 20px;
-            }
         }
+
     }
 }
 

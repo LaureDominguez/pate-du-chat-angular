@@ -71,6 +71,15 @@ router.post(
 			.withMessage(
 				'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
 			),
+		check('type')
+			.isIn(['simple', 'compose'])
+			.withMessage(
+				'Le champ "type d\'ingrédient" doit être "simple" ou "composé".'
+			),
+		check('subIngredients')
+			.isArray()
+			.optional()
+			.withMessage('Le champ "sous-ingrédients" doit être une liste.'),
 		check('allergens')
 			.isArray()
 			.withMessage('Le champ "allergènes" doit être un tableau.'),
@@ -84,24 +93,40 @@ router.post(
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name, supplier, allergens, vegan, vegeta, images } = req.body;
+			let {
+				name,
+				bio,
+				supplier,
+				type,
+				subIngredients,
+				allergens,
+				vegan,
+				vegeta,
+				images,
+			} = req.body;
 
 			// Nettoyage des entrées utilisateur
 			name = sanitize(name);
+			bio = sanitize(bio);
 			supplier = sanitize(supplier);
+			type = sanitize(type);
+			subIngredients = sanitize(subIngredients);
 			allergens = sanitize(allergens);
 			vegan = sanitize(vegan);
 			vegeta = sanitize(vegeta);
 			images = sanitize(images);
 
-			const existingIngredient = await Ingredient.findOne({ name });
+			const existingIngredient = await Ingredient.findOne({ name, bio });
 			if (existingIngredient) {
 				return res.status(400).json({ msg: 'Cet ingrédient existe déjà.' });
 			}
 
 			const newIngredient = new Ingredient({
 				name,
+				bio,
 				supplier,
+				type,
+				subIngredients,
 				allergens,
 				vegan,
 				vegeta,
@@ -135,6 +160,10 @@ router.put(
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
+		check('bio')
+			.optional()
+			.isBoolean()
+			.withMessage('Le champ "bio" doit être un booléen.'),
 		check('supplier')
 			.optional()
 			.trim()
@@ -146,6 +175,16 @@ router.put(
 			.withMessage(
 				'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
 			),
+		check('type')
+			.optional()
+			.isIn(['simple', 'compose'])
+			.withMessage(
+				'Le champ "type d\'ingrédient" doit être "simple" ou "composé".'
+			),
+		check('subIngredients')
+			.isArray()
+			.optional()
+			.withMessage('Le champ "sous-ingrédients" doit être une liste.'),
 		check('allergens')
 			.optional()
 			.isArray()
@@ -162,14 +201,15 @@ router.put(
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name, supplier, allergens, vegan, vegeta, images } = req.body;
+			let { name, bio, supplier, type, subIngredients, allergens, vegan, vegeta, images } =
+				req.body;
 
 			const ingredient = await Ingredient.findById(req.params.id);
 			if (!ingredient) {
 				return res.status(404).json({ msg: 'Ingrédient inconnu' });
 			}
 
-			const existingIngredient = await Ingredient.findOne({ name });
+			const existingIngredient = await Ingredient.findOne({ name, bio });
 			if (
 				existingIngredient &&
 				existingIngredient._id.toString() !== req.params.id
@@ -181,7 +221,13 @@ router.put(
 
 			// Mise à jour des champs
 			ingredient.name = sanitize(name) || ingredient.name;
+			ingredient.bio = sanitize(bio) || ingredient.bio;
 			ingredient.supplier = sanitize(supplier) || ingredient.supplier;
+			ingredient.type = sanitize(type) || ingredient.type;
+			ingredient.subIngredients =
+				subIngredients !== undefined
+					? sanitize(subIngredients)
+					: ingredient.subIngredients;
 			ingredient.allergens = sanitize(allergens) || ingredient.allergens;
 			ingredient.vegan =
 				vegan !== undefined ? sanitize(vegan) : ingredient.vegan;
