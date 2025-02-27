@@ -27,6 +27,7 @@ import { ProductService } from '../../../services/product.service';
 })
 export class IngredientAdminComponent implements OnInit {
   ingredients = new MatTableDataSource<Ingredient>([]);
+  allIngredients: Ingredient[] = [];
   allergenesList: string[] = [];
 
   displayedIngredientsColumns: string[] = [
@@ -52,14 +53,28 @@ export class IngredientAdminComponent implements OnInit {
   ngOnInit(): void {
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
+      this.allIngredients = ingredients;
+      console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
     });
 
     this.fetchAllergenes();
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
+      console.log(
+        '%c [IngredientAdminComponent] → Abonnement openIngredientForm$ déclenché',
+        'color: green; font-weight: bold;'
+      );
+
       const searchedValue = this.sharedDataService.getSearchedIngredient();
+      console.log(
+        '%c [IngredientAdminComponent] → Valeur reçue pour openIngredientForm$ :',
+        'color: green; font-weight: bold;',
+        searchedValue
+      );
+
       this.openIngredientForm(null, searchedValue);
     });
+
 
     this.sharedDataService.downloadImage$.subscribe((data) => {
       if (data) {
@@ -71,6 +86,8 @@ export class IngredientAdminComponent implements OnInit {
   ngAfterViewInit(): void {
     this.ingredients.paginator = this.ingredientsPaginator;
     this.ingredients.sort = this.ingredientsSort;
+
+    // console.log('ingredients : ', this.ingredients)
   }
 
   fetchAllergenes(): void {
@@ -83,6 +100,7 @@ export class IngredientAdminComponent implements OnInit {
   downloadIngredientImage(imagePath: string, ingredientName: string) {
     this.imageService.downloadImage(imagePath, ingredientName);
   }
+
   openIngredientForm(
     ingredient: Ingredient | null,
     searchedValue: string = ''
@@ -93,8 +111,17 @@ export class IngredientAdminComponent implements OnInit {
       ) || [];
 
     // Récupérer tous les ingrédients disponibles pour permettre la sélection des sous-ingrédients
-    this.ingredientService.getIngredients().subscribe((allIngredients) => {
-      const ingredients = allIngredients; // ✅ Déclaration explicite avant l'utilisation
+    // this.ingredientService.getIngredients().subscribe((allIngredients) => {
+      // const ingredients = allIngredients; // ✅ Déclaration explicite avant l'utilisation
+
+          console.log(
+            '[IngredientAdminComponent] openIngredientForm() appelé avec:',
+            ingredient,
+            searchedValue
+          );
+          console.trace(
+            '[IngredientAdminComponent] Trace d’appel openIngredientForm'
+          );
 
       const dialogRef = this.dialog.open(IngredientFormComponent, {
         width: '600px',
@@ -103,7 +130,7 @@ export class IngredientAdminComponent implements OnInit {
           allergenesList: this.allergenesList,
           imageUrls: imageUrls,
           searchedValue: searchedValue,
-          ingredients: ingredients, // ✅ Passage des ingrédients disponibles
+          ingredients: this.allIngredients, // ✅ Passage des ingrédients disponibles
         },
       });
 
@@ -122,7 +149,7 @@ export class IngredientAdminComponent implements OnInit {
           }
         }
       );
-    });
+    // });
   }
 
   handleIngredientFormSubmit(result: {
@@ -182,6 +209,7 @@ export class IngredientAdminComponent implements OnInit {
     } else {
       this.ingredientService.createIngredient(ingredientData).subscribe({
         next: (res) => {
+          console.log('ingredient-admin -> submitIngredientForm à SharedData -> res', res);
           this.sharedDataService.resultIngredientCreated(res);
         },
         error: (error) => {

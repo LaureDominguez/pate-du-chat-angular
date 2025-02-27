@@ -212,6 +212,10 @@ export class ProductFormComponent implements OnInit {
     this.sharedDataService.ingredientCreated$.subscribe((newIngredient) =>
       this.updateList(newIngredient, this.ingredients, 'ingredient')
     );
+      console.log(
+        'product-form -> subscribeToDataUpdates -> ingredients :',
+        this.ingredients
+      );
   }
 
   private updateList(
@@ -271,6 +275,7 @@ export class ProductFormComponent implements OnInit {
 
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
+    console.log ('product-form -> addIngredient -> ingredient :', ingredient);
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
       this.ingredientCtrl.setValue('');
@@ -283,6 +288,7 @@ export class ProductFormComponent implements OnInit {
 
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
+    console.log('product-form -> createIngredient -> searchedValue :', searchedValue);
     this.openIngredientForm(searchedValue)
       .then((newIngredient) => {
         if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
@@ -296,7 +302,7 @@ export class ProductFormComponent implements OnInit {
 
   private openIngredientForm(searchedValue: string): Promise<Ingredient> {
     this.sharedDataService.requestOpenIngredientForm(searchedValue);
-
+    console.log('product-form -> openIngredientForm -> searchedValue :', searchedValue);
     return new Promise((resolve, reject) => {
       this.sharedDataService.ingredientCreated$.pipe(take(1)).subscribe({
         next: (ingredient) => resolve(ingredient),

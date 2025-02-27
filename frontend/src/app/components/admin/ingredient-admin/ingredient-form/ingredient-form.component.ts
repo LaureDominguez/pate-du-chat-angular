@@ -9,7 +9,7 @@ import { AdminModule } from '../../admin.module';
 import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Ingredient } from '../../../../models/ingredient';
 import { SharedDataService } from '../../../../services/shared-data.service';
-import { map, Observable, startWith } from 'rxjs';
+import { map, Observable, startWith, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -92,6 +92,7 @@ export class IngredientFormComponent {
     if (data.ingredient?.subIngredients) {
       this.selectedSubIngredients = [...data.ingredient.subIngredients];
     }
+
   }
 
   ngOnInit(): void {

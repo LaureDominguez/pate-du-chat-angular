@@ -16,4 +16,8 @@ table td:nth-child(4) ::ng-deep .mat-sort-header-container, table td:nth-child(5
 table th:last-child, table td:last-child {
   justify-content: center;
   text-align: center;
+}
+
+.bio {
+  color: var(--tertiaryFixedDim);
 }/*# sourceMappingURL=ingredient-admin.component.css.map */

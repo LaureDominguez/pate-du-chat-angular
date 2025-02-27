@@ -224,9 +224,7 @@ router.put(
 			ingredient.bio = sanitize(bio) || ingredient.bio;
 			ingredient.supplier = sanitize(supplier) || ingredient.supplier;
 			ingredient.type = sanitize(type) || ingredient.type;
-			ingredient.subIngredients =
-				subIngredients !== undefined
-					? sanitize(subIngredients)
+			ingredient.subIngredients = subIngredients !== undefined ? sanitize(subIngredients)
 					: ingredient.subIngredients;
 			ingredient.allergens = sanitize(allergens) || ingredient.allergens;
 			ingredient.vegan =

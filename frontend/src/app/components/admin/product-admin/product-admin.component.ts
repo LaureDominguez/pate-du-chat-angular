@@ -95,7 +95,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((ingredients) => {
         this.ingredients = ingredients;
-        // console.log('🚀 Ingrédients mis à jour :', ingredients);
+        // console.log('🚀 product-admin -> Ingrédients mis à jour :', ingredients);
         this.productService.loadFinalProducts(); // Rafraîchir les produits **UNE SEULE FOIS**
       });
   }
