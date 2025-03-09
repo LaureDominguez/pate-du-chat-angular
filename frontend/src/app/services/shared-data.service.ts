@@ -43,6 +43,16 @@ export class SharedDataService {
   private ingredientListUpdateSubject = new Subject<void>();
   ingredientListUpdate$ = this.ingredientListUpdateSubject.asObservable();
 
+  // Notifier que les ingrédients doivent être rechargés après une mise à jour
+  private ingredientCompositionUpdateSubject = new Subject<void>();
+  ingredientCompositionUpdate$ = this.ingredientCompositionUpdateSubject.asObservable();
+
+  // Méthode pour déclencher la mise à jour
+  notifyIngredientCompositionUpdate() {
+    this.ingredientCompositionUpdateSubject.next();
+  }
+
+
   private openIngredientFormSubject = new Subject<void>();
   openIngredientForm$: Observable<void> =
     this.openIngredientFormSubject.asObservable();
@@ -57,50 +67,23 @@ export class SharedDataService {
 
   // Demande de création par product-form
   requestOpenIngredientForm(searchedValue: string) {
-    console.log(
-      '%c [SharedDataService] → requestOpenIngredientForm() appelée avec :',
-      'color: orange; font-weight: bold;',
-      searchedValue
-    );
-
     this.searchedIngredientSubject.next(searchedValue); // Stocke la valeur recherchée
-    console.log(
-      '%c [SharedDataService] → Avant émission de openIngredientFormSubject',
-      'color: red; font-weight: bold;'
-    );
     this.openIngredientFormSubject.next();
-    console.log(
-      '%c [SharedDataService] → Après émission de openIngredientFormSubject',
-      'color: pink; font-weight: bold;'
-    );
   }
 
   // Récupérer la valeur recherchée
   getSearchedIngredient(): string {
     const value = this.searchedIngredientSubject.getValue();
-    console.log(
-      '%c [SharedDataService] → getSearchedIngredient() retourne :',
-      'color: blue; font-weight: bold;',
-      value
-    );
     return value;
   }
 
   // Réponse de ingredient-admin
   resultIngredientCreated(ingredient: Ingredient) {
-    console.log(
-      'shared-data.service -> resultIngredientCreated : ',
-      ingredient
-    );
     this.ingredientCreatedSubject.next(ingredient);
   }
 
   // Notifier les abonnés de la mise à jour
   notifyIngredientUpdate() {
-    console.log(
-      '%c [SharedDataService] → notifyIngredientUpdate() appelée',
-      'color: purple; font-weight: bold;'
-    );
     this.ingredientListUpdateSubject.next();
   }
 

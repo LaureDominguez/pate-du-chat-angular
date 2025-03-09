@@ -93,6 +93,8 @@ export class IngredientFormComponent {
       this.selectedSubIngredients = [...data.ingredient.subIngredients];
     }
 
+    console.log('🚀 ingredient-form -> onInit -> Ingrédient mis à jour :', data.ingredient);
+
   }
 
   ngOnInit(): void {
@@ -106,7 +108,7 @@ export class IngredientFormComponent {
       map((value) => {
         const results = this._filterIngredients(value);
         this.subIngredientNotFound = results.length === 0; // ✅ Gestion du message "Aucun ingrédient trouvé"
-        return results;
+        return results.sort((a, b) => a.name.localeCompare(b.name));
       })
     );
   }
@@ -167,6 +169,11 @@ export class IngredientFormComponent {
     }
   }
 
+  formatNameInput(name: string): string {
+    if (!name) return "";
+    return name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
+  }
+
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Gestion des images
   onFileSelected(event: any): void {
@@ -206,7 +213,7 @@ export class IngredientFormComponent {
 
   downloadImage(imagePath: string): void {
     console.log('📢 Événement envoyé pour télécharger :', imagePath);
-    const ingredientName = this.data.ingredient?.name || 'Ingredient';
+    let ingredientName = this.data.ingredient?.name || 'Ingredient';
     this.sharedDataService.emitDownloadImage(imagePath, ingredientName);
   }
 
@@ -257,6 +264,8 @@ export class IngredientFormComponent {
     const ingredientData = {
       _id: this.data.ingredient?._id,
       ...this.ingredientForm.value,
+      name: this.formatNameInput(this.ingredientForm.value.name),
+      supplier: this.formatNameInput(this.ingredientForm.value.supplier),
       allergens: allergenesSelectionnes,
       subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
       existingImages: this.existingImages,

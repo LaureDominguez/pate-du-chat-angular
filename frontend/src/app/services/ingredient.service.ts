@@ -20,35 +20,15 @@ export class IngredientService {
     private sharedDataService: SharedDataService
   ) {
     this.loadIngredients(); // Charger les ingrédients au démarrage
-
     this.sharedDataService.ingredientListUpdate$.subscribe(() => {
-      console.log('IngredientService -> SharedData -> ingredientListUpdate$');
       this.loadIngredients();
     });
-
-    // console.log('IngredientService constructor -> ingredients$ :', this.ingredients$);
   }
 
   // Charge les ingrédients et met à jour le BehaviorSubject
   private loadIngredients(): void {
-    console.log(
-      '%c [IngredientService] → loadIngredients() appelée',
-      'color: purple; font-weight: bold;'
-    );
     this.http.get<Ingredient[]>(this.apiUrl).subscribe((ingredients) => {
-      console.log(
-        '%c [IngredientService] → Ingrédients reçus du serveur :',
-        'color: purple; font-weight: bold;',
-        ingredients
-      );
-
-      this.ingredientsSubject.next(ingredients); // Met à jour les abonnés
-
-        console.log(
-          '%c [IngredientService] → Fin loadIngredients()',
-          'color: purple; font-weight: bold;'
-        );
-        
+      this.ingredientsSubject.next(ingredients); // Met à jour les abonnés        
     });
   }
 

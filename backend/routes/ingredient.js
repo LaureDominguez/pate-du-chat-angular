@@ -16,7 +16,9 @@ const validateRequest = (req, res, next) => {
 // Récupérer tous les ingredients
 router.get('/', async (req, res) => {
 	try {
-		const ingredients = await Ingredient.find();
+		const ingredients = await Ingredient
+			.find()
+			.populate('subIngredients');
 		res.status(200).json(ingredients);
 	} catch (error) {
 		console.error(error.message);
@@ -27,7 +29,9 @@ router.get('/', async (req, res) => {
 // Obtenir un seul ingredient par son id
 router.get('/:id', async (req, res) => {
 	try {
-		const ingredient = await Ingredient.findById(req.params.id);
+		const ingredient = await Ingredient
+			.findById(req.params.id)
+			.populate('subIngredients');
 		if (!ingredient) {
 			return res.status(404).json({ msg: 'Ingrédient non trouvé' });
 		}
@@ -59,6 +63,10 @@ router.post(
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
+		check('bio')
+			.optional()
+			.isBoolean()
+			.withMessage('Le champ "bio" doit être un booléen.'),
 		check('supplier')
 			.trim()
 			.notEmpty()
@@ -110,15 +118,34 @@ router.post(
 			bio = sanitize(bio);
 			supplier = sanitize(supplier);
 			type = sanitize(type);
-			subIngredients = sanitize(subIngredients);
-			allergens = sanitize(allergens);
+			subIngredients = sanitize(subIngredients) || [];
+			allergens = sanitize(allergens) || [];
 			vegan = sanitize(vegan);
 			vegeta = sanitize(vegeta);
-			images = sanitize(images);
+			images = sanitize(images) || [];
 
 			const existingIngredient = await Ingredient.findOne({ name, bio });
-			if (existingIngredient) {
+			if (
+				existingIngredient 
+				&& existingIngredient._id.toString() !== req.params.id
+			) {
 				return res.status(400).json({ msg: 'Cet ingrédient existe déjà.' });
+			}
+
+			if (type === 'compose') {
+				if (subIngredients.length === 0) {
+					return res
+						.status(400)
+						.json({ msg: 'Le champ "sous-ingrédients" est obligatoire.' });
+				}
+
+				const subIngredientsData = await Ingredient.find({
+					_id: { $in: subIngredients }
+				});
+
+				allergens = [... new Set(subIngredientsData.flatMap(ing => ing.allergens))];
+				vegan = subIngredientsData.every(ing => ing.vegan);
+				vegeta = subIngredientsData.every(ing => ing.vegeta);
 			}
 
 			const newIngredient = new Ingredient({
@@ -144,6 +171,7 @@ router.post(
 		}
 	}
 );
+
 
 // Modifier un ingredient
 router.put(
@@ -201,9 +229,20 @@ router.put(
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name, bio, supplier, type, subIngredients, allergens, vegan, vegeta, images } =
-				req.body;
-
+			let { 
+				name, 
+				bio, 
+				supplier, 
+				type, 
+				subIngredients, 
+				allergens, 
+				vegan, 
+				vegeta, 
+				images 
+			} = req.body;
+			
+			// console.log(`🟡 [DEBUG] Modification de l'ingrédient : ${name} (ID: ${req.params.id})`);
+    
 			const ingredient = await Ingredient.findById(req.params.id);
 			if (!ingredient) {
 				return res.status(404).json({ msg: 'Ingrédient inconnu' });
@@ -214,14 +253,46 @@ router.put(
 				existingIngredient &&
 				existingIngredient._id.toString() !== req.params.id
 			) {
+				// console.log(`⚠️ [CONFLIT] Un autre ingrédient avec le même nom et état bio existe déjà.`);
 				return res
 					.status(400)
 					.json({ msg: 'Un autre ingrédient porte déjà ce nom.' });
 			}
 
+			// console.log(`🔄 [INFO] Mise à jour de l'ingrédient: ${name}, Type: ${type}`);
+
+			if (type === 'compose') {
+				// console.log(`🟢 [INFO] Ingrédient composé détecté, recalcul des sous-ingrédients...`);
+
+				if (!subIngredients || subIngredients.length === 0) {
+					return res
+						.status(400)
+						.json({ msg: 'Le champ "sous-ingrédients" est obligatoire.' });
+				}
+
+				const subIngredientsData = await Ingredient.find({
+					_id: { $in: subIngredients }
+				});
+
+				// console.log(`🔍 [DEBUG] Sous-ingrédients récupérés : `, subIngredientsData.map(ing => ing.name));
+
+				allergens = [... new Set(subIngredientsData.flatMap(ing => ing.allergens))];
+				vegan = subIngredientsData.every(ing => ing.vegan);
+				vegeta = subIngredientsData.every(ing => ing.vegeta);
+
+				// console.log(`✅ [INFO] Mise à jour automatique des valeurs :`);
+				// console.log(`   ➤ Allergènes : ${allergens}`);
+				// console.log(`   ➤ Vegan : ${vegan}`);
+				// console.log(`   ➤ Végétarien : ${vegeta}`);
+			}
+
 			// Mise à jour des champs
 			ingredient.name = sanitize(name) || ingredient.name;
-			ingredient.bio = sanitize(bio) || ingredient.bio;
+			// ingredient.bio = sanitize(bio) || ingredient.bio;
+			if (bio !== undefined) {
+				ingredient.bio = sanitize(bio);  // ✅ Correction : Accepter `false` comme valeur valide
+			}
+			
 			ingredient.supplier = sanitize(supplier) || ingredient.supplier;
 			ingredient.type = sanitize(type) || ingredient.type;
 			ingredient.subIngredients = subIngredients !== undefined ? sanitize(subIngredients)
@@ -233,8 +304,42 @@ router.put(
 				vegeta !== undefined ? sanitize(vegeta) : ingredient.vegeta;
 			ingredient.images = sanitize(images) || ingredient.images;
 
-			const updatedIngredient = await ingredient.save();
-			res.status(200).json(updatedIngredient);
+			await ingredient.save();
+
+			// const updatedIngredient = await ingredient.save();
+			// res.status(200).json(updatedIngredient);
+
+			// console.log(`✅ [INFO] Ingrédient "${ingredient.name}" mis à jour avec succès.`);
+			
+			// ✅ Éviter la duplication des mises à jour en utilisant un Set
+			const updatedComposedIngredients = new Set();
+
+			if (ingredient.type === 'simple') {
+				// console.log(`🔄 [INFO] Mise à jour des ingrédients composés contenant "${ingredient.name}"...`);
+
+				const composedIngredients = await Ingredient.find({ subIngredients: ingredient._id });
+
+				for (const composed of composedIngredients) {
+					if (!updatedComposedIngredients.has(composed._id.toString())) {
+						updatedComposedIngredients.add(composed._id.toString());
+			
+						const subIngredientsData = await Ingredient.find({ _id: { $in: composed.subIngredients } });
+			
+						// console.log(`🔍 [DEBUG] Mise à jour de l'ingrédient composé : ${composed.name}`);
+						// console.log(`   ➤ Avant : Vegan: ${composed.vegan}, Végétarien: ${composed.vegeta}`);
+			
+						composed.allergens = [...new Set(subIngredientsData.flatMap(ing => ing.allergens))];
+						composed.vegan = subIngredientsData.every(ing => ing.vegan);
+						composed.vegeta = subIngredientsData.every(ing => ing.vegeta);
+			
+						// console.log(`   ➤ Après : Vegan: ${composed.vegan}, Végétarien: ${composed.vegeta}`);
+						
+						await composed.save();
+					}
+				}
+			}
+
+			res.status(200).json(ingredient);
 		} catch (error) {
 			console.error(
 				"Erreur lors de la mise à jour de l'ingrédient:",
@@ -247,6 +352,7 @@ router.put(
 		}
 	}
 );
+
 
 // Supprimer un ingredient
 router.delete('/:id', async (req, res) => {

@@ -79,8 +79,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   // Méthodes pour gérer les catégories
   startEditing(category: Category | null = null): void {
     if (category && this.isDefaultCategory(category)) {
-      console.log('❌ Ne pas éditer "Sans catégorie"');
-      return; // ❌ Ne pas éditer "Sans catégorie"
+      return; // Ne pas éditer "Sans catégorie"
     }
     this.editingCategory = category ? { ...category } : { _id: null, name: '' };
 
@@ -111,6 +110,12 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     this.categories.data = this.categories.data.filter(cat => cat._id !== null);
   }
 
+  formatNameInput(name: string): string {
+    if (!name) return "";
+    return name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
+  }
+  
+
   //Save
   saveCategory(category: Category): void {
     if (this.categoryForm.invalid) {
@@ -119,7 +124,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     }
 
     const newCategory: Category = {
-      name: this.categoryForm.get('name')?.value.trim(), // Nettoyage des espaces
+      name: this.formatNameInput(this.categoryForm.get('name')?.value), // Nettoyage des espaces et majuscules
     };
 
     const request$ = category._id
@@ -135,29 +140,11 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe();
-    // if (category._id) {
-    //   // Update
-    //   this.categoryService
-    //     .updateCategory(category._id, newCategory)
-    //     .subscribe(() => {
-    //       this.cancelEdit();
-    //     });
-    // } else {
-    //   // Create
-    //   this.categoryService.createCategory(newCategory).subscribe({
-    //     next: () => {
-    //       this.cancelEdit();
-    //     },
-    //     error: (error) => {
-    //       this.cancelEdit();
-    //     }
-    //   });
-    // }
   }
 
   // Création depuis product-Form
   private createNewCategory(categoryName: string): void {
-    const newCategory: Category = { _id: null, name: categoryName };
+    const newCategory: Category = { _id: null, name: this.formatNameInput(categoryName) };
 
     this.categoryService
       .createCategory(newCategory)
@@ -170,8 +157,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   //Delete
   deleteCategory(category: Category): void {
     if (this.isDefaultCategory(category)) {
-      console.log('❌ Ne pas supprimer "Sans catégorie"');
-      return; // ❌ Ne pas supprimer "Sans catégorie"
+      return; // Ne pas supprimer "Sans catégorie"
     }
 
     if (category.productCount && category.productCount > 0) {

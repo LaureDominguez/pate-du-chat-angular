@@ -15,7 +15,13 @@
             </mat-form-field>
         
             <!-- BIO -->
-            <mat-slide-toggle formControlName="bio" labelPosition="before">Label BIO</mat-slide-toggle>
+            <mat-slide-toggle 
+                formControlName="bio" 
+                labelPosition="before"
+                [disabled]="ingredientForm.get('type')?.value === 'compose'"
+                >
+                Label BIO
+            </mat-slide-toggle>
         </section>
         
         <!-- Fournisseur -->
@@ -83,8 +89,14 @@
         >
             <mat-form-field appearance="fill">
                 <mat-label>Ajouter un sous-ingrédient</mat-label>
-                <input type="text" matInput [formControl]="subIngredientCtrl" [matAutocomplete]="subIngredientAuto"
-                    formControlName="subIngredients" placeholder="Rechercher un ingrédient" />
+                <input 
+                    type="text" 
+                    matInput 
+                    [formControl]="subIngredientCtrl" 
+                    [matAutocomplete]="subIngredientAuto"
+                    formControlName="subIngredients" 
+                    placeholder="Rechercher un ingrédient" 
+                />
                 <mat-error *ngIf="selectedSubIngredients.length === 0">Ajoutez au moins un ingrédient.</mat-error>
         
                 <mat-autocomplete #subIngredientAuto="matAutocomplete" (optionSelected)="addSubIngredient($event.option.value)"
@@ -93,6 +105,7 @@
                     <mat-option *ngFor="let ingredient of filteredSubIngredients | async" [value]="ingredient"
                         class="composition">
                         <span>{{ ingredient.name }}</span>
+                        <span *ngIf="ingredient.bio" class="bio-label"> (Bio)</span>
                         <mat-icon *ngIf="isSubIngredientSelected(ingredient)">check</mat-icon>
                     </mat-option>
         

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 
 import {
   Ingredient,
@@ -15,7 +15,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SharedDataService } from '../../../services/shared-data.service';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { ProductService } from '../../../services/product.service';
 
@@ -25,10 +25,12 @@ import { ProductService } from '../../../services/product.service';
   templateUrl: './ingredient-admin.component.html',
   styleUrls: ['./ingredient-admin.component.scss', '../admin.component.scss'],
 })
-export class IngredientAdminComponent implements OnInit {
+export class IngredientAdminComponent implements OnInit, OnDestroy {
   ingredients = new MatTableDataSource<Ingredient>([]);
   allIngredients: Ingredient[] = [];
   allergenesList: string[] = [];
+
+  private destroy$ = new Subject<void>();
 
   displayedIngredientsColumns: string[] = [
     'name',
@@ -56,31 +58,24 @@ export class IngredientAdminComponent implements OnInit {
       this.allIngredients = ingredients;
       console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
     });
-
+    
     this.fetchAllergenes();
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
-      console.log(
-        '%c [IngredientAdminComponent] → Abonnement openIngredientForm$ déclenché',
-        'color: green; font-weight: bold;'
-      );
-
       const searchedValue = this.sharedDataService.getSearchedIngredient();
-      console.log(
-        '%c [IngredientAdminComponent] → Valeur reçue pour openIngredientForm$ :',
-        'color: green; font-weight: bold;',
-        searchedValue
-      );
-
       this.openIngredientForm(null, searchedValue);
     });
-
 
     this.sharedDataService.downloadImage$.subscribe((data) => {
       if (data) {
         this.downloadIngredientImage(data.imagePath, data.objectName);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngAfterViewInit(): void {
@@ -111,18 +106,6 @@ export class IngredientAdminComponent implements OnInit {
       ) || [];
 
     // Récupérer tous les ingrédients disponibles pour permettre la sélection des sous-ingrédients
-    // this.ingredientService.getIngredients().subscribe((allIngredients) => {
-      // const ingredients = allIngredients; // ✅ Déclaration explicite avant l'utilisation
-
-          console.log(
-            '[IngredientAdminComponent] openIngredientForm() appelé avec:',
-            ingredient,
-            searchedValue
-          );
-          console.trace(
-            '[IngredientAdminComponent] Trace d’appel openIngredientForm'
-          );
-
       const dialogRef = this.dialog.open(IngredientFormComponent, {
         width: '600px',
         data: {
@@ -149,7 +132,6 @@ export class IngredientAdminComponent implements OnInit {
           }
         }
       );
-    // });
   }
 
   handleIngredientFormSubmit(result: {
@@ -202,6 +184,10 @@ export class IngredientAdminComponent implements OnInit {
       this.ingredientService
         .updateIngredient(ingredientId, ingredientData)
         .subscribe({
+          next: () => {
+            console.log('ingredient-admin -> submitIngredientForm -> Ingrédient mis à jour !');
+            this.sharedDataService.notifyIngredientCompositionUpdate();
+          },
           error: (error) => {
             this.showErrorDialog(error.message);
           },
@@ -209,7 +195,7 @@ export class IngredientAdminComponent implements OnInit {
     } else {
       this.ingredientService.createIngredient(ingredientData).subscribe({
         next: (res) => {
-          console.log('ingredient-admin -> submitIngredientForm à SharedData -> res', res);
+          // console.log('ingredient-admin -> submitIngredientForm à SharedData -> res', res);
           this.sharedDataService.resultIngredientCreated(res);
         },
         error: (error) => {

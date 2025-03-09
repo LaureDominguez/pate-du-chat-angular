@@ -110,10 +110,6 @@ export class ProductFormComponent implements OnInit {
     if (data.product?.images) {
       this.existingImages = [...data.product.images];
       this.existingImageUrls = [...data.imageUrls];
-
-      console.log('📋 Images existantes :', this.existingImages); // LOG ICI 🔍
-      console.log('📋 URLs des images existantes :', this.existingImageUrls); // LOG ICI 🔍
-      console.log('data : ', data); // LOG ICI 🔍
     }
 
     console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
@@ -150,7 +146,7 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Innit du formulaire
 
-  //// AutoComplete
+  ///////// AutoComplete ///////////
   private setupAutoComplete(): void {
     // Categories
     this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
@@ -236,18 +232,19 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
   addCategory(category: Category | 'categoryNotFound' | null): void {
-    console.log('📋 category :', category);
+    // console.log('📋 category :', category);
     if (category === 'categoryNotFound') {
       this.createCategory(this.searchedCategory);
     } else {
       this.productForm.patchValue({ category: category });
       this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
     }
-    console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
+    // console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   private createCategory(searchedValue: string): void {
-    this.sharedDataService.requestCategoryCreation(searchedValue);
+    const filteredValue = this.formatNameInput(searchedValue);
+    this.sharedDataService.requestCategoryCreation(filteredValue);
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -288,8 +285,10 @@ export class ProductFormComponent implements OnInit {
 
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
+    const filteredValue = this.formatNameInput(searchedValue);
     console.log('product-form -> createIngredient -> searchedValue :', searchedValue);
-    this.openIngredientForm(searchedValue)
+    console.log('product-form -> createIngredient -> filteredValue :', filteredValue);
+    this.openIngredientForm(filteredValue)
       .then((newIngredient) => {
         if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
           this.updateComposition(newIngredient, true);
@@ -416,6 +415,12 @@ export class ProductFormComponent implements OnInit {
       selectedFiles: this.selectedFiles,
       removedExistingImages: this.removedExistingImages,
     });
+  }
+
+  formatNameInput(name: string): string {
+    if (!name) return "";
+    let trimmedName = name.replace(/\s+/g, ' ').trim();
+    return trimmedName.trim().charAt(0).toUpperCase() + trimmedName.trim().slice(1);
   }
 
   private fieldLabels: { [key: string]: string } = {
