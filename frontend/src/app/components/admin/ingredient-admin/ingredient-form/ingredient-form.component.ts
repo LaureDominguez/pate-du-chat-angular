@@ -58,7 +58,13 @@ export class IngredientFormComponent {
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
-      bio: [data.ingredient?.bio || false],
+      // bio: [data.ingredient?.bio || false],
+      bio: [
+        { 
+          value: data.ingredient?.bio || false, 
+          disabled: data.ingredient?.type === 'compose' 
+        }
+      ], // ✅ Désactiver si composé
       supplier: [
         data.ingredient?.supplier || '',
         [
@@ -99,6 +105,21 @@ export class IngredientFormComponent {
 
   ngOnInit(): void {
     this.setupAutoComplete();
+
+      // Désactiver "bio" si l'ingrédient est "compose"
+    this.ingredientForm.get('type')?.valueChanges.subscribe((newType: string) => {
+      if (newType === 'compose') {
+        this.ingredientForm.get('bio')?.disable();
+        this.ingredientForm.get('bio')?.setValue(false); // S'assure que bio est désactivé
+      } else {
+        this.ingredientForm.get('bio')?.enable();
+      }
+    });
+
+    // // Vérifier au chargement si le champ doit être désactivé
+    if (this.ingredientForm.get('type')?.value === 'compose') {
+      this.ingredientForm.get('bio')?.disable();
+    }
   }
 
   // ✅ Recherche d'ingrédients avec autocomplete
@@ -161,7 +182,19 @@ export class IngredientFormComponent {
 
   get supplier() {
     return this.ingredientForm.get('supplier');
-  }
+  }  
+
+  // get type() {
+  //   return this.ingredientForm.get('type');
+  // }
+
+  // onTypeChange(type: string): void {
+  //   if (type === 'compose') {
+  //     this.ingredientForm.get('bio')?.disable();
+  //   } else {
+  //     this.ingredientForm.get('bio')?.enable();
+  //   }
+  // }
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
