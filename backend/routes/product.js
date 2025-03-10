@@ -274,7 +274,8 @@ router.put(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
 			.if(check('description').notEmpty())
-			.matches(/^[a-zA-Z0-9À-ÿ\s.,!?()'"-]*$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),

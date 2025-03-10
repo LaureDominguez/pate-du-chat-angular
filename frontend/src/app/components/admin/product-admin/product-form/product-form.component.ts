@@ -326,19 +326,26 @@ export class ProductFormComponent implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const maxFileSize = 10 * 1024 * 1024;
+    let errorMsg: string[] = [];
 
     if (input.files) {
       const validFiles = Array.from(input.files).filter((file) => {
         if (!file.type.startsWith('image/')) {
-          alert(`${file.name} n'est pas une image valide.`);
+          errorMsg.push(`${file.name} n'est pas une image valide.`);
           return false;
         }
         if (file.size > maxFileSize) {
-          alert(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
+          errorMsg.push(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
           return false;
         }
         return true;
       });
+
+      if (errorMsg.length > 0) {
+        this.dialog.open(InfoDialogComponent, {
+          data: { message: errorMsg.join('<br>'), type: 'error' },
+        })
+      }
 
       validFiles.forEach((file) => this.handleImagePreview(file));
 

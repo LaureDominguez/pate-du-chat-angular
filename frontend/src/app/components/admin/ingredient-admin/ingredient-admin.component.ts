@@ -56,7 +56,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
       this.allIngredients = ingredients;
-      console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
+      // console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
     });
     
     this.fetchAllergenes();
@@ -185,7 +185,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         .updateIngredient(ingredientId, ingredientData)
         .subscribe({
           next: () => {
-            console.log('ingredient-admin -> submitIngredientForm -> Ingrédient mis à jour !');
+            // console.log('ingredient-admin -> submitIngredientForm -> Ingrédient mis à jour !');
             this.sharedDataService.notifyIngredientCompositionUpdate();
           },
           error: (error) => {
