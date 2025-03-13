@@ -1,0 +1,15 @@
+<div class="product-card">
+    <button mat-icon-button class="close-btn" (click)="onClose()">
+        <mat-icon>close</mat-icon>
+    </button>
+
+    <img [src]="product.images" alt="{{ product.name }}">
+    <h2>{{ product.name }}</h2>
+    <p>{{ product.description }}</p>
+    
+    <div class="details">
+        <span>Prix : {{ product.price | currency }}</span>
+        <span>Catégorie : {{ product.category }}</span>
+    </div>
+</div>
+    

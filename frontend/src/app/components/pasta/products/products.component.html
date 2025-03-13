@@ -4,7 +4,6 @@
         <mat-grid-tile *ngFor="let product of grid1; let i = index; let last = last">
             <app-product-card 
                 [product]="product" 
-                [ingredients]="ingredients"
                 [isSelected]="product === selectedProduct"
                 (click)="selectProduct(product)">
             </app-product-card>
@@ -14,7 +13,6 @@
     <!-- selected product -->
     <app-product-card 
         [product]="selectedProduct" 
-        [ingredients]="ingredients"
         [isSelected]="isSelected"
         *ngIf="selectedProduct" 
         (closeClick)="onCloseClick()">
@@ -25,7 +23,6 @@
         <mat-grid-tile *ngFor="let product of grid2; let i = index; let last = last">
             <app-product-card 
                 [product]="product"
-                [ingredients]="ingredients" 
                 [isSelected]="product === selectedProduct"
                 (click)="selectProduct(product)">
             </app-product-card>

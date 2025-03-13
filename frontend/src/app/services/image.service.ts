@@ -34,7 +34,9 @@ export class ImageService {
 
   getImageUrl(imagePath: string): string {
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
-    return `${this.baseUrl}/${cleanPath}`;
+    const url = `${this.baseUrl}/${cleanPath}`;
+    console.log(`🖼️ URL générée par getImageUrl: ${url}`);
+    return url;
   }
 
   async downloadImage(

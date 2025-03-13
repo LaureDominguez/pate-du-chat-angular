@@ -5,19 +5,43 @@ const fs = require('fs');
 const path = require('path');
 
 // Recupérer une image
+// router.get('/:filename', (req, res) => {
+// 	const filename = req.params.filename;
+// 	const filePath = path.join(__dirname, '../../uploads', filename);
+// 	fs.readFile(filePath, (err, data) => {
+// 		if (err) {
+// 			console.error(`Image introuvable : ${filename}`);
+// 			return res.status(404).json({ error: 'Image introuvable' });
+// 		}
+// 		res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+// 		res.setHeader('Content-Type', 'image/jpeg');
+// 		res.send(data);
+// 	});
+// });
+// Recupérer une image (Affichage dans le navigateur)
 router.get('/:filename', (req, res) => {
 	const filename = req.params.filename;
 	const filePath = path.join(__dirname, '../../uploads', filename);
-	fs.readFile(filePath, (err, data) => {
-		if (err) {
-			console.error(`Image introuvable : ${filename}`);
-			return res.status(404).json({ error: 'Image introuvable' });
-		}
-		res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-		res.setHeader('Content-Type', 'image/jpeg');
-		res.send(data);
-	});
+
+	// Vérifier si l'image existe
+	if (!fs.existsSync(filePath)) {
+		console.error(`Image introuvable : ${filename}`);
+		return res.status(404).json({ error: 'Image introuvable' });
+	}
+
+	// Détecter le type MIME correct de l’image
+	const ext = path.extname(filename).toLowerCase();
+	let contentType = 'image/jpeg'; // Valeur par défaut
+
+	if (ext === '.png') contentType = 'image/png';
+	else if (ext === '.gif') contentType = 'image/gif';
+	else if (ext === '.webp') contentType = 'image/webp';
+
+	// Définir le bon type MIME et envoyer l’image 
+	res.setHeader('Content-Type', contentType);
+	res.sendFile(filePath);
 });
+
 
 // Ajouter une image
 router.post('/', upload.array('images', 10), (req, res) => {

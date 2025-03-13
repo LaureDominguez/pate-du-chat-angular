@@ -413,6 +413,7 @@ export class ProductFormComponent implements OnInit {
 
     const productData = {
       ...this.productForm.value,
+      name: this.formatNameInput(this.productForm.value.name),
       existingImages: [...this.existingImages],
     };
 

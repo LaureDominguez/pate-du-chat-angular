@@ -1,0 +1,40 @@
+.product-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    width: 400px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    z-index: 1000;
+
+    img {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    h2 {
+        margin-top: 10px;
+        font-size: 1.5rem;
+    }
+
+    p {
+        font-size: 1rem;
+        color: gray;
+    }
+
+    .details {
+        margin-top: 10px;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+}

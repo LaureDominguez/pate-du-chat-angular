@@ -1,0 +1,29 @@
+<div class="vitrine-container">
+    <mat-grid-list cols="5" rowHeight="1:1" gutterSize="10px">
+        <mat-grid-tile *ngFor="let product of products" class="product-tile">
+            <mat-card class="tile-content" (click)="onSelectProduct(product)">
+                <img 
+                    [src]="(product.images && product.images.length > 0) ? 
+                        product.images[0] : 'assets/images/no_image.png'" 
+                    [alt]="product?.name || 'Pas d\'image disponible'"
+                >
+                <mat-card-content>
+                    <mat-card-title>{{ product.name }}</mat-card-title>
+                    <mat-card-subtitle>{{ product.price | currency : 'EUR' }} {{product.priceType}}</mat-card-subtitle>
+                </mat-card-content>
+            </mat-card>
+        </mat-grid-tile>
+    </mat-grid-list>
+</div>
+
+<!-- Détail du produit sélectionné -->
+<app-shop-detail 
+    *ngIf="selectedProduct" 
+    [product]="selectedProduct" 
+    (close)="closeProduct()">
+</app-shop-detail>
+
+<!-- no product found -->
+<div class="container" *ngIf="!products.length">
+    <p>Pas de produits disponibles</p>
+</div> 

@@ -10,9 +10,9 @@
                 <tr>
                     <td>Composition :</td>
                     <td>
-                        <ng-container *ngFor="let ingredient of ingredients; let i = index">
-                            <span>{{ ingredient.name }}</span>
-                            <span *ngIf="i < ingredients.length - 1">, </span>
+                        <ng-container *ngFor="let ingredient of product.composition; let i = index">
+                            <span>{{ ingredient }}</span>
+                            <!-- <span *ngIf="i < ingredient.length - 1">, </span> -->
                         </ng-container>
                     </td>
                 </tr>

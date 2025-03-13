@@ -10,13 +10,8 @@ import {
   ProductService,
   FinalProduct,
 } from '../../../services/product.service';
-import {
-  IngredientService,
-  Ingredient,
-} from '../../../services/ingredient.service';
 
-import { forkJoin, map, Observable, Subject, takeUntil } from 'rxjs';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { ProductCardComponent } from '../product-card/product-card.component';
 import { AppModule } from '../../../app.module';
 
@@ -31,18 +26,12 @@ import { AppModule } from '../../../app.module';
 export class ProductsComponent implements OnInit, OnDestroy {
   // Observables pour les produits et les ingrédients
   products$: Observable<FinalProduct[]> = this.productService.getFinalProducts();
-  ingredients$: Observable<Ingredient[]> =
-    this.ingredientService.getIngredients();
 
   // Données locales
   products: FinalProduct[] = [];
-  ingredients: Ingredient[] = [];
-  allergensList: string[] = [];
-  isVegeta: boolean = true;
-  isVegan: boolean = true;
 
   // Grille d'affichage
-  cols: number = 3;
+  cols: number = 5;
   grid1: FinalProduct[] = [];
   grid2: FinalProduct[] = [];
 
@@ -55,8 +44,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   constructor(
     private productService: ProductService,
-    private ingredientService: IngredientService,
-    private breakpointObserver: BreakpointObserver,
     private cdRef: ChangeDetectorRef
   ) {}
 
@@ -66,39 +53,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
       this.products = products;
       this.updateGrid();
     });
-
-    // Configurer la grille en fonction des tailles d'écran
-    this.breakpointObserver
-      .observe([
-        Breakpoints.XSmall,
-        Breakpoints.Small,
-        Breakpoints.Medium,
-        Breakpoints.Large,
-        Breakpoints.XLarge,
-      ])
-      .pipe(
-        map(({ breakpoints }) => {
-          switch (true) {
-            case breakpoints[Breakpoints.XSmall]:
-              return 1;
-            case breakpoints[Breakpoints.Small]:
-              return 2;
-            case breakpoints[Breakpoints.Medium]:
-              return 3;
-            case breakpoints[Breakpoints.Large]:
-              return 5;
-            case breakpoints[Breakpoints.XLarge]:
-              return 9;
-            default:
-              return 3;
-          }
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((cols: number) => {
-        this.cols = cols;
-        this.cdRef.markForCheck();
-      });
   }
 
   // Sélectionner un produit
@@ -112,64 +66,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.isSelected = true;
 
     this.updateGrid();
-    this.getIngredientsForSelectedProduct();
   }
 
-  // Récupérer les ingrédients du produit sélectionné
-  private getIngredientsForSelectedProduct(): void {
-    // if (!this.selectedProduct?.composition) return;
-
-    // forkJoin(
-    //   this.selectedProduct.composition.map((id: string) =>
-    //     this.ingredientService.getIngredientById(id)
-    //   )
-    // )
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe({
-    //     next: (ingredients: Ingredient[]) => {
-    //       this.ingredients = ingredients;
-    //       this.processIngredients(ingredients);
-    //     },
-    //     error: (error) => {
-    //       console.error(
-    //         'Erreur lors de la récupération des ingrédients :',
-    //         error
-    //       );
-    //     },
-    //   });
-  }
-
-  // Traiter les ingrédients pour déterminer les allergènes et les régimes alimentaires
-  private processIngredients(ingredients: Ingredient[]): void {
-    const allergensSet = new Set<string>();
-    let isVegeta = true;
-    let isVegan = true;
-
-    ingredients.forEach((ingredient) => {
-      if (ingredient.allergens) {
-        ingredient.allergens.forEach((allergen) => allergensSet.add(allergen));
-      }
-      if (!ingredient.vegeta) isVegeta = false;
-      if (!ingredient.vegan) isVegan = false;
-    });
-
-    this.allergensList = Array.from(allergensSet);
-    this.isVegeta = isVegeta;
-    this.isVegan = isVegan;
-
-    if (this.selectedProduct) {
-      this.selectedProduct.allergens = this.allergensList;
-      this.selectedProduct.vegeta = this.isVegeta;
-      this.selectedProduct.vegan = this.isVegan;
-    }
-    this.cdRef.markForCheck();
-  }
 
   // Réinitialiser la sélection
   onCloseClick(): void {
     this.selectedProduct = null;
     this.isSelected = false;
-    this.ingredients = [];
     this.updateGrid();
   }
 
