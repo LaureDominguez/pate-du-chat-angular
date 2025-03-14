@@ -1,1 +1,1 @@
-{"version":3,"sourceRoot":"","sources":["ingredient-admin.component.scss"],"names":[],"mappings":"AACI;AAAA;EAEI;;AAGJ;AAAA;EAEI;EACA;EACA;;AACA;AAAA;EACI;EACA;;AAIR;EACI;EACA;;;AAIR;EACI","file":"ingredient-admin.component.css"}
+{"version":3,"sources":["ingredient-admin.component.scss","ingredient-admin.component.css"],"names":[],"mappings":"AACI;;EAEI,UAAA;ACAR;ADGI;;EAEI,uBAAA;EACA,kBAAA;EACA,UAAA;ACDR;ADEQ;;EACI,kBAAA;EACA,kCAAA;ACCZ;ADGI;EACI,uBAAA;EACA,kBAAA;ACDR;;ADKA;EACI,8BAAA;ACFJ","file":"ingredient-admin.component.css"}

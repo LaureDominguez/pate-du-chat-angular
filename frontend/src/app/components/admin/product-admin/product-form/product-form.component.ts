@@ -262,7 +262,7 @@ export class ProductFormComponent implements OnInit {
 
   private setComposition(composition: Ingredient[]): void {
     this.productForm.get('composition')?.setValue(composition);
-    console.log('📋 Composition :', this.composition); // LOG ICI 🔍
+    // console.log('📋 Composition :', this.composition); // LOG ICI 🔍
   }
 
   // Vérifie si un ingrédient fait partie de la composition
@@ -272,7 +272,7 @@ export class ProductFormComponent implements OnInit {
 
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
-    console.log ('product-form -> addIngredient -> ingredient :', ingredient);
+    // console.log ('product-form -> addIngredient -> ingredient :', ingredient);
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
       this.ingredientCtrl.setValue('');
@@ -286,8 +286,8 @@ export class ProductFormComponent implements OnInit {
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
     const filteredValue = this.formatNameInput(searchedValue);
-    console.log('product-form -> createIngredient -> searchedValue :', searchedValue);
-    console.log('product-form -> createIngredient -> filteredValue :', filteredValue);
+    // console.log('product-form -> createIngredient -> searchedValue :', searchedValue);
+    // console.log('product-form -> createIngredient -> filteredValue :', filteredValue);
     this.openIngredientForm(filteredValue)
       .then((newIngredient) => {
         if (!this.composition.some((comp) => comp._id === newIngredient._id)) {

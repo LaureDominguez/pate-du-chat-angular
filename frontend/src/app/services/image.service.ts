@@ -21,21 +21,21 @@ export class ImageService {
     image.forEach((file) => {
       formData.append('images', file);
     });
-    console.log(
-      'image.service -> FormData Keys:',
-      Array.from((formData as any).keys())
-    );
-    console.log(
-      'image.service -> FormData Values:',
-      Array.from((formData as any).values())
-    );
+    // console.log(
+    //   'image.service -> FormData Keys:',
+    //   Array.from((formData as any).keys())
+    // );
+    // console.log(
+    //   'image.service -> FormData Values:',
+    //   Array.from((formData as any).values())
+    // );
     return this.http.post<UploadResponse>(`${this.baseUrl}`, formData);
   }
 
   getImageUrl(imagePath: string): string {
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
     const url = `${this.baseUrl}/${cleanPath}`;
-    console.log(`🖼️ URL générée par getImageUrl: ${url}`);
+    //console.log(`🖼️ URL générée par getImageUrl: ${url}`);
     return url;
   }
 
@@ -93,7 +93,7 @@ export class ImageService {
       a.click();
       URL.revokeObjectURL(objectUrl);
 
-      console.log(`✅ Image téléchargée sous : ${filename}`);
+      //console.log(`✅ Image téléchargée sous : ${filename}`);
     } catch (error) {
       console.error('❌ Erreur lors du téléchargement de l’image:', error);
     }
@@ -102,7 +102,7 @@ export class ImageService {
   deleteImage(imagePath: string): Observable<{ message: string }> {
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
     const url = `${this.baseUrl}/${cleanPath}`;
-    console.log('image.service :', url);
+    //console.log('image.service :', url);
     return this.http.delete<{ message: string }>(url);
   }
 }
