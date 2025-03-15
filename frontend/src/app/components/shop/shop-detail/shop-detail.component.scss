@@ -1,7 +1,7 @@
 .product-card {
     position: relative;
     background: var(--tertiaryContainer);
-    margin: 0.8rem;
+    margin: 1rem 0.4rem;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
@@ -84,11 +84,23 @@
                 // color: red;
             }
         }
+
+        .ingredients-list{
+            display: inline;
+            white-space: normal;
+        }
+
         .labels {
-            width: 500px;
-            height: auto;
+            display: flex;
+            justify-content: space-evenly;
+            img {
+                height: 50px;
+                shape-rendering: crispEdges;
+            }
         }
     }
+
+
 
     .close-btn {
         position: absolute;

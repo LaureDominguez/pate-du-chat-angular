@@ -22,7 +22,10 @@ router.get('/', async (req, res) => {
 	try {
 		let products = await Product.find()
 			.populate('category')
-			.populate('composition');
+			.populate({
+				path: 'composition', 
+				populate: { path : 'subIngredients'}
+			});
 
 		if (req.query.view === 'full') {
 			try {

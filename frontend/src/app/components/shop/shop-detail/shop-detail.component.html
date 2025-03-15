@@ -12,36 +12,36 @@
     
     <div class="details">
         <h2>{{ product.name }}</h2>
-        <p class="description">{{ product.description }}</p>
-        <div class="price">
-            <span>{{ product.price | currency : 'EUR' }} /{{product.priceType}}</span>
+        <p *ngIf="product.description" class="description">{{ product.description }}</p>
+        
+        <div class="labels">
+            <img *ngIf="isBio" src="assets/images/bio.svg" alt="Bio">
+            <img *ngIf="product.vegan" src="assets/images/vegan.svg" alt="Vegan">
+            <img *ngIf="product.vegeta && !product.vegan" src="assets/images/vegeta.svg" alt="Vegetarian">
+            <img *ngIf="!allergensList.includes('Gluten')" src="assets/images/gluten.svg" alt="Gluten Free">
         </div>
 
         <div class="ingredients">
             <h3>Ingrédients : </h3>
-            <div>
-                <span *ngFor="let ingredient of ingredientsList; let last = last">
-                    {{ ingredient.name }}<span *ngIf="ingredient.bio === true">
-                        BIO</span><span *ngIf="ingredient.allergens.length > 0">*</span>{{ last ? '' : ', ' }}
-                </span>
+            <div class="ingredients-list">
+                {{ ingredientsFormatted }}
             </div>
         </div>
         <div class="allergens">
             <h3>Allergènes : </h3>
-            <div>
-                <span *ngIf="allergensList.length === 0">Aucun</span>
-                <span *ngIf="allergensList.length > 0"> </span>
-                <span *ngFor="let allergens of allergensList; let last = last">
-                    {{ allergens }}{{ last ? '' : ', ' }}
+            <div class="ingredients-list">
+                <span *ngIf="allergensFormatted else noAllergens">
+                    {{ allergensFormatted }}
                 </span>
+                <ng-template #noAllergens>
+                    <span>Aucun </span>
+                    <mat-icon>check_circle</mat-icon>
+                </ng-template>
             </div>
         </div>
-        <div class="labels">
-            <!-- <img *ngIf="ingredientsList.some(ingredient => ingredient.bio)" src="assets/images/vegeta.svg" alt="Vegetarian"> -->
-            <img *ngIf="product.vegan" src="assets/images/vegan.svg" alt="Vegan">
-            <img *ngIf="product.vegeta && !product.vegan" src="assets/images/vegeta.svg" alt="Vegetarian">
-            <img *ngIf="!allergensList.includes('Gluten')" src="assets/images/gluten.svg" alt="Gluten Free">
 
+        <div class="price">
+            <span>{{ product.price | currency : 'EUR' }} /{{product.priceType}}</span>
         </div>
     </div>
 </div>
