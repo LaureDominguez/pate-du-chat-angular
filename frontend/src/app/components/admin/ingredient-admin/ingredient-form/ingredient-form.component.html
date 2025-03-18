@@ -24,14 +24,34 @@
         </section>
         
         <!-- Fournisseur -->
-        <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Fournisseur</mat-label>
-            <input matInput formControlName="supplier" />
-            <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
-            <mat-error *ngIf="supplier?.hasError('minlength')">Minimum 2 caractères.</mat-error>
-            <mat-error *ngIf="supplier?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
-            <mat-error *ngIf="supplier?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
-        </mat-form-field>
+        <section class="supplier">
+            <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Fournisseur</mat-label>
+                <input matInput formControlName="supplier" />
+                <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
+                <mat-error *ngIf="supplier?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+                <mat-error *ngIf="supplier?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+                <mat-error *ngIf="supplier?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
+            </mat-form-field>
+
+            <pre>{{ data.originesList | json }}</pre>
+
+
+            <mat-form-field>
+                <mat-label>Origine</mat-label>
+                <mat-select formControlName="origin">
+                    <ng-container *ngFor="let group of data.originesList">
+                        <!-- <mat-optgroup [label]="group.label">
+                            <mat-option *ngFor="let option of group.options" [value]="option">
+                                {{ option }}
+                            </mat-option>
+                        </mat-optgroup> -->
+                    </ng-container>
+                </mat-select>
+            </mat-form-field>
+            
+
+        </section>
         
         <!-- Type d'ingrédient -->
         <section class="type">

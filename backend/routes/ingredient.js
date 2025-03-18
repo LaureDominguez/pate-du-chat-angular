@@ -18,7 +18,9 @@ router.get('/', async (req, res) => {
 	try {
 		const ingredients = await Ingredient
 			.find()
+			.populate('supplier')
 			.populate('subIngredients');
+
 		res.status(200).json(ingredients);
 	} catch (error) {
 		console.error(error.message);
@@ -31,6 +33,7 @@ router.get('/:id', async (req, res) => {
 	try {
 		const ingredient = await Ingredient
 			.findById(req.params.id)
+			.populate('supplier')
 			.populate('subIngredients');
 		if (!ingredient) {
 			return res.status(404).json({ msg: 'Ingrédient non trouvé' });
@@ -68,17 +71,18 @@ router.post(
 			.isBoolean()
 			.withMessage('Le champ "bio" doit être un booléen.'),
 		check('supplier')
-			.trim()
+			// .trim()
 			.notEmpty()
 			.withMessage('Le champ "fournisseur" est obligatoire.')
-			.isLength({ min: 2, max: 50 })
-			.withMessage(
-				'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
-			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
-			.withMessage(
-				'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
-			),
+			// .isLength({ min: 2, max: 50 })
+			// .withMessage(
+			// 	'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
+			// )
+			// .matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			// .withMessage(
+			// 	'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
+			// )
+			,
 		check('type')
 			.isIn(['simple', 'compose'])
 			.withMessage(
@@ -97,6 +101,9 @@ router.post(
 		check('vegeta')
 			.isBoolean()
 			.withMessage('Le champ "végétarien" doit être un booléen.'),
+			check('origin')
+			.notEmpty()
+			.withMessage('Le champ "origine" est obligatoire.'),
 	],
 	validateRequest,
 	async (req, res) => {
@@ -110,6 +117,7 @@ router.post(
 				allergens,
 				vegan,
 				vegeta,
+				origin,
 				images,
 			} = req.body;
 
@@ -122,6 +130,7 @@ router.post(
 			allergens = sanitize(allergens) || [];
 			vegan = sanitize(vegan);
 			vegeta = sanitize(vegeta);
+			origin = sanitize(origin);
 			images = sanitize(images) || [];
 
 			const existingIngredient = await Ingredient.findOne({ name, bio });
@@ -157,6 +166,7 @@ router.post(
 				allergens,
 				vegan,
 				vegeta,
+				origin,
 				images,
 			});
 
@@ -194,15 +204,16 @@ router.put(
 			.withMessage('Le champ "bio" doit être un booléen.'),
 		check('supplier')
 			.optional()
-			.trim()
-			.isLength({ min: 2, max: 50 })
-			.withMessage(
-				'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
-			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
-			.withMessage(
-				'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
-			),
+			// .trim()
+			// .isLength({ min: 2, max: 50 })
+			// .withMessage(
+			// 	'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
+			// )
+			// .matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			// .withMessage(
+			// 	'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
+			// ),
+			,
 		check('type')
 			.optional()
 			.isIn(['simple', 'compose'])
@@ -225,6 +236,8 @@ router.put(
 			.optional()
 			.isBoolean()
 			.withMessage('Le champ "végétarien" doit être un booléen.'),
+		check('origin')
+			.optional()
 	],
 	validateRequest,
 	async (req, res) => {
@@ -238,6 +251,7 @@ router.put(
 				allergens, 
 				vegan, 
 				vegeta, 
+				origin,
 				images 
 			} = req.body;
 			
@@ -302,6 +316,7 @@ router.put(
 				vegan !== undefined ? sanitize(vegan) : ingredient.vegan;
 			ingredient.vegeta =
 				vegeta !== undefined ? sanitize(vegeta) : ingredient.vegeta;
+			ingredient.origin = sanitize(origin) || ingredient.origin;
 			ingredient.images = sanitize(images) || ingredient.images;
 
 			await ingredient.save();

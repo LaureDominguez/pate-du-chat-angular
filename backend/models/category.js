@@ -6,6 +6,7 @@ const CategorySchema = new mongoose.Schema({
 		required: true,
 		unique: true,
 	},
+    description: { type: String }
 }); 
 
 // Compter le nombre de produits dans une catégorie
@@ -14,7 +15,7 @@ CategorySchema.virtual('productCount', {
 	localField: '_id',
 	foreignField: 'category',
 	count: true
-})
+});
 
 CategorySchema.set('toJSON', { virtuals: true });
 CategorySchema.set('toObject', { virtuals: true });

@@ -45,7 +45,7 @@ router.get('/:id', async (req, res) => {
 		console.error(err.message);
 		res
 			.status(500)
-			.json({ error: 'Erreur bidule lors de la récupération de la catégorie.' });
+			.json({ error: 'Erreur lors de la récupération de la catégorie.' });
 	}
 });
 
@@ -137,7 +137,7 @@ router.put(
 			if (err.code === 11000) {
 				return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
 			}
-			res.status(500).send('Erreur serveur');
+			res.status(500).json({ error: err.message });
 		}
 	}
 );

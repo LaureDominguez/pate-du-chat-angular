@@ -124,7 +124,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     }
 
     const newCategory: Category = {
-      name: this.formatNameInput(this.categoryForm.get('name')?.value), // Nettoyage des espaces et majuscules
+      name: this.formatNameInput(this.categoryForm.get('name')?.value),
     };
 
     const request$ = category._id
@@ -173,8 +173,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       });
       dialogRef.afterClosed().subscribe((result) => {
         if (result) {
-
-          console.log('pouet supprimé : ', category.productCount);
+          // console.log('pouet supprimé : ', category.productCount);
           this.categoryService
             .deleteCategory(category._id!)
             .subscribe(() => {});

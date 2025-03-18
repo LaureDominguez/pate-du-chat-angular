@@ -29,6 +29,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
   ingredients = new MatTableDataSource<Ingredient>([]);
   allIngredients: Ingredient[] = [];
   allergenesList: string[] = [];
+  originesList: string[] = [];
 
   private destroy$ = new Subject<void>();
 
@@ -38,6 +39,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     'allergens',
     'vegan',
     'vegeta',
+    'origin',
     'actions',
   ];
 
@@ -56,10 +58,11 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.ingredientService.getIngredients().subscribe((ingredients) => {
       this.ingredients.data = ingredients;
       this.allIngredients = ingredients;
-      // console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
+      console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
     });
     
     this.fetchAllergenes();
+    this.fetchOrigines();
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
       const searchedValue = this.sharedDataService.getSearchedIngredient();
@@ -91,6 +94,17 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  fetchOrigines(): void {
+    this.ingredientService.getOrigines().subscribe({
+      next: (origines) => {
+        this.originesList = origines;
+        console.log('🚀 Liste des origines dans ingredient-admin:', this.originesList);
+      },
+      error: (err) => console.error('❌ Erreur de récupération des origines:', err),
+    });
+  }
+  
+
   // Télécharger une image
   downloadIngredientImage(imagePath: string, ingredientName: string) {
     this.imageService.downloadImage(imagePath, ingredientName);
@@ -111,6 +125,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         data: {
           ingredient: ingredient,
           allergenesList: this.allergenesList,
+          originesList: this.originesList,
           imageUrls: imageUrls,
           searchedValue: searchedValue,
           ingredients: this.allIngredients, // ✅ Passage des ingrédients disponibles

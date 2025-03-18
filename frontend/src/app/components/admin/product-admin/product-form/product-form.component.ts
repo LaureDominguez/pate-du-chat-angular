@@ -88,6 +88,34 @@ export class ProductFormComponent implements OnInit {
         data.product?.composition || [],
         [Validators.required, Validators.minLength(1)],
       ],
+      dlc: [
+        data.product?.dlc || '',
+        [
+          Validators.required,
+          Validators.maxLength(50),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
+        ],
+      ],
+      cookInstructions: [
+        data.product?.cookInstructions || '',
+        [
+          Validators.required,
+          Validators.maxLength(500),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
+        ],
+      ],
+      stock: [data.product?.stock || false],
+      stockQuantity: [
+        data.product?.stockQuantity || 0,
+        [Validators.required, Validators.min(0)],
+      ],
+      quantityType: [
+        data.product?.quantityType || '',
+        [
+          Validators.required,
+          Validators.pattern(/^(piece|kg)$/)
+        ],
+      ],
       price: [
         data.product?.price ?? 0,
         [
@@ -96,14 +124,6 @@ export class ProductFormComponent implements OnInit {
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
         ],
       ],
-      priceType: [
-        data.product?.priceType || '',
-        [
-          Validators.required,
-          Validators.pattern(/^(piece|kg)$/)
-        ],
-      ],
-      stock: [data.product?.stock || false],
       images: [data.product?.images || []],
     });
 
@@ -137,6 +157,26 @@ export class ProductFormComponent implements OnInit {
 
   get composition(): Ingredient[] {
     return this.productForm.get('composition')?.value || [];
+  }
+
+  get dlc() {
+    return this.productForm.get('dlc');
+  }
+
+  get cookInstructions() {
+    return this.productForm.get('cookInstructions');
+  }
+
+  get stock() {
+    return this.productForm.get('stock');
+  }
+
+  get stockQuantity() {
+    return this.productForm.get('stockQuantity');
+  }
+
+  get quantityType() {
+    return this.productForm.get('quantityType');
   }
 
   get price() {
@@ -436,8 +476,12 @@ export class ProductFormComponent implements OnInit {
     category: 'Catégorie',
     description: 'Description',
     composition: 'Composition',
-    price: 'Prix',
+    dlc: 'DLC',
+    cookInstructions: 'Instructions de cuisson',
     stock: 'Stock',
+    stockQuantity: 'Quantité en stock',
+    quantityType: 'Type de quantité',
+    price: 'Prix',
   };
 
   private getErrorMessage(controlName: string): string | null {

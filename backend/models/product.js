@@ -19,20 +19,33 @@ const ProductSchema = new mongoose.Schema({
 			ref: 'Ingredient',
 		},
 	],
-	price: {
-		type: Number,
+	dlc: {
+		type: String,
 		required: true,
-		min: 0,
 	},
-	priceType: {
+	cookInstructions: {
+		type: String,
+		required: true,
+	},
+	stock: {
+		type: Boolean,
+		default: false,
+	},
+	stockQuantity: {
+		type: Number,
+		min: 0,
+		default: 0,
+	},
+	quantityType: {
 		type: String,
 		enum: ['piece', 'kg'],
 		required: true,
 		default: 'piece',
 	},
-	stock: {
-		type: Boolean,
-		default: false,
+	price: {
+		type: Number,
+		required: true,
+		min: 0,
 	},
 	images: [
 		{

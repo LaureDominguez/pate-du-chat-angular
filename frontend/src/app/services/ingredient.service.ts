@@ -11,6 +11,7 @@ import { SharedDataService } from './shared-data.service';
 export class IngredientService {
   private apiUrl = 'http://localhost:5000/api/ingredients';
   private allergenesUrl = '../assets/data/allergenes.json';
+  private originesUrl = '../assets/data/origines.json';
 
   private ingredientsSubject = new BehaviorSubject<Ingredient[]>([]);
   ingredients$ = this.ingredientsSubject.asObservable(); // Observable écoutable
@@ -46,6 +47,16 @@ export class IngredientService {
       .get<{ allergenes: string[] }>(this.allergenesUrl)
       .pipe(map((data) => data.allergenes));
   }
+
+getOrigines(): Observable<any> {
+  return this.http.get(this.originesUrl).pipe(
+    tap((data) => console.log('✅ Données reçues de origines.json:', data)),
+    catchError((error) => {
+      console.error('❌ Erreur lors du chargement des origines:', error);
+      return throwError(() => new Error('Impossible de charger les origines.'));
+    })
+  );
+}
 
   createIngredient(payload: any): Observable<Ingredient> {
     return this.http.post<Ingredient>(this.apiUrl, payload).pipe(

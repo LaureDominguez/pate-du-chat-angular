@@ -180,20 +180,49 @@ router.post(
 			.withMessage(
 				'Le champ "composition" doit contenir au moins un ingrédient.'
 			),
-		check('price')
-			.isFloat({ min: 0 })
-			.withMessage('Le champ "prix" doit être un nombre positif.'),
-		check('priceType')
-			.isIn(['piece', 'kg'])
-			.withMessage('Le type de prix doit être "piece" ou "kg".'),
+		check('dlc')
+			.trim()
+			.notEmpty()
+			.withMessage('Le champ "DLC" est obligatoire.')
+			.isLength({ min: 2, max: 50 })
+			.withMessage(
+				'Le champ "DLC" doit avoir une longueur comprise entre 2 et 50 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.withMessage(
+				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
+			),
+		check('cookInstructions')
+			.trim()
+			.notEmpty()
+			.withMessage('Le champ "instructions de cuisson" est obligatoire.')
+			.isLength({ min: 2, max: 500 })
+			.withMessage(
+				'Le champ "instructions de cuisson" doit avoir une longueur comprise entre 2 et 500 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.withMessage(
+				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
+			),
 		check('stock')
 			.isBoolean()
 			.withMessage('Le champ "stock" doit être un booléen.'),
+		check('stockQuantity')
+			.isInt({ min: 0 })
+			.withMessage(
+				'Le champ "quantité en stock" doit être un nombre entier positif.'
+			),
+		check('quantityType')
+			.isIn(['piece', 'kg'])
+			.withMessage('L\'unité doit être de type "pièce" ou "kg".'),
+		check('price')
+			.isFloat({ min: 0 })
+			.withMessage('Le champ "prix" doit être un nombre positif.'),
 	],
 	validateRequest,
 	async (req, res, next) => {
 		try {
-			let { name, category, description, composition, price, priceType, stock, images } =
+			let { name, category, description, composition, dlc, cookInstructions, stock, stockQuantity, quantityType, price, images } =
 				req.body;
 
 			// Nettoyage des entrées utilisateur
@@ -201,9 +230,11 @@ router.post(
 			// category = sanitize(category);
 			description = sanitize(description);
 			composition = sanitize(composition);
-			price = sanitize(price);
-			priceType = sanitize(priceType);
+			dlc = sanitize(dlc);
+			cookInstructions = sanitize(cookInstructions);
 			stock = sanitize(stock);
+			stockQuantity = sanitize(stockQuantity);
+			quantityType = sanitize(quantityType);
 			images = sanitize(images);
 
 			category =
@@ -223,20 +254,26 @@ router.post(
 				category,
 				description,
 				composition,
-				price,
-				priceType,
+				dlc,
+				cookInstructions,
 				stock,
+				stockQuantity,
+				quantityType,
+				price,
 				images,
 			});
 
-			const product = await newProduct.save();
-			res.status(201).json(product);
+			await newProduct.save();
+			res.status(201).json(newProduct);
+
+			// const product = await newProduct.save();
+			// res.status(201).json(product);
 		} catch (err) {
 			console.error('Erreur lors de la mise à jour du produit:', err.message);
 			if (err.code === 11000) {
 				return res.status(400).json({ msg: 'Ce produit existe déjà.' });
 			}
-			res.status(500).send('Server error');
+			res.status(500).send('Erreur serveur');
 		}
 	}
 );
@@ -288,23 +325,53 @@ router.put(
 			.withMessage(
 				'Le champ "composition" doit contenir au moins un ingrédient.'
 			),
-		check('price')
+		check('dlc')
 			.optional()
-			.isFloat({ min: 0 })
-			.withMessage('Le champ "prix" doit être un nombre positif.'),
-		check('priceType')
+			.trim()
+			.isLength({ max: 50 })
+			.withMessage(
+				'Le champ "DLC" ne doit pas dépasser 500 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.withMessage(
+				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
+			),
+		check('cookInstructions')
 			.optional()
-			.isIn(['piece', 'kg'])
-			.withMessage('Le type de prix doit être "piece" ou "kg".'),
+			.trim()
+			.isLength({ max: 500 })
+			.withMessage(
+				'Le champ "instructions de cuisson" ne doit pas dépasser 500 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.withMessage(
+				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
+			),
 		check('stock')
 			.optional()
 			.isBoolean()
 			.withMessage('Le champ "stock" doit être un booléen.'),
+		check('stockQuantity')
+			.optional()
+			.isInt({ min: 0 })
+			.withMessage(
+				'Le champ "quantité en stock" doit être un nombre entier positif.'
+			),
+		
+		check('quantityType')
+			.optional()
+			.isIn(['piece', 'kg'])
+			.withMessage('L\'unité doit être de type "pièce" ou "kg".'),
+		
+		check('price')
+			.optional()
+			.isFloat({ min: 0 })
+			.withMessage('Le champ "prix" doit être un nombre positif.'),
 	],
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name, category, description, composition, price, priceType, stock, images } =
+			let { name, category, description, composition, dlc, cookInstructions, stock, stockQuantity, quantityType, price, images } =
 				req.body;
 
 			const product = await Product.findById(req.params.id);
@@ -317,8 +384,8 @@ router.put(
 				existingProduct &&
 				existingProduct._id.toString() !== product._id.toString()
 			) {
-				console.log('📋 existingProduct :', existingProduct);
-				console.log('📋 product :', product);
+				// console.log('📋 existingProduct :', existingProduct);
+				// console.log('📋 product :', product);
 				return res
 					.status(400)
 					.json({ msg: 'Un autre produit porte déjà ce nom.' });
@@ -328,10 +395,12 @@ router.put(
 			// product.category = sanitize(category) || product.category;
 			product.description = sanitize(description) || product.description;
 			product.composition = sanitize(composition) || product.composition;
-			// product.price = sanitize(price) || product.price;
-			product.price = price !== undefined ? sanitize(price) : product.price;
-			product.priceType = sanitize(priceType) || product.priceType;
+			product.dlc = sanitize(dlc) || product.dlc;
+			product.cookInstructions = sanitize(cookInstructions) || product.cookInstructions;
 			product.stock = sanitize(stock) || product.stock;
+			product.stockQuantity = sanitize(stockQuantity) || product.stockQuantity;
+			product.quantityType = sanitize(quantityType) || product.quantityType;
+			product.price = sanitize(price) || product.price;
 			product.images = sanitize(images) || product.images;
 
 			product.category =

@@ -39,6 +39,33 @@ export class SharedDataService {
   }
 
   ///////////////////////////////////////////
+  /////////////// Suppliers  ////////////////
+  private supplierListUpdateSubject = new Subject<void>();
+  supplierListUpdate$ = this.supplierListUpdateSubject.asObservable();
+
+  private requestNewSupplierSubject = new Subject<string>();
+  requestNewSupplier$ = this.requestNewSupplierSubject.asObservable();
+
+  private supplierCreatedSubject = new Subject<any>();
+  supplierCreated$ = this.supplierCreatedSubject.asObservable();
+
+  // Demande de création par ingredient-form
+  requestSupplierCreation(supplierName: string) {
+    this.requestNewSupplierSubject.next(supplierName);
+  }
+
+  // Réponse de supplier-admin
+  sendSupplierToIngredientForm(supplier: any) {
+    this.supplierCreatedSubject.next(supplier);
+  }
+
+  // Notifier les abonnés de la mise à jour
+  notifySupplierUpdate() {
+    this.supplierListUpdateSubject.next();
+  }
+
+
+  ///////////////////////////////////////////
   /////////////// Ingredients ///////////////
   private ingredientListUpdateSubject = new Subject<void>();
   ingredientListUpdate$ = this.ingredientListUpdateSubject.asObservable();

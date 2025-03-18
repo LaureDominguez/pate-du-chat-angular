@@ -1,0 +1,18 @@
+[
+    {
+        "label": "Local (Savoie et voisins)",
+        "options": ["Savoie", "Haute-Savoie", "Isère", "Ain"]
+    },
+    {
+        "label": "France (hors Savoie et voisins)",
+        "options": ["France - Autres régions"]
+    },
+    {
+        "label": "Europe",
+        "options": ["Suisse", "Italie", "Espagne", "Allemagne", "Belgique", "Autres pays de l'UE"]
+    },
+    {
+        "label": "Hors Europe",
+        "options": ["Afrique", "Amérique du Nord", "Amérique du Sud", "Asie", "Océanie"]
+    }
+]

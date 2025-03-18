@@ -44,10 +44,14 @@ export class IngredientFormComponent {
       imageUrls: string[];
       ingredient: Ingredient | null;
       allergenesList: string[];
+      originesList: string[];
       searchedValue: string;
       ingredients: Ingredient[];
     }
   ) {
+    console.log('📢 Données reçues dans ingredient-form:', this.data);
+    console.log('✅ Origines reçues:', this.data.originesList);
+
     this.ingredientForm = this.fb.group({
       name: [
         data.ingredient?.name || data.searchedValue || '',
@@ -83,6 +87,7 @@ export class IngredientFormComponent {
           )
         )
       ),
+      origin: [data.ingredient?.origin || ''],
       vegan: [data.ingredient?.vegan || false],
       vegeta: [data.ingredient?.vegeta || false],
     });
@@ -100,6 +105,7 @@ export class IngredientFormComponent {
     }
 
     console.log('🚀 ingredient-form -> onInit -> Ingrédient mis à jour :', data.ingredient);
+    console.log(' ingredient-form :', this.ingredientForm.value);
 
   }
 
@@ -176,6 +182,10 @@ export class IngredientFormComponent {
     return this.ingredientForm.get('allergens') as FormArray;
   }
 
+  get origins() {
+    return this.ingredientForm.get('origin') ;
+  }
+
   get name() {
     return this.ingredientForm.get('name');
   }
@@ -184,17 +194,6 @@ export class IngredientFormComponent {
     return this.ingredientForm.get('supplier');
   }  
 
-  // get type() {
-  //   return this.ingredientForm.get('type');
-  // }
-
-  // onTypeChange(type: string): void {
-  //   if (type === 'compose') {
-  //     this.ingredientForm.get('bio')?.disable();
-  //   } else {
-  //     this.ingredientForm.get('bio')?.enable();
-  //   }
-  // }
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
@@ -316,6 +315,7 @@ export class IngredientFormComponent {
     name: 'Nom',
     supplier: 'Fournisseur',
     allergens: 'Allergènes',
+    origin: 'Origine',
     vegan: 'Vegan',
     vegeta: 'Végétarien',
   };

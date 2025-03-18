@@ -7,9 +7,12 @@ export interface Product {
     category: string | Category;
     description?: string;
     composition?: (string | Ingredient)[];
-    price: number;
-    priceType: 'piece' | 'kg';
+    dlc: string;
+    cookInstructions: string;
     stock: boolean;
+    stockQuantity: number;
+    quantityType: string;
+    price: number;
     images?: string[];
 }
 

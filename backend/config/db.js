@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Category = require('../models/category');
+const Supplier = require('../models/supplier');
 
 const connectDB = async () => {
 	try {
@@ -7,8 +8,9 @@ const connectDB = async () => {
 		await mongoose.connect('mongodb://localhost:27017/les_pates_du_chat');
 		console.log('MongoDB est connecté');
 
-		// S'assurer que la catégorie par défaut existe
+		// S'assurer que la catégorie et le fournisseur par défaut existent
 		await ensureDefaultCategory();
+		await ensureDefaultSupplier();
 	} catch (error) {
 		console.error('Erreur lors de la connexion à MongoDB:', error.message);
 		process.exit(1);
@@ -32,6 +34,25 @@ const ensureDefaultCategory = async () => {
 		}
 	} catch (error) {
 		console.error("❌ Erreur lors de la création de la catégorie par défaut :", error);
+	}
+};
+
+const ensureDefaultSupplier = async () => {
+	try {
+		const DEFAULT_SUPPLIER_ID = "67d6a38cac36810d223b612e";
+
+		const defaultSupplier = await Supplier.findById(DEFAULT_SUPPLIER_ID);
+		if (!defaultSupplier) {
+			await Supplier.create({
+				_id: new mongoose.Types.ObjectId(DEFAULT_SUPPLIER_ID),
+				name: "Sans fournisseur",
+			});
+			console.log("✅ Fournisseur 'Sans fournisseur' cree avec ID fixe.");
+		} else {
+			console.log("✅ Fournisseur 'Sans fournisseur' existe deja.");
+		}
+	} catch (error) {
+		console.error("❌ Erreur lors de la creation du fournisseur par defaut :", error);
 	}
 };
 

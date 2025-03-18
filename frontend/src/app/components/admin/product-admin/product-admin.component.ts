@@ -45,6 +45,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     'vegeta',
     'price',
     'stock',
+    'stockQuantity',
     'actions',
   ];
 

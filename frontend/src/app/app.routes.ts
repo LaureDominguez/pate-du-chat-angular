@@ -1,19 +1,10 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './components/home/home.component';
-import { AboutComponent } from './components/about/about.component';
-import { ShopComponent } from './components/shop/shop.component';
 import { ContactComponent } from './components/contact/contact.component';
-import { ProductsComponent } from './components/pasta/products/products.component';
 import { ShopGridComponent } from './components/shop/shop-grid/shop-grid.component';
 
 export const APP_ROUTES: Routes = [
   { path: '', data: { title: 'Accueil' }, component: HomeComponent },
-  { path: 'about', data: { title: "L'Atelier" }, component: AboutComponent },
-  {
-    path: 'products',
-    data: { title: 'Les Produits' },
-    component: ProductsComponent,
-  },
   { path: 'shop', data: { title: 'La Boutique' }, component: ShopGridComponent },
   { path: 'contact', data: { title: 'Contact' }, component: ContactComponent },
   // Lazy-loaded admin module

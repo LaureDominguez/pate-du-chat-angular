@@ -19,9 +19,7 @@ import { AppModule } from '../../app.module';
 export class NavComponent implements OnInit {
   navItems = [
     { title: 'Accueil', link: '/' },
-    { title: 'Les Produits', link: '/products' },
-    { title: "L'Atelier", link: '/about' },
-    { title: 'La Boutique', link: '/shop' },
+    { title: 'Les Produits', link: '/shop' },
     { title: 'Contact', link: '/contact' },
     { title: 'Gestion du site', link: '/admin' },
   ];

@@ -12,7 +12,8 @@ const IngredientSchema = new mongoose.Schema({
 		default: false,
 	},
 	supplier: {
-		type: String,
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Supplier',
 		trim: true,
 	},
 	type: {
@@ -40,6 +41,10 @@ const IngredientSchema = new mongoose.Schema({
 	vegeta: {
 		type: Boolean,
 		default: false,
+	},
+	origin: {
+		type: String,
+		required: true,
 	},
 	images: [
 		{

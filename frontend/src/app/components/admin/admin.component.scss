@@ -1,9 +1,9 @@
-.admin-section {
-    padding: 1rem;
-    background-color: var(--surfaceContainer);
-    margin: 1rem;
-    border-radius: 20px;
-}
+// .admin-section {
+//     padding: 1rem;
+//     background-color: var(--surfaceContainer);
+//     margin: 1rem;
+//     border-radius: 20px;
+// }
 
 mat-table {
     table-layout: fixed;
@@ -16,7 +16,7 @@ th {
 }
 
 tr:not(thead tr){
-    background-color: var(--surfaceContainer);
+    // background-color: var(--surfaceContainer);
     transition: background-color 0.3s;
 
     &:hover{
@@ -38,8 +38,80 @@ mat-divider {
 }
 
 /////////////////////////////
+/// // Bentos
+//////////////////////////////
+/// 
+.bento-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); // 2 colonnes
+    gap: 1rem;
+    padding: 2rem;
+    transition: all 0.3s ease-in-out;
+    align-items: stretch;
+
+    @media (max-width: 800px) { 
+        grid-template-columns: 1fr; // Passe en 1 colonne sur écran réduit
+    }
+}
+
+.bento-item {
+    background-color: var(--surfaceContainer);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+    // height: 100%;
+
+    &:hover {
+        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    &.expanded {
+        grid-column: 1 / -1; // Prend toute la largeur
+        min-height: 400px; // Augmente la hauteur en mode étendu
+        padding: 25px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: stretch;
+        position: relative;
+    }
+}
+
+.bento-container:has(.expanded) {
+    grid-template-columns: repeat(4, 1fr); // 4 colonnes alignées sur une seule ligne
+}
+
+
+
+/////////////////////////////
 /// // Boutons
 //////////////////////////////
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px 10px;
+    color: #555;
+    transition: color 0.3s;
+
+    &:hover {
+        color: #d9534f; // Rouge clair au survol
+    }
+}
+
 
 // Add button
 .add {
@@ -137,36 +209,3 @@ mat-divider {
     /* Ajustement spécial pour le retour */
     transition: transform 0.8s ease-out, opacity 0.3s ease-out;
 }
-
-
-//////////////////////////////
-/// // Formulaires
-//////////////////////////////
-
-// ::ng-deep .mat-mdc-dialog-surface {
-//     background-color: var(--surfaceBright);
-// }
-
-// form {
-//     display: flex;
-//     align-items: stretch;
-//     flex-direction: column;
-//     justify-content: space-evenly;
-//     height: 40rem;
-//     width: 95%;
-//     overflow: auto;
-//     margin: auto;
-//     mat-form-field {
-//         border-radius: 10px;
-//         color: var(--onSurface);
-//         background-color: var(--surfaceBright);
-//         &:focus-within {
-//             color: var(--onSurface);
-//             background-color: var(--surfaceContainer);
-//         }
-//         &.ng-invalid.ng-touched {
-//             color: var(--error);
-//             background-color: var(--errorContainer);
-//         }
-//     }
-// }
