@@ -25,32 +25,39 @@
         
         <!-- Fournisseur -->
         <section class="supplier">
-            <mat-form-field appearance="fill" class="full-width">
+            <mat-form-field appearance="fill">
                 <mat-label>Fournisseur</mat-label>
-                <input matInput formControlName="supplier" />
-                <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
-                <mat-error *ngIf="supplier?.hasError('minlength')">Minimum 2 caractères.</mat-error>
-                <mat-error *ngIf="supplier?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
-                <mat-error *ngIf="supplier?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
+                <input 
+                    type="text"
+                    matInput
+                    [formControl]="supplierCtrl"
+                    [matAutocomplete]="supplierAuto"
+                    formControlName="supplier"
+                    placeholder="Rechercher un fournisseur"
+                />
+                <mat-autocomplete #supplierAuto="matAutocomplete" (optionSelected)="addSupplier($event.option.value)"> 
+                    <mat-option *ngFor="let supplier of filteredSuppliers | async" [value]="supplier">
+                        {{supplier.name}}
+                    </mat-option>
+
+                    <mat-option *ngIf="supplierNotFound" [value]="'supplierNotFound'">
+                        Aucun résultat. Cliquez ici pour ajouter un nouveau forunisseur.
+                    </mat-option>
+                </mat-autocomplete>
             </mat-form-field>
-
-            <pre>{{ data.originesList | json }}</pre>
-
 
             <mat-form-field>
                 <mat-label>Origine</mat-label>
                 <mat-select formControlName="origin">
                     <ng-container *ngFor="let group of data.originesList">
-                        <!-- <mat-optgroup [label]="group.label">
+                        <mat-optgroup [label]="group.label">
                             <mat-option *ngFor="let option of group.options" [value]="option">
                                 {{ option }}
                             </mat-option>
-                        </mat-optgroup> -->
+                        </mat-optgroup>
                     </ng-container>
                 </mat-select>
             </mat-form-field>
-            
-
         </section>
         
         <!-- Type d'ingrédient -->

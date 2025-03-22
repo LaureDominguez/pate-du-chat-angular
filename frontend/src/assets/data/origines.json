@@ -1,10 +1,10 @@
 [
     {
-        "label": "Local (Savoie et voisins)",
+        "label": "Local (Savoie et proche)",
         "options": ["Savoie", "Haute-Savoie", "Isère", "Ain"]
     },
     {
-        "label": "France (hors Savoie et voisins)",
+        "label": "France (hors Savoie et proche)",
         "options": ["France - Autres régions"]
     },
     {

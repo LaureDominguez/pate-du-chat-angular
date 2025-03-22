@@ -10,6 +10,7 @@ import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.com
 import { Ingredient } from '../../../../models/ingredient';
 import { SharedDataService } from '../../../../services/shared-data.service';
 import { map, Observable, startWith, Subject } from 'rxjs';
+import { Supplier } from '../../../../models/supplier';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -20,19 +21,31 @@ import { map, Observable, startWith, Subject } from 'rxjs';
 })
 export class IngredientFormComponent {
   ingredientForm: FormGroup;
+
+  // Fournisseurs
+  suppliers: Supplier[] = [];
+  supplierCtrl = new FormControl();
+  filteredSuppliers!: Observable<Supplier[]>;
+  createSupplier: boolean = false;
+  searchedSupplier: string = '';
+  supplierNotFound: boolean = false;
+
+  // Sous-ingrédients
+  allIngredients: Ingredient[] = [];
+  subIngredientCtrl = new FormControl();
+  filteredSubIngredients!: Observable<Ingredient[]>;
+  selectedSubIngredients: Ingredient[] = [];
+  subIngredientNotFound: boolean = false;
+  
+  // Images
   selectedFiles: File[] = [];
   filePreviews: string[] = [];
   existingImages: string[] = [];
   existingImageUrls: string[] = [];
   removedExistingImages: string[] = [];
 
+  ////////////////// je sais pas ce que c'est ???
   @Output() downloadImageEvent = new EventEmitter<string>();
-
-  allIngredients: Ingredient[] = [];
-  filteredSubIngredients!: Observable<Ingredient[]>;
-  selectedSubIngredients: Ingredient[] = [];
-  subIngredientNotFound: boolean = false;
-  subIngredientCtrl = new FormControl();
 
   constructor(
     private fb: FormBuilder,
@@ -44,13 +57,17 @@ export class IngredientFormComponent {
       imageUrls: string[];
       ingredient: Ingredient | null;
       allergenesList: string[];
-      originesList: string[];
+      suppliers: Supplier[];
+      originesList: { label: string; options: string[] }[];
       searchedValue: string;
       ingredients: Ingredient[];
     }
   ) {
     console.log('📢 Données reçues dans ingredient-form:', this.data);
-    console.log('✅ Origines reçues:', this.data.originesList);
+    // console.log('✅ Origines reçues:', this.data.originesList);
+
+    this.suppliers = data.suppliers || [];
+    this.allIngredients = data.ingredients || [];
 
     this.ingredientForm = this.fb.group({
       name: [
@@ -62,7 +79,6 @@ export class IngredientFormComponent {
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
-      // bio: [data.ingredient?.bio || false],
       bio: [
         { 
           value: data.ingredient?.bio || false, 
@@ -70,13 +86,8 @@ export class IngredientFormComponent {
         }
       ], // ✅ Désactiver si composé
       supplier: [
-        data.ingredient?.supplier || '',
-        [
-          Validators.required,
-          Validators.minLength(2),
-          Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
-        ],
+        data.ingredient?.supplier || null,
+        [Validators.required],
       ],
       type: [data.ingredient?.type || 'simple'],
       subIngredients: [data.ingredient?.subIngredients || []],
@@ -92,8 +103,6 @@ export class IngredientFormComponent {
       vegeta: [data.ingredient?.vegeta || false],
     });
 
-    this.allIngredients = data.ingredients || [];
-
     // Charger les images existantes si l'ingrédient est fourni
     if (data.ingredient?.images) {
       this.existingImages = [...data.ingredient.images];
@@ -105,49 +114,108 @@ export class IngredientFormComponent {
     }
 
     console.log('🚀 ingredient-form -> onInit -> Ingrédient mis à jour :', data.ingredient);
-    console.log(' ingredient-form :', this.ingredientForm.value);
+    console.log('liste des suppliers :', this.suppliers);
 
+    const supplier = this.supplier?.value;
+
+    if (supplier && typeof supplier === 'object') {
+      this.supplierCtrl.setValue(supplier.name);
+    } else {
+      this.supplierCtrl.setValue('');
+    }
+    
+    
+    
+    
   }
 
   ngOnInit(): void {
     this.setupAutoComplete();
 
-      // Désactiver "bio" si l'ingrédient est "compose"
-    this.ingredientForm.get('type')?.valueChanges.subscribe((newType: string) => {
+    // Désactiver "bio" si l'ingrédient est "compose"
+    this.type?.valueChanges.subscribe((newType: string) => {
       if (newType === 'compose') {
-        this.ingredientForm.get('bio')?.disable();
-        this.ingredientForm.get('bio')?.setValue(false); // S'assure que bio est désactivé
+        this.bio?.disable();
+        this.bio?.setValue(false); // S'assure que bio est désactivé
       } else {
-        this.ingredientForm.get('bio')?.enable();
+        this.bio?.enable();
       }
     });
 
     // // Vérifier au chargement si le champ doit être désactivé
-    if (this.ingredientForm.get('type')?.value === 'compose') {
-      this.ingredientForm.get('bio')?.disable();
-    }
+    if (this.type?.value === 'compose') {
+      this.bio?.disable();
+    }  
+
   }
 
   // ✅ Recherche d'ingrédients avec autocomplete
   private setupAutoComplete(): void {
+    // Fournisseurs
+    this.filteredSuppliers = this.supplierCtrl.valueChanges.pipe(
+      startWith(''),
+      map((value) => {
+        if (typeof value === 'string' && value !== 'supplierNotFound') {
+          this.searchedSupplier = value.trim();
+          this.supplierNotFound =
+            this.filterItems(value, this.suppliers).length === 0;
+        }
+        return this.filterItems(value, this.suppliers);
+      })
+    );
+
+    // Sous-ingrédients
     this.filteredSubIngredients = this.subIngredientCtrl.valueChanges.pipe(
       startWith(''),
       map((value) => {
-        const results = this._filterIngredients(value);
+        const results = this.filterItems(value, this.allIngredients);
         this.subIngredientNotFound = results.length === 0; // ✅ Gestion du message "Aucun ingrédient trouvé"
         return results.sort((a, b) => a.name.localeCompare(b.name));
       })
     );
   }
 
-  private _filterIngredients(value: string): Ingredient[] {
-    const filterValue = value ? value.toLowerCase().trim() : '';
-    return this.allIngredients.filter(
-      (ing) =>
-        ing.name.toLowerCase().includes(filterValue) &&
-        !this.selectedSubIngredients.some((i) => i._id === ing._id)
-    );
+  //// Tri et filtrage avec tolérance aux accents
+  private filterItems(value: string, list: any[]): any[] {
+    if (!value) return list;
+
+    // Normaliser la valeur recherchée
+    const normalizedValue = this.normalizeString(value);
+
+    return list
+      .filter((item) =>
+        this.normalizeString(item.name).includes(normalizedValue)
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  //// Fonction de normalisation des accents et ligatures
+  private normalizeString(str: string): string {
+    if (typeof str !== 'string') return ''; // Vérifie que c'est bien une string, sinon retourne une chaîne vide
+
+    return str
+      .normalize('NFD') // Décompose les caractères accentués (ex: Œ → O + E, É → E + ´)
+      .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+      .toLowerCase() // Convertit en minuscules
+      .trim(); // Supprime les espaces inutiles
+  }
+
+  //////////////////////////////////////
+  // Ajouter un fournisseur 
+
+  addSupplier(supplier: Supplier | 'supplierNotFound' | null): void {
+    if (supplier === 'supplierNotFound') {
+      // this.createSupplier(this.searchedSupplier);
+    } else {
+      this.ingredientForm.patchValue({ supplier: supplier });
+      this.supplierCtrl.setValue(supplier?.name || '');
+    }
+  }
+  
+
+  //////////////////////////////////////
+
+
   // ✅ Ajouter un sous-ingrédient
   addSubIngredient(ingredient: Ingredient): void {
     if (!this.selectedSubIngredients.includes(ingredient)) {
@@ -178,22 +246,29 @@ export class IngredientFormComponent {
     Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}`;
   }
 
-  get allergens(): FormArray {
-    return this.ingredientForm.get('allergens') as FormArray;
-  }
-
-  get origins() {
-    return this.ingredientForm.get('origin') ;
-  }
-
   get name() {
     return this.ingredientForm.get('name');
+  }
+
+  get bio () {
+    return this.ingredientForm.get('bio');
+  }
+
+  get type() {
+    return this.ingredientForm.get('type');
+  }
+
+  get allergens(): FormArray {
+    return this.ingredientForm.get('allergens') as FormArray;
   }
 
   get supplier() {
     return this.ingredientForm.get('supplier');
   }  
 
+  get origins() {
+    return this.ingredientForm.get('origin') ;
+  }
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
@@ -292,12 +367,18 @@ export class IngredientFormComponent {
       )
       .filter((allergene: string | null) => allergene !== null);
 
+    // Formatage du nom du fournisseur
+    const supplier = this.supplier?.value;
+    const formattedSupplier = supplier
+      ? { ...supplier, name: this.formatNameInput(supplier.name) }
+      : null;
+
     // update des donnéess à envoyer après close
     const ingredientData = {
       _id: this.data.ingredient?._id,
       ...this.ingredientForm.value,
       name: this.formatNameInput(this.ingredientForm.value.name),
-      supplier: this.formatNameInput(this.ingredientForm.value.supplier),
+      supplier: formattedSupplier,
       allergens: allergenesSelectionnes,
       subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
       existingImages: this.existingImages,

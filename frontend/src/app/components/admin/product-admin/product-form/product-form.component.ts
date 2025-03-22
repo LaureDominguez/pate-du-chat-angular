@@ -31,16 +31,16 @@ export class ProductFormComponent implements OnInit {
   categories: Category[] = [];
   categoryCtrl = new FormControl();
   filteredCategories!: Observable<Category[]>;
-  creatingCategory = false;
+  creatingCategory: boolean = false;
   searchedCategory: string = '';
-  categoryNotFound = false;
+  categoryNotFound: boolean = false;
 
   //Ingredients
   ingredients: Ingredient[] = [];
   ingredientCtrl = new FormControl();
   filteredIngredients!: Observable<Ingredient[]>;
   searchedIngredient: string = '';
-  ingredientNotFound = false;
+  ingredientNotFound: boolean = false;
 
   //Images
   selectedFiles: File[] = [];
@@ -51,6 +51,7 @@ export class ProductFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    private sharedDataService: SharedDataService,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -60,7 +61,6 @@ export class ProductFormComponent implements OnInit {
       categories: Category[];
       ingredients: Ingredient[];
     },
-    private sharedDataService: SharedDataService
   ) {
     this.categories = data.categories || [];
     this.ingredients = data.ingredients || [];
@@ -135,7 +135,7 @@ export class ProductFormComponent implements OnInit {
     console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
 
     this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
-    // console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
+    console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   ngOnInit(): void {

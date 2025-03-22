@@ -48,6 +48,12 @@ export class IngredientService {
       .pipe(map((data) => data.allergenes));
   }
 
+  // getOrigines(): Observable<{ label: string, options: string[] }[]> {
+  //   return this.http.get<{ origines: { label: string, options: string[] }[] }>(this.originesUrl).pipe(
+  //     map((data) => data.origines)
+  //   );
+  // }
+  
 getOrigines(): Observable<any> {
   return this.http.get(this.originesUrl).pipe(
     tap((data) => console.log('✅ Données reçues de origines.json:', data)),

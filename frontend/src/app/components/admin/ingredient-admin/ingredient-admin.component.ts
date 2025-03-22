@@ -18,6 +18,8 @@ import { SharedDataService } from '../../../services/shared-data.service';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { ProductService } from '../../../services/product.service';
+import { Supplier } from '../../../models/supplier';
+import { SupplierService } from '../../../services/supplier.service';
 
 @Component({
   selector: 'app-ingredient-admin',
@@ -29,9 +31,10 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
   ingredients = new MatTableDataSource<Ingredient>([]);
   allIngredients: Ingredient[] = [];
   allergenesList: string[] = [];
+  suppliers: Supplier[] = [];
   originesList: string[] = [];
 
-  private destroy$ = new Subject<void>();
+  private unsubscribe$ = new Subject<void>();
 
   displayedIngredientsColumns: string[] = [
     'name',
@@ -51,18 +54,49 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     private ingredientService: IngredientService,
     private imageService: ImageService,
     private productService: ProductService,
+    private supplierService: SupplierService,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    this.ingredientService.getIngredients().subscribe((ingredients) => {
-      this.ingredients.data = ingredients;
-      this.allIngredients = ingredients;
-      console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
-    });
-    
+    this.loadData();    
     this.fetchAllergenes();
     this.fetchOrigines();
+
+    console.log('fournisseurs :', this.suppliers)
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
+  ngAfterViewInit(): void {
+    this.ingredients.paginator = this.ingredientsPaginator;
+    this.ingredients.sort = this.ingredientsSort;
+
+    // console.log('ingredients : ', this.ingredients)
+  }
+
+  loadData(): void {
+    this.ingredientService.ingredients$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((ingredients) => {
+        this.ingredients.data = ingredients.map((ingredient) => ({
+          ...ingredient
+        }))
+      })
+    // this.ingredientService.getIngredients().subscribe((ingredients) => {
+    //   this.ingredients.data = ingredients;
+    //   this.allIngredients = ingredients;
+    //   console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
+    // });
+
+    this.supplierService.suppliers$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((suppliers) => {
+        this.suppliers = suppliers;
+      })
 
     this.sharedDataService.openIngredientForm$.subscribe(() => {
       const searchedValue = this.sharedDataService.getSearchedIngredient();
@@ -74,18 +108,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         this.downloadIngredientImage(data.imagePath, data.objectName);
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  ngAfterViewInit(): void {
-    this.ingredients.paginator = this.ingredientsPaginator;
-    this.ingredients.sort = this.ingredientsSort;
-
-    // console.log('ingredients : ', this.ingredients)
   }
 
   fetchAllergenes(): void {
@@ -126,6 +148,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           ingredient: ingredient,
           allergenesList: this.allergenesList,
           originesList: this.originesList,
+          suppliers: this.suppliers,
           imageUrls: imageUrls,
           searchedValue: searchedValue,
           ingredients: this.allIngredients, // ✅ Passage des ingrédients disponibles
