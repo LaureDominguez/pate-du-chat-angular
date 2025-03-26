@@ -25,11 +25,13 @@ export class SharedDataService {
 
   // Demande de création par product-form
   requestCategoryCreation(categoryName: string) {
+    console.log('📋 Shared-service -> Demande de création de catégorie :', categoryName);
     this.requestNewCategorySubject.next(categoryName);
   }
 
   // Réponse de category-admin
   sendCategoryToProductForm(category: Category) {
+    console.log('📋 Shared-service -> Envoie de la catégorie créée :', category);
     this.categoryCreatedSubject.next(category);
   }
 

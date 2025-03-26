@@ -1,1 +1,25 @@
+<!-- <mat-slide-toggle 
+    #darkModeSwitch
+    class="theme-toggle"
+    [checked]="toggleState"
+    (change)="onToggleChange($event)"
+    hideIcon="true"
+>
+<mat-icon class="custom-icon">{{ toggleState ? 'dark_mode' : 'light_mode' }}</mat-icon>
+</mat-slide-toggle> -->
+
+<label class="theme-toggle">
+    <input
+        type="checkbox"
+        [checked]="toggleState"
+        (change)="onToggleChange($event)"
+    />
+    <span class="toggle-track"></span>
+    <span class="toggle-thumb">
+        <mat-icon class="icon">
+            {{ toggleState ? 'dark_mode' : 'light_mode' }}
+        </mat-icon>
+    </span>
+</label>
+
 <app-nav></app-nav>

@@ -20,13 +20,7 @@ export class ThemeService {
   }
 
   loadTheme(): Observable<any> {
-    return this.http.get(this.themeUrl)
-    //   .pipe(
-    //   tap((theme: any) =>
-    //     console.log('Thème chargé depuis le fichier JSON :', theme)
-    //   ) // Affiche les données récupérées
-    // )
-      ;
+    return this.http.get(this.themeUrl);
   }
 
   applyTheme(theme: any): void {
@@ -49,10 +43,20 @@ export class ThemeService {
   }
 
   setTheme(theme: string) {
+    // console.log('📋 ThemeService -> setTheme -> theme :', theme);
     if (this.isBrowser) {
       const themes = ['dark', 'light'];
       themes.forEach((t) => document.body.classList.remove(t));
       document.body.classList.add(theme);
+
+      this.loadTheme().subscribe((themesData) => {
+        const selectedTheme = themesData.schemes[theme];
+        if (selectedTheme) {
+          this.applyTheme(selectedTheme);
+        } else {
+          console.error('Theme not found:', theme);
+        }
+      })
     }
   }
 }

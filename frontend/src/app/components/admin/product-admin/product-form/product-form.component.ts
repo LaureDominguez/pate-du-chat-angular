@@ -272,18 +272,20 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
   addCategory(category: Category | 'categoryNotFound' | null): void {
-    // console.log('📋 category :', category);
+    console.log('📋 category :', category);
     if (category === 'categoryNotFound') {
+      console.log('📋 this.searchedCategory :', this.searchedCategory);
       this.createCategory(this.searchedCategory);
     } else {
       this.productForm.patchValue({ category: category });
       this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
     }
-    // console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
+    console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   private createCategory(searchedValue: string): void {
     const filteredValue = this.formatNameInput(searchedValue);
+    console.log('product-form -> createCategory -> filteredValue :', filteredValue);
     this.sharedDataService.requestCategoryCreation(filteredValue);
   }
 

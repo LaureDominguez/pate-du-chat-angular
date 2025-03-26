@@ -56,6 +56,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     this.sharedDataService.requestNewCategory$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categoryName) => {
+        console.log('📋 category-admin -> Demande de création de catégorie :', categoryName);
         this.createNewCategory(categoryName);
       });
   }
@@ -145,6 +146,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   // Création depuis product-Form
   private createNewCategory(categoryName: string): void {
     const newCategory: Category = { _id: null, name: this.formatNameInput(categoryName) };
+    console.log('📋 category-admin -> createNewCategory -> newCategory :', newCategory);
 
     this.categoryService
       .createCategory(newCategory)
