@@ -7,15 +7,30 @@
     >
         <h3 *ngIf="activePanel !== panel.key">{{ panel.label }}</h3>
         <p *ngIf="activePanel !== panel.key" class="count">{{ panel.count }} {{ panel.label }}</p>
+
         <ng-container *ngIf="activePanel === panel.key">
-            <button class="close-button" (click)="closePanel($event)">
-                ✖
-            </button>
+            <button class="close-button" (click)="closePanel($event)">✖</button>
+            
             <ng-container [ngSwitch]="panel.key">
-                <app-product-admin *ngSwitchCase="'products'" (click)="$event.stopPropagation()"></app-product-admin>
-                <app-ingredient-admin *ngSwitchCase="'ingredients'" (click)="$event.stopPropagation()"></app-ingredient-admin>
-                <app-category-admin *ngSwitchCase="'categories'" (click)="$event.stopPropagation()"></app-category-admin>
-                <app-supplier-admin *ngSwitchCase="'suppliers'" (click)="$event.stopPropagation()"></app-supplier-admin>
+                    <app-product-admin 
+                        [ngClass]="{ 'hidden': activePanel !== 'products'}"
+                        (click)="$event.stopPropagation()"
+                    ></app-product-admin>
+            
+                    <app-ingredient-admin 
+                        [ngClass]="{ 'hidden': activePanel !== 'ingredients'}"
+                        (click)="$event.stopPropagation()"
+                    ></app-ingredient-admin>
+            
+                    <app-category-admin 
+                        [ngClass]="{ 'hidden': activePanel !== 'categories'}"
+                        (click)="$event.stopPropagation()"
+                    ></app-category-admin>
+            
+                    <app-supplier-admin 
+                        [ngClass]="{ 'hidden': activePanel !== 'suppliers'}"
+                        (click)="$event.stopPropagation()"
+                    ></app-supplier-admin>
             </ng-container>
         </ng-container>
     </div>

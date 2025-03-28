@@ -1,12 +1,19 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
 import { Ingredient } from '../models/ingredient';
 import { Category } from '../models/category';
+import { Supplier } from './supplier.service';
 
 interface DownloadImageData {
   imagePath: string;
   objectName: string;
 }
+
+export interface QuickCreateData {
+  name: string;
+  description?: string;
+}
+
 
 @Injectable({
   providedIn: 'root',
@@ -17,16 +24,18 @@ export class SharedDataService {
   private categoryListUpdateSubject = new Subject<void>();
   categoryListUpdate$ = this.categoryListUpdateSubject.asObservable();
 
-  private requestNewCategorySubject = new Subject<string>();
+  private requestNewCategorySubject = new ReplaySubject<QuickCreateData>(1);
   requestNewCategory$ = this.requestNewCategorySubject.asObservable();
+  // private requestNewCategorySubject = new Subject<QuickCreateData>();
+  // requestNewCategory$ = this.requestNewCategorySubject.asObservable();
 
   private categoryCreatedSubject = new Subject<Category>();
   categoryCreated$ = this.categoryCreatedSubject.asObservable();
 
   // Demande de création par product-form
-  requestCategoryCreation(categoryName: string) {
-    console.log('📋 Shared-service -> Demande de création de catégorie :', categoryName);
-    this.requestNewCategorySubject.next(categoryName);
+  requestCategoryCreation(data: QuickCreateData) {
+    console.log('📋 Shared-service -> Demande de création de catégorie :', data);
+    this.requestNewCategorySubject.next(data);
   }
 
   // Réponse de category-admin
@@ -45,19 +54,21 @@ export class SharedDataService {
   private supplierListUpdateSubject = new Subject<void>();
   supplierListUpdate$ = this.supplierListUpdateSubject.asObservable();
 
-  private requestNewSupplierSubject = new Subject<string>();
+  private requestNewSupplierSubject = new ReplaySubject<QuickCreateData>(1);
   requestNewSupplier$ = this.requestNewSupplierSubject.asObservable();
+  // private requestNewSupplierSubject = new Subject<string>();
+  // requestNewSupplier$ = this.requestNewSupplierSubject.asObservable();
 
-  private supplierCreatedSubject = new Subject<any>();
+  private supplierCreatedSubject = new Subject<Supplier>();
   supplierCreated$ = this.supplierCreatedSubject.asObservable();
 
   // Demande de création par ingredient-form
-  requestSupplierCreation(supplierName: string) {
-    this.requestNewSupplierSubject.next(supplierName);
+  requestSupplierCreation(data : QuickCreateData) {
+    this.requestNewSupplierSubject.next(data);
   }
 
   // Réponse de supplier-admin
-  sendSupplierToIngredientForm(supplier: any) {
+  sendSupplierToIngredientForm(supplier: Supplier) {
     this.supplierCreatedSubject.next(supplier);
   }
 
@@ -82,9 +93,11 @@ export class SharedDataService {
   }
 
 
-  private openIngredientFormSubject = new Subject<void>();
-  openIngredientForm$: Observable<void> =
-    this.openIngredientFormSubject.asObservable();
+  private requestNewIngredientSubject = new ReplaySubject<void>(1);
+  requestNewIngredient$: Observable<void> = this.requestNewIngredientSubject.asObservable();
+  // private openIngredientFormSubject = new Subject<void>();
+  // openIngredientForm$: Observable<void> =
+  //   this.openIngredientFormSubject.asObservable();
 
   private ingredientCreatedSubject = new Subject<Ingredient>();
   ingredientCreated$: Observable<Ingredient> =
@@ -97,7 +110,8 @@ export class SharedDataService {
   // Demande de création par product-form
   requestOpenIngredientForm(searchedValue: string) {
     this.searchedIngredientSubject.next(searchedValue); // Stocke la valeur recherchée
-    this.openIngredientFormSubject.next();
+    this.requestNewIngredientSubject.next();
+    // this.openIngredientFormSubject.next();
   }
 
   // Récupérer la valeur recherchée

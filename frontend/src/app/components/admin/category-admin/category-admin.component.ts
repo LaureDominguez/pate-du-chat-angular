@@ -46,21 +46,27 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.log('📋 CategoryAdmin → INIT');
+
     // Écoute les catégories mises à jour via le BehaviorSubject
     this.categoryService.getCategories()
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categories) => {
+        console.log('📋 CategoryAdmin → Categories chargées', categories);
         if (!categories.some((cat) => cat._id === DEFAULT_CATEGORY._id)) {
           categories.unshift(DEFAULT_CATEGORY);
         }
         this.categories.data = categories;
       });
+
     // Écoute les nouvelles catégories envoyées par product-form
+    console.log('👂 category-admin -> abonnement au requestNewCategory$');
+
     this.sharedDataService.requestNewCategory$
       .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((categoryName) => {
-        console.log('📋 category-admin -> Demande de création de catégorie :', categoryName);
-        this.createNewCategory(categoryName);
+      .subscribe((data) => {
+        console.log('📋 category-admin -> Demande de création de catégorie :', data);
+        this.createNewCategory(data);
       });
   }
 
@@ -161,10 +167,11 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   }
 
   // Création depuis product-Form
-  private createNewCategory(categoryName: string): void {
+  private createNewCategory(data: {name: string; description?: string}): void {
     const newCategory: Category = { 
-      _id: null, name: this.formatNameInput(categoryName),
-      description: '',
+      _id: null, 
+      name: this.formatNameInput(data.name),
+      description: data.description || '',
     };
     console.log('📋 category-admin -> createNewCategory -> newCategory :', newCategory);
 

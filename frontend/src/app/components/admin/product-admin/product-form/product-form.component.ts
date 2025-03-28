@@ -17,6 +17,8 @@ import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.com
 import { Category } from '../../../../models/category';
 import { Ingredient } from '../../../../models/ingredient';
 import { Product } from '../../../../models/product';
+import { title } from 'process';
+import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
 
 @Component({
   selector: 'app-product-form',
@@ -284,9 +286,38 @@ export class ProductFormComponent implements OnInit {
   }
 
   private createCategory(searchedValue: string): void {
-    const filteredValue = this.formatNameInput(searchedValue);
-    console.log('product-form -> createCategory -> filteredValue :', filteredValue);
-    this.sharedDataService.requestCategoryCreation(filteredValue);
+    const dialogRef = this.dialog.open(QuickCreateDialogComponent, {
+      data: {
+        title: 'Créer une nouvelle catégorie',
+        fields: [
+          { 
+            name: 'name', 
+            label: 'Nom de la catégorie', 
+            required: true,
+            maxLength: 50,
+            pattern: /^[a-zA-Z0-9À-ÿŒœ\s-']+$/,
+            defaultValue: this.formatNameInput(searchedValue) 
+          },
+          { 
+            name: 'description', 
+            label: 'Description de la catégorie', 
+            maxLength: 100,
+            pattern: /^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/
+          },
+        ]
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log('product-form -> createCategory -> avant if -> result :', result);
+      if (result) {
+        console.log('📦 product-form -> apres if -> demande de création de catégorie via QuickCreateDialog :', result);
+        this.sharedDataService.requestCategoryCreation(result);
+      }
+    })
+    // const filteredValue = this.formatNameInput(searchedValue);
+    // console.log('product-form -> createCategory -> filteredValue :', filteredValue);
+    // this.sharedDataService.requestCategoryCreation(filteredValue);
   }
 
   /////////////////////////////////////////////////////////////////////////////////

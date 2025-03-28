@@ -54,8 +54,8 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
       });
     this.sharedDataService.requestNewSupplier$
       .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((supplierName) => {
-        this.createNewSupplier(supplierName);
+      .subscribe((data) => {
+        this.createNewSupplier(data);
       });
   }
 
@@ -159,11 +159,11 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
     .subscribe();
   }
 
-  private createNewSupplier(supplierName: string): void {
+  private createNewSupplier(data: {name: string; description?: string}): void {
     const newSupplier: Supplier = {
       _id: null,
-      name: this.formatNameInput(supplierName),
-      description: '',
+      name: this.formatNameInput(data.name),
+      description: data.description || '',
     };
 
     console.log('createNewSupplier -> newSupplier', newSupplier);

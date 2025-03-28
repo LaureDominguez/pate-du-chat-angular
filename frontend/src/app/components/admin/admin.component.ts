@@ -27,10 +27,10 @@ export class AdminComponent implements OnInit {
   
   // Liste des panels avec leur clé et leur titre
   panels = [
-    { key: 'products', label: 'Produits', count: 0 },
-    { key: 'ingredients', label: 'Ingrédients', count: 0 },
-    { key: 'categories', label: 'Catégories', count: 0 },
-    { key: 'suppliers', label: 'Fournisseurs', count: 0 },
+    { key: 'products', label: 'Produits', count: 0, hidden: true },
+    { key: 'ingredients', label: 'Ingrédients', count: 0, hidden: true },
+    { key: 'categories', label: 'Catégories', count: 0, hidden: true },
+    { key: 'suppliers', label: 'Fournisseurs', count: 0, hidden: true },
   ];
 
   constructor(
@@ -69,9 +69,22 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  togglePanel(panel: string) {
-    this.activePanel = this.activePanel === panel ? null : panel;
+  togglePanel(panelKey: string) {
+    this.panels.forEach(panel => panel.hidden = true);
+    const target = this.panels.find(p => p.key === panelKey);
+    if (target) {
+      target.hidden = false;
+      this.activePanel = panelKey;
+    }
+    console.log('📋 Active panel:', this.activePanel);
+    console.log('📋 Panels:', this.panels);
+    console.log('📋 Target:', target);
+  }  
+
+  isVisible(panelKey: string): boolean {
+    return !!this.panels.find(p => p.key === panelKey)?.hidden;
   }
+  
 
   closePanel(event: Event) {
     event.stopPropagation(); // Empêche le clic de fermer immédiatement après l'ouverture

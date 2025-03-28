@@ -98,7 +98,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         this.suppliers = suppliers;
       })
 
-    this.sharedDataService.openIngredientForm$.subscribe(() => {
+    this.sharedDataService.requestNewIngredient$.subscribe(() => {
       const searchedValue = this.sharedDataService.getSearchedIngredient();
       this.openIngredientForm(null, searchedValue);
     });
