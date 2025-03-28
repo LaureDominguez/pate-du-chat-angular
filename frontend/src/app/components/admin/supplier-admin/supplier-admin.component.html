@@ -2,7 +2,6 @@
     <h2>Liste des fournisseurs</h2>
 
     <table mat-table [dataSource]="suppliers" matSort #suppliersSort="matSort">
-        
         <!-- Nom Column -->
         <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Nom</th>
@@ -61,7 +60,7 @@
                             (blur)="cancelEditingSupplier($event)"
                         />
                         <mat-error *ngIf="supplierForm.get('description')?.hasError('maxlength')">
-                            Maximum 100 caractères.
+                            Maximum 250 caractères.
                         </mat-error>
                         <mat-error *ngIf="supplierForm.get('description')?.hasError('pattern')">
                             Certains caractères ne sont pas autorisés.

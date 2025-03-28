@@ -5,21 +5,27 @@
         <!-- Nom Column -->
         <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Nom</th>
-            <td mat-cell *matCellDef="let category">
+            <td 
+                mat-cell 
+                *matCellDef="let category" 
+                (click)="startEditing(category, 'name')"
+            >
+
                 <!-- Mode normal -->
                 <span *ngIf="!editingCategory || editingCategory._id !== category._id">
                     {{ category.name }}
                 </span>
+
                 <!-- Mode édition -->
                 <form *ngIf="editingCategory && editingCategory._id === category._id" [formGroup]="categoryForm">
                     <mat-form-field appearance="fill">
                         <input 
-                            #categoryInput
+                            #categoryNameInput
                             matInput 
                             formControlName="name"
                             placeholder="Nom de la catégorie" 
                             (keydown.enter)="saveCategory(category)"
-                            (blur)="cancelEdit($event)"
+                            (blur)="cancelEditingCategory($event)"
                         />
                         <mat-error *ngIf="categoryForm.get('name')?.hasError('required')">
                             Le nom est obligatoire.
@@ -32,6 +38,37 @@
                         </mat-error>
                         <mat-error *ngIf="categoryForm.get('name')?.hasError('pattern')">
                             Caractères spéciaux interdits.
+                        </mat-error>
+                    </mat-form-field>
+                </form>
+            </td>
+        </ng-container>
+
+        <!-- Description Column -->
+        <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+            <td mat-cell *matCellDef="let category" (click)="startEditing(category, 'description')">
+                <!-- Mode normal -->
+                <span *ngIf="!editingCategory || editingCategory._id !== category._id">
+                    {{ category.description }}
+                </span>
+                <!-- Mode édition -->
+                <form *ngIf="editingCategory && editingCategory._id === category._id" [formGroup]="categoryForm">
+                    <mat-form-field appearance="fill">
+                        <input 
+                            #categoryDescriptionInput
+                            class="editing-mode"
+                            matInput 
+                            formControlName="description"
+                            placeholder="Description de la catégorie" 
+                            (keydown.enter)="saveCategory(category)"
+                            (blur)="cancelEditingCategory($event)"
+                        />
+                        <mat-error *ngIf="categoryForm.get('description')?.hasError('maxlength')">
+                            Maximum 250 caractères.
+                        </mat-error>
+                        <mat-error *ngIf="categoryForm.get('description')?.hasError('pattern')">
+                            Certains caractères ne sont pas autorisés.
                         </mat-error>
                     </mat-form-field>
                 </form>
@@ -51,7 +88,7 @@
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let category">
+            <td mat-cell *matCellDef="let category" class="actions-column">
 
                 <!-- Edit -->
                 <button 
@@ -100,7 +137,7 @@
                     mat-button 
                     class="animated-button cancel" 
                     *ngIf="editingCategory && editingCategory._id === category._id" 
-                    (click)="cancelEdit()"
+                    (click)="cancelEditingCategory()"
                     [disabled]="isDefaultCategory(category)"
                 >
                     <div class="content">

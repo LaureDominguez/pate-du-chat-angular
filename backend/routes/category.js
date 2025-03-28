@@ -65,12 +65,25 @@ router.post(
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
+		check('description')
+			.optional()
+			.trim()
+			.isLength({ max: 100 })
+			.if(check('description').notEmpty())
+			.withMessage(
+				'Le champ "description" doit contenir entre 2 et 255 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.withMessage(
+				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
+			),
 	],
 	validateRequest,
 	async (req, res) => {
 	try {
-		let { name } = req.body;
+		let { name, description } = req.body;
 		name = sanitize(name);
+		description = sanitize(description);
 
 		const existingCategory = await Category.findOne({ name });
 
@@ -78,12 +91,13 @@ router.post(
 			return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
 		}
 
-		const newCategory = new Category({ name });
-		const category = await newCategory.save();
+		const newCategory = new Category({ name, description });
+		// const category = await newCategory.save();
+		await newCategory.save();
 
-		res.status(201).json(category);
+		res.status(201).json(newCategory);
 	} catch (err) {
-		console.error('Erreur lors de l’ajout de la catégorie: ', err);
+		console.error('Erreur lors de l’ajout de la catégorie: ', err.message);
 		if (err.code === 11000) {
 			return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
 		}
@@ -107,12 +121,25 @@ router.put(
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
+		check('description')
+			.optional()
+			.trim()
+			.isLength({ max: 100 })
+			.if(check('description').notEmpty())
+			.withMessage(
+				'Le champ "description" doit contenir entre 2 et 255 caractères.'
+			)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.withMessage(
+				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
+			),
 	],
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name } = req.body;
+			let { name, description } = req.body;
 			name = sanitize(name);
+			description = sanitize(description);
 
 			const category = await Category.findById(req.params.id);
 			if (!category) {
@@ -125,9 +152,10 @@ router.put(
 			}
 
 			// Nettoyage des entrées utilisateur
-			category.name = name;
-			const updatedCategory = await category.save();
+			category.name = sanitize(name) || category.name;
+			category.description = sanitize(description) || category.description;
 
+			const updatedCategory = await category.save();
 			res.status(200).json(updatedCategory);
 		} catch (err) {
 			console.error(
@@ -189,9 +217,9 @@ router.delete('/:id', async (req, res) => {
 	} catch (err) {
 		console.error(err.message);
 		if (err.kind === 'ObjectId') {
-			return res.status(404).json({ msg: 'ID invalide' });
+			return res.status(404).json({ msg: 'ID invalide.' });
 		}
-		res.status(500).send('Erreur serveur');
+		res.status(500).json({ error: err.message });
 	}
 });
 

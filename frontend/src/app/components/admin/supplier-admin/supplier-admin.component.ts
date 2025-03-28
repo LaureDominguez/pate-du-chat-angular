@@ -35,7 +35,6 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   @ViewChild('suppliersPaginator') suppliersPaginator!: MatPaginator;
   @ViewChild('suppliersSort') suppliersSort!: MatSort;
   @ViewChild('supplierNameInput') supplierNameInput!: ElementRef;
-  // @ViewChildren('supplierNameInput') supplierNameInputs!: QueryList<ElementRef>;
 
   constructor(
     private supplierService: SupplierService,
@@ -102,7 +101,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         this.editingSupplier.description,
         [
           Validators.maxLength(100),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
         ]
       ]
     });
@@ -178,7 +177,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
 
   deleteSupplier(supplier: Supplier): void {
     if (this.isDefaultSupplier(supplier)) {
-      return;
+      return; // Ne pas supprimer le fournisseur par défaut
     }
 
     if (supplier.ingredientCount && supplier.ingredientCount > 0) {

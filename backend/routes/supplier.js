@@ -97,6 +97,9 @@ router.post(
         res.status(201).json(newSupplier);
     } catch (err) {
         console.error('Erreur lors de la création du fournisseur :', err.message);
+        if (err.code === 11000) {
+			return res.status(400).json({ msg: 'Ce fournisseur existe déjà.' });
+		}
         res.status(400).json({ error: err.message });
     }
 });
@@ -151,7 +154,7 @@ router.put(
         supplier.description = sanitize(description) || supplier.description;
 
         const updatedSupplier = await supplier.save();
-        res.json(updatedSupplier);
+        res.status(200).json(updatedSupplier);
     } catch (err) {
         console.error('Erreur lors de la mise à jour du fournisseur :', err.message);
         if (err.code === 11000) {
@@ -164,9 +167,38 @@ router.put(
 // 🔹 Supprimer un fournisseur
 router.delete('/:id', async (req, res) => {
     try {
+        const supplierId = req.params.id;
+        const DEFAULT_SUPPLIER_ID = '67d6a38cac36810d223b612e';
+
+        if (supplierId === DEFAULT_SUPPLIER_ID) {
+            return res
+                .status(400)
+                .json({ msg: 'Impossible de supprimer ce fournisseur.' });
+        }
+
+        const supplier = await Supplier.findById(supplierId).populate('productCount');
+        if (!supplier) {
+            return res.status(404).json({ msg: 'Fournisseur introuvable.' });
+        }
+
+        if (supplier.productCount > 0) {
+            await Ingredient.updateMany(
+                { supplier: supplier._id },
+                { supplier: DEFAULT_SUPPLIER_ID }
+            )
+        }
+
         await Supplier.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Fournisseur supprimé' });
+
+        res.json({ 
+            message: 'Fournisseur supprimé avec succès.',
+            reasignDone: supplier.productCount > 0,
+        });
     } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'ID invalide.' });
+        }
         res.status(500).json({ error: err.message });
     }
 });

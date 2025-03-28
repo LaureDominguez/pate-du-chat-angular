@@ -19,7 +19,7 @@ import { catchError, of, Subject, takeUntil, tap } from 'rxjs';
 })
 export class CategoryAdminComponent implements OnInit, OnDestroy {
   categories = new MatTableDataSource<Category>([]);
-  displayedCategoriesColumns: string[] = ['name', 'productCount', 'actions'];
+  displayedCategoriesColumns: string[] = ['name', 'description', 'productCount', 'actions'];
   categoryForm!: FormGroup;
   newCategory: Category | null = null;
   editingCategoryId: string | null = null;
@@ -33,7 +33,10 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
   @ViewChild('categoriesPaginator') categoriesPaginator!: MatPaginator;
   @ViewChild('categoriesSort') categoriesSort!: MatSort;
-  @ViewChild('categoryInput') categoryInput!: ElementRef;
+
+  @ViewChild('categoryNameInput') categoryNameInput!: ElementRef;
+  @ViewChild('categoryDescriptionInput') categoryDescriptionInput!: ElementRef;
+
 
   constructor(
     private categoryService: CategoryService,
@@ -71,18 +74,12 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     this.categories.sort = this.categoriesSort;
   }
 
-  focusInput(): void {
-    setTimeout(() => {
-      this.categoryInput?.nativeElement.focus();
-    });
-  }
-
   // Méthodes pour gérer les catégories
-  startEditing(category: Category | null = null): void {
+  startEditing(category: Category | null = null, focusField?: 'name' | 'description'): void {
     if (category && this.isDefaultCategory(category)) {
       return; // Ne pas éditer "Sans catégorie"
     }
-    this.editingCategory = category ? { ...category } : { _id: null, name: '' };
+    this.editingCategory = category ? { ...category } : { _id: null, name: '', description: '' };
 
     this.categoryForm = this.fb.group({
       name: [
@@ -94,17 +91,34 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
         ],
       ],
+      description: [
+        this.editingCategory.description,
+        [
+          Validators.maxLength(100),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
+        ]
+      ]
     });
     if (!this.editingCategory._id) {
       this.categories.data = [this.editingCategory, ...this.categories.data];
     }
-    this.focusInput();
+    this.focusCategoryInput(focusField);
+  }
+  
+  focusCategoryInput(focusField?: 'name' | 'description'): void {
+    setTimeout(() => {
+      if (focusField === 'name' && this.categoryNameInput) {
+        this.categoryNameInput.nativeElement.focus();
+      } else if (focusField === 'description' && this.categoryDescriptionInput) {
+        this.categoryDescriptionInput.nativeElement.focus();
+      }
+    });
   }
 
   //Cancel et ferme la fenetre
-  cancelEdit(event?: FocusEvent): void {
+  cancelEditingCategory(event?: FocusEvent): void {
     const relatedTarget = event?.relatedTarget as HTMLElement;
-    if (relatedTarget && relatedTarget.classList.contains('save')) {
+    if (relatedTarget && relatedTarget.closest('.editing-mode')) {
       return;
     }
     this.editingCategory = null;
@@ -126,7 +140,10 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
     const newCategory: Category = {
       name: this.formatNameInput(this.categoryForm.get('name')?.value),
+      description: this.formatNameInput(this.categoryForm.get('description')?.value),
     };
+
+    console.log('save -> newCategory', newCategory);  
 
     const request$ = category._id
       ? this.categoryService.updateCategory(category._id, newCategory)
@@ -134,9 +151,9 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
     request$
       .pipe(
-        tap(() => this.cancelEdit()),
+        tap(() => this.cancelEditingCategory()),
         catchError(() => {
-          this.cancelEdit();
+          this.cancelEditingCategory();
           return of(null);
         })
       )
@@ -145,7 +162,10 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
   // Création depuis product-Form
   private createNewCategory(categoryName: string): void {
-    const newCategory: Category = { _id: null, name: this.formatNameInput(categoryName) };
+    const newCategory: Category = { 
+      _id: null, name: this.formatNameInput(categoryName),
+      description: '',
+    };
     console.log('📋 category-admin -> createNewCategory -> newCategory :', newCategory);
 
     this.categoryService
@@ -190,7 +210,9 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       });
       dialogRef.afterClosed().subscribe((result) => {
         if (result === 'confirm') {
-          this.categoryService.deleteCategory(category._id!).subscribe(() => {});
+          this.categoryService
+            .deleteCategory(category._id!)
+            .subscribe(() => {});
         }
       });
     }

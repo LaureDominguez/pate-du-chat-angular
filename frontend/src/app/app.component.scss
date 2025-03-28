@@ -18,6 +18,10 @@
         height: 100%;
         position: absolute;
         transition: background-color 0.3s;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        &:hover {
+            box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.15);
+        }
     }
 
     .toggle-thumb {
