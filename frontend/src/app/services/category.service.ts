@@ -25,19 +25,19 @@ export class CategoryService {
     this.loadCategories(); // Charger les catégories au démarrage
 
     this.sharedDataService.categoryListUpdate$.subscribe(() => {
-      console.log('[CATEGORY SERVICE] 📥 categoryListUpdate$');
+      // console.log('[CATEGORY SERVICE] 📥 categoryListUpdate$');
       this.loadCategories();
     });
 
     this.sharedDataService.productListUpdate$.subscribe(() => {
-      console.log('[CATEGORY SERVICE] 📥 productListUpdate$');
+      // console.log('[CATEGORY SERVICE] 📥 productListUpdate$');
       this.loadCategories();
     });
   }
 
   // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
-    console.log('[CATEGORY SERVICE] 📥 loadCategories() called');
+    // console.log('[CATEGORY SERVICE] 📥 loadCategories() called');
     this.http
       .get<Category[]>(this.apiUrl)
       .pipe(
@@ -56,7 +56,7 @@ export class CategoryService {
                 : 0
             );
           }
-          console.log('[CATEGORY SERVICE] 📦 Categories fetched from API:', categories);
+          // console.log('[CATEGORY SERVICE] 📦 Categories fetched from API:', categories);
           this.categoriesSubject.next(categories);
         }),
         catchError((error) => {
@@ -108,6 +108,8 @@ export class CategoryService {
   // Supprimer une catégorie
   deleteCategory(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
+    console.log('Service -> deleteCategory -> url', url);
+    console.log('Service -> deleteCategory -> id', id);
     return this.http.delete<{ message: string }>(url).pipe(
       tap(() => {
         this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés

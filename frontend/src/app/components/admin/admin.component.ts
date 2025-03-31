@@ -89,9 +89,9 @@ export class AdminComponent implements OnInit {
       // target.hidden = false;
       this.activePanel = panelKey;
     }
-    console.log('📋 Active panel:', this.activePanel);
-    console.log('📋 Panels:', this.panels);
-    console.log('📋 Target:', target);
+    // console.log('📋 Active panel:', this.activePanel);
+    // console.log('📋 Panels:', this.panels);
+    // console.log('📋 Target:', target);
   }  
 
   // isVisible(panelKey: string): boolean {

@@ -179,7 +179,7 @@ router.delete('/:id', async (req, res) => {
 		// console.log('🚮 Catégorie par défaut :', DEFAULT_CATEGORY_ID);
 
 		if (!categoryId) {
-			return res.status(404).json({ msg: 'ID inconnu.' });
+			return res.status(404).json({ msg: 'ID de la catégorie inconnu.' });
 		}
 
 		if (categoryId === DEFAULT_CATEGORY_ID) {

@@ -24,7 +24,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   newSupplier: Supplier | null = null;
   editingSupplierId: string | null = null;
   editingSupplier: Supplier | null = null;
-  isEditing = false;
+  // isEditing = false;
 
   isDefaultSupplier(supplier: Supplier): boolean {
     return supplier._id === DEFAULT_SUPPLIER._id;
@@ -34,7 +34,9 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
 
   @ViewChild('suppliersPaginator') suppliersPaginator!: MatPaginator;
   @ViewChild('suppliersSort') suppliersSort!: MatSort;
+
   @ViewChild('supplierNameInput') supplierNameInput!: ElementRef;
+  @ViewChild('supplierDescriptionInput') supplierDescriptionInput!: ElementRef;
 
   constructor(
     private supplierService: SupplierService,
@@ -52,6 +54,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         }
         this.suppliers.data = suppliers;
       });
+
     this.sharedDataService.requestNewSupplier$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((data) => {
@@ -69,22 +72,17 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
     this.suppliers.sort = this.suppliersSort;
   }
 
-  focusSupplierInput(): void {
-    console.log('focusSupplierInput -> this.supplierNameInput', this.supplierNameInput);
+  startEditingSupplier(supplier: Supplier | null = null, focusField?: 'name' | 'description'): void {
+    if (this.editingSupplier && this.editingSupplier._id !== supplier?._id) {
+      return;
+    }
 
-    setTimeout(() => {
-      const input = document.querySelector<HTMLInputElement>('[formControlName="name"]');
-      console.log('focusSupplierInput -> input', input);
-      if (input) {
-        input.focus();
-      }
-    });
-  }
-
-  startEditingSupplier(supplier: Supplier | null = null): void {
     if (supplier && this.isDefaultSupplier(supplier)) {
       return;
     }
+
+    const autoFocusField: 'name' | 'description' | undefined = !supplier && !focusField ? 'name' : focusField;
+
     this.editingSupplier = supplier ? { ...supplier } : { _id: null, name: '', description: ''};
 
     this.supplierForm = this.fb.group({
@@ -109,20 +107,42 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
     if (!this.editingSupplier._id) {
       this.suppliers.data = [this.editingSupplier, ...this.suppliers.data];
     }
-    this.focusSupplierInput();
+    this.focusSupplierInput(autoFocusField);
+  }
+
+  
+  focusSupplierInput(focusField?: 'name' | 'description'): void {
+    // console.log('focusSupplierInput -> this.supplierNameInput', this.supplierNameInput);
+
+    setTimeout(() => {
+      if (focusField === 'name' && this.supplierNameInput) {
+        this.supplierNameInput.nativeElement.focus();
+      } else if (focusField === 'description' && this.supplierDescriptionInput) {
+        this.supplierDescriptionInput.nativeElement.focus();
+      }
+      // const input = document.querySelector<HTMLInputElement>('[formControlName="name"]');
+      // console.log('focusSupplierInput -> input', input);
+      // if (input) {
+      //   input.focus();
+      // }
+    });
   }
 
   cancelEditingSupplier(event?: FocusEvent): void {
     const relatedTarget = event?.relatedTarget as HTMLElement;
 
-    console.log('cancelEditingSupplier -> relatedTarget', relatedTarget);
+    // console.log('cancelEditingSupplier -> relatedTarget', relatedTarget);
 
     if (relatedTarget && relatedTarget.closest('.editing-mode')) {
       return;
     }
 
-    this.editingSupplier = null;
-    this.suppliers.data = this.suppliers.data.filter(sup => sup._id !== null);
+    setTimeout(() => {
+      this.editingSupplier = null;
+      this.suppliers.data = this.suppliers.data.filter(sup => sup._id !== null);
+    }, 0);
+    // this.editingSupplier = null;
+    // this.suppliers.data = this.suppliers.data.filter(sup => sup._id !== null);
   }
 
   formatNameInput(name: string): string {
@@ -184,13 +204,14 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '400px',
         data: {
-          message: `Ce fournisseur est associé à <span class="bold-text">${supplier.ingredientCount}</span> produits.
+          message: `Ce fournisseur est associé à <span class="bold-text">${supplier.ingredientCount}</span> ingrédients.
           <br> Êtes-vous sûr de vouloir supprimer le fournisseur : <br> 
           <span class="bold-text">"${supplier.name}"</span>?`,
         },
       });
       dialogRef.afterClosed().subscribe((result) => {
-        if (result) {
+        if (result === 'confirm') {
+          console.log('pouet supprimé : ', result);
           this.supplierService
           .deleteSupplier(supplier._id!)
           .subscribe(() => {});
@@ -200,7 +221,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '400px',
         data: {
-          message: `Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
+          message: `Êtes-vous sûr de vouloir supprimer ce fournisseur : <br>
           <span class="bold-text">"${supplier.name}"</span>?`,
         },
       });

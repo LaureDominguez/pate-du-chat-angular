@@ -170,18 +170,23 @@ router.delete('/:id', async (req, res) => {
         const supplierId = req.params.id;
         const DEFAULT_SUPPLIER_ID = '67d6a38cac36810d223b612e';
 
+        if (!supplierId) {
+            return res.status(404).json({ msg: 'ID du fournisseur inconnu.' });
+        }
+
         if (supplierId === DEFAULT_SUPPLIER_ID) {
             return res
                 .status(400)
                 .json({ msg: 'Impossible de supprimer ce fournisseur.' });
         }
 
-        const supplier = await Supplier.findById(supplierId).populate('productCount');
+        const supplier = await Supplier.findById(supplierId).populate('ingredientCount');
+
         if (!supplier) {
             return res.status(404).json({ msg: 'Fournisseur introuvable.' });
         }
 
-        if (supplier.productCount > 0) {
+        if (supplier.ingredientCount > 0) {
             await Ingredient.updateMany(
                 { supplier: supplier._id },
                 { supplier: DEFAULT_SUPPLIER_ID }
@@ -190,9 +195,9 @@ router.delete('/:id', async (req, res) => {
 
         await Supplier.findByIdAndDelete(req.params.id);
 
-        res.json({ 
+        res.status(200).json({ 
             message: 'Fournisseur supprimé avec succès.',
-            reasignDone: supplier.productCount > 0,
+            reasignDone: supplier.ingredientCount > 0,
         });
     } catch (err) {
         console.error(err.message);

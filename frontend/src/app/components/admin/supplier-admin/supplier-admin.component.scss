@@ -1,19 +1,7 @@
-@use '@angular/material' as mat;
-
 table {
-    // text-align: center;
-    // @include mat.table-overrides((
-    //     background-color: orange,
-    //     header-headline-color: red,
-    //     // header-headline-tracking: 1rem
-    // ));
-    // justify-content: center;
-    // text-align: center;
-    th, td {
+    th:nth-child(3), th:last-child, td:nth-child(3), td:last-child {
+        width: 20%;
         justify-content: center;
         text-align: center;
     }
-    // th:last-child, td:last-child {
-    //     width: 20%;
-    // }
 }

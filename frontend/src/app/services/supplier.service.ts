@@ -98,6 +98,8 @@ export class SupplierService {
 
   deleteSupplier(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
+    console.log('Service -> deleteSupplier -> url', url);
+    console.log('Service -> deleteSupplier -> id', id);
     return this.http.delete<{ message: string }>(url).pipe(
       tap(() => {
         this.sharedDataService.notifySupplierUpdate(); // Notifie les abonnés
