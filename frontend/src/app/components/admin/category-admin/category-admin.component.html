@@ -17,7 +17,11 @@
                 </span>
 
                 <!-- Mode édition -->
-                <form *ngIf="editingCategory && editingCategory._id === category._id" [formGroup]="categoryForm">
+                <form 
+                    *ngIf="editingCategory && editingCategory._id === category._id" 
+                    [formGroup]="categoryForm"
+                    class="editing-mode"
+                >
                     <mat-form-field appearance="fill">
                         <input 
                             #categoryNameInput
@@ -53,7 +57,11 @@
                     {{ category.description }}
                 </span>
                 <!-- Mode édition -->
-                <form *ngIf="editingCategory && editingCategory._id === category._id" [formGroup]="categoryForm">
+                <form 
+                    *ngIf="editingCategory && editingCategory._id === category._id" 
+                    [formGroup]="categoryForm"
+                    class="editing-mode"
+                >
                     <mat-form-field appearance="fill">
                         <input 
                             #categoryDescriptionInput

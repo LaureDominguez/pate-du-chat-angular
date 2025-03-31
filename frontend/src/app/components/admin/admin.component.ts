@@ -1,4 +1,4 @@
-import { Component, OnInit} from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import { AdminModule } from './admin.module';
 import { IngredientAdminComponent } from './ingredient-admin/ingredient-admin.component';
 import { ProductAdminComponent } from './product-admin/product-admin.component';
@@ -27,11 +27,24 @@ export class AdminComponent implements OnInit {
   
   // Liste des panels avec leur clé et leur titre
   panels = [
-    { key: 'products', label: 'Produits', count: 0, hidden: true },
-    { key: 'ingredients', label: 'Ingrédients', count: 0, hidden: true },
-    { key: 'categories', label: 'Catégories', count: 0, hidden: true },
-    { key: 'suppliers', label: 'Fournisseurs', count: 0, hidden: true },
+    { key: 'products', label: 'Produits', count: 0 },
+    { key: 'ingredients', label: 'Ingrédients', count: 0 },
+    { key: 'categories', label: 'Catégories', count: 0 },
+    { key: 'suppliers', label: 'Fournisseurs', count: 0 },
   ];
+
+  // panels = [
+  //   { key: 'products', label: 'Produits', count: 0, hidden: true },
+  //   { key: 'ingredients', label: 'Ingrédients', count: 0, hidden: true },
+  //   { key: 'categories', label: 'Catégories', count: 0, hidden: true },
+  //   { key: 'suppliers', label: 'Fournisseurs', count: 0, hidden: true },
+  // ];
+
+  @ViewChild('productTemplate', { static: true }) productTemplate!: TemplateRef<any>;
+  @ViewChild('ingredientTemplate', { static: true }) ingredientTemplate!: TemplateRef<any>;
+  @ViewChild('categoryTemplate', { static: true }) categoryTemplate!: TemplateRef<any>;
+  @ViewChild('supplierTemplate', { static: true }) supplierTemplate!: TemplateRef<any>;
+
 
   constructor(
     private categoryService: CategoryService,
@@ -70,10 +83,10 @@ export class AdminComponent implements OnInit {
   }
 
   togglePanel(panelKey: string) {
-    this.panels.forEach(panel => panel.hidden = true);
+    // this.panels.forEach(panel => panel.hidden = true);
     const target = this.panels.find(p => p.key === panelKey);
     if (target) {
-      target.hidden = false;
+      // target.hidden = false;
       this.activePanel = panelKey;
     }
     console.log('📋 Active panel:', this.activePanel);
@@ -81,13 +94,29 @@ export class AdminComponent implements OnInit {
     console.log('📋 Target:', target);
   }  
 
-  isVisible(panelKey: string): boolean {
-    return !!this.panels.find(p => p.key === panelKey)?.hidden;
-  }
+  // isVisible(panelKey: string): boolean {
+  //   return !!this.panels.find(p => p.key === panelKey)?.hidden;
+  // }
   
 
   closePanel(event: Event) {
     event.stopPropagation(); // Empêche le clic de fermer immédiatement après l'ouverture
     this.activePanel = null;
   }
+
+  getTemplate(panelKey: string): TemplateRef<any> | null {
+    switch (panelKey) {
+      case 'products':
+        return this.productTemplate;
+      case 'ingredients':
+        return this.ingredientTemplate;
+      case 'categories':
+        return this.categoryTemplate;
+      case 'suppliers':
+        return this.supplierTemplate;
+      default:
+        return null;
+    }
+  }
+  
 }

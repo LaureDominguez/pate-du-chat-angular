@@ -63,7 +63,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.fetchAllergenes();
     this.fetchOrigines();
 
-    console.log('fournisseurs :', this.suppliers)
+    // console.log('fournisseurs :', this.suppliers)
   }
 
   ngOnDestroy(): void {
@@ -120,7 +120,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.ingredientService.getOrigines().subscribe({
       next: (origines) => {
         this.originesList = origines;
-        console.log('🚀 Liste des origines dans ingredient-admin:', this.originesList);
+        // console.log('🚀 Liste des origines dans ingredient-admin:', this.originesList);
       },
       error: (err) => console.error('❌ Erreur de récupération des origines:', err),
     });

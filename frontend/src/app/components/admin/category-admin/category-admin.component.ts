@@ -52,7 +52,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     this.categoryService.getCategories()
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categories) => {
-        console.log('📋 CategoryAdmin → Categories chargées', categories);
+        console.log('[CATEGORY ADMIN] 🔄 categories$ subscription triggered:', categories);
         if (!categories.some((cat) => cat._id === DEFAULT_CATEGORY._id)) {
           categories.unshift(DEFAULT_CATEGORY);
         }
@@ -73,18 +73,28 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
+    console.log('[CATEGORY ADMIN] 💥 ngOnDestroy');
   }
 
   ngAfterViewInit(): void {
     this.categories.paginator = this.categoriesPaginator;
     this.categories.sort = this.categoriesSort;
+    console.log('[CATEGORY ADMIN] 👀 ngAfterViewInit');
   }
 
   // Méthodes pour gérer les catégories
   startEditing(category: Category | null = null, focusField?: 'name' | 'description'): void {
+    if (this.editingCategory && this.editingCategory._id === null) {
+      console.warn('⚠️ Ignoré : une ligne de création est déjà active.');
+      return;
+    }
+
     if (category && this.isDefaultCategory(category)) {
       return; // Ne pas éditer "Sans catégorie"
     }
+
+    const autoFocusField: 'name' | 'description' | undefined = !category && !focusField ? 'name' : focusField;
+
     this.editingCategory = category ? { ...category } : { _id: null, name: '', description: '' };
 
     this.categoryForm = this.fb.group({
@@ -108,7 +118,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     if (!this.editingCategory._id) {
       this.categories.data = [this.editingCategory, ...this.categories.data];
     }
-    this.focusCategoryInput(focusField);
+    this.focusCategoryInput(autoFocusField);
   }
   
   focusCategoryInput(focusField?: 'name' | 'description'): void {
@@ -127,8 +137,13 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     if (relatedTarget && relatedTarget.closest('.editing-mode')) {
       return;
     }
-    this.editingCategory = null;
-    this.categories.data = this.categories.data.filter(cat => cat._id !== null);
+    setTimeout(() => {
+      this.editingCategory = null;
+      // Supprimer la ligne temporaire si on était en création
+      this.categories.data = this.categories.data.filter(cat => cat._id !== null);
+    }, 0);
+    // this.editingCategory = null;
+    // this.categories.data = this.categories.data.filter(cat => cat._id !== null);
   }
 
   formatNameInput(name: string): string {

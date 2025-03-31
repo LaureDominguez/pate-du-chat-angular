@@ -56,7 +56,7 @@ export class IngredientService {
   
 getOrigines(): Observable<any> {
   return this.http.get(this.originesUrl).pipe(
-    tap((data) => console.log('✅ Données reçues de origines.json:', data)),
+    // tap((data) => console.log('✅ Données reçues de origines.json:', data)),
     catchError((error) => {
       console.error('❌ Erreur lors du chargement des origines:', error);
       return throwError(() => new Error('Impossible de charger les origines.'));

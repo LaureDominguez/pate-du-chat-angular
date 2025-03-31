@@ -25,16 +25,19 @@ export class CategoryService {
     this.loadCategories(); // Charger les catégories au démarrage
 
     this.sharedDataService.categoryListUpdate$.subscribe(() => {
+      console.log('[CATEGORY SERVICE] 📥 categoryListUpdate$');
       this.loadCategories();
     });
 
     this.sharedDataService.productListUpdate$.subscribe(() => {
+      console.log('[CATEGORY SERVICE] 📥 productListUpdate$');
       this.loadCategories();
     });
   }
 
   // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
+    console.log('[CATEGORY SERVICE] 📥 loadCategories() called');
     this.http
       .get<Category[]>(this.apiUrl)
       .pipe(
@@ -53,6 +56,7 @@ export class CategoryService {
                 : 0
             );
           }
+          console.log('[CATEGORY SERVICE] 📦 Categories fetched from API:', categories);
           this.categoriesSubject.next(categories);
         }),
         catchError((error) => {
