@@ -32,7 +32,6 @@
                     matInput
                     [formControl]="supplierCtrl"
                     [matAutocomplete]="supplierAuto"
-                    formControlName="supplier"
                     placeholder="Rechercher un fournisseur"
                 />
                 <mat-autocomplete #supplierAuto="matAutocomplete" (optionSelected)="addSupplier($event.option.value)"> 
@@ -123,7 +122,7 @@
                     formControlName="subIngredients" 
                     placeholder="Rechercher un ingrédient" 
                 />
-                <mat-error *ngIf="selectedSubIngredients.length === 0">Ajoutez au moins un ingrédient.</mat-error>
+                <mat-error *ngIf="subIngredients.length === 0">Ajoutez au moins un ingrédient.</mat-error>
         
                 <mat-autocomplete #subIngredientAuto="matAutocomplete" (optionSelected)="addSubIngredient($event.option.value)"
                     hideSingleSelectionIndicator>
@@ -143,10 +142,15 @@
             </mat-form-field>
         
             <!-- Liste des sous-ingrédients sélectionnés -->
-            <mat-chip-set *ngIf="selectedSubIngredients.length > 0; else noIngredients">
-                <mat-chip *ngFor="let ingredient of selectedSubIngredients" [removable]="true"
-                    (removed)="removeSubIngredient(ingredient)" [matTooltip]="getIngredientTooltip(ingredient)"
-                    matTooltipPosition="below" matTooltipClass="custom-tooltip">
+            <mat-chip-set *ngIf="subIngredients.length > 0; else noIngredients">
+                <mat-chip 
+                    *ngFor="let ingredient of subIngredients" 
+                    [removable]="true"
+                    (removed)="removeSubIngredient(ingredient)" 
+                    [matTooltip]="getIngredientTooltip(ingredient)"
+                    matTooltipPosition="below" 
+                    matTooltipClass="custom-tooltip"
+                >
                     {{ ingredient.name }}
                     <button mat-icon-button matChipRemove>
                         <mat-icon>cancel</mat-icon>

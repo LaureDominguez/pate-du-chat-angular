@@ -4,6 +4,7 @@ import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'r
 
 import { Ingredient } from '../models/ingredient';
 import { SharedDataService } from './shared-data.service';
+import { originFlag } from '../../assets/data/origin-flags';
 
 @Injectable({
   providedIn: 'root',
@@ -42,27 +43,27 @@ export class IngredientService {
     return this.http.get<Ingredient>(url);
   }
 
+  // Allergènes
   getAllergenes(): Observable<string[]> {
     return this.http
       .get<{ allergenes: string[] }>(this.allergenesUrl)
       .pipe(map((data) => data.allergenes));
   }
-
-  // getOrigines(): Observable<{ label: string, options: string[] }[]> {
-  //   return this.http.get<{ origines: { label: string, options: string[] }[] }>(this.originesUrl).pipe(
-  //     map((data) => data.origines)
-  //   );
-  // }
   
-getOrigines(): Observable<any> {
-  return this.http.get(this.originesUrl).pipe(
-    // tap((data) => console.log('✅ Données reçues de origines.json:', data)),
-    catchError((error) => {
-      console.error('❌ Erreur lors du chargement des origines:', error);
-      return throwError(() => new Error('Impossible de charger les origines.'));
-    })
-  );
-}
+  // Origines
+  getOrigines(): Observable<any> {
+    return this.http.get(this.originesUrl).pipe(
+      // tap((data) => console.log('✅ Données reçues de origines.json:', data)),
+      catchError((error) => {
+        console.error('❌ Erreur lors du chargement des origines:', error);
+        return throwError(() => new Error('Impossible de charger les origines.'));
+      })
+    );
+  }
+
+  getOriginIcon(origin: string): string {
+    return originFlag[origin] || '❓';
+  }
 
   createIngredient(payload: any): Observable<Ingredient> {
     return this.http.post<Ingredient>(this.apiUrl, payload).pipe(

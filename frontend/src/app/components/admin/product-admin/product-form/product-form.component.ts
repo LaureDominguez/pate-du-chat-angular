@@ -242,6 +242,7 @@ export class ProductFormComponent implements OnInit {
       .trim(); // Supprime les espaces inutiles
   }
 
+  //////////////////////////////////////
   //// Ecoute de shared-data
   private subscribeToDataUpdates(): void {
     this.sharedDataService.categoryCreated$.subscribe((newCategory) =>

@@ -53,9 +53,9 @@ export class ShopDetailComponent {
       let bioLabel = ingredient.bio ? ' BIO' : ''; // Ajoute BIO si nécessaire
 
       let subIngredients = '';
-      if (ingredient.type === 'compose' && ingredient.subIngredients?.length) {
-        subIngredients = `: (${ingredient.subIngredients.map(sub => sub.name.toLowerCase()).join(', ')})`;
-      }
+      // if (ingredient.type === 'compose' && ingredient.subIngredients?.length) {
+      //   subIngredients = `: (${ingredient.subIngredients.map(sub => sub.name.toLowerCase()).join(', ')})`;
+      // }
 
       return `${formattedName}${bioLabel}${subIngredients}`;
     }).join(', ') + '.'; // Ajoute un point final

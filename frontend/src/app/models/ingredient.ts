@@ -1,10 +1,12 @@
+import { Supplier } from "./supplier";
+
 export interface Ingredient {
     _id?: string;
     name: string;
     bio: boolean;
-    supplier: string;
+    supplier: string | Supplier;
     type: 'simple' | 'compose';
-    subIngredients?: Ingredient[];
+    subIngredients?: (string | Ingredient)[];
     allergens: string[];
     vegan: boolean;
     vegeta: boolean;

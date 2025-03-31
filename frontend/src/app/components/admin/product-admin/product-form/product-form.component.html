@@ -76,8 +76,14 @@
 
     <!-- Liste des ingrédients -->
     <mat-chip-set>
-        <mat-chip *ngFor="let ingredient of composition" [removable]="true" (removed)="removeIngredient(ingredient)"
-            [matTooltip]="getIngredientTooltip(ingredient)" matTooltipPosition="below" matTooltipClass="custom-tooltip">
+        <mat-chip 
+            *ngFor="let ingredient of composition" 
+            [removable]="true" 
+            (removed)="removeIngredient(ingredient)"
+            [matTooltip]="getIngredientTooltip(ingredient)" 
+            matTooltipPosition="below" 
+            matTooltipClass="custom-tooltip"
+        >
             {{ ingredient.name }}
             <button mat-icon-button matChipRemove>
                 <mat-icon>cancel</mat-icon>

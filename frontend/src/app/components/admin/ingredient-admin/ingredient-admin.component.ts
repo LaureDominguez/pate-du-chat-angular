@@ -18,8 +18,8 @@ import { SharedDataService } from '../../../services/shared-data.service';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { ProductService } from '../../../services/product.service';
-import { Supplier } from '../../../models/supplier';
-import { SupplierService } from '../../../services/supplier.service';
+import { DEFAULT_SUPPLIER } from '../../../models/supplier';
+import { Supplier, SupplierService } from '../../../services/supplier.service';
 
 @Component({
   selector: 'app-ingredient-admin',
@@ -33,6 +33,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
   allergenesList: string[] = [];
   suppliers: Supplier[] = [];
   originesList: string[] = [];
+  originIcon: string = '';
 
   private unsubscribe$ = new Subject<void>();
 
@@ -83,9 +84,14 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((ingredients) => {
         this.ingredients.data = ingredients.map((ingredient) => ({
-          ...ingredient
+          ...ingredient,
+          supplier: ingredient.supplier ? ingredient.supplier : DEFAULT_SUPPLIER,
+          originIcon: this.ingredientService.getOriginIcon(ingredient.origin),
         }))
+        this.allIngredients = ingredients;
+        console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', this.allIngredients);
       })
+
     // this.ingredientService.getIngredients().subscribe((ingredients) => {
     //   this.ingredients.data = ingredients;
     //   this.allIngredients = ingredients;

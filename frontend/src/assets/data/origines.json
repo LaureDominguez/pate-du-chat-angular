@@ -4,12 +4,12 @@
         "options": ["Savoie", "Haute-Savoie", "Isère", "Ain"]
     },
     {
-        "label": "France (hors Savoie et proche)",
-        "options": ["France - Autres régions"]
+        "label": "France (Autres régions)",
+        "options": ["France"]
     },
     {
         "label": "Europe",
-        "options": ["Suisse", "Italie", "Espagne", "Allemagne", "Belgique", "Autres pays de l'UE"]
+        "options": ["Suisse", "Italie", "Espagne", "Portugal", "Allemagne", "Belgique", "Royaume-Uni", "Union Européenne"]
     },
     {
         "label": "Hors Europe",

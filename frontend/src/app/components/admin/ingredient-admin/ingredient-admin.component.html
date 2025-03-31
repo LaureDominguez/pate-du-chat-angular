@@ -22,7 +22,19 @@
         <!-- Origine Column -->
         <ng-container matColumnDef="origin">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Origine</th>
-            <td mat-cell *matCellDef="let ingredient">{{ ingredient.origin }}</td>
+            <td mat-cell *matCellDef="let ingredient">
+                {{ ingredient.origin }}
+                <img 
+                    *ngIf="ingredient.originIcon"
+                    [src]="ingredient.originIcon"
+                    [alt]="ingredient.origin"
+                    width="24"
+                    height="16"
+                    class="flag-icon"
+                />
+                <!-- <span class="origin-flag">{{ ingredient.originIcon }}</span> -->
+
+            </td>
         </ng-container>
 
         <!-- Allergènes Column -->
