@@ -59,7 +59,7 @@ router.post(
             .withMessage(
                 'Le champ "nom" doit contenir entre 2 et 50 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
             .withMessage(
                 'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
             ),
@@ -69,9 +69,9 @@ router.post(
             .isLength({ max: 100 })
 			.if(check('description').notEmpty())
             .withMessage(
-                'Le champ "description" doit contenir entre 2 et 255 caractères.'
+                'Le champ "description" doit contenir entre 2 et 100 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
             .withMessage(
                 'Le champ "description" ne doit pas contenir de caractères spéciaux.'
             ),
@@ -116,7 +116,7 @@ router.put(
             .withMessage(
                 'Le champ "nom" doit contenir entre 2 et 50 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
             .withMessage(
                 'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
             ),
@@ -126,9 +126,9 @@ router.put(
             .isLength({ max: 100 })
 			.if(check('description').notEmpty())
             .withMessage(
-                'Le champ "description" doit contenir entre 2 et 255 caractères.'
+                'Le champ "description" doit contenir entre 2 et 100 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
             .withMessage(
                 'Le champ "description" ne doit pas contenir de caractères spéciaux.'
             ),

@@ -4,27 +4,29 @@
     background-color: var(--surfaceBright);
 }
 
-form {
-    display: flex;
-    align-items: stretch;
-    flex-direction: column;
-    justify-content: space-evenly;
-    height: 40rem;
-    width: 95%;
+@include mat.dialog-overrides((
+    container-color: orange,
+    subhead-color: red,
+    container-min-width: 1000px
+
+));
+
+form{
     overflow: auto;
-    margin: auto;
-    mat-form-field {
-        border-radius: 10px;
+    padding: 0.5rem;
+}
+
+mat-form-field {
+    border-radius: 10px;
+    color: var(--onSurface);
+    background-color: var(--surfaceBright);
+    &:focus-within {
         color: var(--onSurface);
-        background-color: var(--surfaceBright);
-        &:focus-within {
-            color: var(--onSurface);
-            background-color: var(--surfaceContainer);
-        }
-        &.ng-invalid.ng-touched {
-            color: var(--error);
-            background-color: var(--errorContainer);
-        }
+        background-color: var(--surfaceContainer);
+    }
+    &.ng-invalid.ng-touched {
+        color: var(--error);
+        background-color: var(--errorContainer);
     }
 }
 
@@ -41,9 +43,41 @@ mat-option {
     }
 }
 
+
+///////////////////////////////
+
+.dynamic_columns {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    @media (min-width: 768px) {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .form-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+}
+
+///////////////////////////////
+/// Ingrédients
 // Afficher les petites coches des ingrédients selectionnés
 .composition {
     flex-direction: row-reverse;
+}
+
+.empty-message {
+    color: var(--outline);
+    font-style: italic;
+    text-align: center;
+    margin-top: 8px;
 }
 
 ::ng-deep .custom-tooltip {
@@ -57,24 +91,65 @@ mat-option {
     ));
 }
 
+///////////////////////////////
+// Prix - unité
+.prix_unite, .stock_quantity{
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+}
+
+.prix_unite{
+    // > * {
+    //     flex: 0 0 auto;
+    // }
+    .mat-form-field{
+        flex: 1 1 50%;
+        max-width: 50%;
+    }
+    .divider{
+        font-size: 1.5rem;
+        line-height: 1rem;
+        user-select: none;
+        // display: block;
+        align-content: center;
+        justify-content: center;
+        flex: 0 0 5%;
+    }
+}
+
+.stock_quantity{
+    > * {
+        flex: 1 1 50%;
+        max-width: 50%;
+    }
+}
+
 // Customize the entire app. Change :root to your selector if you want to scope the styles.
 .stock {
     // background-color: pink;
+    display: flex;
+    flex-direction: column !important;
+    mat-label {
+        margin: 0 1rem;
+        // line-height: 2rem;
+    }
+
     @include mat.slide-toggle-overrides((
         track-outline-color: orange,
         selected-track-outline-color: green,
         unselected-icon-color: red,
         selected-icon-color: blue,
         handle-surface-color: pink,
-        selected-focus-track-color: yellow,
-        selected-hover-track-color: rgb(247, 45, 45),
-        selected-track-color: rgb(127, 24, 24),
+        // selected-focus-track-color: yellow,
+        // selected-hover-track-color: rgb(247, 45, 45),
+        // selected-track-color: rgb(127, 24, 24),
         unselected-hover-handle-color: orange,
         label-text-color: rgb(58, 192, 154)
     ));
 }
 
-
+//////////////////////////////////////
 //// images 
 .file-upload{
     mat-label {
@@ -135,9 +210,9 @@ mat-option {
             top: 0;
             right: 0;
             bottom: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
+            // display: flex;
+            // flex-direction: column;
+            // justify-content: space-around;
             :first-child {
                 background-color: color-mix(in srgb, var(--error) 70%, transparent);
             }

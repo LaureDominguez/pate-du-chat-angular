@@ -77,7 +77,7 @@ export class IngredientFormComponent {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
         ],
       ],
       bio: [

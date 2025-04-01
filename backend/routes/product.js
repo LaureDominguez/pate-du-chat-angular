@@ -150,7 +150,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -171,7 +171,7 @@ router.post(
 			.withMessage(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -188,7 +188,7 @@ router.post(
 			.withMessage(
 				'Le champ "DLC" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -196,11 +196,11 @@ router.post(
 			.trim()
 			.notEmpty()
 			.withMessage('Le champ "instructions de cuisson" est obligatoire.')
-			.isLength({ min: 2, max: 500 })
+			.isLength({ min: 2, max: 250 })
 			.withMessage(
-				'Le champ "instructions de cuisson" doit avoir une longueur comprise entre 2 et 500 caractères.'
+				'Le champ "instructions de cuisson" doit avoir une longueur comprise entre 2 et 250 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -289,7 +289,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -314,7 +314,7 @@ router.put(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
 			.if(check('description').notEmpty())
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
@@ -330,20 +330,20 @@ router.put(
 			.trim()
 			.isLength({ max: 50 })
 			.withMessage(
-				'Le champ "DLC" ne doit pas dépasser 500 caractères.'
+				'Le champ "DLC" ne doit pas dépasser 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
 		check('cookInstructions')
 			.optional()
 			.trim()
-			.isLength({ max: 500 })
+			.isLength({ max: 250 })
 			.withMessage(
-				'Le champ "instructions de cuisson" ne doit pas dépasser 500 caractères.'
+				'Le champ "instructions de cuisson" ne doit pas dépasser 250 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),

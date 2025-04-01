@@ -108,7 +108,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         this.imageService.getImageUrl(imagePath)
       ) || [];
     const dialogRef = this.dialog.open(ProductFormComponent, {
-      width: '600px',
+      panelClass: 'custom-dialog',
       data: {
         product: product || null,
         imageUrls: imageUrls,

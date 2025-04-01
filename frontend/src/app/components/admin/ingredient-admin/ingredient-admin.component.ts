@@ -89,7 +89,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           originIcon: this.ingredientService.getOriginIcon(ingredient.origin),
         }))
         this.allIngredients = ingredients;
-        console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', this.allIngredients);
+        // console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', this.allIngredients);
       })
 
     // this.ingredientService.getIngredients().subscribe((ingredients) => {

@@ -75,51 +75,60 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
         ],
       ],
-      category: [data.product?.category || ''],
+      category: [
+        data.product?.category || '',
+        [Validators.required]
+      ],
       description: [
         data.product?.description || '',
         [
           Validators.maxLength(500),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
         ],
       ],
       composition: [
         data.product?.composition || [],
-        [Validators.required, Validators.minLength(1)],
+        [
+          Validators.required, 
+          Validators.minLength(1)
+        ],
       ],
       dlc: [
         data.product?.dlc || '',
         [
           Validators.required,
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
         ],
       ],
       cookInstructions: [
         data.product?.cookInstructions || '',
         [
           Validators.required,
-          Validators.maxLength(500),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/),
+          Validators.maxLength(250),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
         ],
       ],
       stock: [data.product?.stock || false],
       stockQuantity: [
         data.product?.stockQuantity || 0,
-        [Validators.required, Validators.min(0)],
+        [
+          Validators.required, 
+          Validators.min(0)
+        ],
       ],
       quantityType: [
-        data.product?.quantityType || '',
+        data.product?.quantityType || 'kg',
         [
           Validators.required,
           Validators.pattern(/^(piece|kg)$/)
         ],
       ],
       price: [
-        data.product?.price ?? 0,
+        data.product?.price || 0,
         [
           Validators.required,
           Validators.min(0),
@@ -178,7 +187,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   get quantityType() {
-    return this.productForm.get('quantityType');
+    return this.productForm.get('quantityType')?.value === "piece" ? "pièces" : "kg";
   }
 
   get price() {
@@ -392,7 +401,9 @@ export class ProductFormComponent implements OnInit {
   getIngredientTooltip(ingredient: Ingredient): string {
     return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
     Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n
-    Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}`;
+    Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}\n
+    Origine : ${ingredient.origin}\n
+    Label BIO : ${ingredient.bio ? 'Oui' : 'Non'}`;
   }
 
   /////////////////////////////////////////////////////////////////////////////////

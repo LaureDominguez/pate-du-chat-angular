@@ -1,3 +1,5 @@
+@use '@angular/material' as mat;
+
 table {
     .mat-column-allergens, 
     .mat-column-vegan, 
@@ -16,4 +18,20 @@ table {
         justify-content: center;
         text-align: center;
     }
+}
+
+@include mat.dialog-overrides((
+    container-min-width: 1000px
+));
+
+// ::ng-deep .custom-dialog-width .mat-dialog-container {
+//     width: 100%;
+//     max-width: 1600px !important;
+//     min-width: 900px;
+// }
+
+::ng-deep .cdk-overlay-pane.custom-dialog {
+    max-width: none !important;
+    width: 90vw;
+    min-width: 800px;
 }
