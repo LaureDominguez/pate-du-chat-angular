@@ -1,18 +1,10 @@
 @use '@angular/material' as mat;
 @use './assets/themes/m3-theme' as m3;
 
-
-
 $theme: m3.$light-theme;
-// @media (prefers-color-scheme: dark) {
-//     $theme: m3.$dark-theme;
-// }
-
-
 // vert: #004f12;
 // orange: #FF8357;
 // Pacifico: "Pacifico", cursive;
-
 
 html, body {
     background-color: var(--surface);

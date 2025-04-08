@@ -19,10 +19,14 @@ import { Ingredient } from '../../../../models/ingredient';
 import { Product } from '../../../../models/product';
 import { title } from 'process';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
+import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 
 @Component({
   selector: 'app-product-form',
-  imports: [AdminModule],
+  imports: [
+    AdminModule,
+    ImageCarouselComponent,
+  ],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss'],
 })

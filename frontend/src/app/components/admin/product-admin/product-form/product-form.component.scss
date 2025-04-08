@@ -4,26 +4,31 @@
     background-color: var(--surfaceBright);
 }
 
-@include mat.dialog-overrides((
-    container-color: orange,
-    subhead-color: red,
-    container-min-width: 1000px
+@include mat.dialog-overrides((container-color: orange,
+        subhead-color: red,
+        container-min-width: 1000px));
 
-));
-
-form{
-    overflow: auto;
+form {
+    max-height: 80vh;
+    overflow: hidden;
     padding: 0.5rem;
+}
+
+.form_content{
+    max-height: 70vh;
+    overflow: auto;
 }
 
 mat-form-field {
     border-radius: 10px;
     color: var(--onSurface);
     background-color: var(--surfaceBright);
+
     &:focus-within {
         color: var(--onSurface);
         background-color: var(--surfaceContainer);
     }
+
     &.ng-invalid.ng-touched {
         color: var(--error);
         background-color: var(--errorContainer);
@@ -37,6 +42,7 @@ mat-label {
 mat-option {
     color: var(--onSurface) !important;
     background-color: var(--surfaceContainer) !important;
+
     &:hover {
         color: var(--onPrimaryFixed) !important;
         background-color: var(--primaryFixed) !important;
@@ -44,26 +50,111 @@ mat-option {
 }
 
 
+
 ///////////////////////////////
 
 .dynamic_columns {
     display: flex;
-    flex-direction: column;
     gap: 2rem;
 
-    @media (min-width: 768px) {
-        flex-direction: row;
-        justify-content: space-between;
-    }
+    // @media (min-width: 768px) {
+    //     flex-direction: row;
+    //     justify-content: space-between;
+    // }
 
     .form-column {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
         min-width: 0;
     }
+    .vertical{
+        @include mat.divider-overrides((
+            color: var(--surfaceDim),
+        ));
 
+    }
+
+}
+
+///////////////////////////////
+/// colonne gauche
+
+///////////////////////////////
+// Nom - cetagorie - description
+.detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.name_category {
+    display: flex;
+    gap: 1rem;
+
+    > :nth-child(1) {
+        flex: 2;
+    }
+
+    > :nth-child(2) {
+        flex: 1;
+    }
+}
+
+
+///////////////////////////////
+// Prix - unité
+.prix_unite,
+.stock_quantity {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.prix_unite, .quantity {
+    input {
+        position: relative;
+    }
+    span {
+        position: absolute;
+        right: 0;
+        display: block;
+        bottom: -8px;
+        padding: 0 1.5rem;
+    }
+}
+
+.stock {
+    mat-label {
+        padding: 1rem;
+        // background-color: pink;
+    }
+
+    @include mat.slide-toggle-overrides(( // bouton
+            handle-surface-color: var(--secondaryContainer),
+            // icone
+            unselected-icon-color: var(--onSecondaryContainer),
+            selected-icon-color: var(--onSecondaryContainer),
+
+            // bordure
+            track-outline-color: var(--surfaceDim),
+            // selected-track-outline-color: var(--onTertiaryContainer),
+            // glissière
+            selected-focus-track-color: var(--tertiaryFixedDim),
+            selected-hover-track-color: var(--tertiaryFixedDim),
+            selected-track-color: var(--tertiaryContainer),
+            // unselected-hover-handle-color: orange,
+            // label-text-color: rgb(58, 192, 154)
+        ));
+}
+
+
+///////////////////////////////
+/// colonne droite
+
+.cooking{
+    display: flex;
+    flex-direction: column;
 }
 
 ///////////////////////////////
@@ -82,103 +173,53 @@ mat-option {
 
 ::ng-deep .custom-tooltip {
     white-space: pre-line;
+
     ::after {
         font-weight: bold;
     }
-    @include mat.tooltip-overrides((
-        container-color: var(--surfaceContainer),
-        supporting-text-color: var(--onSurface)
-    ));
-}
 
-///////////////////////////////
-// Prix - unité
-.prix_unite, .stock_quantity{
-    display: flex;
-    flex-direction: row;
-    gap: 1.5rem;
-}
-
-.prix_unite{
-    // > * {
-    //     flex: 0 0 auto;
-    // }
-    .mat-form-field{
-        flex: 1 1 50%;
-        max-width: 50%;
-    }
-    .divider{
-        font-size: 1.5rem;
-        line-height: 1rem;
-        user-select: none;
-        // display: block;
-        align-content: center;
-        justify-content: center;
-        flex: 0 0 5%;
-    }
-}
-
-.stock_quantity{
-    > * {
-        flex: 1 1 50%;
-        max-width: 50%;
-    }
-}
-
-// Customize the entire app. Change :root to your selector if you want to scope the styles.
-.stock {
-    // background-color: pink;
-    display: flex;
-    flex-direction: column !important;
-    mat-label {
-        margin: 0 1rem;
-        // line-height: 2rem;
-    }
-
-    @include mat.slide-toggle-overrides((
-        track-outline-color: orange,
-        selected-track-outline-color: green,
-        unselected-icon-color: red,
-        selected-icon-color: blue,
-        handle-surface-color: pink,
-        // selected-focus-track-color: yellow,
-        // selected-hover-track-color: rgb(247, 45, 45),
-        // selected-track-color: rgb(127, 24, 24),
-        unselected-hover-handle-color: orange,
-        label-text-color: rgb(58, 192, 154)
-    ));
+    @include mat.tooltip-overrides((container-color: var(--surfaceContainer),
+            supporting-text-color: var(--onSurface)));
 }
 
 //////////////////////////////////////
 //// images 
-.file-upload{
+
+.bloc_images{
+    
+    @include mat.divider-overrides((
+        color: var(--surfaceDim),
+    ));
+}
+// .file-upload{
+//     display: flex;
+//     flex-direction: row;
+// }
+.img_button{
+    display: flex;
+    // flex: 0 1 35%;
+    // flex-direction: column;
+    // justify-content: space-around;
     mat-label {
         margin: 1rem;
-        line-height: 2rem;
+        line-height: 1.5rem;
     }
 }
 
+.previews,
+.existing-images {
+    // max-height: 120px;
+    // padding: 0.5rem;
+    // // border: 2px solid var(--surfaceVariant);
+    // border-radius: 8px;
 
-.file-upload {
-    display: flex;
-    align-items: center;
-    button {
-        margin: auto;
-    }
-}
-
-.previews, .existing-images {
-    max-height: 120px;
-    padding: 0.5rem;
-    border: 2px solid var(--surfaceVariant);
-    border-radius: 8px;
     .previews-container {
-        display: flex; 
-        flex-wrap: nowrap; 
+        display: flex;
+        flex-wrap: nowrap;
         gap: 16px;
-        overflow-x: auto; 
-        overflow-y: hidden; 
-        padding-bottom: 5px; 
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 5px;
     }
 
     .preview-item {
@@ -187,7 +228,7 @@ mat-option {
     }
 
     mat-label {
-        margin: 1rem;
+        margin: 1rem 0.5rem;
         line-height: 1.5rem;
         font-style: italic;
         font-weight: normal;
@@ -199,28 +240,33 @@ mat-option {
         width: 100px;
         height: 100px;
         overflow: hidden;
+
         img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
-        div{
+
+        div {
             position: absolute;
             top: 0;
             right: 0;
             bottom: 0;
+
             // display: flex;
             // flex-direction: column;
             // justify-content: space-around;
             :first-child {
                 background-color: color-mix(in srgb, var(--error) 70%, transparent);
             }
+
             :last-child {
                 background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
 
             }
         }
+
         button {
             // position: absolute;
             // top: 5px;
@@ -236,7 +282,8 @@ mat-option {
             display: flex;
             align-items: center;
             justify-content: center;
-            mat-icon{
+
+            mat-icon {
                 font-size: 20px;
             }
         }
