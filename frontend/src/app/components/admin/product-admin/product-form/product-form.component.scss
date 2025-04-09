@@ -8,15 +8,47 @@
         subhead-color: red,
         container-min-width: 1000px));
 
+// h2{
+//     box-shadow: 0 1px 11px 2px rgba(0, 0, 0, 0.08);
+// }
+
 form {
-    max-height: 80vh;
+    max-height: 90vh;
     overflow: hidden;
     padding: 0.5rem;
+
+    // h2 {
+    //     box-shadow: 0 1px 11px 2px rgba(0, 0, 0, 0.08);
+    // }
+    .light {
+        @include mat.divider-overrides((color: var(--surfaceDim),
+            ));
+    }
 }
 
-.form_content{
+.form_content {
     max-height: 70vh;
     overflow: auto;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.shadow {
+    position: sticky;
+    height: 12px;
+    width: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.top-shadow {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.bottom-shadow {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.08), transparent);
 }
 
 mat-form-field {
@@ -68,13 +100,6 @@ mat-option {
         flex-direction: column;
         min-width: 0;
     }
-    .vertical{
-        @include mat.divider-overrides((
-            color: var(--surfaceDim),
-        ));
-
-    }
-
 }
 
 ///////////////////////////////
@@ -111,10 +136,12 @@ mat-option {
     align-items: center;
 }
 
-.prix_unite, .quantity {
+.prix_unite,
+.quantity {
     input {
         position: relative;
     }
+
     span {
         position: absolute;
         right: 0;
@@ -152,7 +179,7 @@ mat-option {
 ///////////////////////////////
 /// colonne droite
 
-.cooking{
+.cooking {
     display: flex;
     flex-direction: column;
 }
@@ -185,107 +212,121 @@ mat-option {
 //////////////////////////////////////
 //// images 
 
-.bloc_images{
-    
-    @include mat.divider-overrides((
-        color: var(--surfaceDim),
-    ));
+
+.bloc_images {
+    padding: 1rem;
+    display: flex;
+    gap: 2rem;
 }
+
+.img_label {
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 130px;
+}
+
+app-image-carousel {
+    flex: 1;
+    padding: 0.5rem 0;
+}
+
 // .file-upload{
 //     display: flex;
 //     flex-direction: row;
 // }
-.img_button{
-    display: flex;
-    // flex: 0 1 35%;
-    // flex-direction: column;
-    // justify-content: space-around;
-    mat-label {
-        margin: 1rem;
-        line-height: 1.5rem;
-    }
-}
+// .img_button{
+//     display: flex;
+//     // flex: 0 1 35%;
+//     // flex-direction: column;
+//     // justify-content: space-around;
+//     mat-label {
+//         margin: 1rem;
+//         line-height: 1.5rem;
+//     }
+// }
 
-.previews,
-.existing-images {
-    // max-height: 120px;
-    // padding: 0.5rem;
-    // // border: 2px solid var(--surfaceVariant);
-    // border-radius: 8px;
+// .previews,
+// .existing-images {
+// max-height: 120px;
+// padding: 0.5rem;
+// // border: 2px solid var(--surfaceVariant);
+// border-radius: 8px;
 
-    .previews-container {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 16px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-bottom: 5px;
-    }
+// .previews-container {
+//     display: flex;
+//     flex-wrap: nowrap;
+//     gap: 16px;
+//     overflow-x: auto;
+//     overflow-y: hidden;
+//     padding-bottom: 5px;
+// }
 
-    .preview-item {
-        flex: 0 0 auto;
-        display: inline-flex;
-    }
+// .preview-item {
+//     flex: 0 0 auto;
+//     display: inline-flex;
+// }
 
-    mat-label {
-        margin: 1rem 0.5rem;
-        line-height: 1.5rem;
-        font-style: italic;
-        font-weight: normal;
-    }
+// mat-label {
+//     margin: 1rem 0.5rem;
+//     line-height: 1.5rem;
+//     font-style: italic;
+//     font-weight: normal;
+// }
 
-    mat-card {
-        position: relative;
-        border-radius: 20px;
-        width: 100px;
-        height: 100px;
-        overflow: hidden;
+// mat-card {
+//     position: relative;
+//     border-radius: 20px;
+//     width: 100px;
+//     height: 100px;
+//     overflow: hidden;
 
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+//     img {
+//         width: 100%;
+//         height: 100%;
+//         object-fit: cover;
+//         display: block;
+//     }
 
-        div {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
+//     div {
+//         position: absolute;
+//         top: 0;
+//         right: 0;
+//         bottom: 0;
 
-            // display: flex;
-            // flex-direction: column;
-            // justify-content: space-around;
-            :first-child {
-                background-color: color-mix(in srgb, var(--error) 70%, transparent);
-            }
+//         // display: flex;
+//         // flex-direction: column;
+//         // justify-content: space-around;
+//         :first-child {
+//             background-color: color-mix(in srgb, var(--error) 70%, transparent);
+//         }
 
-            :last-child {
-                background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
+//         :last-child {
+//             background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
 
-            }
-        }
+//         }
+//     }
 
-        button {
-            // position: absolute;
-            // top: 5px;
-            // right: 5px;
-            // background-color: rgba(255, 0, 0, 0.8);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            cursor: pointer;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+//     button {
+//         // position: absolute;
+//         // top: 5px;
+//         // right: 5px;
+//         // background-color: rgba(255, 0, 0, 0.8);
+//         color: white;
+//         border: none;
+//         border-radius: 50%;
+//         width: 35px;
+//         height: 35px;
+//         cursor: pointer;
+//         z-index: 1;
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
 
-            mat-icon {
-                font-size: 20px;
-            }
-        }
-    }
-}
+//         mat-icon {
+//             font-size: 20px;
+//         }
+//     }
+// }
+// }

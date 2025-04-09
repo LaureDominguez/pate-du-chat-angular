@@ -7,6 +7,7 @@
     (ngSubmit)="save()"
 >
     <div class="form_content">
+        <div class="shadow top-shadow"></div>
         <div class="dynamic_columns">
             <!------------- colonne gauche ------------->
             <div class="form-column">
@@ -111,7 +112,7 @@
                 <!-- fin du bloc prix - stock -->            
             </div>
             <!------------- fin de colonne gauche ------------->
-            <mat-divider vertical="true" class="vertical"></mat-divider>
+            <mat-divider vertical="true" class="light"></mat-divider>
     
             <!-- ------------------------------------------- -->
     
@@ -199,12 +200,12 @@
             <!------------- fin de colonne droite ------------->
         </div>
         <!------------- fin du bloc de 2 colonnes ------------->
+
+        <mat-divider class="light"></mat-divider>
     
         <!------------- bloc images ------------->
-
         <div class="bloc_images">
-            <mat-divider></mat-divider>
-            <div class="img_button">
+            <div class="img_label">
                 <mat-label>Images</mat-label>
                 <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
                     <mat-icon>file_upload</mat-icon> Ajouter une image
@@ -220,6 +221,12 @@
                 style="display: none;" 
             />
             <app-image-carousel
+                [images]="processedImages"
+                (reorder)="processedImages = $event"
+                (remove)="onImageRemoved($event)"
+                (download)="downloadImage($event)"
+            />
+            <!-- <app-image-carousel
                 [existingImages]="existingImageUrls"
                 [previewImages]="filePreviews"
                 (removeExisting)="removeExistingImage($event)"
@@ -227,89 +234,10 @@
                 (download)="downloadImage($event)"
                 (reorderExisting)="existingImageUrls = $event"
                 (reorderPreview)="filePreviews = $event"
-            />
+            /> -->
         </div>
+        <div class="shadow bottom-shadow"></div>
     </div>
-    
-    <!-- <div class="bloc_images dynamic_columns"> -->
-        <!-- colonne de gauche : ajouter des images -->
-        <!-- <div class="file-upload form-column"> -->
-            <!-- <div class="img_button">
-                <mat-label>Images</mat-label>
-                <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
-                    <mat-icon>file_upload</mat-icon> Ajouter une image
-                </button>
-            </div>
-            <input 
-                #fileInput  
-                id="imageUpload" 
-                type="file" 
-                multiple 
-                (change)="onFileSelected($event)" 
-                accept="image/*"
-                style="display: none;" 
-            />
-
-            <app-image-carousel
-                [previewImages]="filePreviews"
-                (removePreview)="removeFile($event)"
-                (reorderPreview)="filePreviews = $event"
-            /> -->
-
-            <!-- <div class="previews" *ngIf="filePreviews.length > 0">
-                <mat-label *ngIf="existingImageUrls.length > 0">Nouvelles images :</mat-label>
-                <div class="previews-container">
-                    <div class="preview-item" *ngFor="let preview of filePreviews; let i = index">
-                        <mat-card>
-                            <img mat-card-image [src]="preview" alt="Image preview" />
-                            <button mat-icon-button color="warn" (click)="removeFile(i)">
-                                <mat-icon>delete</mat-icon>
-                            </button>
-                        </mat-card>
-                    </div>
-                </div>
-            </div> -->
-        <!-- </div> -->
-        
-        <!-- <mat-divider vertical="true" class="vertical"></mat-divider> -->
-
-        <!-- colonne de droite : modifier les images -->
-        <!-- <div class="existing-images form-column" *ngIf="existingImageUrls.length > 0">
-            <mat-label>Images existantes :</mat-label>
-            <app-image-carousel
-                [existingImages]="existingImageUrls"
-                (removeExisting)="removeExistingImage($event)"
-                (download)="downloadImage($event)"
-                (reorderExisting)="existingImageUrls = $event"
-            /> -->
-            <!-- <mat-label *ngIf="filePreviews.length > 0">Images existantes :</mat-label> -->
-            <!-- <div class="previews-container">
-                <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
-                    <mat-card>
-                        <img mat-card-image [src]="image" alt="Existing image" />
-                        <div>
-                            <button mat-icon-button (click)="removeExistingImage(i)">
-                                <mat-icon>delete</mat-icon>
-                            </button>
-                            <button mat-icon-button (click)="downloadImage(image)">
-                                <mat-icon>download</mat-icon>
-                            </button>
-                        </div>
-                    </mat-card>
-                </div>
-            </div> -->
-        <!-- </div> -->
-    <!-- </div> -->
-    <!-- fin du bloc images -->
-    <!-- <app-image-carousel
-        [existingImages]="existingImageUrls"
-        [previewImages]="filePreviews"
-        (removeExisting)="removeExistingImage($event)"
-        (removePreview)="removeFile($event)"
-        (download)="downloadImage($event)"
-        (reorderExisting)="existingImageUrls = $event"
-        (reorderPreview)="filePreviews = $event"
-    /> -->
 
     <!-- ------------------ -->
 

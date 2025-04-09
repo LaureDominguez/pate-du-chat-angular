@@ -1,29 +1,46 @@
 <!-- Bloc Images déjà enregistrées -->
-<div class="carousel-section" *ngIf="existingImages.length > 0">
-    <p class="carousel-label">Images enregistrées</p>
-    <div cdkDropList class="carousel" (cdkDropListDropped)="onDropExisting($event)">
-        <div class="carousel-image" *ngFor="let img of existingImages; let i = index" cdkDrag>
-            <img [src]="img" (click)="zoom(img)" />
+<!-- <div class="carousel-section" *ngIf="existingImages.length > 0">
+    <p class="carousel-label">Images enregistrées</p> -->
+    <div cdkDropList class="carousel" (cdkDropListDropped)="onDrop($event)">
+        <div 
+            class="carousel-image" 
+            *ngFor="let img of images; let i = index"
+            cdkDrag
+        >
+            <img [src]="img.data" (click)="zoom(img.data)" />
+            <div class="badge" *ngIf="isPreview(img)">Nouveau</div>
+
             <div class="actions">
-                <button (click)="download.emit(img)" title="Télécharger">⬇️</button>
-                <button (click)="removeExisting.emit(i)" title="Supprimer">🗑️</button>
+                <button 
+                    *ngIf="img.type === 'existing'"
+                    (click)="download.emit(img.data)" 
+                    title="Télécharger" 
+                    class="download-button"
+                >
+                    <mat-icon>download</mat-icon>
+                </button>
+                <button (click)="remove.emit(img)" title="Supprimer" class="delete-button">
+                    <mat-icon>delete</mat-icon>
+                </button>
             </div>
         </div>
     </div>
-</div>
+<!-- </div> -->
 
 <!-- Bloc Préviews (images à ajouter) -->
-<div class="carousel-section" *ngIf="previewImages.length > 0">
+<!-- <div class="carousel-section" *ngIf="previewImages.length > 0">
     <p class="carousel-label">Nouvelles images</p>
     <div cdkDropList class="carousel" (cdkDropListDropped)="onDropPreview($event)">
         <div class="carousel-image" *ngFor="let img of previewImages; let i = index" cdkDrag>
             <img [src]="img" (click)="zoom(img)" />
             <div class="actions">
-                <button (click)="removePreview.emit(i)" title="Supprimer">🗑️</button>
+                <button (click)="removePreview.emit(i)" title="Supprimer">
+                    <mat-icon>delete</mat-icon>
+                </button>
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- Zoom modal simple -->
 <div class="zoom-overlay" *ngIf="selectedImage" (click)="closeZoom()">

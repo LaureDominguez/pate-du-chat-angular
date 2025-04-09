@@ -20,6 +20,8 @@ import { Product } from '../../../../models/product';
 import { title } from 'process';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
+import { ProcessedImage } from '../../../../models/image';
+import { ImageService } from '../../../../services/image.service';
 
 @Component({
   selector: 'app-product-form',
@@ -55,9 +57,12 @@ export class ProductFormComponent implements OnInit {
   existingImageUrls: string[] = [];
   removedExistingImages: string[] = [];
 
+  processedImages: ProcessedImage[] = [];
+
   constructor(
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
+    private imageService: ImageService,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -156,6 +161,8 @@ export class ProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
+    this.createProcessedImages();
+    console.log('🖼️ Images traitées :', this.processedImages); // debug
   }
 
   get name() {
@@ -412,6 +419,45 @@ export class ProductFormComponent implements OnInit {
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Gestion des images
+  createProcessedImages(){
+    this.processedImages = [
+      ...this.existingImages.map((imagePath, index) => ({
+        type: 'existing' as const,
+        data: this.imageService.getImageUrl(imagePath),
+        originalIndex: index,
+      })),
+      ...this.filePreviews.map((preview, index) => ({
+        type: 'preview' as const,
+        data: preview,
+        originalIndex: this.existingImages.length + index,
+      })),
+    ];
+    console.log('🖼️ Images traitées :', this.processedImages);
+  }
+
+  onImageRemoved(image: ProcessedImage): void {
+    if (image.type === 'existing') {
+      // Supprimer de la liste des URL et des noms
+      const index = this.existingImageUrls.indexOf(image.data);
+      if (index !== -1) {
+        this.existingImageUrls.splice(index, 1);
+        const removed = this.existingImages.splice(index, 1)[0];
+        this.removedExistingImages.push(removed);
+      }
+    } else {
+      // Supprimer du tableau des previews
+      const index = this.filePreviews.indexOf(image.data);
+      if (index !== -1) {
+        this.filePreviews.splice(index, 1);
+        this.selectedFiles.splice(index, 1);
+      }
+    }
+  
+    // 🔄 Toujours mettre à jour processedImages après
+    this.createProcessedImages();
+  }
+  
+  
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const maxFileSize = 10 * 1024 * 1024;
@@ -452,6 +498,8 @@ export class ProductFormComponent implements OnInit {
     reader.onload = () => {
       if (reader.result) {
         this.filePreviews.push(reader.result as string);
+        
+        this.createProcessedImages();
       }
     };
     reader.readAsDataURL(file);
