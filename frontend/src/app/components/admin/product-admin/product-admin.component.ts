@@ -112,6 +112,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       data: {
         product: product || null,
         imageUrls: imageUrls,
+        imagePaths: product?.images || [],
         categories: this.categories,
         ingredients: this.ingredients,
       },
@@ -124,10 +125,18 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
               productData: any;
               selectedFiles: File[];
               removedExistingImages: string[];
+              imageOrder: string[];
             }
           | undefined
       ) => {
         if (result) {
+          console.log(
+            '🔍 Résultat du formulaire de produit :',
+            result.productData,
+            result.selectedFiles,
+            result.removedExistingImages,
+            result.imageOrder
+          );
           this.handleProductFormSubmit(result);
         }
       }
@@ -144,46 +153,57 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     productData: any;
     selectedFiles: File[];
     removedExistingImages: string[];
+    imageOrder: string[];
   }): void {
-    const { productData, selectedFiles, removedExistingImages } = result;
+    const { productData, selectedFiles, removedExistingImages, imageOrder } = result;
     const productId = productData._id;
-    const existingImages = productData.existingImages ?? [];
-    const finalImages = [...existingImages];
+    // const existingImages = productData.existingImages ?? [];
 
-    delete productData.existingImages;
+    console.log('handleProductFormSubmit() :');
+    console.log('📤 ImageOrder reçu du form :', imageOrder);
+    console.log('📤 Fichiers sélectionnés :', selectedFiles.map(f => f.name));
+    // console.log('📤 Images existantes (paths) :', existingImages);
 
-    // 1️⃣ Supprimer les images marquées pour suppression
-    if (removedExistingImages.length) {
-      removedExistingImages.forEach((imgPath) => {
-        const filename = imgPath.replace('/^/?uploads/?/', '');
-        this.imageService.deleteImage(filename).subscribe();
-      });
-    }
+    // 1️⃣ Supprimer les anciennes images supprimées
+    removedExistingImages.forEach((path) => {
+      const filename = path.replace(/^\/?uploads\/?/, '');
+      this.imageService.deleteImage(filename).subscribe();
+    });
 
-    // 2️⃣ Vérifier s’il y a des nouvelles images à uploader
+    // 2️⃣ Upload des nouvelles images si besoin
     if (selectedFiles.length > 0) {
       this.imageService.uploadImages(selectedFiles).subscribe({
-        next: (uploadResponse) => {
-          finalImages.push(...uploadResponse.imagePath);
+        next: (response) => {
+          const uploadedPaths = response.imagePath; // ['/uploads/xxx.jpg', ...]
+          const uploadedNames = selectedFiles.map((f) => f.name);
+
+          console.log('📤 Images uploadées :', uploadedPaths);
+          console.log('📤 Noms des fichiers uploadés :', uploadedNames);
+
+          // 3️⃣ Reconstituer `images[]` dans l'ordre voulu
+          productData.images = imageOrder.map((entry) => {
+            // ✅ 1. Ancienne image : elle est déjà un chemin complet
+            if (entry.startsWith('/uploads/')) {
+              return entry;
+            }
+
+            // ✅ 2. Image preview (fichier sélectionné) → on cherche le nom dans uploadedNames
+            const index = uploadedNames.findIndex((name) => entry.includes(name));
+            return uploadedPaths[index] || '';
+          }).filter(Boolean);
+
+          delete productData.existingImages;
+          this.submitProductForm(productId, productData);
         },
-        error: (error) => {
-          console.error("Erreur lors de l'upload des images :", error);
-          this.showErrorDialog(error.message);
-        },
-        complete: () => {
-          this.submitProductForm(productId, {
-            ...productData,
-            images: finalImages,
-          });
-        },
+        error: (err) => this.showErrorDialog(err.message),
       });
     } else {
-      this.submitProductForm(productId, {
-        ...productData,
-        images: finalImages,
-      });
+      // 3️⃣ Sans nouveau fichier → reconstruire les chemins uniquement depuis les anciennes images
+      productData.images = imageOrder.filter((entry) => entry.startsWith('/uploads/'));
+      this.submitProductForm(productId, productData);
     }
   }
+  
 
   // 3️⃣ Soumettre le formulaire (création ou mise à jour)
   submitProductForm(productId?: string, productData?: any): void {

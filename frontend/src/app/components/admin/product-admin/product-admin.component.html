@@ -19,13 +19,13 @@
         <ng-container matColumnDef="allergens">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Allergènes</th>
             <td mat-cell *matCellDef="let product">
-                <mat-icon class="success" *ngIf="product.allergens.length === 0">check_circle</mat-icon>
+                <mat-icon class="success" *ngIf="product.allergens.length === 0">cancel</mat-icon>
                 <mat-icon 
                     class="error" 
                     *ngIf="product.allergens.length > 0"
                     matTooltip="{{product.allergens.join(', ')}}"
                 >
-                    cancel
+                    check_circle
                 </mat-icon>
             </td>
         </ng-container>
@@ -54,7 +54,9 @@
             <th mat-header-cell *matHeaderCellDef>Prix</th>
             <td mat-cell *matCellDef="let product">
                 {{ product.price === 0 ? 'Gratuit' : (product.price | currency:'EUR':'symbol')}}
-                / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}
+                <span *ngIf="product.price !== 0">
+                    / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}
+                </span>
             </td>
             <!-- <td>{{ product.price }} € / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}</td> -->
 

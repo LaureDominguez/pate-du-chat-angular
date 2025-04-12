@@ -15,6 +15,73 @@
 }
 
 .carousel-image {
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+.carousel-image.active {
+  transform: translateX(10px);
+}
+.carousel-image.expanded {
+  width: 140px;
+}
+.carousel-image:not(.expanded) {
+  width: 110px;
+}
+.carousel-image .move-controls {
+  opacity: 0;
+  transition: all 0.13s ease;
+  transform: translateX(0);
+  pointer-events: none;
+}
+.carousel-image .move-controls.btn-left {
+  transform: translateX(10px);
+}
+.carousel-image .move-controls.btn-right {
+  transform: translateX(-10px);
+}
+.carousel-image .move-controls.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.carousel-image .move-controls button {
+  background: color-mix(in srgb, var(--surfaceBright) 70%, transparent);
+  color: var(--outlineVariant);
+  border: none;
+  font-size: px;
+  height: 40px;
+  width: 20px;
+  margin: auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.carousel-image .move-controls button .mat-icon {
+  height: 20px;
+  width: 20px;
+}
+.carousel-image .move-controls button .material-icons {
+  font-size: 18px;
+}
+.carousel-image .move-controls button:hover {
+  background: color-mix(in srgb, var(--outlineVariant) 70%, transparent);
+  color: var(--surfaceBright);
+}
+.carousel-image .move-controls.btn-left > button {
+  border-top-left-radius: 100px;
+  border-bottom-left-radius: 100px;
+  justify-content: flex-end;
+}
+.carousel-image .move-controls.btn-right > button {
+  border-top-right-radius: 100px;
+  justify-content: flex-start;
+  border-bottom-right-radius: 100px;
+}
+
+.image-wrapper {
   position: relative;
   flex: 0 0 auto;
   width: 100px;
@@ -22,28 +89,64 @@
   border: 2px solid var(--surfaceDim);
   border-radius: 8px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.2s ease;
 }
-.carousel-image img {
+.image-wrapper img {
   width: 100%;
   height: 100%;
   -o-object-fit: cover;
      object-fit: cover;
+  position: relative;
 }
-.carousel-image:hover {
+.image-wrapper:hover {
   box-shadow: 0 1px 11px 2px rgba(0, 0, 0, 0.08);
 }
-.carousel-image .actions {
+.image-wrapper .new-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: var(--tertiaryContainer);
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+}
+.image-wrapper .index-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.image-wrapper .index-badge:hover {
+  background: rgb(255, 255, 255);
+}
+.image-wrapper .actions {
   position: absolute;
   top: 2px;
   bottom: 2px;
   right: 2px;
   display: flex;
-  justify-content: space-around;
-  flex-direction: column;
+  justify-content: space-between;
+  flex-direction: column-reverse;
 }
-.carousel-image .actions button {
+.image-wrapper .actions button {
   background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
@@ -53,19 +156,19 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.carousel-image .actions button.download-button {
+.image-wrapper .actions button.download-button {
   background: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
   color: white;
 }
-.carousel-image .actions button.download-button:hover {
-  filter: brightness(1.25);
+.image-wrapper .actions button.download-button:hover {
+  filter: brightness(1.15);
 }
-.carousel-image .actions button.delete-button {
+.image-wrapper .actions button.delete-button {
   background: color-mix(in srgb, var(--error) 70%, transparent);
   color: white;
 }
-.carousel-image .actions button.delete-button:hover {
-  filter: brightness(1.5);
+.image-wrapper .actions button.delete-button:hover {
+  filter: brightness(1.35);
 }
 
 .zoom-overlay {
@@ -85,4 +188,15 @@
   max-height: 90%;
   border-radius: 10px;
   box-shadow: 0 0 15px #000;
+}
+
+.image-wrapper.cdk-drag-preview {
+  border: 2px dashed var(--primary);
+  overflow: hidden;
+  opacity: 0.9;
+  border-radius: 8px;
+}
+
+.image-wrapper.cdk-drag-placeholder {
+  opacity: 0;
 }/*# sourceMappingURL=image-carousel.component.css.map */

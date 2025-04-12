@@ -17,7 +17,6 @@ import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.com
 import { Category } from '../../../../models/category';
 import { Ingredient } from '../../../../models/ingredient';
 import { Product } from '../../../../models/product';
-import { title } from 'process';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { ProcessedImage } from '../../../../models/image';
@@ -34,6 +33,7 @@ import { ImageService } from '../../../../services/image.service';
 })
 export class ProductFormComponent implements OnInit {
   productForm: FormGroup;
+  
 
   //Categories
   categories: Category[] = [];
@@ -52,9 +52,6 @@ export class ProductFormComponent implements OnInit {
 
   //Images
   selectedFiles: File[] = [];
-  filePreviews: string[] = [];
-  existingImages: string[] = [];
-  existingImageUrls: string[] = [];
   removedExistingImages: string[] = [];
 
   processedImages: ProcessedImage[] = [];
@@ -67,14 +64,25 @@ export class ProductFormComponent implements OnInit {
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
-      imageUrls: string[];
       product: Product | null;
       categories: Category[];
       ingredients: Ingredient[];
+      imageUrls: string[];
+      imagePaths: string[];
     },
   ) {
     this.categories = data.categories || [];
     this.ingredients = data.ingredients || [];
+
+    if (data.imageUrls && data.imagePaths && data.imageUrls.length === data.imagePaths.length) {
+      console.log('📋 data.imageUrls :', data.imageUrls);
+      this.processedImages = data.imageUrls.map((url, index) => ({
+        type: 'existing',
+        data: url,
+        path: data.imagePaths[index],
+        originalIndex: index,
+      }));
+    }
 
     this.productForm = this.fb.group({
       _id: [data.product?._id || ''],
@@ -147,21 +155,18 @@ export class ProductFormComponent implements OnInit {
       images: [data.product?.images || []],
     });
 
-    if (data.product?.images) {
-      this.existingImages = [...data.product.images];
-      this.existingImageUrls = [...data.imageUrls];
-    }
 
     console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
 
     this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
-    console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
+    // console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   ngOnInit(): void {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
-    this.createProcessedImages();
+    this.updateProcessedImages();
+    // this.createProcessedImages();
     console.log('🖼️ Images traitées :', this.processedImages); // debug
   }
 
@@ -271,10 +276,10 @@ export class ProductFormComponent implements OnInit {
     this.sharedDataService.ingredientCreated$.subscribe((newIngredient) =>
       this.updateList(newIngredient, this.ingredients, 'ingredient')
     );
-      console.log(
-        'product-form -> subscribeToDataUpdates -> ingredients :',
-        this.ingredients
-      );
+      // console.log(
+      //   'product-form -> subscribeToDataUpdates -> ingredients :',
+      //   this.ingredients
+      // );
   }
 
   private updateList(
@@ -295,15 +300,15 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
   addCategory(category: Category | 'categoryNotFound' | null): void {
-    console.log('📋 category :', category);
+    // console.log('📋 category :', category);
     if (category === 'categoryNotFound') {
-      console.log('📋 this.searchedCategory :', this.searchedCategory);
+      // console.log('📋 this.searchedCategory :', this.searchedCategory);
       this.createCategory(this.searchedCategory);
     } else {
       this.productForm.patchValue({ category: category });
       this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
     }
-    console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
+    // console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   private createCategory(searchedValue: string): void {
@@ -330,9 +335,9 @@ export class ProductFormComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('product-form -> createCategory -> avant if -> result :', result);
+      // console.log('product-form -> createCategory -> avant if -> result :', result);
       if (result) {
-        console.log('📦 product-form -> apres if -> demande de création de catégorie via QuickCreateDialog :', result);
+        // console.log('📦 product-form -> apres if -> demande de création de catégorie via QuickCreateDialog :', result);
         this.sharedDataService.requestCategoryCreation(result);
       }
     })
@@ -395,7 +400,7 @@ export class ProductFormComponent implements OnInit {
 
   private openIngredientForm(searchedValue: string): Promise<Ingredient> {
     this.sharedDataService.requestOpenIngredientForm(searchedValue);
-    console.log('product-form -> openIngredientForm -> searchedValue :', searchedValue);
+    // console.log('product-form -> openIngredientForm -> searchedValue :', searchedValue);
     return new Promise((resolve, reject) => {
       this.sharedDataService.ingredientCreated$.pipe(take(1)).subscribe({
         next: (ingredient) => resolve(ingredient),
@@ -418,149 +423,138 @@ export class ProductFormComponent implements OnInit {
   }
 
   /////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////// Gestion des images
-  createProcessedImages(){
-    this.processedImages = [
-      ...this.existingImages.map((imagePath, index) => ({
-        type: 'existing' as const,
-        data: this.imageService.getImageUrl(imagePath),
-        originalIndex: index,
-      })),
-      ...this.filePreviews.map((preview, index) => ({
-        type: 'preview' as const,
-        data: preview,
-        originalIndex: this.existingImages.length + index,
-      })),
-    ];
-    console.log('🖼️ Images traitées :', this.processedImages);
-  }
-
-  onImageRemoved(image: ProcessedImage): void {
-    if (image.type === 'existing') {
-      // Supprimer de la liste des URL et des noms
-      const index = this.existingImageUrls.indexOf(image.data);
-      if (index !== -1) {
-        this.existingImageUrls.splice(index, 1);
-        const removed = this.existingImages.splice(index, 1)[0];
-        this.removedExistingImages.push(removed);
-      }
-    } else {
-      // Supprimer du tableau des previews
-      const index = this.filePreviews.indexOf(image.data);
-      if (index !== -1) {
-        this.filePreviews.splice(index, 1);
-        this.selectedFiles.splice(index, 1);
-      }
-    }
-  
-    // 🔄 Toujours mettre à jour processedImages après
-    this.createProcessedImages();
+  // ///////////////////////// Gestion des images
+  updateProcessedImages(): void {
+    this.processedImages = this.processedImages.map((img, index) => ({
+      ...img,
+      originalIndex: index,
+    }));
   }
   
   
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const maxFileSize = 10 * 1024 * 1024;
-    let errorMsg: string[] = [];
-
-    if (input.files) {
-      const validFiles = Array.from(input.files).filter((file) => {
-        if (!file.type.startsWith('image/')) {
-          errorMsg.push(`${file.name} n'est pas une image valide.`);
-          return false;
-        }
-        if (file.size > maxFileSize) {
-          errorMsg.push(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
-          return false;
-        }
-        return true;
+    const files = input.files;
+    const maxSize = 10 * 1024 * 1024;
+    const errors: string[] = [];
+  
+    if (!files) return;
+  
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        errors.push(`${file.name} n'est pas une image.`);
+        return;
+      }
+  
+      if (file.size > maxSize) {
+        errors.push(`${file.name} dépasse 10 Mo.`);
+        return;
+      }
+  
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.processedImages.push({
+          type: 'preview',
+          data: reader.result as string,
+          file: file,
+          originalIndex: this.processedImages.length,
+        });
+        console.log('🖼️ product-form -> Images traitées :', this.processedImages); // debug
+      };
+      reader.readAsDataURL(file);
+    });
+  
+    if (errors.length > 0) {
+      this.dialog.open(InfoDialogComponent, {
+        data: { message: errors.join('<br>'), type: 'error' },
       });
-
-      if (errorMsg.length > 0) {
-        this.dialog.open(InfoDialogComponent, {
-          data: { message: errorMsg.join('<br>'), type: 'error' },
-        })
-      }
-
-      validFiles.forEach((file) => this.handleImagePreview(file));
-
-      if (validFiles.length > 0) {
-        input.value = '';
-        this.selectedFiles.push(...validFiles);
-      }
     }
+  
+    input.value = '';
   }
-
-  // Gérer la preview
-  private handleImagePreview(file: File): void {
-    console.log('📋 Fichier sélectionné :', file); // LOG ICI 🔍
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        this.filePreviews.push(reader.result as string);
-        
-        this.createProcessedImages();
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
+  
+  
   downloadImage(imageUrl: string): void {
     console.log('📢 Événement envoyé pour télécharger :', imageUrl);
     const productName = this.data.product?.name || 'Produit';
     this.sharedDataService.emitDownloadImage(imageUrl, productName);
   }
 
-  // Retirer une image de la prévieuw
-  removeFile(index: number): void {
-    this.selectedFiles.splice(index, 1);
-    this.filePreviews.splice(index, 1);
+  onImageRemoved(image: ProcessedImage): void {
+    const index = this.processedImages.findIndex((img) => img.data === image.data);
+    if (index === -1) return;
+  
+    this.processedImages.splice(index, 1);
+  
+    if (image.type === 'existing' && image.path) {
+      this.removedExistingImages.push(image.path);
+    }
+  
+    if (image.type === 'preview' && image.file) {
+      const fileIndex = this.selectedFiles.findIndex(f => f === image.file);
+      if (fileIndex !== -1) this.selectedFiles.splice(fileIndex, 1);
+    }
   }
-
-  // Retirer une image existante
-  removeExistingImage(index: number): void {
-    this.existingImageUrls.splice(index, 1);
-    const removed = this.existingImages.splice(index, 1)[0];
-    this.removedExistingImages.push(removed);
+  
+  onReorder(images: ProcessedImage[]): void {
+    this.processedImages = [...images];
   }
+  
 
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Validation du formulaire
   save(): void {
-    console.log('📋 Formulaire soumis :', this.productForm.value); // LOG ICI 🔍
+    console.log('📋 Formulaire soumis :', this.productForm.value);
+  
     let formErrors: string[] = [];
-
+  
     Object.keys(this.productForm.controls).forEach((field) => {
       const errorMsg = this.getErrorMessage(field);
-      if (errorMsg) {
-        formErrors.push(errorMsg);
-      }
+      if (errorMsg) formErrors.push(errorMsg);
     });
-
+  
     if (this.composition.length === 0) {
       formErrors.push('Ajoutez au moins un ingrédient.');
     }
-
+  
     if (formErrors.length > 0) {
       this.dialog.open(InfoDialogComponent, {
         data: { message: formErrors.join('<br>'), type: 'error' },
       });
       return;
     }
-
+  
+    const selectedFiles: File[] = this.processedImages
+      .filter(img => img.type === 'preview' && img.file)
+      .map(img => img.file!)  // `!` car on a déjà filtré
+  
+    const existingImages: string[] = this.processedImages
+      .filter(img => img.type === 'existing' && img.path)
+      .map(img => img.path!)
+  
+    const imageOrder: string[] = this.processedImages.map((img) =>
+      img.type === 'existing' ? img.path! : img.file!.name
+    );
+  
     const productData = {
       ...this.productForm.value,
       name: this.formatNameInput(this.productForm.value.name),
-      existingImages: [...this.existingImages],
+      existingImages: existingImages,
     };
-
-    console.log('📤 Données envoyées :', productData); // LOG ICI 🔍
+  
+    console.log('📤 Données envoyées :', productData);
+    console.log('📤 Fichiers sélectionnés :', selectedFiles);
+    console.log('📤 Images supprimées :', this.removedExistingImages);
+    console.log('📤 Ordre des images :', imageOrder);
+  
     this.dialogRef.close({
       productData,
-      selectedFiles: this.selectedFiles,
+      selectedFiles,
       removedExistingImages: this.removedExistingImages,
+      imageOrder,
     });
   }
+  
 
   formatNameInput(name: string): string {
     if (!name) return "";

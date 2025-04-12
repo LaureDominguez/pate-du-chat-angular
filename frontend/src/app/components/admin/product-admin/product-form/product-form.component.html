@@ -205,12 +205,17 @@
     
         <!------------- bloc images ------------->
         <div class="bloc_images">
-            <div class="img_label">
-                <mat-label>Images</mat-label>
-                <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
-                    <mat-icon>file_upload</mat-icon> Ajouter une image
-                </button>
-            </div>
+            <mat-label>Images</mat-label>
+            
+            <app-image-carousel
+                [images]="processedImages"
+                (reorder)="onReorder($event)"
+                (remove)="onImageRemoved($event)"
+                (download)="downloadImage($event)"
+            />
+            <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
+                <mat-icon>file_upload</mat-icon> Ajouter une image
+            </button>
             <input 
                 #fileInput  
                 id="imageUpload" 
@@ -220,21 +225,6 @@
                 accept="image/*"
                 style="display: none;" 
             />
-            <app-image-carousel
-                [images]="processedImages"
-                (reorder)="processedImages = $event"
-                (remove)="onImageRemoved($event)"
-                (download)="downloadImage($event)"
-            />
-            <!-- <app-image-carousel
-                [existingImages]="existingImageUrls"
-                [previewImages]="filePreviews"
-                (removeExisting)="removeExistingImage($event)"
-                (removePreview)="removeFile($event)"
-                (download)="downloadImage($event)"
-                (reorderExisting)="existingImageUrls = $event"
-                (reorderPreview)="filePreviews = $event"
-            /> -->
         </div>
         <div class="shadow bottom-shadow"></div>
     </div>

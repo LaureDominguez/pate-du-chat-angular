@@ -3,7 +3,6 @@ import { AdminModule } from '../admin.module';
 import { AppModule } from '../../../app.module';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ProcessedImage } from '../../../models/image';
-import { ImageService } from '../../../services/image.service';
 
 @Component({
   selector: 'app-image-carousel',
@@ -14,42 +13,92 @@ import { ImageService } from '../../../services/image.service';
   templateUrl: './image-carousel.component.html',
   styleUrls: ['./image-carousel.component.scss']
 })
-export class ImageCarouselComponent implements OnChanges {
-  // @Input() existingImages: string[] = [];
-  // @Input() previewImages: string[]= [];
-
-  // @Output() removeExisting = new EventEmitter<number>();
-  // @Output() removePreview = new EventEmitter<number>();
-  // @Output() download = new EventEmitter<string>();
-  // @Output() reorderExisting = new EventEmitter<string[]>();
-  // @Output() reorderPreview = new EventEmitter<string[]>();
-
-  
+export class ImageCarouselComponent {  
   @Input() images: ProcessedImage[] = [];
 
+  @Output() download = new EventEmitter<string>();
   @Output() reorder = new EventEmitter<ProcessedImage[]>();
   @Output() remove = new EventEmitter<ProcessedImage>();
-  @Output() download = new EventEmitter<string>();
 
   selectedImage: string | null = null;
+  activeControlIndex: number | null = null;
+  activeControlKey: string | null = null;
 
-  constructor(private imageService: ImageService) {}
+  isDragging: boolean = false;
 
-  ngOnChanges() {
-    console.log('🎠 Images reçues :', this.images);
-  }
-  
 
-  onDrop(event: CdkDragDrop<ProcessedImage[]>) {
+
+  // onDrop(event: CdkDragDrop<ProcessedImage[]>) {
+  //   moveItemInArray(this.images, event.previousIndex, event.currentIndex);
+  //   this.reorder.emit([...this.images]);
+  // }  
+onDrop(event: CdkDragDrop<ProcessedImage[]>) {
+  if (event.previousIndex !== event.currentIndex) {
     moveItemInArray(this.images, event.previousIndex, event.currentIndex);
     this.reorder.emit(this.images);
+    this.activeControlIndex = event.currentIndex;
+  }
+}
+
+  toggleControls(index: number): void {
+    this.activeControlIndex = this.activeControlIndex === index ? null : index;
+    console.log('activeControlIndex', this.activeControlIndex);
   }
 
-  zoom(image: string) {
+  moveImageLeft(index: number): void {
+    if (index > 0) {
+      const newImages = [...this.images];
+      [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+      this.reorder.emit(newImages);
+      this.activeControlIndex = index - 1; // Move the active control to the left image
+    }
+  }
+  
+  moveImageRight(index: number): void {
+    if (index < this.images.length - 1) {
+      const newImages = [...this.images];
+      [newImages[index + 1], newImages[index]] = [newImages[index], newImages[index + 1]];
+      this.reorder.emit(newImages);
+      this.activeControlIndex = index + 1; // Move the active control to the right image
+    }
+  }
+  
+  // toggleControls(img: ProcessedImage): void {
+  //   const key = img.data;
+  //   this.activeControlKey = this.activeControlKey === key ? null : key;
+  //   console.log('activeControlKey', this.activeControlKey);
+  // }
+  
+  // moveImageLeft(img: ProcessedImage): void {
+  //   const index = this.images.indexOf(img);
+  //   if (index > 0) {
+  //     const newImages = [...this.images];
+  //     [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+  //     this.reorder.emit(newImages);
+  //     this.activeControlKey = newImages[index - 1].data;
+  //   }
+  // }
+  
+  // moveImageRight(img: ProcessedImage): void {
+  //   const index = this.images.indexOf(img);
+  //   if (index < this.images.length - 1) {
+  //     const newImages = [...this.images];
+  //     [newImages[index + 1], newImages[index]] = [newImages[index], newImages[index + 1]];
+  //     this.reorder.emit(newImages);
+  //     this.activeControlKey = newImages[index + 1].data;
+  //   }
+  // }
+  
+
+  removeImage(image: ProcessedImage): void {
+    this.remove.emit(image);
+  }
+
+  zoom(image: string): void {
     this.selectedImage = image;
   }
 
-  closeZoom() {
+  closeZoom(): void {
     this.selectedImage = null;
   }
 
@@ -57,21 +106,4 @@ export class ImageCarouselComponent implements OnChanges {
     return image.type === 'preview';
   }
 
-  // onDropExisting(event: CdkDragDrop<string[]>) {
-  //   moveItemInArray(this.existingImages, event.previousIndex, event.currentIndex);
-  //   this.reorderExisting.emit(this.existingImages);
-  // }
-
-  // onDropPreview(event: CdkDragDrop<string[]>) {
-  //   moveItemInArray(this.previewImages, event.previousIndex, event.currentIndex);
-  //   this.reorderPreview.emit(this.previewImages);
-  // }
-
-  // zoom(image: string) {
-  //   this.selectedImage = image;
-  // }
-
-  // closeZoom() {
-  //   this.selectedImage = null;
-  // }
 }
