@@ -1,10 +1,12 @@
 <div 
+    #carouselRef
     class="carousel" 
     cdkDropList 
     cdkDropListOrientation="horizontal"
     (cdkDropListDropped)="onDrop($event)">
     <div 
         class="carousel-image" 
+
         [class.expanded]="activeControlIndex === i && !isDragging"
         [ngClass]="{ 'active': activeControlIndex === i && !isDragging }"
         *ngFor="let img of images; let i = index"
