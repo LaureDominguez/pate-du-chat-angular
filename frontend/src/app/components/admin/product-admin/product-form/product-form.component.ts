@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Inject, OnInit, Output, ViewChild } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -21,6 +21,7 @@ import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { ProcessedImage } from '../../../../models/image';
 import { ImageService } from '../../../../services/image.service';
+import { ConfirmDialogComponent } from '../../../dialog/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-product-form',
@@ -33,8 +34,9 @@ import { ImageService } from '../../../../services/image.service';
 })
 export class ProductFormComponent implements OnInit {
   productForm: FormGroup;
-  
 
+  @Output() checkNameExists = new EventEmitter<string>();
+  
   //Categories
   categories: Category[] = [];
   categoryCtrl = new FormControl();
@@ -50,10 +52,13 @@ export class ProductFormComponent implements OnInit {
   searchedIngredient: string = '';
   ingredientNotFound: boolean = false;
 
+  //DLCs
+  dlcsList: string[] = [];
+  @ViewChild('customDlcInput') customDlcInput!: ElementRef<HTMLInputElement>;
+
   //Images
   selectedFiles: File[] = [];
   removedExistingImages: string[] = [];
-
   processedImages: ProcessedImage[] = [];
 
   constructor(
@@ -69,13 +74,24 @@ export class ProductFormComponent implements OnInit {
       ingredients: Ingredient[];
       imageUrls: string[];
       imagePaths: string[];
+      dlcs: string[];
     },
   ) {
     this.categories = data.categories || [];
     this.ingredients = data.ingredients || [];
+    this.dlcsList = data.dlcs || [];
+
+    console.log('data :', data); // debug
+    console.log('dlcsList :', this.dlcsList); // debug
+
+    const existingDlc = data.product?.dlc || '';
+    const isCustom = existingDlc && !this.dlcsList.includes(existingDlc);
+
+    console.log('existingDlc :', existingDlc); // debug
+    console.log('isCustom :', isCustom); // debug
 
     if (data.imageUrls && data.imagePaths && data.imageUrls.length === data.imagePaths.length) {
-      console.log('📋 data.imageUrls :', data.imageUrls);
+      // console.log('📋 data.imageUrls :', data.imageUrls);
       this.processedImages = data.imageUrls.map((url, index) => ({
         type: 'existing',
         data: url,
@@ -114,9 +130,16 @@ export class ProductFormComponent implements OnInit {
         ],
       ],
       dlc: [
-        data.product?.dlc || '',
+        isCustom ? 'Autre' : existingDlc || '',
         [
           Validators.required,
+          Validators.maxLength(50),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+        ],
+      ],
+      customDlc: [
+        isCustom ? existingDlc : '',
+        [
           Validators.maxLength(50),
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
         ],
@@ -131,9 +154,10 @@ export class ProductFormComponent implements OnInit {
       ],
       stock: [data.product?.stock || false],
       stockQuantity: [
-        data.product?.stockQuantity || 0,
+        data.product?.stockQuantity !== null && data.product?.stockQuantity !== undefined ? data.product?.stockQuantity : null,
         [
           Validators.required, 
+          Validators.pattern(/^\d+(\.\d{1,2})?$/),
           Validators.min(0)
         ],
       ],
@@ -145,7 +169,7 @@ export class ProductFormComponent implements OnInit {
         ],
       ],
       price: [
-        data.product?.price || 0,
+        data.product?.price !== null && data.product?.price !== undefined ? data.product?.price : null,
         [
           Validators.required,
           Validators.min(0),
@@ -166,8 +190,15 @@ export class ProductFormComponent implements OnInit {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
     this.updateProcessedImages();
-    // this.createProcessedImages();
-    console.log('🖼️ Images traitées :', this.processedImages); // debug
+
+    this.dlc?.valueChanges.subscribe((value) => {
+      console.log('📋 DLC :', value); // LOG ICI 🔍
+      if (value === 'Autre') {
+        setTimeout(() => {
+          this.customDlcInput?.nativeElement.focus();
+        }, 0);
+      }
+    });
   }
 
   get name() {
@@ -188,6 +219,10 @@ export class ProductFormComponent implements OnInit {
 
   get dlc() {
     return this.productForm.get('dlc');
+  }
+
+  get customDlc() {
+    return this.productForm.get('customDlc');
   }
 
   get cookInstructions() {
@@ -266,6 +301,21 @@ export class ProductFormComponent implements OnInit {
       .toLowerCase() // Convertit en minuscules
       .trim(); // Supprime les espaces inutiles
   }
+
+  ////// Autocomplete des champs price et stock
+  setDefaultIfEmpty(controlName: string): void {
+    const control = this.productForm.get(controlName);
+    const value = control?.value;
+
+    if (control && (value === null || value === undefined || value === '')) {
+      control?.setValue(0);
+    }
+
+    if (control && (controlName=== "stockQuantity" && value === 0)){
+      console.log('pouet')
+    }
+  }
+
 
   //////////////////////////////////////
   //// Ecoute de shared-data
@@ -424,6 +474,9 @@ export class ProductFormComponent implements OnInit {
 
   /////////////////////////////////////////////////////////////////////////////////
   // ///////////////////////// Gestion des images
+
+  /////////////////////////////////////////////////////////////////////////////////
+  // ///////////////////////// Gestion des images
   updateProcessedImages(): void {
     this.processedImages = this.processedImages.map((img, index) => ({
       ...img,
@@ -459,7 +512,7 @@ export class ProductFormComponent implements OnInit {
           file: file,
           originalIndex: this.processedImages.length,
         });
-        console.log('🖼️ product-form -> Images traitées :', this.processedImages); // debug
+        // console.log('🖼️ product-form -> Images traitées :', this.processedImages); // debug
       };
       reader.readAsDataURL(file);
     });
@@ -475,7 +528,7 @@ export class ProductFormComponent implements OnInit {
   
   
   downloadImage(imageUrl: string): void {
-    console.log('📢 Événement envoyé pour télécharger :', imageUrl);
+    // console.log('📢 Événement envoyé pour télécharger :', imageUrl);
     const productName = this.data.product?.name || 'Produit';
     this.sharedDataService.emitDownloadImage(imageUrl, productName);
   }
@@ -505,7 +558,60 @@ export class ProductFormComponent implements OnInit {
   ////////////////// Validation du formulaire
   save(): void {
     console.log('📋 Formulaire soumis :', this.productForm.value);
-  
+
+    const name = this.productForm.value.name;
+    console.log('📋 Vérification de l\'existence du nom :', name);
+
+    this.checkNameExists.emit(name);
+  }
+
+  validateStockAndPrice(): void {
+    // autocompleter les champs price et stock
+    const checkfields: string[] = [];
+
+    ['price', 'stockQuantity'].forEach((field) => {
+      const control = this.productForm.get(field);
+      const value = control?.value;
+      if (value === null || value === undefined || value === '') {
+        checkfields.push(field);
+      }
+    });
+
+    if (checkfields.length > 0) {
+      const fieldLabelsList = checkfields.map((field) => this.fieldLabels[field] || field);
+
+      const formattedList = fieldLabelsList.length > 1
+        ? fieldLabelsList.slice(0, -1).join(', ') + ' et ' + fieldLabelsList.slice(-1)
+        : fieldLabelsList[0];
+
+      const message = fieldLabelsList.length > 1
+        ? `Les champs ${formattedList} sont vides. Souhaitez-vous les remplir avec 0 ?`
+        : `Le champ ${formattedList} est vide. Souhaitez-vous le remplir avec 0 ?`;
+
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        data: {
+          message,
+          confirmButtonText: 'Oui',
+          cancelButtonText: 'Non',
+        },
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        console.log('📋 Résultat du dialogue de confirmation :', result);
+        if (result === 'confirm') {
+          console.log('📋 Champs remplis avec 0 :', checkfields);
+          checkfields.forEach((field) => {
+            this.productForm.get(field)?.setValue(0);
+          });
+          this.validateAndSubmit();
+        }
+      });
+    } else {
+      this.validateAndSubmit();
+    }
+  }
+
+  validateAndSubmit(): void {
     let formErrors: string[] = [];
   
     Object.keys(this.productForm.controls).forEach((field) => {
@@ -539,13 +645,9 @@ export class ProductFormComponent implements OnInit {
     const productData = {
       ...this.productForm.value,
       name: this.formatNameInput(this.productForm.value.name),
+      dlc: this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
       existingImages: existingImages,
     };
-  
-    console.log('📤 Données envoyées :', productData);
-    console.log('📤 Fichiers sélectionnés :', selectedFiles);
-    console.log('📤 Images supprimées :', this.removedExistingImages);
-    console.log('📤 Ordre des images :', imageOrder);
   
     this.dialogRef.close({
       productData,

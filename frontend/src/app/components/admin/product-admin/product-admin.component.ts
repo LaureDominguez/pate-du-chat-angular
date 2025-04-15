@@ -34,6 +34,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   products = new MatTableDataSource<FinalProduct>([]);
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
+  dlcsList: string[] = [];
 
   private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
 
@@ -62,6 +63,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadData(); // Charge les données initiales
+    this.fetchDlcs(); // Récupère la liste des DLCs
   }
 
   ngOnDestroy(): void {
@@ -101,6 +103,14 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       });
   }
 
+  fetchDlcs(): void {
+    console.log('🔍 Récupération des DLCs...');
+    this.productService.getDlcs().subscribe((dlcs) => {
+      this.dlcsList = dlcs;
+      console.log('🚀 DLCs mis à jour :', dlcs);
+    });
+  }
+
   openProductForm(product: Product | null): void {
     // console.log('🔍 Chargement des catégories et des ingrédients...');
     const imageUrls =
@@ -115,7 +125,29 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         imagePaths: product?.images || [],
         categories: this.categories,
         ingredients: this.ingredients,
+        dlcs: this.dlcsList,
       },
+    });
+
+    const instance = dialogRef.componentInstance;
+
+    instance.checkNameExists.subscribe((name: string) => {
+      const excludedId = product?._id;
+      console.log('🔍 Vérification de l\'existence du nom :', name, excludedId);
+
+      this.productService.checkExistingProducName(name, excludedId).subscribe((exists: boolean) => {
+        if (exists) {
+          this.dialog.open(InfoDialogComponent, {
+            data: {
+              message: `Le nom "${name}" existe déjà.`,
+              type: 'error',
+            },
+          });
+        } else {
+          console.log('✅ Le nom est disponible !');
+          instance.validateStockAndPrice();
+        }
+      });
     });
 
     dialogRef.afterClosed().subscribe(

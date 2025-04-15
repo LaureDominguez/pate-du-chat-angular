@@ -52,13 +52,14 @@ export class IngredientService {
   
   // Origines
   getOrigines(): Observable<any> {
-    return this.http.get(this.originesUrl).pipe(
-      // tap((data) => console.log('✅ Données reçues de origines.json:', data)),
-      catchError((error) => {
-        console.error('❌ Erreur lors du chargement des origines:', error);
-        return throwError(() => new Error('Impossible de charger les origines.'));
-      })
-    );
+    return this.http
+      .get(this.originesUrl)
+      .pipe(
+        catchError((error) => {
+          console.error('❌ Erreur lors du chargement des origines:', error);
+          return throwError(() => new Error('Impossible de charger les origines.'));
+        })
+      );
   }
 
   getOriginIcon(origin: string): string {

@@ -18,6 +18,8 @@ export class ProductService {
   private finalProductSubject = new BehaviorSubject<FinalProduct[]>([]);
   finalProducts$ = this.finalProductSubject.asObservable(); // Observable écoutable
 
+  private dlcsUrl = '../assets/data/dlcs.json';
+
   constructor(
     private http: HttpClient,
     private sharedDataService: SharedDataService
@@ -111,6 +113,34 @@ export class ProductService {
         }))
       )
     );
+  }
+
+  getDlcs(): Observable<any> {
+    return this.http
+      .get(this.dlcsUrl)
+      .pipe(
+        catchError((error) => {
+          console.error('❌ Erreur lors du chargement des DLCs:', error);
+          return throwError(() => new Error('Impossible de charger les DLCs.'));
+        }),
+      );
+  }
+
+  checkExistingProducName(name: string, excludedId?: string): Observable<boolean> {
+    let url = `${this.apiUrl}/check-name/${encodeURIComponent(name)}`;
+    if (excludedId) {
+      url += `?excludedId=${excludedId}`;
+      console.log('Excluded ID:', excludedId);
+      console.log('URL:', url);
+    }
+    return this.http
+      .get<boolean>(url)
+      .pipe(
+        catchError((error) => {
+          console.error('❌ Erreur lors de la recherche du produit:', error);
+          return throwError(() => new Error('Impossible de charger le produit.'));
+        }),
+      );
   }
 
   createProduct(payload: any): Observable<Product> {

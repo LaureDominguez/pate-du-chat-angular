@@ -23,8 +23,8 @@ router.get('/', async (req, res) => {
 		let products = await Product.find()
 			.populate('category')
 			.populate({
-				path: 'composition', 
-				populate: { path : 'subIngredients'}
+				path: 'composition',
+				populate: { path: 'subIngredients' }
 			});
 
 		if (req.query.view === 'full') {
@@ -137,6 +137,26 @@ router.get('/:id', async (req, res) => {
 	}
 });
 
+router.get('/check-name/:name', async (req, res) => {
+	const name = req.params.name;
+	const excludeId = req.query.excludedId;
+
+	const query = {
+		name: new RegExp(`^${name}$`, 'i')
+	};
+
+	if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
+		query._id = { $ne: excludeId };
+	}
+	try {
+		const product = await Product.findOne(query);
+		res.json(!!product);
+	} catch (error) {
+		console.error('Erreur dans /check-name:', error.message);
+		res.status(500).json({ error: 'Erreur serveur lors de la vérification du nom' });
+	}
+});
+
 
 // Ajouter un produit
 router.post(
@@ -208,7 +228,7 @@ router.post(
 			.isBoolean()
 			.withMessage('Le champ "stock" doit être un booléen.'),
 		check('stockQuantity')
-			.isInt({ min: 0 })
+			.isFloat({ min: 0 })
 			.withMessage(
 				'Le champ "quantité en stock" doit être un nombre entier positif.'
 			),
@@ -353,16 +373,16 @@ router.put(
 			.withMessage('Le champ "stock" doit être un booléen.'),
 		check('stockQuantity')
 			.optional()
-			.isInt({ min: 0 })
+			.isFloat({ min: 0 })
 			.withMessage(
 				'Le champ "quantité en stock" doit être un nombre entier positif.'
 			),
-		
+
 		check('quantityType')
 			.optional()
 			.isIn(['piece', 'kg'])
 			.withMessage('L\'unité doit être de type "pièce" ou "kg".'),
-		
+
 		check('price')
 			.optional()
 			.isFloat({ min: 0 })
