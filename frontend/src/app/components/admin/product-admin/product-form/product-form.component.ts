@@ -82,13 +82,13 @@ export class ProductFormComponent implements OnInit {
     this.dlcsList = data.dlcs || [];
 
     console.log('data :', data); // debug
-    console.log('dlcsList :', this.dlcsList); // debug
+    // console.log('dlcsList :', this.dlcsList); // debug
 
     const existingDlc = data.product?.dlc || '';
     const isCustom = existingDlc && !this.dlcsList.includes(existingDlc);
 
-    console.log('existingDlc :', existingDlc); // debug
-    console.log('isCustom :', isCustom); // debug
+    // console.log('existingDlc :', existingDlc); // debug
+    // console.log('isCustom :', isCustom); // debug
 
     if (data.imageUrls && data.imagePaths && data.imageUrls.length === data.imagePaths.length) {
       // console.log('📋 data.imageUrls :', data.imageUrls);
@@ -108,7 +108,7 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/),
         ],
       ],
       category: [
@@ -119,7 +119,7 @@ export class ProductFormComponent implements OnInit {
         data.product?.description || '',
         [
           Validators.maxLength(500),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
         ],
       ],
       composition: [
@@ -134,14 +134,14 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.required,
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/),
         ],
       ],
       customDlc: [
         isCustom ? existingDlc : '',
         [
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/),
         ],
       ],
       cookInstructions: [
@@ -149,7 +149,7 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.required,
           Validators.maxLength(250),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
         ],
       ],
       stock: [data.product?.stock || false],
@@ -192,12 +192,31 @@ export class ProductFormComponent implements OnInit {
     this.updateProcessedImages();
 
     this.dlc?.valueChanges.subscribe((value) => {
-      console.log('📋 DLC :', value); // LOG ICI 🔍
+      // console.log('📋 DLC :', value); // LOG ICI 🔍
       if (value === 'Autre') {
         setTimeout(() => {
           this.customDlcInput?.nativeElement.focus();
         }, 0);
       }
+    });
+
+    this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
+      const stockCtrl = this.productForm.get('stockQuantity');
+      console.log('📋 Type de quantité :', value); // LOG ICI 🔍
+      if (value === 'piece') {
+        console.log('📋 pieces :', stockCtrl?.value); // LOG ICI 🔍
+        stockCtrl?.setValidators([
+          Validators.required,
+          Validators.pattern(/^\d+$/),
+        ]);
+      } else {
+        console.log('📋 kg :', stockCtrl?.value); // LOG ICI 🔍
+        stockCtrl?.setValidators([
+          Validators.required,
+          Validators.pattern(/^\d+(\.\d{1,2})?$/),
+        ]);
+      }
+      stockCtrl?.updateValueAndValidity();
     });
   }
 
@@ -421,15 +440,25 @@ export class ProductFormComponent implements OnInit {
 
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
-    // console.log ('product-form -> addIngredient -> ingredient :', ingredient);
+    console.log ('product-form -> addIngredient -> ingredient :', ingredient);
+
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
       this.ingredientCtrl.setValue('');
       return;
     }
-    if (!this.composition.some((comp) => comp._id === ingredient._id)) {
+
+    const alreadyExists = this.composition.some(
+      (comp) => comp._id === ingredient._id
+    );
+
+    if (alreadyExists) {
+      this.removeIngredient(ingredient);
+      return;
+    } else {
       this.updateComposition(ingredient, true);
     }
+    this.ingredientCtrl.setValue('');
   }
 
   // Création d'un nouvel ingrédient
@@ -630,6 +659,7 @@ export class ProductFormComponent implements OnInit {
       return;
     }
   
+    // traitement des images
     const selectedFiles: File[] = this.processedImages
       .filter(img => img.type === 'preview' && img.file)
       .map(img => img.file!)  // `!` car on a déjà filtré

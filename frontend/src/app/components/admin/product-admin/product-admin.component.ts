@@ -104,10 +104,10 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   }
 
   fetchDlcs(): void {
-    console.log('🔍 Récupération des DLCs...');
+    // console.log('🔍 Récupération des DLCs...');
     this.productService.getDlcs().subscribe((dlcs) => {
       this.dlcsList = dlcs;
-      console.log('🚀 DLCs mis à jour :', dlcs);
+      // console.log('🚀 DLCs mis à jour :', dlcs);
     });
   }
 
@@ -191,9 +191,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     const productId = productData._id;
     // const existingImages = productData.existingImages ?? [];
 
-    console.log('handleProductFormSubmit() :');
-    console.log('📤 ImageOrder reçu du form :', imageOrder);
-    console.log('📤 Fichiers sélectionnés :', selectedFiles.map(f => f.name));
+    // console.log('handleProductFormSubmit() :');
+    // console.log('📤 ImageOrder reçu du form :', imageOrder);
+    // console.log('📤 Fichiers sélectionnés :', selectedFiles.map(f => f.name));
     // console.log('📤 Images existantes (paths) :', existingImages);
 
     // 1️⃣ Supprimer les anciennes images supprimées
@@ -209,8 +209,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           const uploadedPaths = response.imagePath; // ['/uploads/xxx.jpg', ...]
           const uploadedNames = selectedFiles.map((f) => f.name);
 
-          console.log('📤 Images uploadées :', uploadedPaths);
-          console.log('📤 Noms des fichiers uploadés :', uploadedNames);
+          // console.log('📤 Images uploadées :', uploadedPaths);
+          // console.log('📤 Noms des fichiers uploadés :', uploadedNames);
 
           // 3️⃣ Reconstituer `images[]` dans l'ordre voulu
           productData.images = imageOrder.map((entry) => {

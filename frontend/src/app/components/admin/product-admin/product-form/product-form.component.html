@@ -105,9 +105,11 @@
                             <input 
                                 matInput 
                                 type="number" 
+                                [step]="quantityType === 'kg' ? '0.01' : '1'"
                                 min="0" 
                                 formControlName="stockQuantity" 
-                                placeholder="0,00"
+                                [placeholder]="quantityType === 'kg' ? '0.01' : '1'"
+
                                 (blur)="setDefaultIfEmpty('stockQuantity')"
                             />
                             <span matSuffix> {{ quantityType }} </span>

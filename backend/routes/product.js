@@ -170,7 +170,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -191,7 +191,7 @@ router.post(
 			.withMessage(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -208,7 +208,7 @@ router.post(
 			.withMessage(
 				'Le champ "DLC" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/)
 			.withMessage(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -220,7 +220,7 @@ router.post(
 			.withMessage(
 				'Le champ "instructions de cuisson" doit avoir une longueur comprise entre 2 et 250 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -228,10 +228,28 @@ router.post(
 			.isBoolean()
 			.withMessage('Le champ "stock" doit être un booléen.'),
 		check('stockQuantity')
-			.isFloat({ min: 0 })
-			.withMessage(
-				'Le champ "quantité en stock" doit être un nombre entier positif.'
-			),
+			.custom((value, { req }) => {
+				const type = req.body.quantityType;
+
+				if (value === undefined || value === null || value === '') {
+					throw new Error('La quantité en stock est requise.');
+				}
+
+				const num = parseFloat(value);
+				if (isNaN(num) || num < 0) {
+					throw new Error('La quantité en stock doit être un nombre positif.');
+				}
+
+				if (type === 'piece' && !Number.isInteger(num)) {
+					throw new Error('La quantité doit être un entier si l\'unité est "pièce".');
+				}
+
+				if (type === 'kg' && !/^\d+(\.\d{1,2})?$/.test(value.toString())) {
+					throw new Error('La quantité en kg doit être un nombre décimal avec 2 chiffres max après la virgule.');
+				}
+
+				return true;
+			}),
 		check('quantityType')
 			.isIn(['piece', 'kg'])
 			.withMessage('L\'unité doit être de type "pièce" ou "kg".'),
@@ -309,7 +327,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -334,7 +352,7 @@ router.put(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
 			.if(check('description').notEmpty())
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
 
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
@@ -352,7 +370,7 @@ router.put(
 			.withMessage(
 				'Le champ "DLC" ne doit pas dépasser 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/)
 			.withMessage(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -363,7 +381,7 @@ router.put(
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas dépasser 250 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -373,10 +391,23 @@ router.put(
 			.withMessage('Le champ "stock" doit être un booléen.'),
 		check('stockQuantity')
 			.optional()
-			.isFloat({ min: 0 })
-			.withMessage(
-				'Le champ "quantité en stock" doit être un nombre entier positif.'
-			),
+			.custom((value, { req }) => {
+				const type = req.body.quantityType;
+				if (value === undefined || value === null || value === '') {
+					throw new Error('La quantité en stock est requise.');
+				}
+				const num = parseFloat(value);
+				if (isNaN(num) || num < 0) {
+					throw new Error('La quantité en stock doit être un nombre positif.');
+				}
+				if (type === 'piece' && !Number.isInteger(num)) {
+					throw new Error('La quantité doit être un entier si l\'unité est "pièce".');
+				}
+				if (type === 'kg' && !/^\d+(\.\d{1,2})?$/.test(value.toString())) {
+					throw new Error('La quantité en kg doit être un nombre décimal avec 2 chiffres max après la virgule.');
+				}
+				return true;
+			}),
 
 		check('quantityType')
 			.optional()
