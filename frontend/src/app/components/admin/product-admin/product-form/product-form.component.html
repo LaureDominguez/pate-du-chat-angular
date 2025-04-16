@@ -26,9 +26,17 @@
                         <!-- Catégorie -->
                         <mat-form-field appearance="fill">
                             <mat-label>Catégorie</mat-label>
-                            <input type="text" matInput [formControl]="categoryCtrl" [matAutocomplete]="categoryAuto"
-                                formControlName="category" placeholder="Rechercher une catégorie" />
-                            <mat-error *ngIf="category?.hasError('required')">La catégorie est obligatoire.</mat-error>
+                            <input 
+                                type="text" 
+                                matInput 
+                                [formControl]="categoryCtrl" 
+                                [matAutocomplete]="categoryAuto"
+                                formControlName="category" 
+                                placeholder="Rechercher une catégorie" 
+                            />
+                            <mat-error *ngIf="category?.hasError('required')">
+                                La catégorie est obligatoire.
+                            </mat-error>
                             <mat-autocomplete #categoryAuto="matAutocomplete"
                                 (optionSelected)="addCategory($event.option.value)">
                                 <!-- Affichage des résultats filtrés -->
@@ -61,16 +69,15 @@
                 <div class="price_stock">
                     <div class="prix_unite">
                         <!-- Prix -->
-                        <mat-form-field appearance="fill" class="full-width">
+                        <mat-form-field appearance="fill">
                             <mat-label>Prix</mat-label>
                             <input 
                                 matInput 
                                 type="number" 
                                 formControlName="price" 
                                 placeholder="0,00"
-                                (blur)="setDefaultIfEmpty('price')"
                             />
-                            <span matSuffix>€</span>
+                            <span matTextSuffix>€</span>
                             <mat-error *ngIf="price?.hasError('required')">Le prix est obligatoire.</mat-error>
                             <mat-error *ngIf="price?.hasError('min')">Le prix doit être un nombre positif ou égale à
                                 0.</mat-error>
@@ -83,7 +90,7 @@
                         </div>
 
                         <!-- Unité -->
-                        <mat-form-field appearance="fill">
+                        <mat-form-field appearance="fill" hideRequiredMarker>
                             <mat-label>Unité</mat-label>
                             <mat-select formControlName="quantityType">
                                 <mat-option value="piece">pièce</mat-option>
@@ -94,13 +101,21 @@
 
                     <div class="stock_quantity">
                         <!-- Stock -->
-                        <section class="stock">
-                            <mat-label>En stock</mat-label>
-                            <mat-slide-toggle formControlName="stock"></mat-slide-toggle>
+                        <section class="stock" #stockSection>
+                            <div>
+                                <mat-label>En vente</mat-label>
+                                <mat-slide-toggle 
+                                    formControlName="stock"
+    
+                                ></mat-slide-toggle>
+                            </div>
+                            <mat-hint *ngIf="stock?.disabled" class="hint">
+                                Ajoutez une quantité pour activer ce champ
+                            </mat-hint>
                         </section>
 
                         <!-- Quantité -->
-                        <mat-form-field appearance="fill" class="quantity">
+                        <mat-form-field appearance="fill" class="">
                             <mat-label>Quantité en stock</mat-label>
                             <input 
                                 matInput 
@@ -108,11 +123,14 @@
                                 [step]="quantityType === 'kg' ? '0.01' : '1'"
                                 min="0" 
                                 formControlName="stockQuantity" 
-                                [placeholder]="quantityType === 'kg' ? '0.01' : '1'"
+                                [placeholder]="quantityType === 'kg' ? '0,00' : '0'"
 
-                                (blur)="setDefaultIfEmpty('stockQuantity')"
                             />
-                            <span matSuffix> {{ quantityType }} </span>
+                            <span matTextSuffix> {{ quantityType }} </span>
+                            <mat-error *ngIf="stockQuantity?.hasError('required')">
+                                La quantité est obligatoire.
+                            </mat-error>
+                            
                             <mat-error *ngIf="stockQuantity?.hasError('min')">
                                 Doit être supérieur ou égal à 0
                             </mat-error>
@@ -173,37 +191,64 @@
                     <!-- Instructions de cuisson -->
                     <mat-form-field appearance="fill">
                         <mat-label>Instructions de cuisson</mat-label>
-                        <textarea matInput formControlName="cookInstructions" rows="3"></textarea>
+                        <textarea 
+                            matInput 
+                            formControlName="cookInstructions" 
+                            placeholder="Ex : 10 minutes à 180°C"
+                            rows="3"
+                        ></textarea>
+                        <mat-error *ngIf="cookInstructions?.hasError('required')">
+                            Les instructions de cuisson sont obligatoires.
+                        </mat-error>
+                        <mat-error *ngIf="cookInstructions?.hasError('maxlength')">
+                            Maximum 250 caractères.
+                        </mat-error>
+                        <mat-error *ngIf="cookInstructions?.hasError('pattern')">
+                            Caractères non autorisés.
+                        </mat-error>
+                        
                     </mat-form-field>
 
                     <!-- DLC -->
-                    <mat-form-field appearance="fill">
-                        <mat-label>Durée de consommation (DLC)</mat-label>
-                        <mat-select formControlName="dlc">
-                            <mat-option *ngFor="let dlc of dlcsList" [value]="dlc">
-                                {{ dlc }}
-                            </mat-option>
-                            <mat-option value="Autre">Autre...</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-
-                    <!-- DLC Custom (si Autre...) -->
-                    <mat-form-field *ngIf="dlc?.value === 'Autre'" appearance="fill">
-                        <mat-label>DLC personnalisée</mat-label>
-                        <input 
-                            matInput 
-                            #customDlcInput
-                            formControlName="customDlc" 
-                            placeholder="Ex : 9 mois, 18 jours, etc." 
-                        />
-                        <mat-error *ngIf="productForm.get('customDlc')?.hasError('maxlength')">
-                            Trop long (max. 50 caractères)
-                        </mat-error>
-                        <mat-error *ngIf="productForm.get('customDlc')?.hasError('pattern')">
-                            Caractères invalides
-                        </mat-error>
-                    </mat-form-field>
-
+                    <div class="dlc" #dlcContainer>
+                        <mat-form-field appearance="fill" class="dlc-main" [class.with-custom]="dlc?.value === 'Autre'">
+                            <mat-label>
+                                {{ dlc?.value === 'Autre' ? 'DLC' : 'Date Limite de consommation (DLC)' }}
+                            </mat-label>
+                            <mat-select formControlName="dlc">
+                                <mat-option *ngFor="let dlc of dlcsList" [value]="dlc">
+                                    {{ dlc }}
+                                </mat-option>
+                                <mat-option value="Autre">Autre...</mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="dlc?.hasError('required')">
+                                La DLC est obligatoire.
+                            </mat-error>
+                              <mat-error *ngIf="dlc?.hasError('maxlength')">
+                                Maximum 50 caractères.
+                            </mat-error>
+                              <mat-error *ngIf="dlc?.hasError('pattern')">
+                                Caractères non autorisés.
+                            </mat-error>
+                        </mat-form-field>
+    
+                        <!-- DLC Custom (si Autre...) -->
+                        <mat-form-field *ngIf="dlc?.value === 'Autre'" appearance="fill" class="dlc-custom">
+                            <mat-label>DLC personnalisée</mat-label>
+                            <input 
+                                matInput 
+                                #customDlcInput
+                                formControlName="customDlc" 
+                                placeholder="Ex : 9 mois, 18 jours, etc." 
+                            />
+                            <mat-error *ngIf="productForm.get('customDlc')?.hasError('maxlength')">
+                                Maximum 50 caractères.
+                            </mat-error>
+                            <mat-error *ngIf="productForm.get('customDlc')?.hasError('pattern')">
+                                Caractères non autorisés.
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
                 </div>
 
             </div>

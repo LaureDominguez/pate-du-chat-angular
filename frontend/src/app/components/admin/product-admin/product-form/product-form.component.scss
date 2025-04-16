@@ -4,22 +4,11 @@
     background-color: var(--surfaceBright);
 }
 
-@include mat.dialog-overrides((container-color: orange,
-        subhead-color: red,
-        container-min-width: 1000px));
-
-// h2{
-//     box-shadow: 0 1px 11px 2px rgba(0, 0, 0, 0.08);
-// }
-
 form {
     max-height: 90vh;
     overflow: hidden;
     padding: 0.5rem;
 
-    // h2 {
-    //     box-shadow: 0 1px 11px 2px rgba(0, 0, 0, 0.08);
-    // }
     .light {
         @include mat.divider-overrides((color: var(--surfaceDim),
             ));
@@ -55,16 +44,25 @@ mat-form-field {
     border-radius: 10px;
     color: var(--onSurface);
     background-color: var(--surfaceBright);
+    transition: all 0.2s ease;
+    margin: 0.3rem 0;
+
+    &:hover {
+        color: var(--onSurface);
+        background-color: var(--surfaceContainerLow);
+    }
 
     &:focus-within {
         color: var(--onSurface);
-        background-color: var(--surfaceContainer);
+        background-color: var(--surfaceContainerLow);
     }
 
     &.ng-invalid.ng-touched {
         color: var(--error);
         background-color: var(--errorContainer);
     }
+
+
 }
 
 mat-label {
@@ -117,7 +115,7 @@ mat-option {
     gap: 1rem;
 
     > :nth-child(1) {
-        flex: 2;
+        flex: 1;
     }
 
     > :nth-child(2) {
@@ -134,27 +132,24 @@ mat-option {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-}
-
-.prix_unite,
-.quantity {
-    input {
-        position: relative;
-    }
-
-    span {
-        position: absolute;
-        right: 0;
-        display: block;
-        bottom: -8px;
-        padding: 0 1.5rem;
+    span{
+        margin-left: 0.5rem;
     }
 }
+
+
 
 .stock {
     mat-label {
         padding: 1rem;
-        // background-color: pink;
+    }
+    mat-hint{
+        font-size: 0.8rem;
+        color: var(--outline);
+        font-style: italic;
+        letter-spacing: 0.05em;
+        padding: 0 0.5rem;
+        transition: opacity 0.3s ease;
     }
 
     @include mat.slide-toggle-overrides(( // bouton
@@ -210,14 +205,42 @@ mat-option {
 }
 
 //////////////////////////////////////
+//// DLC
+
+.dlc {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+
+    mat-form-field {
+        transition: width 0.5s ease;
+    }
+
+    .dlc-main {
+        width: 100%;
+
+        &.with-custom {
+            width: 30%;
+        }
+    }
+
+    .dlc-custom {
+        width: 70%;
+    }
+}
+
+
+
+//////////////////////////////////////
 //// images 
 
 .bloc_images {
     padding: 1rem;
     display: flex;
     flex-direction: column;
+
     // gap: 2rem;
-    button{
+    button {
         width: 200px;
         align-self: end;
     }

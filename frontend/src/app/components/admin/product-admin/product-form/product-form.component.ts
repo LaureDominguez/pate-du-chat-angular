@@ -23,6 +23,8 @@ import { ProcessedImage } from '../../../../models/image';
 import { ImageService } from '../../../../services/image.service';
 import { ConfirmDialogComponent } from '../../../dialog/confirm-dialog/confirm-dialog.component';
 
+import autoAnimate from '@formkit/auto-animate';
+
 @Component({
   selector: 'app-product-form',
   imports: [
@@ -34,6 +36,9 @@ import { ConfirmDialogComponent } from '../../../dialog/confirm-dialog/confirm-d
 })
 export class ProductFormComponent implements OnInit {
   productForm: FormGroup;
+
+  @ViewChild('stockSection') stockSection!: ElementRef;
+  @ViewChild('dlcContainer') dlcContainer!: ElementRef;
 
   @Output() checkNameExists = new EventEmitter<string>();
   
@@ -199,6 +204,27 @@ export class ProductFormComponent implements OnInit {
         }, 0);
       }
     });
+    
+    this.stock?.disable({ emitEvent: false });
+
+    this.productForm.get('stockQuantity')?.valueChanges.subscribe((value) => {
+      const stockCtrl = this.stock;
+      const numericValue = parseFloat(value);
+  
+      const shouldEnable =
+        value !== null &&
+        value !== undefined &&
+        value !== '' &&
+        !isNaN(numericValue) &&
+        numericValue > 0;
+  
+      if (shouldEnable) {
+        stockCtrl?.enable({ emitEvent: false });
+      } else {
+        stockCtrl?.setValue(false, { emitEvent: false });
+        stockCtrl?.disable({ emitEvent: false });
+      }
+    });
 
     this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
       const stockCtrl = this.productForm.get('stockQuantity');
@@ -218,6 +244,11 @@ export class ProductFormComponent implements OnInit {
       }
       stockCtrl?.updateValueAndValidity();
     });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.stockSection) autoAnimate(this.stockSection.nativeElement);
+    if (this.dlcContainer) autoAnimate(this.dlcContainer.nativeElement);
   }
 
   get name() {
@@ -257,7 +288,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   get quantityType() {
-    return this.productForm.get('quantityType')?.value === "piece" ? "pièces" : "kg";
+    return this.productForm.get('quantityType')?.value === "piece" ? "pièce(s)" : "kg";
   }
 
   get price() {
@@ -328,10 +359,6 @@ export class ProductFormComponent implements OnInit {
 
     if (control && (value === null || value === undefined || value === '')) {
       control?.setValue(0);
-    }
-
-    if (control && (controlName=== "stockQuantity" && value === 0)){
-      console.log('pouet')
     }
   }
 
@@ -595,27 +622,11 @@ export class ProductFormComponent implements OnInit {
   }
 
   validateStockAndPrice(): void {
-    // autocompleter les champs price et stock
-    const checkfields: string[] = [];
+    // const stockControl = this.productForm.get('stockQuantity');
+    const stockValue = this.stockQuantity?.value;
 
-    ['price', 'stockQuantity'].forEach((field) => {
-      const control = this.productForm.get(field);
-      const value = control?.value;
-      if (value === null || value === undefined || value === '') {
-        checkfields.push(field);
-      }
-    });
-
-    if (checkfields.length > 0) {
-      const fieldLabelsList = checkfields.map((field) => this.fieldLabels[field] || field);
-
-      const formattedList = fieldLabelsList.length > 1
-        ? fieldLabelsList.slice(0, -1).join(', ') + ' et ' + fieldLabelsList.slice(-1)
-        : fieldLabelsList[0];
-
-      const message = fieldLabelsList.length > 1
-        ? `Les champs ${formattedList} sont vides. Souhaitez-vous les remplir avec 0 ?`
-        : `Le champ ${formattedList} est vide. Souhaitez-vous le remplir avec 0 ?`;
+    if (stockValue === null || stockValue === undefined || stockValue === '') {
+      const message = `Le champ "Quantité en stock" est vide. Souhaitez-vous le remplir avec 0 ? <br> Le produit ne sera pas visible dans le catalogue tant que la quantité est à 0.`;
 
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         data: {
@@ -628,19 +639,63 @@ export class ProductFormComponent implements OnInit {
       dialogRef.afterClosed().subscribe((result) => {
         console.log('📋 Résultat du dialogue de confirmation :', result);
         if (result === 'confirm') {
-          console.log('📋 Champs remplis avec 0 :', checkfields);
-          checkfields.forEach((field) => {
-            this.productForm.get(field)?.setValue(0);
-          });
+          console.log('📋 Champ "stockQuantity" rempli avec 0');
+          this.stockQuantity?.setValue(0);
           this.validateAndSubmit();
         }
       });
+    // // autocompleter les champs price et stock
+    // const checkfields: string[] = [];
+
+    // ['price', 'stockQuantity'].forEach((field) => {
+    //   const control = this.productForm.get(field);
+    //   const value = control?.value;
+    //   if (value === null || value === undefined || value === '') {
+    //     checkfields.push(field);
+    //   }
+    // });
+
+    // if (checkfields.length > 0) {
+    //   const fieldLabelsList = checkfields.map((field) => this.fieldLabels[field] || field);
+
+    //   const formattedList = fieldLabelsList.length > 1
+    //     ? fieldLabelsList.slice(0, -1).join(', ') + ' et ' + fieldLabelsList.slice(-1)
+    //     : fieldLabelsList[0];
+
+    //   const message = fieldLabelsList.length > 1
+    //     ? `Les champs ${formattedList} sont vides. Souhaitez-vous les remplir avec 0 ?`
+    //     : `Le champ ${formattedList} est vide. Souhaitez-vous le remplir avec 0 ?`;
+
+    //   const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    //     data: {
+    //       message,
+    //       confirmButtonText: 'Oui',
+    //       cancelButtonText: 'Non',
+    //     },
+    //   });
+
+    //   dialogRef.afterClosed().subscribe((result) => {
+    //     console.log('📋 Résultat du dialogue de confirmation :', result);
+    //     if (result === 'confirm') {
+    //       console.log('📋 Champs remplis avec 0 :', checkfields);
+    //       checkfields.forEach((field) => {
+    //         this.productForm.get(field)?.setValue(0);
+    //       });
+    //       this.validateAndSubmit();
+    //     }
+    //   });
     } else {
       this.validateAndSubmit();
     }
   }
 
   validateAndSubmit(): void {
+    // vérifier si le champ stockQuantity 
+    const quantity = this.productForm.get('stockQuantity')?.value;
+    if (!quantity || parseFloat(quantity) === 0) {
+      this.productForm.get('stock')?.setValue(false);
+    }
+
     let formErrors: string[] = [];
   
     Object.keys(this.productForm.controls).forEach((field) => {
@@ -648,9 +703,9 @@ export class ProductFormComponent implements OnInit {
       if (errorMsg) formErrors.push(errorMsg);
     });
   
-    if (this.composition.length === 0) {
-      formErrors.push('Ajoutez au moins un ingrédient.');
-    }
+    // if (this.composition.length === 0) {
+    //   formErrors.push('Ajoutez au moins un ingrédient.');
+    // }
   
     if (formErrors.length > 0) {
       this.dialog.open(InfoDialogComponent, {
