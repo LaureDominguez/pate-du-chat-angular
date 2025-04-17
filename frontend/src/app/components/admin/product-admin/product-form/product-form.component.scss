@@ -70,15 +70,28 @@ mat-label {
     font-weight: bold;
 }
 
-mat-option {
+::ng-deep .mat-mdc-autocomplete-panel {
+    background-color: var(--surfaceBright) !important;
     color: var(--onSurface) !important;
-    background-color: var(--surfaceContainer) !important;
+    border-radius: 8px; // arrondi optionnel
+}
+
+::ng-deep .mat-mdc-select-panel {
+    background-color: var(--surfaceBright) !important;
+    color: var(--onSurface) !important;
+    border-radius: 8px; // arrondi optionnel
+}
+
+::ng-deep mat-option {
+    color: var(--onSurface) !important;
+    background-color: var(--surfaceBright) !important;
 
     &:hover {
         color: var(--onPrimaryFixed) !important;
         background-color: var(--primaryFixed) !important;
     }
 }
+
 
 mat-error, mat-hint, mat-label{
     white-space: nowrap;

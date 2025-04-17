@@ -472,6 +472,12 @@ export class ProductFormComponent implements OnInit {
       }
     }
   }
+
+  clearCategory(): void {
+    this.categoryCtrl.setValue('');
+    this.productForm.get('category')?.reset();
+  }
+  
   
   
 

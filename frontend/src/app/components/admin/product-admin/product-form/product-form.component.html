@@ -36,6 +36,16 @@
                                 placeholder="Rechercher une catégorie" 
                                 (blur)="onCategoryBlur()"
                             />
+                            <button
+                                *ngIf="categoryCtrl.value"
+                                matSuffix
+                                mat-icon-button
+                                aria-label="Effacer la catégorie"
+                                (click)="clearCategory()"
+                                tabindex="-1"
+                            >
+                            <mat-icon>close</mat-icon>
+                        </button>
                             <mat-error *ngIf="category?.hasError('required')">
                                 La catégorie est obligatoire.
                             </mat-error>
@@ -192,9 +202,14 @@
 
                     <!-- Liste des ingrédients -->
                     <mat-chip-set *ngIf="composition.length > 0; else noIngredients">
-                        <mat-chip *ngFor="let ingredient of composition" [removable]="true"
-                            (removed)="removeIngredient(ingredient)" [matTooltip]="getIngredientTooltip(ingredient)"
-                            matTooltipPosition="below" matTooltipClass="custom-tooltip">
+                        <mat-chip 
+                            *ngFor="let ingredient of composition" 
+                            [removable]="true"
+                            (removed)="removeIngredient(ingredient)" 
+                            [matTooltip]="getIngredientTooltip(ingredient)"
+                            matTooltipPosition="below" 
+                            matTooltipClass="custom-tooltip"
+                        >
                             {{ ingredient.name }}
                             <button mat-icon-button matChipRemove>
                                 <mat-icon>cancel</mat-icon>
