@@ -559,6 +559,11 @@ export class ProductFormComponent implements OnInit {
     this.updateComposition(ingredient, false);
   }
 
+  clearIngredientSearch(): void {
+    this.ingredientCtrl.setValue('');
+  }
+  
+
   getIngredientTooltip(ingredient: Ingredient): string {
     return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
     Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n

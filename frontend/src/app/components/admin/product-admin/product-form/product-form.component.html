@@ -175,9 +175,16 @@
                             placeholder="Rechercher un ingrédient" 
                             (blur)="onIngredientBlur()"
                         />
-                        <!-- <mat-error *ngIf="composition.length === 0">
-                            Ajoutez au moins un ingrédient.
-                        </mat-error> -->
+                        <button
+                            *ngIf="ingredientCtrl.value"
+                            matSuffix
+                            mat-icon-button
+                            aria-label="Effacer la recherche"
+                            (click)="clearIngredientSearch()"
+                            tabindex="-1"
+                        >
+                        <mat-icon>close</mat-icon>
+                    </button>
                         <mat-error *ngIf="productForm.get('composition')?.hasError('required')">
                             Ajoutez au moins un ingrédient.
                         </mat-error>
@@ -187,10 +194,16 @@
                         <mat-autocomplete #ingredientAuto="matAutocomplete"
                             (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
                             <!-- Affichage des résultats filtrés -->
-                            <mat-option *ngFor="let ingredient of filteredIngredients | async" [value]="ingredient"
-                                class="composition">
+                            <mat-option 
+                                *ngFor="let ingredient of filteredIngredients | async" 
+                                [value]="ingredient"
+                                class="composition"
+                                [ngClass]="{ 'selected-ingredient': isIngredientSelected(ingredient) }"
+                            >
                                 <span>{{ ingredient.name }}</span>
-                                <mat-icon *ngIf="isIngredientSelected(ingredient)">check</mat-icon>
+                                <mat-icon *ngIf="isIngredientSelected(ingredient)">
+                                    check
+                                </mat-icon>
                             </mat-option>
 
                             <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->

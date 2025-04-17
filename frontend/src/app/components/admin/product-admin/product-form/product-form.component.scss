@@ -57,7 +57,6 @@ mat-form-field {
         background-color: var(--surfaceContainerLow);
     }
 
-    // &.ng-invalid.ng-untouched
     &.ng-invalid.ng-touched {
         color: var(--error);
         background-color: var(--errorContainer);
@@ -89,6 +88,16 @@ mat-label {
     &:hover {
         color: var(--onPrimaryFixed) !important;
         background-color: var(--primaryFixed) !important;
+    }
+}
+
+.selected-ingredient {
+    font-weight: bold;
+    background: var(--secondaryContainer) !important; // ou une couleur plus discrète comme --surfaceContainer
+    color: var(--onSecondaryContainer) !important;
+    &:hover {
+        filter: brightness(1.05);
+        opacity: 0.95;
     }
 }
 
