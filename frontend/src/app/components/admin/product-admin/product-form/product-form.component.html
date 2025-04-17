@@ -27,15 +27,20 @@
                         <mat-form-field appearance="fill">
                             <mat-label>Catégorie</mat-label>
                             <input 
+                                #categoryInput
                                 type="text" 
                                 matInput 
                                 [formControl]="categoryCtrl" 
                                 [matAutocomplete]="categoryAuto"
                                 formControlName="category" 
                                 placeholder="Rechercher une catégorie" 
+                                (blur)="onCategoryBlur()"
                             />
                             <mat-error *ngIf="category?.hasError('required')">
                                 La catégorie est obligatoire.
+                            </mat-error>
+                            <mat-error *ngIf="category?.hasError('invalidSelection')">
+                                Veuillez choisir une catégorie valide.
                             </mat-error>
                             <mat-autocomplete #categoryAuto="matAutocomplete"
                                 (optionSelected)="addCategory($event.option.value)">
@@ -103,13 +108,13 @@
                         <!-- Stock -->
                         <section class="stock" #stockSection>
                             <div>
-                                <mat-label>En vente</mat-label>
+                                <mat-label>Visible dans la boutique</mat-label>
                                 <mat-slide-toggle 
                                     formControlName="stock"
     
                                 ></mat-slide-toggle>
                             </div>
-                            <mat-hint *ngIf="stock?.disabled" class="hint">
+                            <mat-hint *ngIf="stock?.disabled" class="hint slow-reveal">
                                 Ajoutez une quantité pour activer ce champ
                             </mat-hint>
                         </section>
@@ -151,9 +156,24 @@
                     <!-- Composition -->
                     <mat-form-field appearance="fill">
                         <mat-label>Composition</mat-label>
-                        <input type="text" matInput [formControl]="ingredientCtrl" [matAutocomplete]="ingredientAuto"
-                            formControlName="composition" placeholder="Rechercher un ingrédient" />
-                        <mat-error *ngIf="composition.length === 0">Ajoutez au moins un ingrédient.</mat-error>
+                        <input 
+                            type="text" 
+                            matInput 
+                            [formControl]="ingredientCtrl" 
+                            [matAutocomplete]="ingredientAuto"
+                            formControlName="composition" 
+                            placeholder="Rechercher un ingrédient" 
+                            (blur)="onIngredientBlur()"
+                        />
+                        <!-- <mat-error *ngIf="composition.length === 0">
+                            Ajoutez au moins un ingrédient.
+                        </mat-error> -->
+                        <mat-error *ngIf="productForm.get('composition')?.hasError('required')">
+                            Ajoutez au moins un ingrédient.
+                        </mat-error>
+                          <mat-error *ngIf="productForm.get('composition')?.hasError('invalidSelection')">
+                            Veuillez choisir un ingrédient dans la liste.
+                        </mat-error>
                         <mat-autocomplete #ingredientAuto="matAutocomplete"
                             (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
                             <!-- Affichage des résultats filtrés -->

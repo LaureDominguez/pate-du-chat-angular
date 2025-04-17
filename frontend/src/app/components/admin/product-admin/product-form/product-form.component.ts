@@ -1,4 +1,12 @@
-import { Component, ElementRef, EventEmitter, Inject, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -27,10 +35,7 @@ import autoAnimate from '@formkit/auto-animate';
 
 @Component({
   selector: 'app-product-form',
-  imports: [
-    AdminModule,
-    ImageCarouselComponent,
-  ],
+  imports: [AdminModule, ImageCarouselComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss'],
 })
@@ -41,7 +46,7 @@ export class ProductFormComponent implements OnInit {
   @ViewChild('dlcContainer') dlcContainer!: ElementRef;
 
   @Output() checkNameExists = new EventEmitter<string>();
-  
+
   //Categories
   categories: Category[] = [];
   categoryCtrl = new FormControl();
@@ -80,7 +85,7 @@ export class ProductFormComponent implements OnInit {
       imageUrls: string[];
       imagePaths: string[];
       dlcs: string[];
-    },
+    }
   ) {
     this.categories = data.categories || [];
     this.ingredients = data.ingredients || [];
@@ -95,7 +100,11 @@ export class ProductFormComponent implements OnInit {
     // console.log('existingDlc :', existingDlc); // debug
     // console.log('isCustom :', isCustom); // debug
 
-    if (data.imageUrls && data.imagePaths && data.imageUrls.length === data.imagePaths.length) {
+    if (
+      data.imageUrls &&
+      data.imagePaths &&
+      data.imageUrls.length === data.imagePaths.length
+    ) {
       // console.log('📋 data.imageUrls :', data.imageUrls);
       this.processedImages = data.imageUrls.map((url, index) => ({
         type: 'existing',
@@ -116,37 +125,37 @@ export class ProductFormComponent implements OnInit {
           Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/),
         ],
       ],
-      category: [
-        data.product?.category || '',
-        [Validators.required]
-      ],
+      category: [data.product?.category || '', [Validators.required]],
       description: [
         data.product?.description || '',
         [
           Validators.maxLength(500),
-          Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
+          Validators.pattern(
+            /^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
+          ),
         ],
       ],
       composition: [
         data.product?.composition || [],
-        [
-          Validators.required, 
-          Validators.minLength(1)
-        ],
+        [Validators.required, Validators.minLength(1)],
       ],
       dlc: [
         isCustom ? 'Autre' : existingDlc || '',
         [
           Validators.required,
           Validators.maxLength(50),
-          Validators.pattern(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/),
+          Validators.pattern(
+            /^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
+          ),
         ],
       ],
       customDlc: [
         isCustom ? existingDlc : '',
         [
           Validators.maxLength(50),
-          Validators.pattern(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/),
+          Validators.pattern(
+            /^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
+          ),
         ],
       ],
       cookInstructions: [
@@ -154,27 +163,31 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.required,
           Validators.maxLength(250),
-          Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
+          Validators.pattern(
+            /^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
+          ),
         ],
       ],
       stock: [data.product?.stock || false],
       stockQuantity: [
-        data.product?.stockQuantity !== null && data.product?.stockQuantity !== undefined ? data.product?.stockQuantity : null,
+        data.product?.stockQuantity !== null &&
+        data.product?.stockQuantity !== undefined
+          ? data.product?.stockQuantity
+          : null,
         [
-          Validators.required, 
+          Validators.required,
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
-          Validators.min(0)
+          Validators.min(0),
         ],
       ],
       quantityType: [
         data.product?.quantityType || 'kg',
-        [
-          Validators.required,
-          Validators.pattern(/^(piece|kg)$/)
-        ],
+        [Validators.required, Validators.pattern(/^(piece|kg)$/)],
       ],
       price: [
-        data.product?.price !== null && data.product?.price !== undefined ? data.product?.price : null,
+        data.product?.price !== null && data.product?.price !== undefined
+          ? data.product?.price
+          : null,
         [
           Validators.required,
           Validators.min(0),
@@ -183,7 +196,6 @@ export class ProductFormComponent implements OnInit {
       ],
       images: [data.product?.images || []],
     });
-
 
     console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
 
@@ -195,6 +207,7 @@ export class ProductFormComponent implements OnInit {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
     this.updateProcessedImages();
+    
 
     this.dlc?.valueChanges.subscribe((value) => {
       // console.log('📋 DLC :', value); // LOG ICI 🔍
@@ -204,20 +217,20 @@ export class ProductFormComponent implements OnInit {
         }, 0);
       }
     });
-    
+
     this.stock?.disable({ emitEvent: false });
 
     this.productForm.get('stockQuantity')?.valueChanges.subscribe((value) => {
       const stockCtrl = this.stock;
       const numericValue = parseFloat(value);
-  
+
       const shouldEnable =
         value !== null &&
         value !== undefined &&
         value !== '' &&
         !isNaN(numericValue) &&
         numericValue > 0;
-  
+
       if (shouldEnable) {
         stockCtrl?.enable({ emitEvent: false });
       } else {
@@ -288,7 +301,9 @@ export class ProductFormComponent implements OnInit {
   }
 
   get quantityType() {
-    return this.productForm.get('quantityType')?.value === "piece" ? "pièce(s)" : "kg";
+    return this.productForm.get('quantityType')?.value === 'piece'
+      ? 'pièce(s)'
+      : 'kg';
   }
 
   get price() {
@@ -362,7 +377,6 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
-
   //////////////////////////////////////
   //// Ecoute de shared-data
   private subscribeToDataUpdates(): void {
@@ -372,10 +386,10 @@ export class ProductFormComponent implements OnInit {
     this.sharedDataService.ingredientCreated$.subscribe((newIngredient) =>
       this.updateList(newIngredient, this.ingredients, 'ingredient')
     );
-      // console.log(
-      //   'product-form -> subscribeToDataUpdates -> ingredients :',
-      //   this.ingredients
-      // );
+    // console.log(
+    //   'product-form -> subscribeToDataUpdates -> ingredients :',
+    //   this.ingredients
+    // );
   }
 
   private updateList(
@@ -412,22 +426,22 @@ export class ProductFormComponent implements OnInit {
       data: {
         title: 'Créer une nouvelle catégorie',
         fields: [
-          { 
-            name: 'name', 
-            label: 'Nom de la catégorie', 
+          {
+            name: 'name',
+            label: 'Nom de la catégorie',
             required: true,
             maxLength: 50,
             pattern: /^[a-zA-Z0-9À-ÿŒœ\s-']+$/,
-            defaultValue: this.formatNameInput(searchedValue) 
+            defaultValue: this.formatNameInput(searchedValue),
           },
-          { 
-            name: 'description', 
-            label: 'Description de la catégorie', 
+          {
+            name: 'description',
+            label: 'Description de la catégorie',
             maxLength: 100,
-            pattern: /^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/
+            pattern: /^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/,
           },
-        ]
-      }
+        ],
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -436,11 +450,30 @@ export class ProductFormComponent implements OnInit {
         // console.log('📦 product-form -> apres if -> demande de création de catégorie via QuickCreateDialog :', result);
         this.sharedDataService.requestCategoryCreation(result);
       }
-    })
+    });
     // const filteredValue = this.formatNameInput(searchedValue);
     // console.log('product-form -> createCategory -> filteredValue :', filteredValue);
     // this.sharedDataService.requestCategoryCreation(filteredValue);
   }
+  onCategoryBlur(): void {
+    const inputValue = this.categoryCtrl.value;
+    const selectedCategory = this.productForm.get('category')?.value;
+  
+    if (!selectedCategory) {
+      this.category?.markAsTouched();
+  
+      // Cas 1 : texte saisi mais aucun choix sélectionné
+      if (inputValue && typeof inputValue === 'string') {
+        this.category?.setErrors({ invalidSelection: true });
+      }
+      // Cas 2 : champ vide
+      else {
+        this.category?.setErrors({ required: true });
+      }
+    }
+  }
+  
+  
 
   /////////////////////////////////////////////////////////////////////////////////
   ////////// Gestion des ingrédients
@@ -467,7 +500,7 @@ export class ProductFormComponent implements OnInit {
 
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
-    console.log ('product-form -> addIngredient -> ingredient :', ingredient);
+    console.log('product-form -> addIngredient -> ingredient :', ingredient);
 
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
@@ -528,6 +561,24 @@ export class ProductFormComponent implements OnInit {
     Label BIO : ${ingredient.bio ? 'Oui' : 'Non'}`;
   }
 
+  onIngredientBlur(): void {
+    const typedValue = this.ingredientCtrl.value;
+    const currentComposition = this.composition;
+  
+    if (currentComposition.length === 0) {
+      // Cas 1 : l'utilisateur a écrit mais n'a rien sélectionné
+      if (typedValue && typeof typedValue === 'string') {
+        this.productForm.get('composition')?.setErrors({ invalidSelection: true });
+      } else {
+        // Cas 2 : il n'a rien fait du tout
+        this.productForm.get('composition')?.setErrors({ required: true });
+      }
+  
+      this.productForm.get('composition')?.markAsTouched();
+    }
+  }
+  
+
   /////////////////////////////////////////////////////////////////////////////////
   // ///////////////////////// Gestion des images
 
@@ -539,27 +590,26 @@ export class ProductFormComponent implements OnInit {
       originalIndex: index,
     }));
   }
-  
-  
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files;
     const maxSize = 10 * 1024 * 1024;
     const errors: string[] = [];
-  
+
     if (!files) return;
-  
+
     Array.from(files).forEach((file) => {
       if (!file.type.startsWith('image/')) {
         errors.push(`${file.name} n'est pas une image.`);
         return;
       }
-  
+
       if (file.size > maxSize) {
         errors.push(`${file.name} dépasse 10 Mo.`);
         return;
       }
-  
+
       const reader = new FileReader();
       reader.onload = () => {
         this.processedImages.push({
@@ -572,17 +622,16 @@ export class ProductFormComponent implements OnInit {
       };
       reader.readAsDataURL(file);
     });
-  
+
     if (errors.length > 0) {
       this.dialog.open(InfoDialogComponent, {
         data: { message: errors.join('<br>'), type: 'error' },
       });
     }
-  
+
     input.value = '';
   }
-  
-  
+
   downloadImage(imageUrl: string): void {
     // console.log('📢 Événement envoyé pour télécharger :', imageUrl);
     const productName = this.data.product?.name || 'Produit';
@@ -590,35 +639,42 @@ export class ProductFormComponent implements OnInit {
   }
 
   onImageRemoved(image: ProcessedImage): void {
-    const index = this.processedImages.findIndex((img) => img.data === image.data);
+    const index = this.processedImages.findIndex(
+      (img) => img.data === image.data
+    );
     if (index === -1) return;
-  
+
     this.processedImages.splice(index, 1);
-  
+
     if (image.type === 'existing' && image.path) {
       this.removedExistingImages.push(image.path);
     }
-  
+
     if (image.type === 'preview' && image.file) {
-      const fileIndex = this.selectedFiles.findIndex(f => f === image.file);
+      const fileIndex = this.selectedFiles.findIndex((f) => f === image.file);
       if (fileIndex !== -1) this.selectedFiles.splice(fileIndex, 1);
     }
   }
-  
+
   onReorder(images: ProcessedImage[]): void {
     this.processedImages = [...images];
   }
-  
 
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Validation du formulaire
   save(): void {
     console.log('📋 Formulaire soumis :', this.productForm.value);
 
-    const name = this.productForm.value.name;
-    console.log('📋 Vérification de l\'existence du nom :', name);
+    Object.values(this.productForm.controls).forEach(control => {
+      control.markAsTouched();
+      // this.categoryCtrl.markAsTouched();
+      // this.ingredientCtrl.markAsTouched();
+    });
 
-    this.checkNameExists.emit(name);
+    const name = this.productForm.value.name;
+    console.log("📋 Vérification de l'existence du nom :", name);
+    if (name === '' || name === undefined) return;
+    else this.checkNameExists.emit(name);
   }
 
   validateStockAndPrice(): void {
@@ -644,96 +700,55 @@ export class ProductFormComponent implements OnInit {
           this.validateAndSubmit();
         }
       });
-    // // autocompleter les champs price et stock
-    // const checkfields: string[] = [];
-
-    // ['price', 'stockQuantity'].forEach((field) => {
-    //   const control = this.productForm.get(field);
-    //   const value = control?.value;
-    //   if (value === null || value === undefined || value === '') {
-    //     checkfields.push(field);
-    //   }
-    // });
-
-    // if (checkfields.length > 0) {
-    //   const fieldLabelsList = checkfields.map((field) => this.fieldLabels[field] || field);
-
-    //   const formattedList = fieldLabelsList.length > 1
-    //     ? fieldLabelsList.slice(0, -1).join(', ') + ' et ' + fieldLabelsList.slice(-1)
-    //     : fieldLabelsList[0];
-
-    //   const message = fieldLabelsList.length > 1
-    //     ? `Les champs ${formattedList} sont vides. Souhaitez-vous les remplir avec 0 ?`
-    //     : `Le champ ${formattedList} est vide. Souhaitez-vous le remplir avec 0 ?`;
-
-    //   const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-    //     data: {
-    //       message,
-    //       confirmButtonText: 'Oui',
-    //       cancelButtonText: 'Non',
-    //     },
-    //   });
-
-    //   dialogRef.afterClosed().subscribe((result) => {
-    //     console.log('📋 Résultat du dialogue de confirmation :', result);
-    //     if (result === 'confirm') {
-    //       console.log('📋 Champs remplis avec 0 :', checkfields);
-    //       checkfields.forEach((field) => {
-    //         this.productForm.get(field)?.setValue(0);
-    //       });
-    //       this.validateAndSubmit();
-    //     }
-    //   });
+      
     } else {
       this.validateAndSubmit();
     }
   }
 
   validateAndSubmit(): void {
-    // vérifier si le champ stockQuantity 
+    // vérifier si le champ stockQuantity
     const quantity = this.productForm.get('stockQuantity')?.value;
     if (!quantity || parseFloat(quantity) === 0) {
       this.productForm.get('stock')?.setValue(false);
     }
 
     let formErrors: string[] = [];
-  
+
     Object.keys(this.productForm.controls).forEach((field) => {
+      console.log('📋 Champ :', field);
       const errorMsg = this.getErrorMessage(field);
       if (errorMsg) formErrors.push(errorMsg);
     });
-  
-    // if (this.composition.length === 0) {
-    //   formErrors.push('Ajoutez au moins un ingrédient.');
-    // }
-  
+
     if (formErrors.length > 0) {
       this.dialog.open(InfoDialogComponent, {
         data: { message: formErrors.join('<br>'), type: 'error' },
       });
       return;
     }
-  
+
     // traitement des images
     const selectedFiles: File[] = this.processedImages
-      .filter(img => img.type === 'preview' && img.file)
-      .map(img => img.file!)  // `!` car on a déjà filtré
-  
+      .filter((img) => img.type === 'preview' && img.file)
+      .map((img) => img.file!); // `!` car on a déjà filtré
+
     const existingImages: string[] = this.processedImages
-      .filter(img => img.type === 'existing' && img.path)
-      .map(img => img.path!)
-  
+      .filter((img) => img.type === 'existing' && img.path)
+      .map((img) => img.path!);
+
     const imageOrder: string[] = this.processedImages.map((img) =>
       img.type === 'existing' ? img.path! : img.file!.name
     );
-  
+
     const productData = {
       ...this.productForm.value,
       name: this.formatNameInput(this.productForm.value.name),
-      dlc: this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
+      dlc:
+        this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
       existingImages: existingImages,
     };
-  
+
     this.dialogRef.close({
       productData,
       selectedFiles,
@@ -741,12 +756,13 @@ export class ProductFormComponent implements OnInit {
       imageOrder,
     });
   }
-  
 
   formatNameInput(name: string): string {
-    if (!name) return "";
+    if (!name) return '';
     let trimmedName = name.replace(/\s+/g, ' ').trim();
-    return trimmedName.trim().charAt(0).toUpperCase() + trimmedName.trim().slice(1);
+    return (
+      trimmedName.trim().charAt(0).toUpperCase() + trimmedName.trim().slice(1)
+    );
   }
 
   private fieldLabels: { [key: string]: string } = {

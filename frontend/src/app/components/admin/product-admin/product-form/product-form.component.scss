@@ -57,6 +57,7 @@ mat-form-field {
         background-color: var(--surfaceContainerLow);
     }
 
+    // &.ng-invalid.ng-untouched
     &.ng-invalid.ng-touched {
         color: var(--error);
         background-color: var(--errorContainer);
@@ -79,7 +80,11 @@ mat-option {
     }
 }
 
-
+mat-error, mat-hint, mat-label{
+    white-space: nowrap;
+    overflow: hidden;
+    // text-overflow: ellipsis;
+}
 
 ///////////////////////////////
 
@@ -153,21 +158,51 @@ mat-option {
     }
 
     @include mat.slide-toggle-overrides(( // bouton
-            handle-surface-color: var(--secondaryContainer),
+            handle-surface-color: var(--secondaryFixed),
+            unselected-handle-color: var(--secondaryContainer),
+
+            selected-handle-color: var(--tertiaryContainer),
+            selected-focus-handle-color: var(--tertiaryFixedDim),
+            selected-hover-handle-color: var(--tertiaryFixedDim),
+
+            disabled-unselected-handle-color: var(--surfaceContainer),
             // icone
             unselected-icon-color: var(--onSecondaryContainer),
-            selected-icon-color: var(--onSecondaryContainer),
+            selected-icon-color: var(--onTertiaryContainer),
 
             // bordure
             track-outline-color: var(--surfaceDim),
-            // selected-track-outline-color: var(--onTertiaryContainer),
+            selected-track-outline-color: var(--tertiaryFixedDim),
+
             // glissière
-            selected-focus-track-color: var(--tertiaryFixedDim),
-            selected-hover-track-color: var(--tertiaryFixedDim),
-            selected-track-color: var(--tertiaryContainer),
+            // selected-focus-track-color: var(--tertiaryFixed),
+            // selected-hover-track-color: var(--tertiaryFixed),
+            // selected-track-color: var(--tertiaryFixed),
+            disabled-unselected-track-color: var(--surfaceDim),
             // unselected-hover-handle-color: orange,
+
             // label-text-color: rgb(58, 192, 154)
+            // unselected-hover-state-layer-opacity: 0.8,
+            // unselected-hover-state-layer-color: red,
         ));
+}
+
+// animation effet "écriture"
+.slow-reveal {
+    opacity: 0;
+        animation: fadeInText 1s ease forwards;
+    }
+    
+@keyframes fadeInText {
+    0% {
+        opacity: 0;
+        clip-path: inset(0 100% 0 0);
+    }
+
+    100% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+    }
 }
 
 
