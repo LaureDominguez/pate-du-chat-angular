@@ -9,4 +9,8 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+::ng-deep.mat-mdc-dialog-surface {
+  overflow: hidden;
 }/*# sourceMappingURL=quick-create-dialog.component.css.map */

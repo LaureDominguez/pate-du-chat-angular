@@ -10,3 +10,7 @@
     justify-content: flex-end;
     gap: 0.5rem;
 }
+
+::ng-deep.mat-mdc-dialog-surface {
+    overflow: hidden;
+}

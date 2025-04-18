@@ -118,7 +118,7 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/),
+          Validators.pattern(/^(?=.*\S)[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/),
         ],
       ],
       category: [data.product?.category || '', [Validators.required]],
@@ -127,7 +127,7 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.maxLength(500),
           Validators.pattern(
-            /^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
+            /^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
           ),
         ],
       ],
@@ -141,7 +141,7 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.maxLength(50),
           Validators.pattern(
-            /^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
+            /^(?=.*\S)[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
           ),
         ],
       ],
@@ -150,7 +150,7 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.maxLength(50),
           Validators.pattern(
-            /^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
+            /^(?=.*\S)[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
           ),
         ],
       ],
@@ -160,7 +160,7 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.maxLength(250),
           Validators.pattern(
-            /^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
+            /^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
           ),
         ],
       ],
@@ -432,6 +432,7 @@ export class ProductFormComponent implements OnInit {
   addCategory(category: Category | 'categoryNotFound' | null): void {
     if (category === 'categoryNotFound') {
       this.createCategory(this.searchedCategory);
+      this.categoryCtrl.setValue('');
     } else {
       this.productForm.patchValue({ category: category });
       this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
@@ -448,14 +449,14 @@ export class ProductFormComponent implements OnInit {
             label: 'Nom de la catégorie',
             required: true,
             maxLength: 50,
-            pattern: /^[a-zA-Z0-9À-ÿŒœ\s-']+$/,
+            pattern: /^(?=.*\S)[a-zA-Z0-9À-ÿŒœ\s-']+$/,
             defaultValue: this.formatNameInput(searchedValue),
           },
           {
             name: 'description',
             label: 'Description de la catégorie',
             maxLength: 100,
-            pattern: /^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/,
+            pattern: /^(?=.*\S)[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/,
           },
         ],
       },
