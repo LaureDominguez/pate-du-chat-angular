@@ -263,6 +263,17 @@ router.post(
 			let { name, category, description, composition, dlc, cookInstructions, stock, stockQuantity, quantityType, price, images } =
 				req.body;
 
+			// Nettoyage des champs
+			stock = sanitize(stock);
+			stockQuantity = sanitize(stockQuantity);
+
+			// Logique par défaut
+			const numericQuantity = parseFloat(stockQuantity);
+			const resolvedStock =
+			typeof stock === 'boolean'
+				? stock
+				: !isNaN(numericQuantity) && numericQuantity > 0;
+
 			// Nettoyage des entrées utilisateur
 			name = sanitize(name);
 			// category = sanitize(category);
@@ -270,8 +281,8 @@ router.post(
 			composition = sanitize(composition);
 			dlc = sanitize(dlc);
 			cookInstructions = sanitize(cookInstructions);
-			stock = sanitize(stock);
-			stockQuantity = sanitize(stockQuantity);
+			stock = resolvedStock;
+			stockQuantity = numericQuantity;
 			quantityType = sanitize(quantityType);
 			images = sanitize(images);
 
@@ -435,29 +446,36 @@ router.put(
 				existingProduct &&
 				existingProduct._id.toString() !== product._id.toString()
 			) {
-				// console.log('📋 existingProduct :', existingProduct);
-				// console.log('📋 product :', product);
 				return res
 					.status(400)
 					.json({ msg: 'Un autre produit porte déjà ce nom.' });
 			}
 
+			const numericQuantity = parseFloat(stockQuantity);
+
 			product.name = sanitize(name) || product.name;
 			// product.category = sanitize(category) || product.category;
+			product.category =
+			category && mongoose.Types.ObjectId.isValid(category._id)
+				? sanitize(category._id)
+				: DEFAULT_CATEGORY._id;
 			product.description = sanitize(description) || product.description;
 			product.composition = sanitize(composition) || product.composition;
 			product.dlc = sanitize(dlc) || product.dlc;
 			product.cookInstructions = sanitize(cookInstructions) || product.cookInstructions;
-			product.stock = sanitize(stock) || product.stock;
-			product.stockQuantity = sanitize(stockQuantity) || product.stockQuantity;
+			if ('stock' in req.body) {
+				product.stock = sanitize(stock);
+				} else if (!isNaN(numericQuantity)) {
+				product.stock = numericQuantity > 0;
+				} else {
+				product.stock = false;
+			}
+			product.stockQuantity = !isNaN(numericQuantity) ? numericQuantity : 0;
 			product.quantityType = sanitize(quantityType) || product.quantityType;
 			product.price = sanitize(price) || product.price;
 			product.images = sanitize(images) || product.images;
 
-			product.category =
-				category && mongoose.Types.ObjectId.isValid(category._id)
-					? sanitize(category._id)
-					: DEFAULT_CATEGORY._id;
+
 
 			const updatedProduct = await product.save();
 			res.json(updatedProduct);

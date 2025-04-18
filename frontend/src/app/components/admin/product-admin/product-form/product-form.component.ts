@@ -92,13 +92,9 @@ export class ProductFormComponent implements OnInit {
     this.dlcsList = data.dlcs || [];
 
     console.log('data :', data); // debug
-    // console.log('dlcsList :', this.dlcsList); // debug
 
     const existingDlc = data.product?.dlc || '';
     const isCustom = existingDlc && !this.dlcsList.includes(existingDlc);
-
-    // console.log('existingDlc :', existingDlc); // debug
-    // console.log('isCustom :', isCustom); // debug
 
     if (
       data.imageUrls &&
@@ -200,17 +196,19 @@ export class ProductFormComponent implements OnInit {
     console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
 
     this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
-    // console.log('📋 Catégorie :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   ngOnInit(): void {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
     this.updateProcessedImages();
-    
+    this.updateStockToggleState(); 
+
+    this.productForm.get('stockQuantity')?.valueChanges.subscribe(() => {
+      this.updateStockToggleState(); // Réévalue à chaque changement
+    });
 
     this.dlc?.valueChanges.subscribe((value) => {
-      // console.log('📋 DLC :', value); // LOG ICI 🔍
       if (value === 'Autre') {
         setTimeout(() => {
           this.customDlcInput?.nativeElement.focus();
@@ -218,38 +216,38 @@ export class ProductFormComponent implements OnInit {
       }
     });
 
-    this.stock?.disable({ emitEvent: false });
+    // this.stock?.disable({ emitEvent: false });
 
-    this.productForm.get('stockQuantity')?.valueChanges.subscribe((value) => {
-      const stockCtrl = this.stock;
-      const numericValue = parseFloat(value);
+    // this.productForm.get('stockQuantity')?.valueChanges.subscribe((value) => {
+    //   const stockCtrl = this.stock;
+    //   const numericValue = parseFloat(value);
 
-      const shouldEnable =
-        value !== null &&
-        value !== undefined &&
-        value !== '' &&
-        !isNaN(numericValue) &&
-        numericValue > 0;
+    //   const shouldEnable =
+    //     value !== null &&
+    //     value !== undefined &&
+    //     value !== '' &&
+    //     !isNaN(numericValue) &&
+    //     numericValue > 0;
 
-      if (shouldEnable) {
-        stockCtrl?.enable({ emitEvent: false });
-      } else {
-        stockCtrl?.setValue(false, { emitEvent: false });
-        stockCtrl?.disable({ emitEvent: false });
-      }
-    });
+    //   if (shouldEnable) {
+    //     stockCtrl?.enable({ emitEvent: false });
+    //   } else {
+    //     stockCtrl?.setValue(false, { emitEvent: false });
+    //     stockCtrl?.disable({ emitEvent: false });
+    //   }
+    // });
 
     this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
       const stockCtrl = this.productForm.get('stockQuantity');
-      console.log('📋 Type de quantité :', value); // LOG ICI 🔍
+      // console.log('📋 Type de quantité :', value); // LOG ICI 🔍
       if (value === 'piece') {
-        console.log('📋 pieces :', stockCtrl?.value); // LOG ICI 🔍
+        // console.log('📋 pieces :', stockCtrl?.value); // LOG ICI 🔍
         stockCtrl?.setValidators([
           Validators.required,
           Validators.pattern(/^\d+$/),
         ]);
       } else {
-        console.log('📋 kg :', stockCtrl?.value); // LOG ICI 🔍
+        // console.log('📋 kg :', stockCtrl?.value); // LOG ICI 🔍
         stockCtrl?.setValidators([
           Validators.required,
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
@@ -342,6 +340,28 @@ export class ProductFormComponent implements OnInit {
     );
   }
 
+  // toggle du bouton stock
+  private updateStockToggleState(): void {
+    const stockCtrl = this.stock;
+    const value = this.stockQuantity?.value;
+    const numericValue = parseFloat(value);
+  
+    const shouldEnable =
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      !isNaN(numericValue) &&
+      numericValue > 0;
+  
+    if (shouldEnable) {
+      stockCtrl?.enable({ emitEvent: false });
+    } else {
+      stockCtrl?.setValue(false, { emitEvent: false });
+      stockCtrl?.disable({ emitEvent: false });
+    }
+  }
+  
+
   //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
     if (!value) return list;
@@ -410,15 +430,12 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ///////////Gestion des categories
   addCategory(category: Category | 'categoryNotFound' | null): void {
-    // console.log('📋 category :', category);
     if (category === 'categoryNotFound') {
-      // console.log('📋 this.searchedCategory :', this.searchedCategory);
       this.createCategory(this.searchedCategory);
     } else {
       this.productForm.patchValue({ category: category });
       this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
     }
-    // console.log('📋 CatégorieCtrl :', this.categoryCtrl.value); // LOG ICI 🔍
   }
 
   private createCategory(searchedValue: string): void {
@@ -445,15 +462,10 @@ export class ProductFormComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      // console.log('product-form -> createCategory -> avant if -> result :', result);
       if (result) {
-        // console.log('📦 product-form -> apres if -> demande de création de catégorie via QuickCreateDialog :', result);
         this.sharedDataService.requestCategoryCreation(result);
       }
     });
-    // const filteredValue = this.formatNameInput(searchedValue);
-    // console.log('product-form -> createCategory -> filteredValue :', filteredValue);
-    // this.sharedDataService.requestCategoryCreation(filteredValue);
   }
   onCategoryBlur(): void {
     const inputValue = this.categoryCtrl.value;
@@ -496,7 +508,6 @@ export class ProductFormComponent implements OnInit {
 
   private setComposition(composition: Ingredient[]): void {
     this.productForm.get('composition')?.setValue(composition);
-    // console.log('📋 Composition :', this.composition); // LOG ICI 🔍
   }
 
   // Vérifie si un ingrédient fait partie de la composition
@@ -506,7 +517,7 @@ export class ProductFormComponent implements OnInit {
 
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
-    console.log('product-form -> addIngredient -> ingredient :', ingredient);
+    // console.log('product-form -> addIngredient -> ingredient :', ingredient);
 
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
@@ -530,8 +541,6 @@ export class ProductFormComponent implements OnInit {
   // Création d'un nouvel ingrédient
   private createIngredient(searchedValue: string): void {
     const filteredValue = this.formatNameInput(searchedValue);
-    // console.log('product-form -> createIngredient -> searchedValue :', searchedValue);
-    // console.log('product-form -> createIngredient -> filteredValue :', filteredValue);
     this.openIngredientForm(filteredValue)
       .then((newIngredient) => {
         if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
@@ -545,7 +554,6 @@ export class ProductFormComponent implements OnInit {
 
   private openIngredientForm(searchedValue: string): Promise<Ingredient> {
     this.sharedDataService.requestOpenIngredientForm(searchedValue);
-    // console.log('product-form -> openIngredientForm -> searchedValue :', searchedValue);
     return new Promise((resolve, reject) => {
       this.sharedDataService.ingredientCreated$.pipe(take(1)).subscribe({
         next: (ingredient) => resolve(ingredient),
@@ -629,7 +637,6 @@ export class ProductFormComponent implements OnInit {
           file: file,
           originalIndex: this.processedImages.length,
         });
-        // console.log('🖼️ product-form -> Images traitées :', this.processedImages); // debug
       };
       reader.readAsDataURL(file);
     });
@@ -644,7 +651,6 @@ export class ProductFormComponent implements OnInit {
   }
 
   downloadImage(imageUrl: string): void {
-    // console.log('📢 Événement envoyé pour télécharger :', imageUrl);
     const productName = this.data.product?.name || 'Produit';
     this.sharedDataService.emitDownloadImage(imageUrl, productName);
   }
@@ -683,7 +689,7 @@ export class ProductFormComponent implements OnInit {
     });
 
     const name = this.productForm.value.name;
-    console.log("📋 Vérification de l'existence du nom :", name);
+    // console.log("📋 Vérification de l'existence du nom :", name);
     if (name === '' || name === undefined) return;
     else this.checkNameExists.emit(name);
   }
@@ -704,9 +710,7 @@ export class ProductFormComponent implements OnInit {
       });
 
       dialogRef.afterClosed().subscribe((result) => {
-        console.log('📋 Résultat du dialogue de confirmation :', result);
         if (result === 'confirm') {
-          console.log('📋 Champ "stockQuantity" rempli avec 0');
           this.stockQuantity?.setValue(0);
           this.validateAndSubmit();
         }
@@ -727,7 +731,6 @@ export class ProductFormComponent implements OnInit {
     let formErrors: string[] = [];
 
     Object.keys(this.productForm.controls).forEach((field) => {
-      console.log('📋 Champ :', field);
       const errorMsg = this.getErrorMessage(field);
       if (errorMsg) formErrors.push(errorMsg);
     });
@@ -758,7 +761,10 @@ export class ProductFormComponent implements OnInit {
       dlc:
         this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
       existingImages: existingImages,
+      stock: this.stock?.value,
     };
+
+    console.log('📋 Données du produit avant envoi :', productData)
 
     this.dialogRef.close({
       productData,
