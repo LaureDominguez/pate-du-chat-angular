@@ -1,34 +1,48 @@
 @use '@angular/material' as mat;
 
-table {
-    .mat-column-allergens, 
-    .mat-column-vegan, 
-    .mat-column-vegeta {
-        width: 32px;
-        padding-right: 24px;
-        text-align: center;
-    }
-    
-    .mat-column-price, .mat-column-stock {
-        width: 10%;
-        text-align: center;
-    }
-    
-    th:last-child, td:last-child {
-        justify-content: center;
-        text-align: center;
+// Colonne NOM → la plus large, prend la place restante
+::ng-deep .mat-column-name {
+    flex: 3 1 240px;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+// Colonnes moyennes : Catégorie, Prix, Quantité, Unité
+::ng-deep .mat-column-category,
+::ng-deep .mat-column-price,
+::ng-deep .mat-column-stockQuantity,
+::ng-deep .mat-column-unite {
+    flex: 2 1 120px;
+    min-width: 80px;
+    max-width: 120px;
+}
+
+// Petites colonnes : Allergènes, Vegan, Végétarien, Stock
+::ng-deep .mat-column-allergens,
+::ng-deep .mat-column-vegan,
+::ng-deep .mat-column-vegeta,
+::ng-deep .mat-column-stock {
+    flex: 0 0 60px;
+    width: 70px;
+    min-width: 50px;
+    max-width: 80px;
+    text-align: center;
+
+    .mat-icon {
+        vertical-align: middle;
     }
 }
 
-@include mat.dialog-overrides((
-    container-min-width: 1000px
-));
+// Colonne ACTIONS → largeur fixe suffisante pour les boutons
+::ng-deep .mat-column-actions {
+    flex: 0 0 200px;
+    width: 200px;
+    min-width: 200px;
+    max-width: 220px;
+}
 
-// ::ng-deep .custom-dialog-width .mat-dialog-container {
-//     width: 100%;
-//     max-width: 1600px !important;
-//     min-width: 900px;
-// }
+
+@include mat.dialog-overrides((container-min-width: 1000px));
 
 ::ng-deep .cdk-overlay-pane.custom-dialog {
     max-width: none !important;

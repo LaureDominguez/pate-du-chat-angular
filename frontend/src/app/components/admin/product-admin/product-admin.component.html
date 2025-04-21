@@ -17,7 +17,7 @@
 
         <!-- Allergènes Column -->
         <ng-container matColumnDef="allergens">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Allergènes</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Allergies</th>
             <td mat-cell *matCellDef="let product">
                 <mat-icon class="success" *ngIf="product.allergens.length === 0">cancel</mat-icon>
                 <mat-icon 
@@ -41,7 +41,7 @@
         
         <!-- Vegeta Column -->
         <ng-container matColumnDef="vegeta">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Végétarien</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Végé</th>
             <td mat-cell *matCellDef="let product">
                 <mat-icon class="success" *ngIf="product.vegeta">check_circle</mat-icon>
                 <mat-icon class="error" *ngIf="!product.vegeta">cancel</mat-icon>
@@ -51,49 +51,58 @@
 
         <!-- Prix Column -->
         <ng-container matColumnDef="price">
-            <th mat-header-cell *matHeaderCellDef>Prix</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Prix</th>
             <td mat-cell *matCellDef="let product">
-                {{ product.price === 0 ? 'Gratuit' : (product.price | currency:'EUR':'symbol')}}
-                <span *ngIf="product.price !== 0">
-                    / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}
-                </span>
+                <ng-container *ngIf="product.price === 0; else paid">
+                    <span class="bold">Gratuit</span>
+                </ng-container>
+                <ng-template #paid>
+                    {{ product.price | currency:'EUR':'symbol' }}
+                </ng-template>
             </td>
-            <!-- <td>{{ product.price }} € / {{ product.priceType === 'kg' ? 'kg' : 'pièce' }}</td> -->
 
         </ng-container>
 
+        <!-- Quantity Column -->
+        <ng-container matColumnDef="stockQuantity">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
+            <td mat-cell *matCellDef="let product">{{ product.stockQuantity }}</td>
+        </ng-container>
+
+        <!-- Unite Column -->
+        <ng-container matColumnDef="unite">
+            <th mat-header-cell *matHeaderCellDef>Unité</th>
+            <td mat-cell *matCellDef="let product">{{ product.quantityType === 'kg' ? 'kg' : (product.stockQuantity > 1 ? 'pièces' : 'pièce') }}</td>
+        </ng-container>
+        
         <!-- Stock Column -->
         <ng-container matColumnDef="stock">
-            <th mat-header-cell *matHeaderCellDef>En stock</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>En vente</th>
             <td mat-cell *matCellDef="let product">
                 <mat-icon class="success" *ngIf="product.stock">check_circle</mat-icon>
                 <mat-icon class="error" *ngIf="!product.stock">cancel</mat-icon>
             </td>
         </ng-container>
 
-        <!-- Quantity Column -->
-        <ng-container matColumnDef="stockQuantity">
-            <th mat-header-cell *matHeaderCellDef>Quantité</th>
-            <td mat-cell *matCellDef="let product">{{ product.stockQuantity }} {{ product.quantityType }}</td>
-        </ng-container>
-
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let product">
-                <button mat-button class="animated-button edit" (click)="openProductForm(product)">
-                    <div class="content">
-                        <mat-icon class="icon">edit</mat-icon>
-                        <span class="text">Modifier</span>
-                    </div>
-                </button>
-
-                <button mat-button class="animated-button delete" (click)="deleteProduct(product)">
-                    <div class="content">
-                        <mat-icon class="icon">delete</mat-icon>
-                        <span class="text">Supprimer</span>
-                    </div>
-                </button>
+                <div class="actionsBtns">
+                    <button mat-button class="animated-button edit" (click)="openProductForm(product)">
+                        <div class="content">
+                            <mat-icon class="icon">edit</mat-icon>
+                            <span class="text">Modifier</span>
+                        </div>
+                    </button>
+    
+                    <button mat-button class="animated-button delete" (click)="deleteProduct(product)">
+                        <div class="content">
+                            <mat-icon class="icon">delete</mat-icon>
+                            <span class="text">Supprimer</span>
+                        </div>
+                    </button>
+                </div>
             </td>
         </ng-container>
 

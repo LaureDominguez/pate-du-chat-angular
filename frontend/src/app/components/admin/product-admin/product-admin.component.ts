@@ -45,8 +45,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     'vegan',
     'vegeta',
     'price',
-    'stock',
     'stockQuantity',
+    'unite',
+    'stock',
     'actions',
   ];
 

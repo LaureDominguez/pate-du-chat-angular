@@ -1,26 +1,41 @@
-// .admin-section {
-//     padding: 1rem;
-//     background-color: var(--surfaceContainer);
-//     margin: 1rem;
-//     border-radius: 20px;
-// }
 
 mat-table {
     table-layout: fixed;
     width: 100%;
+    overflow-x: auto;
+    min-width: 600px;
+    max-width: 100vw;
 }
 
-th {
+::ng-deep .mat-mdc-header-cell {
     font-weight: bold;
-    text-align: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    align-items: center;
+    background-color: var(--surfaceVariant) !important;
 }
 
-tr:not(thead tr){
-    // background-color: var(--surfaceContainer);
+// Actions buttons
+.actionsBtns {
+    width: 500px;
+    display: flex;
+    height: auto;
+    // flex: 0 1 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    button {
+        min-width: auto;
+        display: flex;
+        align-items: center;
+    }
+}
+
+tr:not(thead tr) {
     transition: background-color 0.3s;
 
-    &:hover{
-        background-color: var(--surfaceVariant);
+    &:hover {
+        background-color: var(--surfaceBright);
     }
 }
 
@@ -29,15 +44,16 @@ mat-divider {
 }
 
 .mat-icon {
-    &.success { 
+    &.success {
         color: var(--tertiaryContainer);
     }
+
     &.error {
         color: var(--error);
     }
 }
 
-.editing-mode{
+.editing-mode {
     input:focus {
         background-color: var(--surface);
         padding: 0 0.5rem;
@@ -57,7 +73,7 @@ mat-divider {
     transition: all 0.3s ease-in-out;
     align-items: stretch;
 
-    @media (max-width: 800px) { 
+    @media (max-width: 800px) {
         grid-template-columns: 1fr; // Passe en 1 colonne sur écran réduit
     }
 }
@@ -69,7 +85,7 @@ mat-divider {
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
     transition: all 0.3s ease-in-out;
-    cursor: pointer;
+    // cursor: pointer;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -126,13 +142,14 @@ mat-divider {
     margin-left: 0.5rem;
     background-color: var(--primaryContainer);
     color: var(--onPrimaryContainer);
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    // box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
 
-    transition: all 0.3s ease-in;
+    transition: all 0.2s ease-out;
+
     &:hover {
         background-color: var(--primaryFixedDim);
         color: var(--onPrimaryFixedVariant);
-        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.15);
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
 
     }
 }
@@ -143,24 +160,11 @@ mat-divider {
     align-items: center;
 }
 
-// Actions buttons
-
-.actions-column {
-    // display: flex;
-    // flex-wrap: nowrap;      // Empêche les boutons de passer à la ligne
-    // gap: 0.5rem;             // Marge entre les boutons
-    // justify-content: center;
-    // align-items: center;
-    min-width: 320px;        // Largeur minimale pour contenir les 4 boutons
-    max-width: 100%;
-    overflow: hidden;
-}
-
-
 .animated-button {
     position: relative;
     overflow: hidden;
-    width: 60px; /* Taille de base */
+    width: 40px;
+    /* Taille de base */
     height: 40px;
     background-color: transparent;
     cursor: pointer;
@@ -172,18 +176,23 @@ mat-divider {
         justify-content: center;
     }
 
-    &.edit, &.save {
+    &.edit,
+    &.save {
         color: var(--primary);
     }
-    &.delete, &.cancel {
+
+    &.delete,
+    &.cancel {
         color: var(--error);
     }
+
     &:disabled {
         opacity: 0.3;
         cursor: not-allowed;
     }
-    
-    .icon, .text {
+
+    .icon,
+    .text {
         position: absolute;
         transition: transform 0.4s ease-out, opacity 0.3s ease-out;
         pointer-events: none;
@@ -206,10 +215,11 @@ mat-divider {
             background-color: var(--primaryContainer);
             color: var(--onPrimaryContainer);
             width: 90px;
+
             .icon {
                 transform: translateX(15px); // pousse l'icône à droite
             }
-    
+
             .text {
                 opacity: 1;
                 transform: translateX(-55px);
@@ -220,10 +230,11 @@ mat-divider {
             background-color: var(--error);
             color: var(--onError);
             width: 104px;
+
             .icon {
                 transform: translateX(22px); // pousse l'icône à droite
             }
-    
+
             .text {
                 opacity: 1;
                 transform: translateX(-62px);
@@ -234,10 +245,11 @@ mat-divider {
             background-color: var(--primaryContainer);
             color: var(--onPrimaryContainer);
             width: 110px;
+
             .icon {
                 transform: translateX(25px);
             }
-        
+
             .text {
                 transform: translateX(-65px);
                 opacity: 1;
@@ -248,10 +260,11 @@ mat-divider {
             background-color: var(--error);
             color: var(--onError);
             width: 90px;
+
             .icon {
                 transform: translateX(15px); // pousse l'icône à droite
             }
-    
+
             .text {
                 opacity: 1;
                 transform: translateX(-55px);

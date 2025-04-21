@@ -9,6 +9,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
     exports: [
@@ -21,7 +22,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
         MatButtonModule,
         MatGridListModule,
         MatCardModule,
-        MatSlideToggleModule
+        MatSlideToggleModule,
+        MatPaginatorModule
     ]
 })
 export class AppModule {}
