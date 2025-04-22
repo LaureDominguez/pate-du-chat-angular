@@ -22,11 +22,12 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { DEFAULT_CATEGORY } from '../../../models/category';
+import { MobileViewComponent } from "../mobile-view/mobile-view.component";
 
 @Component({
   selector: 'app-product-admin',
   standalone: true,
-  imports: [AdminModule],
+  imports: [AdminModule, MobileViewComponent],
   templateUrl: './product-admin.component.html',
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
@@ -35,6 +36,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
   dlcsList: string[] = [];
+
+  isMobile = false;
 
   private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
 
@@ -65,6 +68,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadData(); // Charge les données initiales
     this.fetchDlcs(); // Récupère la liste des DLCs
+    this.checkIfMobile();
+    window.addEventListener('resize', this.checkIfMobile.bind(this));
   }
 
   ngOnDestroy(): void {
@@ -110,6 +115,10 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       this.dlcsList = dlcs;
       // console.log('🚀 DLCs mis à jour :', dlcs);
     });
+  }
+
+  checkIfMobile() {
+    this.isMobile = window.innerWidth < 768;
   }
 
   openProductForm(product: Product | null): void {

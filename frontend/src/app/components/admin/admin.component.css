@@ -23,9 +23,29 @@ mat-table {
   justify-content: flex-start;
 }
 .actionsBtns button {
-  min-width: auto;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
+  transition: all 0.2s ease-out;
+}
+.actionsBtns button.edit, .actionsBtns button.save {
+  color: var(--primary);
+}
+.actionsBtns button.delete, .actionsBtns button.cancel {
+  color: var(--error);
+}
+.actionsBtns button:hover.edit, .actionsBtns button:hover.save {
+  background-color: var(--primaryContainer);
+  color: var(--onPrimaryContainer);
+}
+.actionsBtns button:hover.delete, .actionsBtns button:hover.cancel {
+  background-color: var(--error);
+  color: var(--onError);
+}
+.actionsBtns button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 tr:not(thead tr) {
@@ -113,110 +133,13 @@ mat-divider {
   color: #d9534f;
 }
 
-.add {
-  margin-left: 0.5rem;
-  background-color: var(--primaryContainer);
-  color: var(--onPrimaryContainer);
-  transition: all 0.2s ease-out;
-}
-.add:hover {
-  background-color: var(--primaryFixedDim);
-  color: var(--onPrimaryFixedVariant);
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-}
-
 .add-button {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
-.animated-button {
-  position: relative;
-  overflow: hidden;
-  width: 40px;
-  /* Taille de base */
-  height: 40px;
-  background-color: transparent;
-  cursor: pointer;
-  transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out;
-}
-.animated-button .content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.animated-button.edit, .animated-button.save {
-  color: var(--primary);
-}
-.animated-button.delete, .animated-button.cancel {
-  color: var(--error);
-}
-.animated-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-.animated-button .icon,
-.animated-button .text {
-  position: absolute;
-  transition: transform 0.4s ease-out, opacity 0.3s ease-out;
-  pointer-events: none;
-}
-.animated-button .icon {
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20px;
-}
-.animated-button .text {
-  left: 20px;
-  opacity: 0;
-  white-space: nowrap;
-}
-.animated-button:hover.edit {
+.add-button .add {
+  margin-left: 0.5rem;
   background-color: var(--primaryContainer);
   color: var(--onPrimaryContainer);
-  width: 90px;
-}
-.animated-button:hover.edit .icon {
-  transform: translateX(15px);
-}
-.animated-button:hover.edit .text {
-  opacity: 1;
-  transform: translateX(-55px);
-}
-.animated-button:hover.delete {
-  background-color: var(--error);
-  color: var(--onError);
-  width: 104px;
-}
-.animated-button:hover.delete .icon {
-  transform: translateX(22px);
-}
-.animated-button:hover.delete .text {
-  opacity: 1;
-  transform: translateX(-62px);
-}
-.animated-button:hover.save {
-  background-color: var(--primaryContainer);
-  color: var(--onPrimaryContainer);
-  width: 110px;
-}
-.animated-button:hover.save .icon {
-  transform: translateX(25px);
-}
-.animated-button:hover.save .text {
-  transform: translateX(-65px);
-  opacity: 1;
-}
-.animated-button:hover.cancel {
-  background-color: var(--error);
-  color: var(--onError);
-  width: 90px;
-}
-.animated-button:hover.cancel .icon {
-  transform: translateX(15px);
-}
-.animated-button:hover.cancel .text {
-  opacity: 1;
-  transform: translateX(-55px);
 }/*# sourceMappingURL=admin.component.css.map */

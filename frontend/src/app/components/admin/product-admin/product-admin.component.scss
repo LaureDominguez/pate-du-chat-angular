@@ -1,10 +1,10 @@
 @use '@angular/material' as mat;
 
-// Colonne NOM → la plus large, prend la place restante
+// Colonne NOM → la plus large, adaptable
 ::ng-deep .mat-column-name {
-    flex: 3 1 240px;
-    min-width: 200px;
-    max-width: 400px;
+    flex: 3 1 30vw;
+    min-width: 160px;
+    max-width: 40vw;
 }
 
 // Colonnes moyennes : Catégorie, Prix, Quantité, Unité
@@ -12,9 +12,9 @@
 ::ng-deep .mat-column-price,
 ::ng-deep .mat-column-stockQuantity,
 ::ng-deep .mat-column-unite {
-    flex: 2 1 120px;
+    flex: 2 1 10vw;
     min-width: 80px;
-    max-width: 120px;
+    max-width: 14vw;
 }
 
 // Petites colonnes : Allergènes, Vegan, Végétarien, Stock
@@ -22,10 +22,9 @@
 ::ng-deep .mat-column-vegan,
 ::ng-deep .mat-column-vegeta,
 ::ng-deep .mat-column-stock {
-    flex: 0 0 60px;
-    width: 70px;
+    flex: 1 1 6vw;
     min-width: 50px;
-    max-width: 80px;
+    max-width: 8vw;
     text-align: center;
 
     .mat-icon {
@@ -35,10 +34,9 @@
 
 // Colonne ACTIONS → largeur fixe suffisante pour les boutons
 ::ng-deep .mat-column-actions {
-    flex: 0 0 200px;
-    width: 200px;
-    min-width: 200px;
-    max-width: 220px;
+    flex: 1 1 10vw;
+    min-width: 120px;
+    max-width: 14vw;
 }
 
 

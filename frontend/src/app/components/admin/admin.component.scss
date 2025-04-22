@@ -1,11 +1,18 @@
+@use '@angular/material' as mat;
 
 mat-table {
-    table-layout: fixed;
-    width: 100%;
-    overflow-x: auto;
-    min-width: 600px;
-    max-width: 100vw;
+    overflow: auto;
+    // min-width: 600px;
+    // max-width: 100vw;
+
 }
+
+::ng-deep .mat-mdc-tooltip-panel {
+    background-color: var(--secondaryContainer) !important;
+    color: var(--onSecondaryContainer) !important;
+    border-radius: 15px;
+}
+
 
 ::ng-deep .mat-mdc-header-cell {
     font-weight: bold;
@@ -17,17 +24,52 @@ mat-table {
 
 // Actions buttons
 .actionsBtns {
-    width: 500px;
     display: flex;
     height: auto;
-    // flex: 0 1 auto;
+    flex: 1 1 auto;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     button {
-        min-width: auto;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
+        transition: all 0.2s ease-out;
+
+        &.edit,
+        &.save {
+            color: var(--primary);
+
+        }
+    
+        &.delete,
+        &.cancel {
+            color: var(--error);
+        }
+
+        &:hover {
+            &.edit,
+            &.save {
+                background-color: var(--primaryContainer);
+                color: var(--onPrimaryContainer);
+            }
+            &.delete,
+            &.cancel {
+                background-color: var(--error);
+                color: var(--onError);
+            }
+        }
+    
+        &:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     }
 }
 
@@ -128,147 +170,142 @@ mat-divider {
     font-size: 16px;
     cursor: pointer;
     padding: 5px 10px;
-    color: #555;
+    color: var(--onSurface);
     transition: color 0.3s;
 
     &:hover {
-        color: #d9534f; // Rouge clair au survol
+        color: var(--error);
     }
 }
 
 
 // Add button
-.add {
-    margin-left: 0.5rem;
-    background-color: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
-    // box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-
-    transition: all 0.2s ease-out;
-
-    &:hover {
-        background-color: var(--primaryFixedDim);
-        color: var(--onPrimaryFixedVariant);
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-
-    }
-}
-
 .add-button {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.animated-button {
-    position: relative;
-    overflow: hidden;
-    width: 40px;
-    /* Taille de base */
-    height: 40px;
-    background-color: transparent;
-    cursor: pointer;
-    transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out;
-
-    .content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    &.edit,
-    &.save {
-        color: var(--primary);
-    }
-
-    &.delete,
-    &.cancel {
-        color: var(--error);
-    }
-
-    &:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    .icon,
-    .text {
-        position: absolute;
-        transition: transform 0.4s ease-out, opacity 0.3s ease-out;
-        pointer-events: none;
-    }
-
-    .icon {
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 20px;
-    }
-
-    .text {
-        left: 20px;
-        opacity: 0;
-        white-space: nowrap;
-    }
-
-    &:hover {
-        &.edit {
-            background-color: var(--primaryContainer);
-            color: var(--onPrimaryContainer);
-            width: 90px;
-
-            .icon {
-                transform: translateX(15px); // pousse l'icône à droite
-            }
-
-            .text {
-                opacity: 1;
-                transform: translateX(-55px);
-            }
-        }
-
-        &.delete {
-            background-color: var(--error);
-            color: var(--onError);
-            width: 104px;
-
-            .icon {
-                transform: translateX(22px); // pousse l'icône à droite
-            }
-
-            .text {
-                opacity: 1;
-                transform: translateX(-62px);
-            }
-        }
-
-        &.save {
-            background-color: var(--primaryContainer);
-            color: var(--onPrimaryContainer);
-            width: 110px;
-
-            .icon {
-                transform: translateX(25px);
-            }
-
-            .text {
-                transform: translateX(-65px);
-                opacity: 1;
-            }
-        }
-
-        &.cancel {
-            background-color: var(--error);
-            color: var(--onError);
-            width: 90px;
-
-            .icon {
-                transform: translateX(15px); // pousse l'icône à droite
-            }
-
-            .text {
-                opacity: 1;
-                transform: translateX(-55px);
-            }
-        }
+    .add {
+        margin-left: 0.5rem;
+        background-color: var(--primaryContainer);
+        color: var(--onPrimaryContainer);
+        // transition: all 0.2s ease-out;
+        // &:hover {
+        //     background-color: var(--primaryFixedDim);
+        //     color: var(--onPrimaryFixedVariant);
+        //     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        // }
     }
 }
+
+// .animated-button {
+//     position: relative;
+//     overflow: hidden;
+//     width: 40px;
+//     /* Taille de base */
+//     height: 40px;
+//     background-color: transparent;
+//     cursor: pointer;
+//     transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out;
+
+//     .content {
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
+//     }
+
+//     &.edit,
+//     &.save {
+//         color: var(--primary);
+//     }
+
+//     &.delete,
+//     &.cancel {
+//         color: var(--error);
+//     }
+
+//     &:disabled {
+//         opacity: 0.3;
+//         cursor: not-allowed;
+//     }
+
+//     .icon,
+//     .text {
+//         position: absolute;
+//         transition: transform 0.4s ease-out, opacity 0.3s ease-out;
+//         pointer-events: none;
+//     }
+
+//     .icon {
+//         left: 50%;
+//         transform: translateX(-50%);
+//         font-size: 20px;
+//     }
+
+//     .text {
+//         left: 20px;
+//         opacity: 0;
+//         white-space: nowrap;
+//     }
+
+//     &:hover {
+//         &.edit {
+//             background-color: var(--primaryContainer);
+//             color: var(--onPrimaryContainer);
+//             width: 90px;
+
+//             .icon {
+//                 transform: translateX(15px); // pousse l'icône à droite
+//             }
+
+//             .text {
+//                 opacity: 1;
+//                 transform: translateX(-55px);
+//             }
+//         }
+
+//         &.delete {
+//             background-color: var(--error);
+//             color: var(--onError);
+//             width: 104px;
+
+//             .icon {
+//                 transform: translateX(22px); // pousse l'icône à droite
+//             }
+
+//             .text {
+//                 opacity: 1;
+//                 transform: translateX(-62px);
+//             }
+//         }
+
+//         &.save {
+//             background-color: var(--primaryContainer);
+//             color: var(--onPrimaryContainer);
+//             width: 110px;
+
+//             .icon {
+//                 transform: translateX(25px);
+//             }
+
+//             .text {
+//                 transform: translateX(-65px);
+//                 opacity: 1;
+//             }
+//         }
+
+//         &.cancel {
+//             background-color: var(--error);
+//             color: var(--onError);
+//             width: 90px;
+
+//             .icon {
+//                 transform: translateX(15px); // pousse l'icône à droite
+//             }
+
+//             .text {
+//                 opacity: 1;
+//                 transform: translateX(-55px);
+//             }
+//         }
+//     }
+// }

@@ -1,0 +1,20 @@
+<div class="mobile-card" *ngFor="let item of items; trackBy: trackById">
+    <div class="card-header" (click)="toggle(item)">
+        <div class="title">{{ item.name || 'Sans nom' }}</div>
+    </div>
+
+    <div class="card-details" *ngIf="expandedItemId === item._id">
+        <!-- 💡 Ici on insère ton propre template -->
+        <ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item }">
+        </ng-container>
+
+        <div class="card-actions">
+            <button mat-icon-button matTooltip="Modifier" (click)="edit.emit(item)">
+                <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Supprimer" (click)="delete.emit(item)">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </div>
+    </div>
+</div>

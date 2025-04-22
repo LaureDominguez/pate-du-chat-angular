@@ -1,0 +1,36 @@
+.mobile-card {
+    background: var(--surfaceContainer);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+    .card-header {
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .title {
+        font-size: 1.1rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .subtitle {
+        color: var(--onSurfaceVariant);
+        font-size: 0.9rem;
+    }
+
+    .card-details {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+    }
+}
