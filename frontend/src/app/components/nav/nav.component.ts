@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AppModule } from '../../app.module';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-nav',
@@ -12,7 +13,6 @@ import { AppModule } from '../../app.module';
   standalone: true,
   imports: [
     AppModule,
-    // Module pour les routes
     RouterModule,
   ],
 })
@@ -25,18 +25,21 @@ export class NavComponent implements OnInit {
   ];
 
   isHandset$: Observable<boolean>;
+  toggleState: boolean = false;
   pageTitle: string = '';
 
   constructor(
     private breakpointObserver: BreakpointObserver,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    public themeService: ThemeService // Injecter le service de thème
   ) {
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
       map((result) => result.matches),
       shareReplay()
     );
   }
+
   ngOnInit(): void {
     // Écouter les changements de navigation
     this.router.events
@@ -53,5 +56,11 @@ export class NavComponent implements OnInit {
       .subscribe((title: string) => {
         this.pageTitle = title || 'Les Pâtes du Chat'; // Mettre à jour le titre ou définir un titre par défaut
       });
+  }
+
+  onToggleChange(event: any): void {
+    this.toggleState = event?.target?.checked ?? false;
+    const theme = this.toggleState ? 'dark' : 'light';
+    this.themeService.setTheme(theme);
   }
 }

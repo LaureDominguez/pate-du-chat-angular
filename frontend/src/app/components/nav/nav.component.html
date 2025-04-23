@@ -6,8 +6,9 @@
     fixedInViewport
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="(isHandset$ | async) === false">
-    <mat-toolbar>Les Pâtes du Chat</mat-toolbar>
+    [opened]="(isHandset$ | async) === false"
+  >
+    <mat-toolbar class="page-title">Les Pâtes du Chat</mat-toolbar>
 
     <mat-divider></mat-divider>
 
@@ -23,18 +24,40 @@
   <!-- Contenu principal -->
   <mat-sidenav-content>
     <mat-toolbar>
-        <button *ngIf= "isHandset$ | async">
+        <button 
+          *ngIf= "isHandset$ | async"
           type="button"
           aria-label="Toggle sidenav"
           mat-icon-button
-          (click)="drawer.toggle()">
+          (click)="drawer.toggle()"
+        >
           <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
         </button>
+      
       <span class="page-title">{{ pageTitle }}</span>
+
+      <span class="spacer"></span>
+
+      <!-- 🌙 Toggle thème -->
+      <label class="theme-toggle">
+        <input
+          type="checkbox"
+          [checked]="toggleState"
+          (change)="onToggleChange($event)"
+        />
+        <span class="toggle-track"></span>
+        <span class="toggle-thumb">
+          <mat-icon class="icon">
+            {{ toggleState ? 'dark_mode' : 'light_mode' }}
+          </mat-icon>
+        </span>
+      </label>
+
     </mat-toolbar>
 
     <!-- Contenu de l'application -->
     <router-outlet></router-outlet>
 
   </mat-sidenav-content>
+
 </mat-sidenav-container>
