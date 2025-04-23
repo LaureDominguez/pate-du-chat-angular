@@ -1,6 +1,11 @@
-<div class="bento-container">
-    <div class="bento-item" *ngFor="let panel of panels" [class.expanded]="activePanel === panel.key"
-        (click)="togglePanel(panel.key)">
+<div #bentoContainer class="bento-container">
+    <div 
+        class="bento-item anim-expand" 
+        *ngFor="let panel of panels" 
+        [class.expanded]="activePanel === panel.key"
+        [class.solo]="isSolo(panel.key)"
+        (click)="togglePanel(panel.key)"
+    >
         <h3 *ngIf="activePanel !== panel.key">{{ panel.label }}</h3>
         <p *ngIf="activePanel !== panel.key" class="count">
             {{ panel.count }} {{ panel.label }}

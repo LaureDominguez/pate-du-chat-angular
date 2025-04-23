@@ -1,4 +1,4 @@
-import { Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import { Component, ElementRef, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import { AdminModule } from './admin.module';
 import { IngredientAdminComponent } from './ingredient-admin/ingredient-admin.component';
 import { ProductAdminComponent } from './product-admin/product-admin.component';
@@ -8,6 +8,7 @@ import { CategoryService } from '../../services/category.service';
 import { SupplierService } from '../../services/supplier.service';
 import { IngredientService } from '../../services/ingredient.service';
 import { ProductService } from '../../services/product.service';
+import autoAnimate from '@formkit/auto-animate';
 
 @Component({
   selector: 'app-admin',
@@ -33,17 +34,12 @@ export class AdminComponent implements OnInit {
     { key: 'suppliers', label: 'Fournisseurs', count: 0 },
   ];
 
-  // panels = [
-  //   { key: 'products', label: 'Produits', count: 0, hidden: true },
-  //   { key: 'ingredients', label: 'Ingrédients', count: 0, hidden: true },
-  //   { key: 'categories', label: 'Catégories', count: 0, hidden: true },
-  //   { key: 'suppliers', label: 'Fournisseurs', count: 0, hidden: true },
-  // ];
-
   @ViewChild('productTemplate', { static: true }) productTemplate!: TemplateRef<any>;
   @ViewChild('ingredientTemplate', { static: true }) ingredientTemplate!: TemplateRef<any>;
   @ViewChild('categoryTemplate', { static: true }) categoryTemplate!: TemplateRef<any>;
   @ViewChild('supplierTemplate', { static: true }) supplierTemplate!: TemplateRef<any>;
+
+  @ViewChild('bentoContainer', { static: true }) bentoContainer!: ElementRef;
 
 
   constructor(
@@ -55,6 +51,12 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCounts();
+  }
+
+  ngAfterViewInit(): void {
+    if (this.bentoContainer?.nativeElement) {
+      autoAnimate(this.bentoContainer.nativeElement);
+    }
   }
 
   loadCounts(): void {
@@ -89,14 +91,11 @@ export class AdminComponent implements OnInit {
       // target.hidden = false;
       this.activePanel = panelKey;
     }
-    // console.log('📋 Active panel:', this.activePanel);
-    // console.log('📋 Panels:', this.panels);
-    // console.log('📋 Target:', target);
-  }  
-
-  // isVisible(panelKey: string): boolean {
-  //   return !!this.panels.find(p => p.key === panelKey)?.hidden;
-  // }
+  }
+  
+  isSolo(panelKey: string): boolean {
+    return this.activePanel !== null && this.activePanel !== panelKey;
+  }
   
 
   closePanel(event: Event) {
