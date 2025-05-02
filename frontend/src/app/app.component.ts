@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavComponent } from './components/nav/nav.component';
 import { ThemeService } from './services/theme.service';
 import { AppModule } from './app.module';
@@ -12,13 +12,12 @@ import { DeviceService } from './services/device.service';
 })
 export class AppComponent{
   title: string = 'les_pates_du_chat';
-  toggleState: boolean = false;
   
   constructor(
     private themeService: ThemeService,
     private deviceService: DeviceService
   ) {
-    console.log('📱 deviceService.isMobile :', this.deviceService.isMobile);
+    // console.log('📱 deviceService.isMobile :', this.deviceService.isMobile);
   }
 
   ngOnInit() {
@@ -27,28 +26,5 @@ export class AppComponent{
     });
   }
 
-
-  // switchToLightTheme() {
-  //   console.log('switchToLightTheme');
-  //   this.themeService.setTheme('light');
-  // }
-
-  // switchToDarkTheme() {
-  //   console.log('switchToDarkTheme');
-  //   this.themeService.setTheme('dark');
-  // }
-
-
-  // onToggleChange(event: any): void {
-  //   this.toggleState = event?.target?.checked ?? false;
-
-  //   console.log('📋 toggleState :', this.toggleState);
-
-  //   if (this.toggleState) {
-  //     this.switchToDarkTheme();   // si activé
-  //   } else {
-  //     this.switchToLightTheme();  // si désactivé
-  //   }
-  // }
 }
 

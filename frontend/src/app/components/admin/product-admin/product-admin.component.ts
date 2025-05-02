@@ -22,6 +22,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { DEFAULT_CATEGORY } from '../../../models/category';
+import { DeviceService } from '../../../services/device.service';
 
 @Component({
   selector: 'app-product-admin',
@@ -61,12 +62,23 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     private ingredientService: IngredientService,
     private categoryService: CategoryService,
     private imageService: ImageService,
+    private deviceService: DeviceService,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.loadData(); // Charge les données initiales
     this.fetchDlcs(); // Récupère la liste des DLCs
+    this.deviceService.isMobile$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((isMobile) => {
+        this.isMobile = isMobile;
+        console.log('Mobile :', this.deviceService.isMobile);
+        console.log('OS :', this.deviceService.os);
+        console.log('Navigateur :', this.deviceService.browser);
+      });
+
+      console.log('tous les produits : ', this.products)
   }
 
   ngOnDestroy(): void {

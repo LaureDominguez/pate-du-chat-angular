@@ -152,7 +152,7 @@ mat-divider {
     &.expanded {
         grid-column: 1 / -1; // Prend toute la largeur
         min-height: 400px; // Augmente la hauteur en mode étendu
-        padding: 25px;
+        // padding: 25px;
         display: flex;
         justify-content: flex-start;
         align-items: stretch;
