@@ -2,6 +2,7 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { NavComponent } from './nav.component';
+import { ActivatedRoute } from '@angular/router';
 
 describe('NavComponent', () => {
   let component: NavComponent;
@@ -9,7 +10,12 @@ describe('NavComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule]
+      imports: [NoopAnimationsModule],
+      declarations: [NavComponent],
+      providers: [
+        { provide: ActivatedRoute, 
+          useValue: { snapshot: { get: (key: string) => null } } },
+      ],
     }).compileComponents();
   }));
 

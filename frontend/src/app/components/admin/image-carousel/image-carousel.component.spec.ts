@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ImageCarouselComponent } from './image-carousel.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 describe('ImageCarouselComponent', () => {
   let component: ImageCarouselComponent;
@@ -8,7 +9,12 @@ describe('ImageCarouselComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ImageCarouselComponent]
+      imports: [
+        ImageCarouselComponent,
+        DragDropModule
+      ],
+      declarations: [ImageCarouselComponent],
+      providers: [],
     })
     .compileComponents();
 
@@ -17,7 +23,7 @@ describe('ImageCarouselComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('devrait être créé', () => {
     expect(component).toBeTruthy();
   });
 });

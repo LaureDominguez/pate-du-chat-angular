@@ -10,7 +10,16 @@ describe('DeviceService', () => {
     service = TestBed.inject(DeviceService);
   });
 
-  it('should be created', () => {
+  it('devrait être crée', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('doit détecter un appareil mobile quand userAgent contient "Android"', () => {
+    // Simulation d'un userAgent Android
+    spyOnProperty(window.navigator, 'userAgent', 'get').and.returnValue('Mozilla/5.0 (Linux; Android 10)');
+    spyOnProperty(window, 'innerWidth', 'get').and.returnValue(400);
+
+    const newService = new DeviceService();
+    expect(newService.isMobile).toBeTrue();
   });
 });

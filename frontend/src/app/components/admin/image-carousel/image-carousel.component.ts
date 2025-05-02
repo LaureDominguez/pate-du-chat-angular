@@ -1,9 +1,8 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import { AdminModule } from '../admin.module';
 import { AppModule } from '../../../app.module';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ProcessedImage } from '../../../models/image';
-import { animate, query, style, transition, trigger } from '@angular/animations';
 
 import autoAnimate from '@formkit/auto-animate';
 
@@ -12,31 +11,9 @@ import autoAnimate from '@formkit/auto-animate';
   imports: [
     AdminModule,
     AppModule,
-
   ],
   templateUrl: './image-carousel.component.html',
   styleUrls: ['./image-carousel.component.scss'],
-  // animations: [
-  //   trigger('reorderAnimation', [
-  //     transition('* <=> *', [
-  //       query(':enter, :leave', [
-  //         style({
-  //           transform: 'translateX(0)',
-  //           opacity: 1,
-  //         }),
-  //       ], { optional: true }),
-
-  //       query(':enter', [
-  //         style({ transform: 'translateX(30px)', opacity: 0 }),
-  //         animate('200ms ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
-  //       ], { optional: true }),
-
-  //       query(':leave', [
-  //         animate('200ms ease-in', style({ transform: 'translateX(-30px)', opacity: 0 })),
-  //       ], { optional: true }),
-  //     ]),
-  //   ]),
-  // ],
 })
 export class ImageCarouselComponent implements AfterViewInit {  
   @Input() images: ProcessedImage[] = [];
