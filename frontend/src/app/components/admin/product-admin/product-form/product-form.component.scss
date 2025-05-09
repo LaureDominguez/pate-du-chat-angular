@@ -1,7 +1,7 @@
 @use '@angular/material' as mat;
 
 ::ng-deep .mat-mdc-dialog-surface {
-    background-color: var(--surfaceBright);
+    background-color: var(--surface-bright);
 }
 
 form {
@@ -10,8 +10,7 @@ form {
     padding: 0.5rem;
 
     .light {
-        @include mat.divider-overrides((color: var(--surfaceDim),
-            ));
+        @include mat.divider-overrides((color: var(--surface-dim)));
     }
 }
 
@@ -42,27 +41,25 @@ form {
 
 mat-form-field {
     border-radius: 10px;
-    color: var(--onSurface);
-    background-color: var(--surfaceBright);
+    color: var(--on-surface);
+    background-color: var(--surface-bright);
     transition: all 0.2s ease;
     margin: 0.3rem 0;
 
     &:hover {
-        color: var(--onSurface);
-        background-color: var(--surfaceContainerLow);
+        color: var(--on-surface);
+        background-color: var(--surface-container-low);
     }
 
     &:focus-within {
-        color: var(--onSurface);
-        background-color: var(--surfaceContainerLow);
+        color: var(--on-surface);
+        background-color: var(--surface-container-low);
     }
 
     &.ng-invalid.ng-touched {
         color: var(--error);
-        background-color: var(--errorContainer);
+        background-color: var(--error-container);
     }
-
-
 }
 
 mat-label {
@@ -70,54 +67,46 @@ mat-label {
 }
 
 ::ng-deep .mat-mdc-autocomplete-panel {
-    background-color: var(--surfaceBright) !important;
-    color: var(--onSurface) !important;
-    border-radius: 8px; // arrondi optionnel
+    background-color: var(--surface-bright) !important;
+    color: var(--on-surface) !important;
+    border-radius: 8px;
 }
 
 ::ng-deep .mat-mdc-select-panel {
-    background-color: var(--surfaceBright) !important;
-    color: var(--onSurface) !important;
-    border-radius: 8px; // arrondi optionnel
+    background-color: var(--surface-bright) !important;
+    color: var(--on-surface) !important;
+    border-radius: 8px;
 }
 
 ::ng-deep mat-option {
-    color: var(--onSurface) !important;
-    background-color: var(--surfaceBright) !important;
+    color: var(--on-surface) !important;
+    background-color: var(--surface-bright) !important;
 
     &:hover {
-        color: var(--onPrimaryFixed) !important;
-        background-color: var(--primaryFixed) !important;
+        color: var(--on-primary-fixed) !important;
+        background-color: var(--primary-fixed) !important;
     }
 }
 
 .selected-ingredient {
     font-weight: bold;
-    background: var(--secondaryContainer) !important; // ou une couleur plus discrète comme --surfaceContainer
-    color: var(--onSecondaryContainer) !important;
+    background: var(--secondary-container) !important;
+    color: var(--on-secondary-container) !important;
     &:hover {
         filter: brightness(1.05);
         opacity: 0.95;
     }
 }
 
-
-mat-error, mat-hint, mat-label{
+mat-error, mat-hint, mat-label {
     white-space: nowrap;
     overflow: hidden;
-    // text-overflow: ellipsis;
 }
 
 ///////////////////////////////
-
 .dynamic_columns {
     display: flex;
     gap: 2rem;
-
-    // @media (min-width: 768px) {
-    //     flex-direction: row;
-    //     justify-content: space-between;
-    // }
 
     .form-column {
         flex: 1;
@@ -128,10 +117,6 @@ mat-error, mat-hint, mat-label{
 }
 
 ///////////////////////////////
-/// colonne gauche
-
-///////////////////////////////
-// Nom - cetagorie - description
 .detail {
     display: flex;
     flex-direction: column;
@@ -150,27 +135,23 @@ mat-error, mat-hint, mat-label{
     }
 }
 
-
-///////////////////////////////
-// Prix - unité
 .prix_unite,
 .stock_quantity {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    span{
+
+    span {
         margin-left: 0.5rem;
     }
 }
-
-
 
 .stock {
     mat-label {
         padding: 1rem;
     }
-    mat-hint{
+    mat-hint {
         font-size: 0.8rem;
         color: var(--outline);
         font-style: italic;
@@ -179,42 +160,26 @@ mat-error, mat-hint, mat-label{
         transition: opacity 0.3s ease;
     }
 
-    @include mat.slide-toggle-overrides(( // bouton
-            handle-surface-color: var(--secondaryFixed),
-            unselected-handle-color: var(--secondaryContainer),
-
-            selected-handle-color: var(--tertiaryContainer),
-            selected-focus-handle-color: var(--tertiaryFixedDim),
-            selected-hover-handle-color: var(--tertiaryFixedDim),
-
-            disabled-unselected-handle-color: var(--surfaceContainer),
-            // icone
-            unselected-icon-color: var(--onSecondaryContainer),
-            selected-icon-color: var(--onTertiaryContainer),
-
-            // bordure
-            track-outline-color: var(--surfaceDim),
-            selected-track-outline-color: var(--tertiaryFixedDim),
-
-            // glissière
-            // selected-focus-track-color: var(--tertiaryFixed),
-            // selected-hover-track-color: var(--tertiaryFixed),
-            // selected-track-color: var(--tertiaryFixed),
-            disabled-unselected-track-color: var(--surfaceDim),
-            // unselected-hover-handle-color: orange,
-
-            // label-text-color: rgb(58, 192, 154)
-            // unselected-hover-state-layer-opacity: 0.8,
-            // unselected-hover-state-layer-color: red,
-        ));
+    @include mat.slide-toggle-overrides((
+        handle-surface-color: var(--secondary-fixed),
+        unselected-handle-color: var(--secondary-container),
+        selected-handle-color: var(--tertiary-container),
+        selected-focus-handle-color: var(--tertiary-fixed-dim),
+        selected-hover-handle-color: var(--tertiary-fixed-dim),
+        disabled-unselected-handle-color: var(--surface-container),
+        unselected-icon-color: var(--on-secondary-container),
+        selected-icon-color: var(--on-tertiary-container),
+        track-outline-color: var(--surface-dim),
+        selected-track-outline-color: var(--tertiary-fixed-dim),
+        disabled-unselected-track-color: var(--surface-dim)
+    ));
 }
 
-// animation effet "écriture"
 .slow-reveal {
     opacity: 0;
-        animation: fadeInText 1s ease forwards;
-    }
-    
+    animation: fadeInText 1s ease forwards;
+}
+
 @keyframes fadeInText {
     0% {
         opacity: 0;
@@ -227,18 +192,11 @@ mat-error, mat-hint, mat-label{
     }
 }
 
-
-///////////////////////////////
-/// colonne droite
-
 .cooking {
     display: flex;
     flex-direction: column;
 }
 
-///////////////////////////////
-/// Ingrédients
-// Afficher les petites coches des ingrédients selectionnés
 .composition {
     flex-direction: row-reverse;
 }
@@ -252,17 +210,15 @@ mat-error, mat-hint, mat-label{
 
 ::ng-deep .custom-tooltip {
     white-space: pre-line;
-
     ::after {
         font-weight: bold;
     }
 
-    @include mat.tooltip-overrides((container-color: var(--surfaceContainer),
-            supporting-text-color: var(--onSurface)));
+    @include mat.tooltip-overrides((
+        container-color: var(--surface-container),
+        supporting-text-color: var(--on-surface)
+    ));
 }
-
-//////////////////////////////////////
-//// DLC
 
 .dlc {
     display: flex;
@@ -286,17 +242,11 @@ mat-error, mat-hint, mat-label{
     }
 }
 
-
-
-//////////////////////////////////////
-//// images 
-
 .bloc_images {
     padding: 1rem;
     display: flex;
     flex-direction: column;
 
-    // gap: 2rem;
     button {
         width: 200px;
         align-self: end;

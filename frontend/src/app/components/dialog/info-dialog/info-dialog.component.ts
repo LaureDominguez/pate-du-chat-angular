@@ -10,6 +10,9 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
   styleUrls: ['./info-dialog.component.scss'],
 })
 export class InfoDialogComponent {
+  ngOnInit() {
+    throw new Error('Method not implemented.');
+  }
   title: string = '';
   constructor(
     public dialogRef: MatDialogRef<InfoDialogComponent>,

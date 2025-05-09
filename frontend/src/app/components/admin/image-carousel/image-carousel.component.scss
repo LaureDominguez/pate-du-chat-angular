@@ -53,8 +53,8 @@
         }
 
         button {
-            background: color-mix(in srgb, var(--surfaceBright) 70%, transparent);
-            color: var(--outlineVariant);
+            background: color-mix(in srgb, var(--surface-bright) 70%, transparent);
+            color: var(--outline-variant);
             border: none;
             font-size: px;
             height: 40px;
@@ -76,8 +76,8 @@
             }
 
             &:hover {
-                background: color-mix(in srgb, var(--outlineVariant) 70%, transparent);
-                color: var(--surfaceBright);
+                background: color-mix(in srgb, var(--outline-variant) 70%, transparent);
+                color: var(--surface-bright);
             }
         }
 
@@ -100,7 +100,7 @@
     flex: 0 0 auto;
     width: 100px;
     height: 100px;
-    border: 2px solid var(--surfaceDim);
+    border: 2px solid var(--surface-dim);
     border-radius: 8px;
     overflow: hidden;
     cursor: grab;
@@ -122,7 +122,7 @@
         position: absolute;
         top: 2px;
         left: 2px;
-        background: var(--tertiaryContainer);
+        background: var(--tertiary-container);
         color: white;
         display: flex;
         justify-content: space-around;
@@ -176,7 +176,7 @@
             transition: all 0.2s ease;
 
             &.download-button {
-                background: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
+                background: color-mix(in srgb, var(--tertiary-container) 70%, transparent);
                 color: white;
 
                 &:hover {

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FinalProduct } from '../../../models/product';
 import { ProductService } from '../../../services/product.service';
 import { ShopDetailComponent } from "../shop-detail/shop-detail.component";

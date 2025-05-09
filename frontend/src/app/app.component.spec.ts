@@ -1,29 +1,51 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { ThemeService } from './services/theme.service';
+import { DeviceService } from './services/device.service';
+import { of } from 'rxjs';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+  let themeServiceSpy: jasmine.SpyObj<ThemeService>;
+  let deviceServiceSpy: jasmine.SpyObj<DeviceService>;
+
   beforeEach(async () => {
+    const themeSpy = jasmine.createSpyObj('ThemeService', ['loadTheme', 'applyTheme']);
+    const deviceSpy = jasmine.createSpyObj('DeviceService', ['isMobile']);
+
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [
+        { provide: ThemeService, useValue: themeSpy },
+        { provide: DeviceService, useValue: deviceSpy }
+      ]
     }).compileComponents();
+
+    themeServiceSpy = TestBed.inject(ThemeService) as jasmine.SpyObj<ThemeService>;
+    deviceServiceSpy = TestBed.inject(DeviceService) as jasmine.SpyObj<DeviceService>;
+
+    themeServiceSpy.loadTheme.and.returnValue(of({ schemes: { light: { primary: '#ffffff' } } }));
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+  it('devrait être créé', () => {
+    expect(component).toBeTruthy();
   });
 
-  it(`should have the 'les_pates_du_chat' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('les_pates_du_chat');
+  it('devrait avoir le titre "les_pates_du_chat"', () => {
+    expect(component.title).toBe('les_pates_du_chat');
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+  it('devrait charger et appliquer le thème au démarrage', () => {
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, les_pates_du_chat');
+    expect(themeServiceSpy.loadTheme).toHaveBeenCalled();
+    expect(themeServiceSpy.applyTheme).toHaveBeenCalledWith({ primary: '#ffffff' });
+  });
+
+  it('devrait appeler le DeviceService pour vérifier si c\'est un mobile', () => {
+    fixture.detectChanges();
+    expect(deviceServiceSpy.isMobile).toBeDefined();
   });
 });

@@ -4,5 +4,5 @@ table th:last-child, table td:last-child {
 }
 
 .bio {
-  color: var(--tertiaryFixedDim);
+  color: var(--tertiary-fixedDim);
 }/*# sourceMappingURL=ingredient-admin.component.css.map */

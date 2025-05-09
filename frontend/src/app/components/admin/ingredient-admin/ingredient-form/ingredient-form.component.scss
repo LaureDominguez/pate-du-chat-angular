@@ -2,31 +2,30 @@
 
 ::ng-deep .mat-mdc-dialog-surface {
     background-color: var(--background);
-    color: var(--onBackground);
+    color: var(--on-background);
 }
 
 // ✅ Gestion de l'affichage des listes déroulantes (mat-select, mat-option, mat-optgroup)
 ::ng-deep .mat-mdc-select-panel {
-    background-color: var(--surfaceContainer) !important;
+    background-color: var(--surface-container) !important;
 }
 
 ::ng-deep .mat-mdc-option {
-    color: var(--onSurface) !important;
-    background-color: var(--surfaceContainer) !important;
+    color: var(--on-surface) !important;
+    background-color: var(--surface-container) !important;
     &:hover {
-        color: var(--onPrimaryFixed) !important;
-        background-color: var(--primaryFixed) !important;
+        color: var(--on-primary-fixed) !important;
+        background-color: var(--primary-fixed) !important;
     }
 }
 
 // ✅ Correction du label transparent sur mat-optgroup
 ::ng-deep .mat-mdc-optgroup-label {
-    color: var(--onSurface) !important;
+    color: var(--on-surface) !important;
     font-weight: bold;
-    background-color: var(--surfaceContainer) !important;
+    background-color: var(--surface-container) !important;
     padding: 8px 12px;
 }
-
 
 form {
     display: flex;
@@ -41,14 +40,14 @@ form {
         border-radius: 5px;
         width: 100%;
         background-color: var(--background);
-        color: var(--onBackground);
+        color: var(--on-background);
         &:focus-within {
-            color: var(--onSurface);
-            background-color: var(--surfaceContainer);
+            color: var(--on-surface);
+            background-color: var(--surface-container);
         }
         &.ng-invalid.ng-touched {
             color: var(--error);
-            background-color: var(--errorContainer);
+            background-color: var(--error-container);
         }
     }
 }
@@ -58,12 +57,11 @@ mat-label {
     flex-shrink: 0;
 }
 
-.header-fields{
+.header-fields {
     display: flex;
     flex-direction: column;
 
-    // Nom + label BIO
-    .name{
+    .name {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -74,25 +72,21 @@ mat-label {
             margin: 1rem;
             flex-shrink: 0;
         }
-        // background-color: pink;
+
         @include mat.slide-toggle-overrides((
-            track-outline-color: var(--outlineVariant), //border unselected
-            selected-track-outline-color: var(--outlineVariant), //border selected
-
-            unselected-icon-color: var(--onSecondaryContainer), //icon unselected
-            selected-icon-color: var(--onTertiaryFixedVariant), //icon selected
-
-            handle-surface-color: var(--tertiaryFixedDim), //handle selected
-            unselected-handle-color: var(--secondaryContainer), //handle unselected
-            unselected-hover-handle-color: var(--secondaryContainer), //handle unselected hover
-
-            label-text-weight: 600,
+            track-outline-color: var(--outline-variant),
+            selected-track-outline-color: var(--outline-variant),
+            unselected-icon-color: var(--on-secondary-container),
+            selected-icon-color: var(--on-tertiary-fixed-variant),
+            handle-surface-color: var(--tertiary-fixed-dim),
+            unselected-handle-color: var(--secondary-container),
+            unselected-hover-handle-color: var(--secondary-container),
+            label-text-weight: 600
         ));
     }
 }
 
-
-@keyframes slideInLeft {
+@keyframes slide-in-left {
     from {
         transform: translateX(-100%);
         opacity: 0;
@@ -103,7 +97,7 @@ mat-label {
     }
 }
 
-@keyframes slideInRight {
+@keyframes slide-in-right {
     from {
         transform: translateX(100%);
         opacity: 0;
@@ -114,8 +108,7 @@ mat-label {
     }
 }
 
-
-.supplier{
+.supplier {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -124,25 +117,24 @@ mat-label {
     }
 }
 
-.type{
+.type {
     @include mat.button-toggle-overrides((
-        background-color: var(--surfaceContainer),
-        selected-state-background-color: var(--primaryFixed),
+        background-color: var(--surface-container),
+        selected-state-background-color: var(--primary-fixed)
     ));
 }
 
-.dynamic-fields{
+.dynamic-fields {
     display: grid;
-    flex-direction: column;
     position: relative;
     overflow: hidden;
     transition: height 0.3s ease-out;
 
-    &.simple-active{
+    &.simple-active {
         height: 280px;
     }
 
-    &.compose-active{
+    &.compose-active {
         height: auto;
     }
 
@@ -158,7 +150,7 @@ mat-label {
         &.animation {
             opacity: 1;
             transform: translateX(0);
-            animation: slideInLeft 0.3s ease-out;           
+            animation: slide-in-left 0.3s ease-out;
         }
     }
 
@@ -168,41 +160,33 @@ mat-label {
         &.animation {
             opacity: 1;
             transform: translateX(0);
-            animation: slideInRight 0.3s ease-out;
+            animation: slide-in-right 0.3s ease-out;
         }
     }
 }
 
-
 // Liste des allergènes
-.allergen-form-field{
+.allergen-form-field {
     padding-top: 0.5rem;
 }
 .allergen-grid {
     max-height: 150px;
     overflow: auto;
     margin-top: 0.5rem;
-    border: 2px solid var(--outlineVariant);
+    border: 2px solid var(--outline-variant);
     border-radius: 8px;
     padding: 0.8rem;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+
     mat-checkbox {
         &:hover {
             border-radius: 8px;
-            background-color: var(--surfaceContainer);
+            background-color: var(--surface-container);
         }
     }
 }
 
-.allergen-form-field, .file-upload, .type{
-    mat-label {
-        margin: 1rem;
-        line-height: 2rem;
-    }
-}
-
-// Régime allimentaire (vege / vegan)
 .regime {
     display: flex;
     align-items: center;
@@ -212,15 +196,16 @@ mat-label {
         line-height: 2rem;
         padding: 0 1rem;
     }
-    div{
+    div {
         display: flex;
         justify-content: space-evenly;
         width: 65%;
+
         mat-checkbox {
             padding-right: 0.5rem;
             &:hover {
                 border-radius: 8px;
-                background-color: var(--surfaceContainer);
+                background-color: var(--surface-container);
             }
         }
     }
@@ -233,18 +218,16 @@ mat-label {
     margin-top: 8px;
 }
 
-
 mat-divider {
     margin: 0.5rem 0;
 }
 
 // Gestion des images
 .images-fields {
-    // background-color: red;
     flex-grow: 1;
     flex-shrink: 0;
-
 }
+
 .file-upload {
     display: flex;
     align-items: center;
@@ -256,15 +239,16 @@ mat-divider {
 .previews, .existing-images {
     max-height: 120px;
     padding: 0.5rem;
-    border: 2px solid var(--surfaceVariant);
+    border: 2px solid var(--surface-variant);
     border-radius: 8px;
+
     .previews-container {
-        display: flex; 
-        flex-wrap: nowrap; 
+        display: flex;
+        flex-wrap: nowrap;
         gap: 16px;
-        overflow-x: auto; 
-        overflow-y: hidden; 
-        padding-bottom: 5px; 
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 5px;
     }
 
     .preview-item {
@@ -285,13 +269,15 @@ mat-divider {
         width: 100px;
         height: 100px;
         overflow: hidden;
+
         img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
-        div{
+
+        div {
             position: absolute;
             top: 0;
             right: 0;
@@ -299,23 +285,24 @@ mat-divider {
             display: flex;
             flex-direction: column;
             justify-content: space-around;
+
             :first-child {
                 background-color: color-mix(in srgb, var(--error) 70%, transparent);
                 color: white;
             }
+
             :last-child {
-                background-color: color-mix(in srgb, var(--tertiaryContainer) 70%, transparent);
+                background-color: color-mix(in srgb, var(--tertiary-container) 70%, transparent);
                 color: white;
             }
         }
-        .delete{
+
+        .delete {
             position: absolute;
             top: 0;
             right: 0;
             background-color: color-mix(in srgb, var(--error) 70%, transparent);
             color: white;
         }
-
     }
 }
-

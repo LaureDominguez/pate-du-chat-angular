@@ -1,7 +1,7 @@
 .product-card {
   position: relative;
-  background-color: var(--surfaceContainer);
-  color: var(--onSecondaryContainer);
+  background-color: var(--surface-container);
+  color: var(--on-secondary-container);
 }
 .product-card h2 {
   font-size: 1.2rem;
@@ -42,8 +42,8 @@ mat-card-content {
   font-size: 1rem;
   font-weight: bold;
   line-height: 3rem;
-  background-color: var(--primaryContainer);
-  color: var(--onPrimaryContainer);
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
   padding: 0.5rem;
   border-radius: 8px;
 }
@@ -79,8 +79,8 @@ mat-card-content {
   font-style: italic;
 }
 .product-card.selected mat-card-content .composition {
-  background-color: var(--primaryContainer);
-  color: var(--onPrimaryContainer);
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
   padding: 1rem;
   border-radius: 8px;
   text-align: left;
@@ -92,7 +92,7 @@ mat-card-content {
 }
 .product-card.selected mat-card-content .composition td:first-child {
   font-weight: bold;
-  text-wrap: nowrap;
+  white-space: nowrap;
 }
 
 h1 {

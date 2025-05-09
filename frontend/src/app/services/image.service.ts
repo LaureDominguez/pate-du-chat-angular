@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { lastValueFrom, Observable } from 'rxjs';
+import { lastValueFrom, Observable, throwError } from 'rxjs';
 
 interface UploadResponse {
   message: string;
@@ -21,22 +21,18 @@ export class ImageService {
     image.forEach((file) => {
       formData.append('images', file);
     });
-    // console.log(
-    //   'image.service -> FormData Keys:',
-    //   Array.from((formData as any).keys())
-    // );
-    // console.log(
-    //   'image.service -> FormData Values:',
-    //   Array.from((formData as any).values())
-    // );
     return this.http.post<UploadResponse>(`${this.baseUrl}`, formData);
   }
 
   getImageUrl(imagePath: string): string {
+    if (!imagePath) {
+      console.error('❌ Chemin d\'image vide.');
+      return '';
+    }
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
-    const url = `${this.baseUrl}/${cleanPath}`;
-    //console.log(`🖼️ URL générée par getImageUrl: ${url}`);
-    return url;
+    // const url = `${this.baseUrl}/${cleanPath}`;
+    // return url;
+    return cleanPath.startsWith('http') ? cleanPath : `${this.baseUrl}/${cleanPath}`;
   }
 
   async downloadImage(
@@ -44,15 +40,12 @@ export class ImageService {
     customFilename: string
   ): Promise<void> {
     try {
-      // 🔥 Extraction et nettoyage du chemin de l'image
       let cleanPath = imagePath;
 
-      // Si l'URL contient `http://` ou `https://`, extraire uniquement le nom du fichier
-      if (imagePath.includes('http://') || imagePath.includes('https://')) {
-        cleanPath = new URL(imagePath).pathname; // Extrait "/uploads/nom_fichier.ext"
+      if (/^https?:\/\//.test(imagePath)) {
+        cleanPath = new URL(imagePath).pathname;
       }
 
-      // Supprime "/uploads/" ou tout préfixe supplémentaire
       cleanPath =
         cleanPath
           .replace(/^\/?uploads\/?/, '')
@@ -67,25 +60,15 @@ export class ImageService {
         return;
       }
 
-      // 🔥 Construction de l’URL API backend correcte
       const url = `${this.baseUrl}/${cleanPath}`;
-      // console.log('📥 Téléchargement de l’image depuis:', url);
-
-      // 🔥 Téléchargement de l’image
       const blob = await lastValueFrom(
         this.http.get(url, { responseType: 'blob' })
       );
-
-      // 🔥 Génération du nom de fichier propre
-      const extension = cleanPath.split('.').pop() || 'jpg'; // Par défaut en "jpg" si pas d'extension trouvée
+      const extension = cleanPath.split('.').pop() || 'jpg';
       const timestamp = Date.now();
-
-      // Nettoie `customFilename` pour éviter les caractères spéciaux dans le nom de fichier
       const safeFilename = customFilename.replace(/[^a-zA-Z0-9_-]/g, '_');
-
       const filename = `${safeFilename}_${timestamp}.${extension}`;
 
-      // 🔥 Création du lien de téléchargement
       const a = document.createElement('a');
       const objectUrl = URL.createObjectURL(blob);
       a.href = objectUrl;
@@ -93,16 +76,18 @@ export class ImageService {
       a.click();
       URL.revokeObjectURL(objectUrl);
 
-      //console.log(`✅ Image téléchargée sous : ${filename}`);
     } catch (error) {
       console.error('❌ Erreur lors du téléchargement de l’image:', error);
     }
   }
 
   deleteImage(imagePath: string): Observable<{ message: string }> {
+    if (!imagePath) {
+      console.error('❌ Chemin d\'image vide pour suppression.');
+      return throwError(() => new Error('Chemin d\'image vide.'));
+    }
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
     const url = `${this.baseUrl}/${cleanPath}`;
-    //console.log('image.service :', url);
     return this.http.delete<{ message: string }>(url);
   }
 }

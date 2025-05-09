@@ -1,6 +1,4 @@
-@use "@angular/material" as mat;
 @import url("https://fonts.googleapis.com/css2?family=Pacifico&display=swap");
-
 :root {
   --primary: #875200;
   --surface-tint: #875200;
@@ -51,71 +49,54 @@
   --surface-container: #FBEBDD;
   --surface-container-high: #F6E5D8;
   --surface-container-highest: #F0E0D2;
-
-  // Variables spécifiques pour Material Angular (nouvelles versions)
   --mat-primary: var(--primary);
   --mat-on-primary: var(--on-primary);
   --mat-primary-container: var(--primary-container);
   --mat-on-primary-container: var(--on-primary-container);
-
   --mat-secondary: var(--secondary);
   --mat-on-secondary: var(--on-secondary);
   --mat-secondary-container: var(--secondary-container);
   --mat-on-secondary-container: var(--on-secondary-container);
-
   --mat-tertiary: var(--tertiary);
   --mat-on-tertiary: var(--on-tertiary);
   --mat-tertiary-container: var(--tertiary-container);
   --mat-on-tertiary-container: var(--on-tertiary-container);
-
   --mat-error: var(--error);
   --mat-on-error: var(--on-error);
   --mat-error-container: var(--error-container);
   --mat-on-error-container: var(--on-error-container);
-
   --mat-background: var(--background);
   --mat-on-background: var(--on-background);
-
   --mat-surface: var(--surface);
   --mat-on-surface: var(--on-surface);
   --mat-surface-variant: var(--surface-variant);
   --mat-on-surface-variant: var(--on-surface-variant);
-
   --mat-outline: var(--outline);
   --mat-outline-variant: var(--outline-variant);
-
   --mat-shadow: var(--shadow);
   --mat-scrim: var(--scrim);
   --mat-inverse-surface: var(--inverse-surface);
   --mat-inverse-on-surface: var(--inverse-on-surface);
   --mat-inverse-primary: var(--inverse-primary);
-
-  // Typographie (ne marche pas)
-  --my-brand-font: 'Pacifico', cursive;
-  --my-headline-font: 'Pacifico';
-  --my-title-font: 'Pacifico';
-  --my-plain-font: 'Arial', sans-serif;
-
+  --my-brand-font: "Pacifico", cursive;
+  --my-headline-font: "Pacifico";
+  --my-title-font: "Pacifico";
+  --my-plain-font: "Arial", sans-serif;
   --md-ref-typeface-brand: var(--my-brand-font);
   --md-ref-typeface-plain: var(--my-plain-font);
-
   --md-sys-typescale-headline-font: var(--my-headline-font);
   --md-sys-typescale-title-font: var(--my-title-font);
-
   --md-sys-typescale-headline-large: var(--my-font-brand);
   --md-sys-typescale-headline-medium: var(--my-font-brand);
   --md-sys-typescale-headline-small: var(--my-font-brand);
-
   --md-sys-typescale-title-large: var(--my-font-brand);
   --md-sys-typescale-title-medium: var(--my-font-brand);
   --md-sys-typescale-title-small: var(--my-font-brand);
-
   --md-sys-typescale-body-large: var(--my-font-plain);
   --md-sys-typescale-body-medium: var(--my-font-plain);
   --md-sys-typescale-body-small: var(--my-font-plain);
 }
 
-// 🌒 Mode Sombre
 body.dark {
   --primary: #FFC380;
   --surface-tint: #FFB866;
@@ -166,18 +147,4 @@ body.dark {
   --surface-container: #261E16;
   --surface-container-high: #312820;
   --surface-container-highest: #3C332A;
-}
-
-
-$light-theme: mat.define-theme(
-  (
-    typography: (
-      plain-family: "Arial",
-      brand-family: "Pacifico",
-      bold-weight: 500,
-      medium-weight: 400,
-      regular-weight: 200,
-    ),
-  )
-);
-
+}/*# sourceMappingURL=m3-theme.css.map */

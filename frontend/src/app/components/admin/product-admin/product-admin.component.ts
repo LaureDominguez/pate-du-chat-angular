@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { first, firstValueFrom, forkJoin, Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import {
@@ -73,12 +73,12 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((isMobile) => {
         this.isMobile = isMobile;
-        console.log('Mobile :', this.deviceService.isMobile);
-        console.log('OS :', this.deviceService.os);
-        console.log('Navigateur :', this.deviceService.browser);
+        // console.log('Mobile :', this.deviceService.isMobile);
+        // console.log('OS :', this.deviceService.os);
+        // console.log('Navigateur :', this.deviceService.browser);
       });
 
-      console.log('tous les produits : ', this.products)
+      // console.log('tous les produits : ', this.products)
   }
 
   ngOnDestroy(): void {

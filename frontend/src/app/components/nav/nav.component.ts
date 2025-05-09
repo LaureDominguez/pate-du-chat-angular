@@ -17,6 +17,10 @@ import { ThemeService } from '../../services/theme.service';
   ],
 })
 export class NavComponent implements OnInit {
+  activeTheme$: Observable<string>;
+
+  pageTitle: string = '';
+
   navItems = [
     { title: 'Accueil', link: '/' },
     { title: 'Les Produits', link: '/shop' },
@@ -25,23 +29,27 @@ export class NavComponent implements OnInit {
   ];
 
   isHandset$: Observable<boolean>;
-  toggleState: boolean = false;
-  pageTitle: string = '';
 
   constructor(
     private breakpointObserver: BreakpointObserver,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     public themeService: ThemeService // Injecter le service de thème
-  ) {
+  ) 
+  {
+    // Observer pour détecter les changements de taille d'écran
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
       map((result) => result.matches),
       shareReplay()
     );
+
+    // Initialiser le thème actif
+    this.activeTheme$ = this.themeService.getActiveTheme();
+    console.log('activeTheme$ :', this.activeTheme$);
   }
 
   ngOnInit(): void {
-    // Écouter les changements de navigation
+    // Gestion de la navigation et du titre de la page
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd), // Filtrer les événements de navigation
@@ -58,9 +66,8 @@ export class NavComponent implements OnInit {
       });
   }
 
-  onToggleChange(event: any): void {
-    this.toggleState = event?.target?.checked ?? false;
-    const theme = this.toggleState ? 'dark' : 'light';
-    this.themeService.setTheme(theme);
+  onToggleTheme() {
+    this.themeService.toggleTheme();
+    console.log('activeTheme :', this.activeTheme$);
   }
 }

@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { ImageCarouselComponent } from './image-carousel.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
@@ -13,10 +12,8 @@ describe('ImageCarouselComponent', () => {
         ImageCarouselComponent,
         DragDropModule
       ],
-      declarations: [ImageCarouselComponent],
       providers: [],
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ImageCarouselComponent);
     component = fixture.componentInstance;

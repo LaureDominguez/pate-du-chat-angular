@@ -15,15 +15,13 @@ export class AppComponent{
   
   constructor(
     private themeService: ThemeService,
-    private deviceService: DeviceService
+    // private deviceService: DeviceService
   ) {
     // console.log('📱 deviceService.isMobile :', this.deviceService.isMobile);
   }
 
   ngOnInit() {
-    this.themeService.loadTheme().subscribe((theme) => {
-      this.themeService.applyTheme(theme.schemes.light);
-    });
+    this.themeService.initializeTheme();
   }
 
 }

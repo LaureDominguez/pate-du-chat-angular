@@ -2,28 +2,24 @@
 
 mat-table {
     overflow: auto;
-    // min-width: 600px;
-    // max-width: 100vw;
-
 }
 
 ::ng-deep .mat-mdc-tooltip-panel {
-    background-color: var(--secondaryContainer) !important;
-    color: var(--onSecondaryContainer) !important;
+    background-color: var(--secondary-container) !important;
+    color: var(--on-secondary-container) !important;
     border-radius: 15px;
 }
-
 
 ::ng-deep .mat-mdc-header-cell {
     font-weight: bold;
     flex-wrap: nowrap;
     white-space: nowrap;
     align-items: center;
-    background-color: var(--surfaceVariant) !important;
+    background-color: var(--surface-variant) !important;
 }
 
 // Actions buttons
-.actionsBtns {
+.actions-btns {
     display: flex;
     height: auto;
     flex: 1 1 auto;
@@ -41,7 +37,6 @@ mat-table {
         &.edit,
         &.save {
             color: var(--primary);
-
         }
 
         &.delete,
@@ -50,17 +45,16 @@ mat-table {
         }
 
         &:hover {
-
             &.edit,
             &.save {
-                background-color: var(--primaryContainer);
-                color: var(--onPrimaryContainer);
+                background-color: var(--primary-container);
+                color: var(--on-primary-container);
             }
 
             &.delete,
             &.cancel {
                 background-color: var(--error);
-                color: var(--onError);
+                color: var(--on-error);
             }
         }
 
@@ -81,17 +75,17 @@ tr:not(thead tr) {
     transition: background-color 0.3s;
 
     &:hover {
-        background-color: var(--surfaceBright);
+        background-color: var(--surface-bright);
     }
 }
 
 mat-divider {
-    color: var(--surfaceContainerHighest);
+    color: var(--surface-container-highest);
 }
 
 .mat-icon {
     &.success {
-        color: var(--tertiaryContainer);
+        color: var(--tertiary-container);
     }
 
     &.error {
@@ -108,12 +102,11 @@ mat-divider {
 }
 
 /////////////////////////////
-/// // Bentos
-//////////////////////////////
-/// 
+/// Bentos
+/////////////////////////////
 .bento-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); // 2 colonnes
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     padding: 2rem;
     transition: all 0.3s ease-in-out;
@@ -121,19 +114,17 @@ mat-divider {
 
     &:has(.expanded) {
         @media (min-width: 769px) {
-            grid-template-columns: repeat(4, 1fr); // Desktop uniquement
+            grid-template-columns: repeat(4, 1fr);
         }
     }
 }
 
 .bento-item {
-    background-color: var(--surfaceContainer);
+    background-color: var(--surface-container);
     border-radius: 8px;
     padding: 2rem;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    // transition: all 0.3s ease-in-out;
-    // cursor: pointer;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -150,9 +141,8 @@ mat-divider {
     }
 
     &.expanded {
-        grid-column: 1 / -1; // Prend toute la largeur
-        min-height: 400px; // Augmente la hauteur en mode étendu
-        // padding: 25px;
+        grid-column: 1 / -1;
+        min-height: 400px;
         display: flex;
         justify-content: flex-start;
         align-items: stretch;
@@ -166,12 +156,10 @@ mat-divider {
         gap: 0.75rem;
         padding: 1rem;
 
-        // Bento étendu : pleine largeur
         .bento-item.expanded {
             grid-column: 1 / -1;
         }
 
-        // Bento replié et seul sur la ligne
         .bento-item.solo {
             grid-column: 1 / -1;
             min-height: 110px !important;
@@ -181,12 +169,9 @@ mat-divider {
     }
 }
 
-
-
 /////////////////////////////
-/// // Boutons
-//////////////////////////////
-
+/// Boutons
+/////////////////////////////
 .close-button {
     position: absolute;
     top: 10px;
@@ -196,14 +181,13 @@ mat-divider {
     font-size: 16px;
     cursor: pointer;
     padding: 5px 10px;
-    color: var(--onSurface);
+    color: var(--on-surface);
     transition: color 0.3s;
 
     &:hover {
         color: var(--error);
     }
 }
-
 
 // Add button
 .add-button {
@@ -213,126 +197,7 @@ mat-divider {
 
     .add {
         margin-left: 0.5rem;
-        background-color: var(--primaryContainer);
-        color: var(--onPrimaryContainer);
-        // transition: all 0.2s ease-out;
-        // &:hover {
-        //     background-color: var(--primaryFixedDim);
-        //     color: var(--onPrimaryFixedVariant);
-        //     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-        // }
+        background-color: var(--primary-container);
+        color: var(--on-primary-container);
     }
 }
-
-// .animated-button {
-//     position: relative;
-//     overflow: hidden;
-//     width: 40px;
-//     /* Taille de base */
-//     height: 40px;
-//     background-color: transparent;
-//     cursor: pointer;
-//     transition: width 0.5s ease-out, background-color 0.5s ease-out, color 0.3s ease-out;
-
-//     .content {
-//         display: flex;
-//         align-items: center;
-//         justify-content: center;
-//     }
-
-//     &.edit,
-//     &.save {
-//         color: var(--primary);
-//     }
-
-//     &.delete,
-//     &.cancel {
-//         color: var(--error);
-//     }
-
-//     &:disabled {
-//         opacity: 0.3;
-//         cursor: not-allowed;
-//     }
-
-//     .icon,
-//     .text {
-//         position: absolute;
-//         transition: transform 0.4s ease-out, opacity 0.3s ease-out;
-//         pointer-events: none;
-//     }
-
-//     .icon {
-//         left: 50%;
-//         transform: translateX(-50%);
-//         font-size: 20px;
-//     }
-
-//     .text {
-//         left: 20px;
-//         opacity: 0;
-//         white-space: nowrap;
-//     }
-
-//     &:hover {
-//         &.edit {
-//             background-color: var(--primaryContainer);
-//             color: var(--onPrimaryContainer);
-//             width: 90px;
-
-//             .icon {
-//                 transform: translateX(15px); // pousse l'icône à droite
-//             }
-
-//             .text {
-//                 opacity: 1;
-//                 transform: translateX(-55px);
-//             }
-//         }
-
-//         &.delete {
-//             background-color: var(--error);
-//             color: var(--onError);
-//             width: 104px;
-
-//             .icon {
-//                 transform: translateX(22px); // pousse l'icône à droite
-//             }
-
-//             .text {
-//                 opacity: 1;
-//                 transform: translateX(-62px);
-//             }
-//         }
-
-//         &.save {
-//             background-color: var(--primaryContainer);
-//             color: var(--onPrimaryContainer);
-//             width: 110px;
-
-//             .icon {
-//                 transform: translateX(25px);
-//             }
-
-//             .text {
-//                 transform: translateX(-65px);
-//                 opacity: 1;
-//             }
-//         }
-
-//         &.cancel {
-//             background-color: var(--error);
-//             color: var(--onError);
-//             width: 90px;
-
-//             .icon {
-//                 transform: translateX(15px); // pousse l'icône à droite
-//             }
-
-//             .text {
-//                 opacity: 1;
-//                 transform: translateX(-55px);
-//             }
-//         }
-//     }
-// }

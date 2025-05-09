@@ -18,13 +18,13 @@ describe('CategoryAdminComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         CategoryAdminComponent,
+        CategoryAdminComponent,
         ReactiveFormsModule,
         MatDialogModule,
         MatPaginatorModule,
         MatSortModule,
         MatTableModule
       ],
-      declarations: [CategoryAdminComponent],
       providers: [
         {
           provide: CategoryService,

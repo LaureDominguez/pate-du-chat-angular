@@ -1,17 +1,20 @@
 .product-card {
     position: relative;
-    background-color: var(--surfaceContainer);
-    color: var(--onSecondaryContainer);
+    background-color: var(--surface-container);
+    color: var(--on-secondary-container);
+
     h2 {
         font-size: 1.2rem;
         line-height: normal;
         margin: 0;
     }
+
     p {
         font-size: 0.875rem;
         line-height: normal;
         margin: 0;
     }
+
     img {
         background-color: var(--surface);
     }
@@ -20,10 +23,12 @@
 .product-card:not(.selected) {
     height: 13rem;
     width: 13rem;
+
     img {
         max-height: 150px;
         object-fit: cover;
     }
+
     &:hover {
         transform: translateY(-5px);
         transition: transform 0.2s ease-in-out;
@@ -41,8 +46,8 @@ mat-card-content {
     font-size: 1rem;
     font-weight: bold;
     line-height: 3rem;
-    background-color: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
     padding: 0.5rem;
     border-radius: 8px;
 }
@@ -53,6 +58,7 @@ mat-card-content {
     justify-content: center;
     align-items: center;
     height: 70vh;
+
     img {
         width: 40%;
         height: 99%;
@@ -61,6 +67,7 @@ mat-card-content {
         margin: 0.2rem;
         box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.25);
     }
+
     mat-card-content {
         max-height: 95%;
         max-width: 60%;
@@ -71,27 +78,30 @@ mat-card-content {
         padding: 2rem 5rem;
         margin: auto;
         border-radius: 8px;
-        .description{
+
+        .description {
             font-style: italic;
         }
-        .composition{
-            background-color: var(--primaryContainer);
-            color: var(--onPrimaryContainer);
+
+        .composition {
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
             padding: 1rem;
             border-radius: 8px;
             text-align: left;
             width: 300px;
+
             tr {
                 vertical-align: top;
                 margin: 1rem 0;
             }
+
             td:first-child {
                 font-weight: bold;
-                text-wrap: nowrap;
+                white-space: nowrap;
             }
         }
     }
-    
 }
 
 h1 {

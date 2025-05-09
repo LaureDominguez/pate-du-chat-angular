@@ -39,9 +39,9 @@ export class DeviceService {
     const isMobileOS = ['android', 'ios'].includes(this.os);
     const result = isSmallScreen && isMobileOS;
     this.isMobileSubject.next(result);
-    console.log('📏 Écran petit :', isSmallScreen);
-    console.log('📱 OS mobile :', isMobileOS);
-    console.log('✅ isMobile :', result);
+    // console.log('📏 Écran petit :', isSmallScreen);
+    // console.log('📱 OS mobile :', isMobileOS);
+    // console.log('✅ isMobile :', result);
   }
 
   private detectOS(): void {
@@ -51,7 +51,7 @@ export class DeviceService {
       };
 
     const userAgent = navigator.userAgent.toLocaleLowerCase();
-    console.log('Unknown OS:', userAgent);
+    // console.log('Unknown OS:', userAgent);
 
     if (userAgent.includes('android')) {
       this.os = 'android';

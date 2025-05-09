@@ -1,6 +1,6 @@
 .product-card {
     position: relative;
-    background: var(--tertiaryContainer);
+    background: var(--tertiary-container);
     margin: 1rem 0.4rem;
     padding: 20px;
     border-radius: 10px;
@@ -32,31 +32,31 @@
         margin: 1.5rem;
         padding: 2rem;
         border-radius: 8px;
-        color: var(--onTertiaryFixed);
-        background-color: var(--tertiaryFixed);
+        color: var(--on-tertiary-fixed);
+        background-color: var(--tertiary-fixed);
         
         h2 {
             margin-top: 10px;
             font-size: 1.5rem;
         }
 
-        h3{
+        h3 {
             font-size: 1.2rem;
-            color: var(--onTertiaryFixedVariant);
+            color: var(--on-tertiary-fixed-variant);
             text-decoration: solid underline;
         }
 
         .description {
             font-size: 1rem;
             font-style: italic;
-            color: var(--onTertiaryFixedVariant);
+            color: var(--on-tertiary-fixed-variant);
         }
 
         .price {
             font-weight: bold;
             font-size: 1.2rem;
-            color: var(--onPrimary);
-            background-color: var(--primaryContainer);
+            color: var(--on-primary);
+            background-color: var(--primary-container);
             margin: 0 auto;
             width: 100px;
             height: 50px;
@@ -67,25 +67,26 @@
             align-items: center;
         }
 
-        .ingredients, .allergens{
+        .ingredients,
+        .allergens {
             width: 400px;
             display: flex;
             flex-direction: row;
             margin: auto;
+
             h3 {
                 margin: 0 0.5rem;
                 font-size: 1.2rem;
                 white-space: nowrap;
-                // color: green;
             }
+
             div {
                 margin: 0.1rem;
                 text-align: justify;
-                // color: red;
             }
         }
 
-        .ingredients-list{
+        .ingredients-list {
             display: inline;
             white-space: normal;
         }
@@ -93,14 +94,13 @@
         .labels {
             display: flex;
             justify-content: space-evenly;
+
             img {
                 height: 50px;
                 shape-rendering: crispEdges;
             }
         }
     }
-
-
 
     .close-btn {
         position: absolute;

@@ -15,8 +15,8 @@
         margin: auto;
 
         @include mat.card-overrides((
-            subtitle-text-color: var(--onTertiaryContainer),
-            elevated-container-color: var(--tertiaryContainer),
+            subtitle-text-color: var(--on-tertiary-container),
+            elevated-container-color: var(--tertiary-container),
             elevated-container-shape: 18px,
             title-text-size: 1.2rem,
             title-text-tracking: 0.1rem,
