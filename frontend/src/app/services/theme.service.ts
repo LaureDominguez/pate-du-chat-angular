@@ -27,13 +27,6 @@ export class ThemeService {
       this.activeTheme$.next(savedTheme);
     }
   }
-  // initializeTheme(): void {
-  //   this.loadTheme().subscribe((themesData) => {
-  //     const savedTheme = localStorage.getItem('theme') || 'light';
-  //     this.applyTheme(themesData, savedTheme);
-  //     this.activeTheme$.next(savedTheme);
-  //   });
-  // }
 
   getActiveTheme(): Observable<string> {
     return this.activeTheme$.asObservable();

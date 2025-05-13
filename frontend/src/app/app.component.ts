@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavComponent } from './components/nav/nav.component';
 import { ThemeService } from './services/theme.service';
 import { AppModule } from './app.module';
-import { DeviceService } from './services/device.service';
+// import { DeviceService } from './services/device.service';
 
 @Component({
   selector: 'app-root',
@@ -23,6 +23,5 @@ export class AppComponent{
   ngOnInit() {
     this.themeService.initializeTheme();
   }
-
 }
 

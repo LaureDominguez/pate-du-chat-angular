@@ -1,67 +1,78 @@
 import { TestBed } from '@angular/core/testing';
 import { ThemeService } from './theme.service';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { PLATFORM_ID } from '@angular/core';
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { provideHttpClient, withJsonpSupport, withInterceptors } from '@angular/common/http';
+import { BehaviorSubject } from 'rxjs';
 
 describe('ThemeService', () => {
     let service: ThemeService;
-    let httpMock: HttpTestingController;
-    let documentSpy: Document;
-
-    const mockTheme = {
-        schemes: {
-            light: {
-                primary: '#ffffff',
-                secondary: '#000000'
-            },
-            dark: {
-                primary: '#000000',
-                secondary: '#ffffff'
-            }
-        }
-    };
+    let localStorageSpy: jasmine.SpyObj<Storage>;
+    const mockPlatformId = 'browser'; // Simule un environnement navigateur
 
     beforeEach(() => {
-        const documentMock = {
-            documentElement: {
-                style: {
-                    setProperty: jasmine.createSpy('setProperty')
-                }
-            },
-            body: {
-                classList: {
-                    remove: jasmine.createSpy('remove'),
-                    add: jasmine.createSpy('add')
-                }
-            }
-        };
+        localStorageSpy = jasmine.createSpyObj('localStorage', ['getItem', 'setItem']);
+        localStorageSpy.getItem.and.returnValue(null);
 
         TestBed.configureTestingModule({
             providers: [
-                provideHttpClient(
-                  withJsonpSupport(), // Support JSONP si besoin
-                  withInterceptors([]) // Pas d'intercepteurs dans ce test
-                ),
-                provideHttpClientTesting(),
                 ThemeService,
-                { provide: PLATFORM_ID, useValue: 'browser' },
-                { provide: DOCUMENT, useValue: documentMock }
-            ]
+                { provide: PLATFORM_ID, useValue: mockPlatformId },
+            ],
         });
 
         service = TestBed.inject(ThemeService);
-        httpMock = TestBed.inject(HttpTestingController);
-        documentSpy = TestBed.inject(DOCUMENT);
+
+        // Mock du localStorage pour les tests
+        spyOn(localStorage, 'getItem').and.callFake((key) => localStorageSpy.getItem(key));
+        spyOn(localStorage, 'setItem').and.callFake((key, value) => localStorageSpy.setItem(key, value));
     });
 
-    afterEach(() => {
-        httpMock.verify();
-    });
-
-    it('devrait être créé', () => {
+    it('should be created', () => {
         expect(service).toBeTruthy();
     });
 
+    it('should initialize with light theme if no theme is saved', () => {
+        localStorageSpy.getItem.and.returnValue(null); // Pas de thème enregistré
+        service.initializeTheme();
+        service.getActiveTheme().subscribe((theme) => {
+            expect(theme).toBe('light');
+        });
+    });
+
+    it('should initialize with saved theme from localStorage', () => {
+        localStorageSpy.getItem.and.returnValue('dark');
+        service.initializeTheme();
+        service.getActiveTheme().subscribe((theme) => {
+            expect(theme).toBe('dark');
+        });
+    });
+
+    it('should toggle theme between light and dark', () => {
+        service.setTheme('light');
+        service.toggleTheme();
+        service.getActiveTheme().subscribe((theme) => {
+            expect(theme).toBe('dark');
+        });
+
+        service.toggleTheme();
+        service.getActiveTheme().subscribe((theme) => {
+            expect(theme).toBe('light');
+        });
+    });
+
+    it('should save the theme to localStorage when set', () => {
+        service.setTheme('dark');
+        expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+
+        service.setTheme('light');
+        expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
+    });
+
+    it('should apply the theme correctly in the DOM', () => {
+        const body = document.body;
+        service.setTheme('dark');
+        expect(body.classList.contains('dark')).toBeTrue();
+
+        service.setTheme('light');
+        expect(body.classList.contains('dark')).toBeFalse();
+    });
 });
