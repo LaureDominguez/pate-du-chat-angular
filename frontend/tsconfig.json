@@ -20,12 +20,18 @@
     "lib": [
       "ES2022",
       "DOM"
-    ]
+    ],
+    "types": ["node", "jasmine"],     // ✅ Ajout de types pour Node et Jasmine
+    "typeRoots": ["node_modules/@types"]  // ✅ Assure que les types sont correctement trouvés
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
