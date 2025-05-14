@@ -4,20 +4,6 @@ const upload = require('../../middleware/fileUpload');
 const fs = require('fs');
 const path = require('path');
 
-// Recupérer une image
-// router.get('/:filename', (req, res) => {
-// 	const filename = req.params.filename;
-// 	const filePath = path.join(__dirname, '../../uploads', filename);
-// 	fs.readFile(filePath, (err, data) => {
-// 		if (err) {
-// 			console.error(`Image introuvable : ${filename}`);
-// 			return res.status(404).json({ error: 'Image introuvable' });
-// 		}
-// 		res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-// 		res.setHeader('Content-Type', 'image/jpeg');
-// 		res.send(data);
-// 	});
-// });
 // Recupérer une image (Affichage dans le navigateur)
 router.get('/:filename', (req, res) => {
 	const filename = req.params.filename;
@@ -37,8 +23,12 @@ router.get('/:filename', (req, res) => {
 	else if (ext === '.gif') contentType = 'image/gif';
 	else if (ext === '.webp') contentType = 'image/webp';
 
-	// Définir le bon type MIME et envoyer l’image 
+	// Définir les en-têtes CORS et MIME 
 	res.setHeader('Content-Type', contentType);
+	res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+	res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+	// Envoyer l'image 
 	res.sendFile(filePath);
 });
 

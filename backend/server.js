@@ -1,12 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const connectDB = require('./config/db');
 const configMiddleware = require('./config/middleware');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+// const bodyParser = require('body-parser');
+// const cors = require('cors');
 const path = require('path');
+
 const app = express();
-const multer = require(path.resolve(__dirname, '../middleware/node_modules/multer'));
-const upload = multer();
+// const multer = require(path.resolve(__dirname, '../middleware/node_modules/multer'));
+// const upload = multer();
 
 
 // Connecter à la base de données
