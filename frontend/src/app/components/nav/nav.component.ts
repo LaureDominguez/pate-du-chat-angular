@@ -45,7 +45,7 @@ export class NavComponent implements OnInit {
 
     // Initialiser le thème actif
     this.activeTheme$ = this.themeService.getActiveTheme();
-    console.log('activeTheme$ :', this.activeTheme$);
+    // console.log('activeTheme$ :', this.activeTheme$);
   }
 
   ngOnInit(): void {
@@ -68,6 +68,6 @@ export class NavComponent implements OnInit {
 
   onToggleTheme() {
     this.themeService.toggleTheme();
-    console.log('activeTheme :', this.activeTheme$);
+    // console.log('activeTheme :', this.activeTheme$);
   }
 }
