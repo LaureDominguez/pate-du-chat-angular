@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { SharedDataService, QuickCreateData } from './shared-data.service';
 import { Category } from '../models/category';
 import { Ingredient } from '../models/ingredient';
-import { Supplier } from '../models/supplier'; // Corrigé
+import { Supplier } from '../models/supplier';
+import { firstValueFrom } from 'rxjs';
 
 describe('SharedDataService', () => {
   let service: SharedDataService;
@@ -20,32 +21,29 @@ describe('SharedDataService', () => {
 
   ///////////////////////////////////////////
   /////////////// Categories  ///////////////
-  it('devrait émettre une demande de création de catégorie', (done) => {
+  it('devrait émettre une demande de création de catégorie', async () => {
     const testData: QuickCreateData = { name: 'Test Category' };
 
-    service.requestNewCategory$.subscribe((data) => {
+    firstValueFrom(service.requestNewCategory$).then((data) => {
       expect(data).toEqual(testData);
-      done();
     });
 
     service.requestCategoryCreation(testData);
   });
 
-  it('devrait envoyer une catégorie créée au product-form', (done) => {
+  it('devrait envoyer une catégorie créée au product-form', async () => {
     const testCategory: Category = { _id: '1', name: 'Test Category' };
 
-    service.categoryCreated$.subscribe((category) => {
+    firstValueFrom(service.categoryCreated$).then((category) => {
       expect(category).toEqual(testCategory);
-      done();
     });
 
     service.sendCategoryToProductForm(testCategory);
   });
 
-  it('devrait notifier une mise à jour des catégories', (done) => {
-    service.categoryListUpdate$.subscribe(() => {
+  it('devrait notifier une mise à jour des catégories', async () => {
+    firstValueFrom(service.categoryListUpdate$).then(() => {
       expect(true).toBeTrue();
-      done();
     });
 
     service.notifyCategoryUpdate();
@@ -53,32 +51,29 @@ describe('SharedDataService', () => {
 
   ///////////////////////////////////////////
   /////////////// Suppliers  ////////////////
-  it('devrait émettre une demande de création de fournisseur', (done) => {
+  it('devrait émettre une demande de création de fournisseur', async () => {
     const testData: QuickCreateData = { name: 'Test Supplier' };
 
-    service.requestNewSupplier$.subscribe((data) => {
+    firstValueFrom(service.requestNewSupplier$).then((data) => {
       expect(data).toEqual(testData);
-      done();
     });
 
     service.requestSupplierCreation(testData);
   });
 
-  it('devrait envoyer un fournisseur créé à ingredient-form', (done) => {
+  it('devrait envoyer un fournisseur créé à ingredient-form', async () => {
     const testSupplier: Supplier = { _id: '1', name: 'Test Supplier' };
 
-    service.supplierCreated$.subscribe((supplier) => {
+    firstValueFrom(service.supplierCreated$).then((supplier) => {
       expect(supplier).toEqual(testSupplier);
-      done();
     });
 
     service.sendSupplierToIngredientForm(testSupplier);
   });
 
-  it('devrait notifier une mise à jour des fournisseurs', (done) => {
-    service.supplierListUpdate$.subscribe(() => {
+  it('devrait notifier une mise à jour des fournisseurs', async () => {
+    firstValueFrom(service.supplierListUpdate$).then(() => {
       expect(true).toBeTrue();
-      done();
     });
 
     service.notifySupplierUpdate();
@@ -86,35 +81,36 @@ describe('SharedDataService', () => {
 
   ///////////////////////////////////////////
   /////////////// Ingredients ///////////////
-  it('devrait notifier une mise à jour de la composition des ingrédients', (done) => {
-    service.ingredientCompositionUpdate$.subscribe(() => {
+  it('devrait notifier une mise à jour de la composition des ingrédients', async () => {
+    firstValueFrom(service.ingredientCompositionUpdate$).then(() => {
       expect(true).toBeTrue();
-      done();
     });
 
     service.notifyIngredientCompositionUpdate();
   });
 
-  it('devrait notifier une mise à jour des produits', (done) => {
-    service.productListUpdate$.subscribe(() => {
+  it('devrait notifier une mise à jour des produits', async () => {
+    firstValueFrom(service.productListUpdate$).then(() => {
       expect(true).toBeTrue();
-      done();
     });
 
     service.notifyProductUpdate();
   });
 
   ///////////////////////////////////////////
-  //////////////// Images ///////////////////
-  it('devrait émettre une demande de téléchargement d\'image', (done) => {
+  // //////////////// Images ///////////////////
+  it('devrait émettre une demande de téléchargement d\'image', async () => {
     const imagePath = '/uploads/test.jpg';
     const objectName = 'Test Image';
 
-    service.downloadImage$.subscribe((data) => {
-      expect(data).toEqual({ imagePath, objectName });
-      done();
-    });
-
+    // On déclenche l'émission de l'image
     service.emitDownloadImage(imagePath, objectName);
+
+    // On récupère la valeur émise avec firstValueFrom
+    const receivedData = await firstValueFrom(service.downloadImage$);
+
+    // On vérifie la valeur reçue
+    expect(receivedData).toEqual({ imagePath, objectName });
   });
+
 });
