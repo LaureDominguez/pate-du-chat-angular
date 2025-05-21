@@ -30,8 +30,6 @@ export class ImageService {
       return '';
     }
     const cleanPath = imagePath.replace(/^\/?uploads\/?/, '');
-    // const url = `${this.baseUrl}/${cleanPath}`;
-    // return url;
     return cleanPath.startsWith('http') ? cleanPath : `${this.baseUrl}/${cleanPath}`;
   }
 

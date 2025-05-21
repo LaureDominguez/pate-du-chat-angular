@@ -1,78 +1,83 @@
+// src/app/services/theme.service.spec.ts
 import { TestBed } from '@angular/core/testing';
 import { ThemeService } from './theme.service';
 import { PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
+import { take } from 'rxjs';
 
 describe('ThemeService', () => {
     let service: ThemeService;
-    let localStorageSpy: jasmine.SpyObj<Storage>;
-    const mockPlatformId = 'browser'; // Simule un environnement navigateur
 
     beforeEach(() => {
-        localStorageSpy = jasmine.createSpyObj('localStorage', ['getItem', 'setItem']);
-        localStorageSpy.getItem.and.returnValue(null);
-
+        // Simule un environnement navigateur (Browser)
         TestBed.configureTestingModule({
             providers: [
                 ThemeService,
-                { provide: PLATFORM_ID, useValue: mockPlatformId },
-            ],
+                { provide: PLATFORM_ID, useValue: 'browser' },
+            ]
         });
 
-        service = TestBed.inject(ThemeService);
+        // Nettoie les classes de body et le localStorage avant chaque test
+        document.body.classList.remove('dark');
+        localStorage.clear();
 
-        // Mock du localStorage pour les tests
-        spyOn(localStorage, 'getItem').and.callFake((key) => localStorageSpy.getItem(key));
-        spyOn(localStorage, 'setItem').and.callFake((key, value) => localStorageSpy.setItem(key, value));
+        service = TestBed.inject(ThemeService);
     });
 
-    it('should be created', () => {
+    it('devrait être créé', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should initialize with light theme if no theme is saved', () => {
-        localStorageSpy.getItem.and.returnValue(null); // Pas de thème enregistré
-        service.initializeTheme();
+    it('devrait appliquer le thème clair par défaut', (done) => {
         service.getActiveTheme().subscribe((theme) => {
             expect(theme).toBe('light');
+            expect(document.body.classList.contains('dark')).toBeFalse();
+            done();
         });
     });
 
-    it('should initialize with saved theme from localStorage', () => {
-        localStorageSpy.getItem.and.returnValue('dark');
+    it('devrait appliquer le thème sombre si enregistré dans localStorage', (done) => {
+        localStorage.setItem('theme', 'dark');
         service.initializeTheme();
+
         service.getActiveTheme().subscribe((theme) => {
             expect(theme).toBe('dark');
+            expect(document.body.classList.contains('dark')).toBeTrue();
+            done();
         });
     });
 
-    it('should toggle theme between light and dark', () => {
-        service.setTheme('light');
-        service.toggleTheme();
-        service.getActiveTheme().subscribe((theme) => {
-            expect(theme).toBe('dark');
-        });
 
-        service.toggleTheme();
-        service.getActiveTheme().subscribe((theme) => {
-            expect(theme).toBe('light');
-        });
+    it('devrait alterner entre les thèmes clair et sombre', (done) => {
+    const expectedThemes = ['dark', 'light'];
+    const actualThemes: string[] = [];
+
+    // On ignore la première émission ('light' par défaut) en ne prenant que les suivantes
+    service.getActiveTheme().subscribe((theme) => {
+        if (actualThemes.length > 0 || theme !== 'light') {
+        actualThemes.push(theme);
+        }
+
+        if (actualThemes.length === expectedThemes.length) {
+        expect(actualThemes[0]).toBe('dark');
+        expect(actualThemes[1]).toBe('light');
+        expect(document.body.classList.contains('dark')).toBeFalse(); // après 2 toggles
+        done();
+        }
     });
 
-    it('should save the theme to localStorage when set', () => {
+    service.toggleTheme(); // light → dark
+    service.toggleTheme(); // dark → light
+    });
+
+
+    it('devrait enregistrer le thème sélectionné dans localStorage', () => {
         service.setTheme('dark');
-        expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+        expect(localStorage.getItem('theme')).toBe('dark');
+        expect(document.body.classList.contains('dark')).toBeTrue();
 
         service.setTheme('light');
-        expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
-    });
-
-    it('should apply the theme correctly in the DOM', () => {
-        const body = document.body;
-        service.setTheme('dark');
-        expect(body.classList.contains('dark')).toBeTrue();
-
-        service.setTheme('light');
-        expect(body.classList.contains('dark')).toBeFalse();
+        expect(localStorage.getItem('theme')).toBe('light');
+        expect(document.body.classList.contains('dark')).toBeFalse();
     });
 });

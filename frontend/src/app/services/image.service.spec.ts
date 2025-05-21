@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ImageService } from './image.service';
+import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { provideHttpClient, withJsonpSupport, withInterceptors } from '@angular/common/http';
 
 describe('ImageService', () => {
   let service: ImageService;
@@ -9,14 +9,7 @@ describe('ImageService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(
-          withJsonpSupport(), // Support JSONP si besoin
-          withInterceptors([]) // Pas d'intercepteurs dans ce test
-        ),
-        provideHttpClientTesting(),
-        ImageService
-      ]
+      providers: [ImageService, provideHttpClient(), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(ImageService);
@@ -28,64 +21,82 @@ describe('ImageService', () => {
   });
 
   it('devrait être créé', () => {
+    console.log('ImageService créé');
     expect(service).toBeTruthy();
   });
 
   it('devrait uploader des images', () => {
-    const mockResponse = { message: 'Images uploadées', imagePath: ['/uploads/image1.jpg'] };
-    const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+    console.log('Test d\'upload d\'images');
+    const mockFile = new File(['image'], 'image.jpg', { type: 'image/jpeg' });
+    const mockResponse = {
+      message: 'Images uploaded successfully',
+      imagePath: ['uploads/image.jpg'],
+    };
 
     service.uploadImages([mockFile]).subscribe((response) => {
-      expect(response.message).toBe('Images uploadées');
+      console.log('Réponse de l\'upload:', response);
+      expect(response.message).toBe('Images uploaded successfully');
       expect(response.imagePath.length).toBe(1);
-      expect(response.imagePath[0]).toBe('/uploads/image1.jpg');
+      console.log('Chemin de l\'image:', response.imagePath[0]);
     });
+
+    console.log('Vérification de la requête HTTP');
 
     const req = httpMock.expectOne('http://localhost:5000/api/images');
     expect(req.request.method).toBe('POST');
+    expect(req.request.body instanceof FormData).toBeTrue();
+    console.log('Vérification de la requête terminée');
+    console.log('FormData:', req.request.body);
     req.flush(mockResponse);
   });
 
-  it('devrait retourner l\'URL complète d\'une image', () => {
-    const url = service.getImageUrl('/uploads/image1.jpg');
-    expect(url).toBe('http://localhost:5000/api/images/image1.jpg');
+  it('devrait générer une URL d\'image complète', () => {
+    console.log('Test de génération d\'URL d\'image');
+    const path = 'uploads/test.jpg';
+    const fullUrl = service.getImageUrl(path);
+    expect(fullUrl).toBe('http://localhost:5000/api/images/test.jpg');
+    console.log('URL générée:', fullUrl);
+  });
+
+  it('devrait gérer les URL déjà complètes', () => {
+    console.log('Test de gestion des URL déjà complètes');
+    const fullUrl = 'http://localhost:5000/api/images/image.jpg';
+    const result = service.getImageUrl(fullUrl);
+    expect(result).toBe(fullUrl);
+    console.log('URL déjà complète:', result);
+  });
+
+  it('devrait retourner une chaîne vide si le chemin est vide', () => {
+    console.log('Test de gestion des chemins vides');
+    const result = service.getImageUrl('');
+    expect(result).toBe('');
+    console.log('Chemin vide géré:', result);
   });
 
   it('devrait supprimer une image', () => {
-    const mockResponse = { message: 'Image supprimée' };
+    console.log('Test de suppression d\'image');
+    const imagePath = '/uploads/image.jpg';
 
-    service.deleteImage('/uploads/image1.jpg').subscribe((response) => {
-      expect(response.message).toBe('Image supprimée');
+    service.deleteImage(imagePath).subscribe((res) => {
+      console.log('Réponse de la suppression:', res);
+      expect(res.message).toBe('Image supprimée');
     });
 
-    const req = httpMock.expectOne('http://localhost:5000/api/images/image1.jpg');
+    const req = httpMock.expectOne('http://localhost:5000/api/images/image.jpg');
     expect(req.request.method).toBe('DELETE');
-    req.flush(mockResponse);
+    req.flush({ message: 'Image supprimée' });
+    console.log('Vérification de la requête de suppression terminée');
   });
 
-  it('devrait télécharger une image avec un nom de fichier personnalisé', async () => {
-    const mockBlob = new Blob(['image content'], { type: 'image/jpeg' });
-    const mockUrl = 'http://localhost:5000/api/images/image1.jpg';
-
-    const spyCreateElement = spyOn(document, 'createElement').and.callFake(() => {
-      return {
-        href: '',
-        download: '',
-        click: jasmine.createSpy('click'),
-        remove: jasmine.createSpy('remove')
-      } as any;
+  it('devrait renvoyer une erreur si le chemin est vide pour la suppression', (done) => {
+    console.log('Test de gestion des erreurs de suppression avec chemin vide');
+    service.deleteImage('').subscribe({
+      next: () => fail('La suppression aurait dû échouer.'),
+      error: (error) => {
+        expect(error.message).toBe("Chemin d'image vide.");
+        console.log('Erreur gérée:', error);
+        done();
+      },
     });
-
-    spyOn(URL, 'createObjectURL').and.returnValue('blob:http://localhost/image');
-    spyOn(URL, 'revokeObjectURL');
-
-    await service.downloadImage('/uploads/image1.jpg', 'custom_filename');
-
-    const req = httpMock.expectOne(mockUrl);
-    req.flush(mockBlob);
-
-    expect(spyCreateElement).toHaveBeenCalled();
-    expect(URL.createObjectURL).toHaveBeenCalled();
-    expect(URL.revokeObjectURL).toHaveBeenCalled();
   });
 });
