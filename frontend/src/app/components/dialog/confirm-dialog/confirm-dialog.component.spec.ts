@@ -1,41 +1,31 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { ConfirmDialogComponent } from './confirm-dialog.component';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { By } from '@angular/platform-browser';
 
 describe('ConfirmDialogComponent', () => {
   let component: ConfirmDialogComponent;
   let fixture: ComponentFixture<ConfirmDialogComponent>;
+  let dialogRefSpy: jasmine.SpyObj<MatDialogRef<ConfirmDialogComponent>>;
 
   beforeEach(async () => {
+    dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
+
     await TestBed.configureTestingModule({
-      imports: [
-        ConfirmDialogComponent,
-        CommonModule,
-        MatButtonModule,
-        MatDialogModule,
-      ],
+      imports: [ConfirmDialogComponent],
       providers: [
-        {
-          provide: MatDialogRef,
-          useValue: {
-            close: jasmine.createSpy('close')
-          }
-        },
+        { provide: MatDialogRef, useValue: dialogRefSpy },
         {
           provide: MAT_DIALOG_DATA,
           useValue: {
-            message: 'Êtes-vous sur de vouloir continuer?',
-            confirmButtonText: 'Valider',
-            cancelButtonText: 'Annuler',
-            extraButton: 'Extra'
-          }
-        }
-      ]
-    })
-    .compileComponents();
+            message: 'Confirmer cette action ?',
+            confirmButtonText: 'Oui',
+            cancelButtonText: 'Non',
+            extraButton: 'Autre',
+          },
+        },
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ConfirmDialogComponent);
     component = fixture.componentInstance;
@@ -46,21 +36,18 @@ describe('ConfirmDialogComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('doit appeler dialogRef.close avec "confirm" en cas de confirmation', () => {
-    const dialogRef = TestBed.inject(MatDialogRef);
+  it('devrait fermer la boîte avec "confirm" quand on clique sur confirmer', () => {
     component.onConfirm();
-    expect(dialogRef.close).toHaveBeenCalledWith('confirm');
+    expect(dialogRefSpy.close).toHaveBeenCalledWith('confirm');
   });
 
-  it('doit appeler dialogRef.close avec "cancel" en cas d\'annulation', () => {
-    const dialogRef = TestBed.inject(MatDialogRef);
+  it('devrait fermer la boîte avec "cancel" quand on clique sur annuler', () => {
     component.onCancel();
-    expect(dialogRef.close).toHaveBeenCalledWith('cancel');
+    expect(dialogRefSpy.close).toHaveBeenCalledWith('cancel');
   });
 
-  it('doit appeler dialogRef.close avec "extra" si le bouton extra est utilisé', () => {
-    const dialogRef = TestBed.inject(MatDialogRef);
+  it('devrait fermer la boîte avec "extra" quand on clique sur extra', () => {
     component.onExtra();
-    expect(dialogRef.close).toHaveBeenCalledWith('extra');
+    expect(dialogRefSpy.close).toHaveBeenCalledWith('extra');
   });
 });

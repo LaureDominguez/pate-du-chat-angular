@@ -1,61 +1,48 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { InfoDialogComponent } from './info-dialog.component';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Component } from '@angular/core';
 
 describe('InfoDialogComponent', () => {
-  let component: InfoDialogComponent;
   let fixture: ComponentFixture<InfoDialogComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        CommonModule,
-        MatButtonModule,
-        MatDialogModule,
-        InfoDialogComponent
-      ],
+  function createComponentWithType(type: 'info' | 'error' | 'success') {
+    TestBed.configureTestingModule({
+      imports: [InfoDialogComponent],
       providers: [
-        {
-          provide: MatDialogRef,
-          useValue: {
-            close: jasmine.createSpy('close')
-          }
-        },
+        { provide: MatDialogRef, useValue: {} },
         {
           provide: MAT_DIALOG_DATA,
           useValue: {
-            message: 'Ceci est un message d\'information.',
-            type: 'info'
-          }
-        }
-      ]
+            message: 'Test message',
+            type,
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(InfoDialogComponent);
-    component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+    return fixture.componentInstance;
+  }
 
-  it('devrait être créé', () => {
+  it('devrait être créé', async () => {
+    const component = createComponentWithType('info');
     expect(component).toBeTruthy();
   });
 
-  it('devrait afficher "Information" comme titre pour un type "info"', () => {
+  it('devrait afficher le titre "Information" si type est "info"', () => {
+    const component = createComponentWithType('info');
     expect(component.title).toBe('Information');
   });
 
-  it('devrait afficher "Erreur" comme titre pour un type "error"', () => {
-    component.data.type = 'error';
-    component.ngOnInit();
+  it('devrait afficher le titre "Erreur" si type est "error"', () => {
+    const component = createComponentWithType('error');
     expect(component.title).toBe('Erreur');
   });
 
-  it('devrait afficher "Succès" comme titre pour un type "success"', () => {
-    component.data.type = 'success';
-    component.ngOnInit();
+  it('devrait afficher le titre "Succès" si type est "success"', () => {
+    const component = createComponentWithType('success');
     expect(component.title).toBe('Succès');
   });
 });

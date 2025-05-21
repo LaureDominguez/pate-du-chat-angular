@@ -1,76 +1,79 @@
+// src/app/components/dialog/quick-create-dialog/quick-create-dialog.component.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { QuickCreateDialogComponent } from './quick-create-dialog.component';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
 describe('QuickCreateDialogComponent', () => {
   let component: QuickCreateDialogComponent;
   let fixture: ComponentFixture<QuickCreateDialogComponent>;
+  let dialogRefSpy: jasmine.SpyObj<MatDialogRef<QuickCreateDialogComponent>>;
+
+  const mockData = {
+    title: 'Ajouter une catégorie',
+    fields: [
+      {
+        name: 'name',
+        label: 'Nom',
+        required: true,
+        maxLength: 20,
+        defaultValue: 'Pâtes'
+      },
+      {
+        name: 'description',
+        label: 'Description',
+        required: false
+      }
+    ]
+  };
 
   beforeEach(async () => {
+    dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
+
     await TestBed.configureTestingModule({
-      imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        QuickCreateDialogComponent
-      ],
+      imports: [QuickCreateDialogComponent, ReactiveFormsModule],
       providers: [
-        {
-          provide: MatDialogRef,
-          useValue: {
-            close: jasmine.createSpy('close')
-          }
-        },
-        {
-          provide: MAT_DIALOG_DATA,
-          useValue: {
-            title: 'Quick Create Test',
-            fields: [
-              { name: 'name', label: 'Name', required: true, maxLength: 50 },
-              { name: 'description', label: 'Description' }
-            ]
-          }
-        }
+        provideNoopAnimations(),
+        { provide: MAT_DIALOG_DATA, useValue: mockData },
+        { provide: MatDialogRef, useValue: dialogRefSpy }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(QuickCreateDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-
   it('devrait être créé', () => {
     expect(component).toBeTruthy();
   });
 
-  it('devrait initialiser les champs du formulaire en fonction des champs de données', () => {
-    const nameControl = component.form.get('name');
-    const descriptionControl = component.form.get('description');
-    expect(nameControl).toBeTruthy();
-    expect(descriptionControl).toBeTruthy();
+  it('devrait construire un formulaire avec les bons champs', () => {
+    expect(component.form.contains('name')).toBeTrue();
+    expect(component.form.contains('description')).toBeTrue();
+    expect(component.form.get('name')?.value).toBe('Pâtes');
   });
 
-  it('doit fermer le dialogue avec les valeurs du formulaire si valide', () => {
-    const dialogRef = TestBed.inject(MatDialogRef);
-    component.form.get('name')?.setValue('Test Name');
+  it('devrait fermer la boîte de dialogue avec les données si le formulaire est valide', () => {
+    component.form.setValue({ name: 'Raviolis', description: 'Farce maison' });
     component.save();
-    expect(dialogRef.close).toHaveBeenCalledWith({ name: 'Test Name', description: '' });
+    expect(dialogRefSpy.close).toHaveBeenCalledWith({
+      name: 'Raviolis',
+      description: 'Farce maison'
+    });
   });
 
-  it('doit marquer les champs comme touchés si le formulaire est invalide à la sauvegarde', () => {
-    const dialogRef = TestBed.inject(MatDialogRef);
+  it('ne devrait pas fermer la boîte de dialogue si le formulaire est invalide', () => {
+    component.form.get('name')?.setValue(''); // champ requis vidé
     component.save();
-    expect(dialogRef.close).not.toHaveBeenCalled();
+    expect(dialogRefSpy.close).not.toHaveBeenCalled();
     expect(component.form.get('name')?.touched).toBeTrue();
   });
 
-  it('doit fermer le dialogue avec null si annulation', () => {
-    const dialogRef = TestBed.inject(MatDialogRef);
+  it('devrait fermer la boîte de dialogue avec null en cas d’annulation', () => {
     component.cancel();
-    expect(dialogRef.close).toHaveBeenCalledWith(null);
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(null);
   });
 });
