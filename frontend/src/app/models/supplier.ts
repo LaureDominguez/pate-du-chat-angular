@@ -3,6 +3,7 @@ export interface Supplier {
     name: string;
     description?: string;
     ingredientCount?: number;
+    ingredients?: { _id: string, name?: string }[];
 }
 
 export const DEFAULT_SUPPLIER: Supplier = {

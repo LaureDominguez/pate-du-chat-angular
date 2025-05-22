@@ -16,6 +16,13 @@ SupplierSchema.virtual('ingredientCount', {
     count: true
 });
 
+SupplierSchema.virtual('ingredients', {
+    ref: 'Ingredient',
+    localField: '_id',
+    foreignField: 'supplier',
+});
+
+
 SupplierSchema.set('toJSON', { virtuals: true });
 SupplierSchema.set('toObject', { virtuals: true });
 

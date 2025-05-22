@@ -17,7 +17,12 @@ const validateRequest = (req, res, next) => {
 // 🔹 Récupérer tous les fournisseurs
 router.get('/', async (req, res) => {
     try {
-        const suppliers = await Supplier.find().populate('ingredientCount');
+        const suppliers = await Supplier.find()
+        .populate('ingredientCount')
+        .populate({
+            path: 'ingredients',
+            select: '_id name',
+        });
 
         if (!suppliers || suppliers.length === 0) {
             console.warn('⚠️ Aucun fournisseur trouvé en base !');
@@ -34,7 +39,13 @@ router.get('/', async (req, res) => {
 // 🔹 Récupérer un fournisseur par son I
 router.get('/:id', async (req, res) => {
     try {
-        const supplier = await Supplier.findById(req.params.id).populate('ingredientCount');
+        const supplier = await Supplier.findById(req.params.id)
+        .populate('ingredientCount')
+        .populate({
+            path: 'ingredients',
+            select: '_id name', // pour ne pas charger toute la fiche ingrédient
+        });
+
         if (!supplier) {
             return res.status(404).json({ msg: 'Fournisseur non trouvé.' });
         }
@@ -59,7 +70,7 @@ router.post(
             .withMessage(
                 'Le champ "nom" doit contenir entre 2 et 50 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
             .withMessage(
                 'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
             ),
@@ -71,7 +82,7 @@ router.post(
             .withMessage(
                 'Le champ "description" doit contenir entre 2 et 100 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
             .withMessage(
                 'Le champ "description" ne doit pas contenir de caractères spéciaux.'
             ),
@@ -116,7 +127,7 @@ router.put(
             .withMessage(
                 'Le champ "nom" doit contenir entre 2 et 50 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
             .withMessage(
                 'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
             ),
@@ -128,7 +139,7 @@ router.put(
             .withMessage(
                 'Le champ "description" doit contenir entre 2 et 100 caractères.'
             )
-            .matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
             .withMessage(
                 'Le champ "description" ne doit pas contenir de caractères spéciaux.'
             ),

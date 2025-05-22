@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, firstValueFrom, map, Observable, tap, throwError } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
 import { SharedDataService } from './shared-data.service';
@@ -22,9 +22,16 @@ export class IngredientService {
     private sharedDataService: SharedDataService
   ) {
     this.loadIngredients(); // Charger les ingrédients au démarrage
+    this.handleSupplierReplacement();
+
     this.sharedDataService.ingredientListUpdate$.subscribe(() => {
       this.loadIngredients();
     });
+
+    this.sharedDataService.supplierListUpdate$.subscribe(() => {
+      this.loadIngredients(); // 👈 ou autre action de refresh
+    });
+
   }
 
   // Charge les ingrédients et met à jour le BehaviorSubject
@@ -69,7 +76,9 @@ export class IngredientService {
   createIngredient(payload: any): Observable<Ingredient> {
     return this.http.post<Ingredient>(this.apiUrl, payload).pipe(
       catchError(this.handleError),
-      tap(() => this.loadIngredients()) // Recharge la liste après création
+      tap(() => this.loadIngredients()), // Recharge la liste après création
+      tap(() => this.sharedDataService.notifySupplierUpdate())
+
     );
   }
 
@@ -77,9 +86,32 @@ export class IngredientService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Ingredient>(url, payload).pipe(
       catchError(this.handleError),
-      tap(() => this.loadIngredients()) // Recharge la liste après modification
+      tap(() => this.loadIngredients()), // Recharge la liste après modification
+      tap(() => this.sharedDataService.notifySupplierUpdate())
     );
   }
+
+  private handleSupplierReplacement(): void {
+    this.sharedDataService.replaceSupplierInIngredients$.subscribe(
+      ({ oldSupplierId, newSupplierId, ingredientIds }) => {
+        const updates = ingredientIds.map(id =>
+          firstValueFrom(this.updateIngredient(id, { supplier: newSupplierId }))
+        );
+
+        Promise.all(updates)
+          .then(() => {
+            console.log('✅ Tous les ingrédients ont été mis à jour avec le nouveau fournisseur.');
+            this.sharedDataService.emitReplaceSupplierInIngredientsComplete(true);
+          })
+          .catch((error) => {
+            console.error('❌ Erreur lors de la mise à jour des ingrédients :', error);
+            this.sharedDataService.emitReplaceSupplierInIngredientsComplete(false);
+          });
+          console.log(`🔁 Remplacement du fournisseur ${oldSupplierId} → ${newSupplierId} pour :`, ingredientIds);
+      }
+    );
+  }
+
 
   deleteIngredient(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
