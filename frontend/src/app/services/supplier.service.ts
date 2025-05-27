@@ -57,7 +57,7 @@ export class SupplierService {
             '❌ Erreur lors de la récupération des fournisseurs :',
             error
           );
-          this.suppliersSubject.next([DEFAULT_SUPPLIER]); // Sécurise le frontend pour éviter un crash
+          this.suppliersSubject.next([DEFAULT_SUPPLIER]);
           return throwError(
             () => new Error('Erreur lors de la récupération des fournisseurs')
             );
@@ -76,11 +76,9 @@ export class SupplierService {
   }
 
   createSupplier(payload: any): Observable<Supplier> {
-    console.log('Service -> createSupplier -> payload', payload);
     return this.http.post<Supplier>(this.apiUrl, payload).pipe(
       tap(() => {
-        console.log('Service -> Reponse du serveur :', payload);
-        this.sharedDataService.notifySupplierUpdate(); // Notifie les abonnés
+        this.sharedDataService.notifySupplierUpdate();
       }),
       catchError(this.handleError.bind(this))
     );
@@ -90,7 +88,7 @@ export class SupplierService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Supplier>(url, payload).pipe(
       tap(() => {
-        this.sharedDataService.notifySupplierUpdate(); // Notifie les abonnés
+        this.sharedDataService.notifySupplierUpdate();
       }),
       catchError(this.handleError.bind(this))
     );
@@ -98,11 +96,11 @@ export class SupplierService {
 
   deleteSupplier(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
-    console.log('Service -> deleteSupplier -> url', url);
-    console.log('Service -> deleteSupplier -> id', id);
+    console.log('Suppression du fournisseur avec l\'ID :', id);
+    console.log('URL de la requête :', url);
     return this.http.delete<{ message: string }>(url).pipe(
       tap(() => {
-        this.sharedDataService.notifySupplierUpdate(); // Notifie les abonnés
+        this.sharedDataService.notifySupplierUpdate();
       }),
       catchError(this.handleError.bind(this)) 
     );

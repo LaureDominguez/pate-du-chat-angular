@@ -79,21 +79,21 @@ export class SharedDataService {
 
   ///////////////////////////////////////////////////
   // Remplacer le supplier par defaut dans ingredient
-  private replaceSupplierInIngredientsSubject = new Subject<{ oldSupplierId: string, newSupplierId: string, ingredientIds: string[] }>();
-  replaceSupplierInIngredients$ = this.replaceSupplierInIngredientsSubject.asObservable();
+  // private replaceSupplierInIngredientsSubject = new Subject<{ oldSupplierId: string, newSupplierId: string, ingredientIds: string[] }>();
+  // replaceSupplierInIngredients$ = this.replaceSupplierInIngredientsSubject.asObservable();
 
-  emitReplaceSupplierInIngredients(oldSupplierId: string, newSupplierId: string, ingredientIds: string[]) {
-    console.log('🔁 Remplacement demandé :', { oldSupplierId, newSupplierId, ingredientIds });
-    this.replaceSupplierInIngredientsSubject.next({ oldSupplierId, newSupplierId, ingredientIds });
-  }
+  // emitReplaceSupplierInIngredients(oldSupplierId: string, newSupplierId: string, ingredientIds: string[]) {
+  //   console.log('🔁 Remplacement demandé :', { oldSupplierId, newSupplierId, ingredientIds });
+  //   this.replaceSupplierInIngredientsSubject.next({ oldSupplierId, newSupplierId, ingredientIds });
+  // }
 
-  // Réponse
-  private replaceSupplierInIngredientsCompleteSubject = new Subject<boolean>();
-  replaceSupplierInIngredientsComplete$ = this.replaceSupplierInIngredientsCompleteSubject.asObservable();
+  // // Réponse
+  // private replaceSupplierInIngredientsCompleteSubject = new Subject<boolean>();
+  // replaceSupplierInIngredientsComplete$ = this.replaceSupplierInIngredientsCompleteSubject.asObservable();
 
-  emitReplaceSupplierInIngredientsComplete(success: boolean) {
-    this.replaceSupplierInIngredientsCompleteSubject.next(success);
-  }
+  // emitReplaceSupplierInIngredientsComplete(success: boolean) {
+  //   this.replaceSupplierInIngredientsCompleteSubject.next(success);
+  // }
 
 
 

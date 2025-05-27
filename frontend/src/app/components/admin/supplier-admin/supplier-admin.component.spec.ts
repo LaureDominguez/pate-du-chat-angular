@@ -1,16 +1,15 @@
-// supplier-admin.component.spec.ts
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { SupplierAdminComponent } from './supplier-admin.component';
 import { SupplierService } from '../../../services/supplier.service';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
 import { MatDialog } from '@angular/material/dialog';
-import { of, Subject } from 'rxjs';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
+import { of } from 'rxjs';
 import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
 import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
+
 
 describe('SupplierAdminComponent', () => {
   let component: SupplierAdminComponent;
@@ -21,28 +20,48 @@ describe('SupplierAdminComponent', () => {
   let matDialogSpy: jasmine.SpyObj<MatDialog>;
 
   beforeEach(async () => {
-    supplierServiceSpy = jasmine.createSpyObj('SupplierService', ['getSuppliers', 'createSupplier', 'updateSupplier', 'deleteSupplier']);
-    sharedDataServiceSpy = jasmine.createSpyObj('SharedDataService', [
-      'sendSupplierToIngredientForm',
-      'notifySupplierUpdate',
-      'emitReplaceSupplierInIngredients',
-    ], {
-      requestNewSupplier$: of({ name: 'Test Nouveau', description: 'Créé via ingredient' }),
-      replaceSupplierInIngredientsComplete$: new Subject<boolean>()
+    supplierServiceSpy = jasmine.createSpyObj('SupplierService', [
+      'getSuppliers', 'createSupplier', 'updateSupplier', 'deleteSupplier'
+    ]);
+
+    sharedDataServiceSpy = jasmine.createSpyObj(
+      'SharedDataService',
+      ['sendSupplierToIngredientForm', 'notifySupplierUpdate', 'requestNewSupplier$',]
+    );
+    
+    Object.defineProperty(sharedDataServiceSpy, 'requestNewSupplier$', {
+      value: of()
     });
+
     dialogServiceSpy = jasmine.createSpyObj('DialogService', ['showInfo', 'showHttpError']);
+
     matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
+    matDialogSpy.open.and.returnValue({
+      afterClosed: () => of('confirm'),
+      componentInstance: {}
+    } as any);
 
     await TestBed.configureTestingModule({
-      imports: [SupplierAdminComponent, ReactiveFormsModule, BrowserAnimationsModule],
+      imports: [
+        SupplierAdminComponent,
+        ReactiveFormsModule,
+        BrowserAnimationsModule,
+        ConfirmDialogComponent
+      ],
       providers: [
         { provide: SupplierService, useValue: supplierServiceSpy },
         { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        { provide: DialogService, useValue: dialogServiceSpy },
-        { provide: MatDialog, useValue: matDialogSpy },
-      ],
-      schemas: [NO_ERRORS_SCHEMA],
+        { provide: DialogService, useValue: dialogServiceSpy }
+      ]
     }).compileComponents();
+
+    TestBed.overrideComponent(SupplierAdminComponent, {
+  set: {
+    providers: [
+      { provide: MatDialog, useValue: matDialogSpy }
+    ]
+  }
+});
 
     fixture = TestBed.createComponent(SupplierAdminComponent);
     component = fixture.componentInstance;
@@ -71,76 +90,57 @@ describe('SupplierAdminComponent', () => {
   });
 
   it('ne devrait pas enregistrer si le formulaire est invalide', () => {
-    supplierServiceSpy.createSupplier.calls.reset(); // pour remettre à zéro l’état d’appel si besoin
+    supplierServiceSpy.createSupplier.calls.reset();
     component.startEditingSupplier();
     component.saveSupplier({ _id: null, name: '', description: '' });
     expect(supplierServiceSpy.createSupplier).not.toHaveBeenCalled();
   });
 
-  it('devrait appeler deleteSupplier sur confirmation et pas d’ingrédients', () => {
-    const mockSupplier = { _id: 'abc123', name: 'Test', description: '', ingredientCount: 0 };
-
-    const mockDialogRef = {
-      afterClosed: () => of('confirm'),
-      // 💡 permet d’éviter les erreurs internes de MatDialog
-      componentInstance: { _animationStateChanged: of() }
-    };
-
-    matDialogSpy.open.and.returnValue(mockDialogRef as any);
-    supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'ok' }));
-
-    component.deleteSupplier(mockSupplier);
-
-    expect(matDialogSpy.open).toHaveBeenCalled();
-    expect(supplierServiceSpy.deleteSupplier).toHaveBeenCalledWith('abc123');
+  it('devrait refuser de supprimer le fournisseur par défaut', () => {
+    component.deleteSupplier(DEFAULT_SUPPLIER);
+    expect(dialogServiceSpy.showInfo).toHaveBeenCalledWith(
+      'Le fournisseur par défaut ne peut pas être supprimé.',
+      'info'
+    );
+    expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
   });
 
-
-  it('devrait déclencher le remplacement si des ingrédients sont liés', () => {
-  const mockSupplier = {
-    _id: 'sup1',
-    name: 'Test',
+it('devrait supprimer un fournisseur après confirmation', fakeAsync(() => {
+  const supplier: Supplier = {
+    _id: 'abc123',
+    name: 'Test Supplier',
     description: '',
-    ingredientCount: 2,
-    ingredients: [{ _id: 'i1' }, { _id: 'i2' }]
+    ingredientCount: 0
   };
 
-  matDialogSpy.open.and.returnValue({
-    afterClosed: () => of('confirm'),
-    componentInstance: { _animationStateChanged: of() } // 💡
-  } as any);
+  supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'Fournisseur supprimé avec succès.' }));
 
+  component.deleteSupplier(supplier);
+  tick();
 
-    supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'ok' }));
+  expect(matDialogSpy.open).toHaveBeenCalled();
+  expect(supplierServiceSpy.deleteSupplier).toHaveBeenCalledWith('abc123');
+  expect(dialogServiceSpy.showInfo).toHaveBeenCalledWith(
+    'Fournisseur supprimé avec succès.',
+    'success'
+  );
+}));
 
-    component.deleteSupplier(mockSupplier);
-    (sharedDataServiceSpy.replaceSupplierInIngredientsComplete$ as Subject<boolean>).next(true);
-
-    expect(sharedDataServiceSpy.emitReplaceSupplierInIngredients).toHaveBeenCalledWith('sup1', DEFAULT_SUPPLIER._id!, ['i1', 'i2']);
-    expect(supplierServiceSpy.deleteSupplier).toHaveBeenCalledWith('sup1');
-  });
-
-  it('devrait afficher une erreur si le remplacement échoue', () => {
-    const mockSupplier = {
-      _id: 'sup1',
-      name: 'Test',
-      description: '',
-      ingredientCount: 1,
-      ingredients: [{ _id: 'i1' }]
-    };
-
+  it('ne devrait rien faire si l’utilisateur annule la suppression', () => {
     matDialogSpy.open.and.returnValue({
-      afterClosed: () => of('confirm'),
-      componentInstance: { _animationStateChanged: of() } // 💡
+      afterClosed: () => of('cancel'),
+      componentInstance: {}
     } as any);
 
-    component.deleteSupplier(mockSupplier);
-    (sharedDataServiceSpy.replaceSupplierInIngredientsComplete$ as Subject<boolean>).next(false);
+    const supplier: Supplier = {
+      _id: 'abc123',
+      name: 'Test Supplier',
+      description: '',
+      ingredientCount: 0
+    };
 
-    expect(dialogServiceSpy.showInfo).toHaveBeenCalledWith(
-      'Échec lors du remplacement des fournisseurs liés. Suppression annulée.',
-      'error'
-    );
+    component.deleteSupplier(supplier);
+
     expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
   });
 });

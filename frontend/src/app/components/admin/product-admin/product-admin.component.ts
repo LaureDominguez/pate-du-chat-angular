@@ -67,8 +67,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadData(); // Charge les données initiales
-    this.fetchDlcs(); // Récupère la liste des DLCs
+    this.loadData();
+    this.fetchDlcs();
     this.deviceService.isMobile$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((isMobile) => {
@@ -77,8 +77,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         // console.log('OS :', this.deviceService.os);
         // console.log('Navigateur :', this.deviceService.browser);
       });
-
-      // console.log('tous les produits : ', this.products)
   }
 
   ngOnDestroy(): void {
@@ -93,41 +91,35 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
   loadData(): void {
     this.productService.finalProducts$
-      .pipe(takeUntil(this.unsubscribe$)) // Nettoie les souscriptions à la destruction du composant
+      .pipe(takeUntil(this.unsubscribe$))
       .subscribe((products) => {
         this.products.data = products.map((product) => ({
           ...product,
           category: product.category ? product.category : DEFAULT_CATEGORY,
         }));
-        // console.log('🚀 Produits finaux mis à jour :', products);
       });
 
     this.categoryService.categories$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categories) => {
         this.categories = categories;
-        // console.log('🚀 Catégories mises à jour :', categories);
       });
 
     this.ingredientService.ingredients$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((ingredients) => {
         this.ingredients = ingredients;
-        // console.log('🚀 product-admin -> Ingrédients mis à jour :', ingredients);
-        this.productService.loadFinalProducts(); // Rafraîchir les produits **UNE SEULE FOIS**
+        this.productService.loadFinalProducts();
       });
   }
 
   fetchDlcs(): void {
-    // console.log('🔍 Récupération des DLCs...');
     this.productService.getDlcs().subscribe((dlcs) => {
       this.dlcsList = dlcs;
-      // console.log('🚀 DLCs mis à jour :', dlcs);
     });
   }
 
   openProductForm(product: Product | null): void {
-    // console.log('🔍 Chargement des catégories et des ingrédients...');
     const imageUrls =
       product?.images?.map((imagePath) =>
         this.imageService.getImageUrl(imagePath)
@@ -148,7 +140,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
     instance.checkNameExists.subscribe((name: string) => {
       const excludedId = product?._id;
-      console.log('🔍 Vérification de l\'existence du nom :', name, excludedId);
 
       this.productService.checkExistingProducName(name, excludedId).subscribe((exists: boolean) => {
         if (exists) {
@@ -159,7 +150,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
             },
           });
         } else {
-          console.log('✅ Le nom est disponible !');
           instance.validateStockAndPrice();
         }
       });
@@ -177,13 +167,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           | undefined
       ) => {
         if (result) {
-          console.log(
-            '🔍 Résultat du formulaire de produit :',
-            result.productData,
-            result.selectedFiles,
-            result.removedExistingImages,
-            result.imageOrder
-          );
           this.handleProductFormSubmit(result);
         }
       }
@@ -206,35 +189,22 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     const productId = productData._id;
     // const existingImages = productData.existingImages ?? [];
 
-    // console.log('handleProductFormSubmit() :');
-    // console.log('📤 ImageOrder reçu du form :', imageOrder);
-    // console.log('📤 Fichiers sélectionnés :', selectedFiles.map(f => f.name));
-    // console.log('📤 Images existantes (paths) :', existingImages);
-
-    // 1️⃣ Supprimer les anciennes images supprimées
     removedExistingImages.forEach((path) => {
       const filename = path.replace(/^\/?uploads\/?/, '');
       this.imageService.deleteImage(filename).subscribe();
     });
 
-    // 2️⃣ Upload des nouvelles images si besoin
     if (selectedFiles.length > 0) {
       this.imageService.uploadImages(selectedFiles).subscribe({
         next: (response) => {
-          const uploadedPaths = response.imagePath; // ['/uploads/xxx.jpg', ...]
+          const uploadedPaths = response.imagePath;
           const uploadedNames = selectedFiles.map((f) => f.name);
 
-          // console.log('📤 Images uploadées :', uploadedPaths);
-          // console.log('📤 Noms des fichiers uploadés :', uploadedNames);
-
-          // 3️⃣ Reconstituer `images[]` dans l'ordre voulu
           productData.images = imageOrder.map((entry) => {
-            // ✅ 1. Ancienne image : elle est déjà un chemin complet
             if (entry.startsWith('/uploads/')) {
               return entry;
             }
 
-            // ✅ 2. Image preview (fichier sélectionné) → on cherche le nom dans uploadedNames
             const index = uploadedNames.findIndex((name) => entry.includes(name));
             return uploadedPaths[index] || '';
           }).filter(Boolean);
@@ -245,14 +215,12 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         error: (err) => this.showErrorDialog(err.message),
       });
     } else {
-      // 3️⃣ Sans nouveau fichier → reconstruire les chemins uniquement depuis les anciennes images
       productData.images = imageOrder.filter((entry) => entry.startsWith('/uploads/'));
       this.submitProductForm(productId, productData);
     }
   }
   
 
-  // 3️⃣ Soumettre le formulaire (création ou mise à jour)
   submitProductForm(productId?: string, productData?: any): void {
     console.log('🚀 Envoi du produit au backend :', productData); // LOG ICI 🔍
     if (productId) {
@@ -266,7 +234,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Afficher les erreurs dans une fenêtre modale
   private showErrorDialog(message: string, type = 'error'): void {
     this.dialog.open(InfoDialogComponent, {
       data: { message, type },
@@ -304,12 +271,10 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           default:
             break;
         }
-        // ✅ Suppression des images avant suppression de l’ingrédient
         product.images?.forEach((imageUrl) => {
           const filename = imageUrl.replace('/^/?uploads/?/', '');
           this.imageService.deleteImage(filename).subscribe();
         });
-        // ✅ Suppression finale de l’ingrédient
         this.confirmDeleteProduct(product);
       });
   }

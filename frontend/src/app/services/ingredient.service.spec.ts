@@ -39,11 +39,11 @@ describe('IngredientService', () => {
   beforeEach(() => {
 const sharedDataServiceSpy = jasmine.createSpyObj(
   'SharedDataService',
-  ['notifyIngredientUpdate', 'notifySupplierUpdate', 'emitReplaceSupplierInIngredientsComplete'],
+  ['notifyIngredientUpdate', 'notifySupplierUpdate'],
   {
     ingredientListUpdate$: of(),
     supplierListUpdate$: of(),
-    replaceSupplierInIngredients$: of(),
+    // replaceSupplierInIngredients$: of(),
   }
 );
 
@@ -146,58 +146,58 @@ const sharedDataServiceSpy = jasmine.createSpyObj(
     httpMock.expectOne('../assets/data/origines.json').flush(mockOrigines);
   });
   
-  it('devrait remplacer le fournisseur pour plusieurs ingrédients via SharedDataService', (done) => {
-    const replaceSubject = new Subject<{
-      oldSupplierId: string;
-      newSupplierId: string;
-      ingredientIds: string[];
-    }>();
+  // it('devrait remplacer le fournisseur pour plusieurs ingrédients via SharedDataService', (done) => {
+  //   const replaceSubject = new Subject<{
+  //     oldSupplierId: string;
+  //     newSupplierId: string;
+  //     ingredientIds: string[];
+  //   }>();
 
-    const sharedDataServiceSpy = jasmine.createSpyObj(
-      'SharedDataService',
-      ['notifyIngredientUpdate', 'notifySupplierUpdate', 'emitReplaceSupplierInIngredientsComplete'],
-      {
-        ingredientListUpdate$: of(),
-        supplierListUpdate$: of(),
-        replaceSupplierInIngredients$: replaceSubject.asObservable(),
-      }
-    );
+  //   const sharedDataServiceSpy = jasmine.createSpyObj(
+  //     'SharedDataService',
+  //     ['notifyIngredientUpdate', 'notifySupplierUpdate', 'emitReplaceSupplierInIngredientsComplete'],
+  //     {
+  //       ingredientListUpdate$: of(),
+  //       supplierListUpdate$: of(),
+  //       // replaceSupplierInIngredients$: replaceSubject.asObservable(),
+  //     }
+  //   );
 
-    TestBed.resetTestingModule().configureTestingModule({
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        IngredientService,
-      ],
-    }).compileComponents().then(() => {
-      service = TestBed.inject(IngredientService);
-      httpMock = TestBed.inject(HttpTestingController);
-      sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
+  //   TestBed.resetTestingModule().configureTestingModule({
+  //     providers: [
+  //       provideHttpClient(),
+  //       provideHttpClientTesting(),
+  //       { provide: SharedDataService, useValue: sharedDataServiceSpy },
+  //       IngredientService,
+  //     ],
+  //   }).compileComponents().then(() => {
+  //     service = TestBed.inject(IngredientService);
+  //     httpMock = TestBed.inject(HttpTestingController);
+  //     sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
 
-      httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]);
+  //     httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]);
 
-      const updateSpy = spyOn(service, 'updateIngredient').and.callFake((id: string, payload: any) => {
-        return of({ _id: id, name: 'Updated', supplier: payload.supplier } as Ingredient);
-      });
+  //     const updateSpy = spyOn(service, 'updateIngredient').and.callFake((id: string, payload: any) => {
+  //       return of({ _id: id, name: 'Updated', supplier: payload.supplier } as Ingredient);
+  //     });
 
-      // 🔁 Émet l’événement
-      replaceSubject.next({
-        oldSupplierId: 'old123',
-        newSupplierId: 'new456',
-        ingredientIds: ['ing1', 'ing2']
-      });
+  //     // 🔁 Émet l’événement
+  //     replaceSubject.next({
+  //       oldSupplierId: 'old123',
+  //       newSupplierId: 'new456',
+  //       ingredientIds: ['ing1', 'ing2']
+  //     });
 
-      // 💡 Petit délai pour laisser les Promises se résoudre
-      setTimeout(() => {
-        expect(updateSpy).toHaveBeenCalledTimes(2);
-        expect(updateSpy).toHaveBeenCalledWith('ing1', { supplier: 'new456' });
-        expect(updateSpy).toHaveBeenCalledWith('ing2', { supplier: 'new456' });
-        expect(sharedDataService.emitReplaceSupplierInIngredientsComplete).toHaveBeenCalledWith(true);
-        done();
-      }, 0);
-    });
-  });
+  //     // 💡 Petit délai pour laisser les Promises se résoudre
+  //     setTimeout(() => {
+  //       expect(updateSpy).toHaveBeenCalledTimes(2);
+  //       expect(updateSpy).toHaveBeenCalledWith('ing1', { supplier: 'new456' });
+  //       expect(updateSpy).toHaveBeenCalledWith('ing2', { supplier: 'new456' });
+  //       // expect(sharedDataService.emitReplaceSupplierInIngredientsComplete).toHaveBeenCalledWith(true);
+  //       done();
+  //     }, 0);
+  //   });
+  // });
 
 
   it('devrait gérer une erreur 500', (done) => {

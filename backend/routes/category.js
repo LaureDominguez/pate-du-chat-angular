@@ -61,7 +61,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -73,7 +73,7 @@ router.post(
 			.withMessage(
 				'Le champ "description" doit contenir entre 2 et 255 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -117,7 +117,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -129,7 +129,7 @@ router.put(
 			.withMessage(
 				'Le champ "description" doit contenir entre 2 et 255 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -174,9 +174,7 @@ router.put(
 router.delete('/:id', async (req, res) => {
 	try {
 		const categoryId = req.params.id;
-		// console.log('🚮 Catégorie supprimée :', categoryId);
 		const DEFAULT_CATEGORY_ID = '65a123456789abcd12345678';
-		// console.log('🚮 Catégorie par défaut :', DEFAULT_CATEGORY_ID);
 
 		if (!categoryId) {
 			return res.status(404).json({ msg: 'ID de la catégorie inconnu.' });
@@ -188,11 +186,9 @@ router.delete('/:id', async (req, res) => {
 				.json({ msg: 'Impossible de supprimer cette catégorie.' });
 		}
 
-		// Vérifier combien de produits sont associés à cette catégorie
 		const category = await Category.findById(categoryId).populate(
 			'productCount'
 		);
-		// console.log('🔍 Nombre de produits associés à la catégorie :', category);
 
 		if (!category) {
 			return res.status(404).json({ msg: 'Catégorie introuvable.' });
@@ -203,12 +199,9 @@ router.delete('/:id', async (req, res) => {
 				{ category: category._id },
 				{ category: DEFAULT_CATEGORY_ID }
 			)
-			// console.log('🔄 Produits déplacés vers la catégorie par défaut.');
 		}
 
 		await Category.findByIdAndDelete(req.params.id);
-
-		// console.log(`✅ Catégorie supprimée : ${category.name}`);
 
 		res.status(200).json({
 			message: 'Catégorie supprimée avec succès.',

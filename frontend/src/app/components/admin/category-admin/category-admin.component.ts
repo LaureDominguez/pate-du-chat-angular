@@ -10,6 +10,7 @@ import { SharedDataService } from '../../../services/shared-data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DEFAULT_CATEGORY } from '../../../models/category';
 import { catchError, of, Subject, takeUntil, tap } from 'rxjs';
+import { DialogService } from '../../../services/dialog.service';
 
 @Component({
   selector: 'app-category-admin',
@@ -42,30 +43,23 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private sharedDataService: SharedDataService
+    private sharedDataService: SharedDataService,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
-    // console.log('📋 CategoryAdmin → INIT');
-
-    // Écoute les catégories mises à jour via le BehaviorSubject
     this.categoryService.getCategories()
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categories) => {
-        // console.log('[CATEGORY ADMIN] 🔄 categories$ subscription triggered:', categories);
         if (!categories.some((cat) => cat._id === DEFAULT_CATEGORY._id)) {
           categories.unshift(DEFAULT_CATEGORY);
         }
         this.categories.data = categories;
       });
 
-    // Écoute les nouvelles catégories envoyées par product-form
-    // console.log('👂 category-admin -> abonnement au requestNewCategory$');
-
     this.sharedDataService.requestNewCategory$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((data) => {
-        // console.log('📋 category-admin -> Demande de création de catégorie :', data);
         this.createNewCategory(data);
       });
   }
@@ -73,24 +67,24 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
-    // console.log('[CATEGORY ADMIN] 💥 ngOnDestroy');
   }
 
   ngAfterViewInit(): void {
     this.categories.paginator = this.categoriesPaginator;
     this.categories.sort = this.categoriesSort;
-    // console.log('[CATEGORY ADMIN] 👀 ngAfterViewInit');
   }
 
-  // Méthodes pour gérer les catégories
   startEditingCategory(category: Category | null = null, focusField?: 'name' | 'description'): void {
     if (this.editingCategory && this.editingCategory._id === null) {
-      // console.warn('⚠️ Ignoré : une ligne de création est déjà active.');
+      return;
+    }
+
+    if (this.editingCategory && this.editingCategory._id !== category?._id) {
       return;
     }
 
     if (category && this.isDefaultCategory(category)) {
-      return; // Ne pas éditer "Sans catégorie"
+      return; 
     }
 
     const autoFocusField: 'name' | 'description' | undefined = !category && !focusField ? 'name' : focusField;
@@ -104,14 +98,14 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ],
       ],
       description: [
         this.editingCategory.description,
         [
           Validators.maxLength(100),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ]
       ]
     });
@@ -131,19 +125,16 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  //Cancel et ferme la fenetre
   cancelEditingCategory(event?: FocusEvent): void {
     const relatedTarget = event?.relatedTarget as HTMLElement;
+
     if (relatedTarget && relatedTarget.closest('.editing-mode')) {
       return;
     }
     setTimeout(() => {
       this.editingCategory = null;
-      // Supprimer la ligne temporaire si on était en création
       this.categories.data = this.categories.data.filter(cat => cat._id !== null);
     }, 0);
-    // this.editingCategory = null;
-    // this.categories.data = this.categories.data.filter(cat => cat._id !== null);
   }
 
   formatNameInput(name: string): string {
@@ -151,7 +142,6 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     return name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
   }
   
-
   //Save
   saveCategory(category: Category): void {
     if (this.categoryForm.invalid) {
@@ -164,21 +154,25 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       description: this.formatNameInput(this.categoryForm.get('description')?.value),
     };
 
-    // console.log('save -> newCategory', newCategory);  
-
     const request$ = category._id
       ? this.categoryService.updateCategory(category._id, newCategory)
       : this.categoryService.createCategory(newCategory);
 
-    request$
-      .pipe(
-        tap(() => this.cancelEditingCategory()),
-        catchError(() => {
-          this.cancelEditingCategory();
-          return of(null);
-        })
-      )
-      .subscribe();
+    request$.pipe(
+      tap(() => {
+        this.dialogService.showInfo(
+          category._id ? 'Catégorie mise à jour' : 'Catégorie créée',
+          'success'
+        );
+        this.cancelEditingCategory()
+      }),
+      catchError((error) => {
+        this.cancelEditingCategory();
+        this.dialogService.showHttpError(error);
+        return of(null);
+      })
+    ).subscribe();
+    this.sharedDataService.notifyCategoryUpdate();
   }
 
   // Création depuis product-Form
@@ -188,25 +182,31 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       name: this.formatNameInput(data.name),
       description: data.description || '',
     };
-    // console.log('📋 category-admin -> createNewCategory -> newCategory :', newCategory);
 
     this.categoryService
       .createCategory(newCategory)
-      .subscribe((createdCategory) => {
-        // Envoie l'objet complet avec l'ID généré
-        this.sharedDataService.sendCategoryToProductForm(createdCategory);
-      });
+      .subscribe({
+        next: (createdCategory) => {
+          this.dialogService.showInfo(
+            'Catégorie créée avec succès.',
+            'success'
+          );
+          this.sharedDataService.sendCategoryToProductForm(createdCategory);
+        },
+        error: (error) => {
+          this.dialogService.showHttpError(error);
+      }
+    });
   }
 
-  //Delete
+
   deleteCategory(category: Category): void {
     if (this.isDefaultCategory(category)) {
-      return; // Ne pas supprimer "Sans catégorie"
+      this.dialogService.showInfo('Vous ne pouvez pas supprimer la catégorie "Sans catégorie".', 'info');
+      return;
     }
 
     if (category.productCount && category.productCount > 0) {
-      // console.log('pouet : ', category.productCount);
-
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '400px',
         data: {
@@ -217,7 +217,6 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       });
       dialogRef.afterClosed().subscribe((result) => {
         if (result  === 'confirm') {
-          // console.log('pouet supprimé : ', category.productCount);
           this.categoryService
             .deleteCategory(category._id!)
             .subscribe(() => {});

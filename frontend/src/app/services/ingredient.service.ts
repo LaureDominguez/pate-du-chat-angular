@@ -22,7 +22,7 @@ export class IngredientService {
     private sharedDataService: SharedDataService
   ) {
     this.loadIngredients(); // Charger les ingrédients au démarrage
-    this.handleSupplierReplacement();
+    // this.handleSupplierReplacement();
 
     this.sharedDataService.ingredientListUpdate$.subscribe(() => {
       this.loadIngredients();
@@ -91,26 +91,26 @@ export class IngredientService {
     );
   }
 
-  private handleSupplierReplacement(): void {
-    this.sharedDataService.replaceSupplierInIngredients$.subscribe(
-      ({ oldSupplierId, newSupplierId, ingredientIds }) => {
-        const updates = ingredientIds.map(id =>
-          firstValueFrom(this.updateIngredient(id, { supplier: newSupplierId }))
-        );
+  // private handleSupplierReplacement(): void {
+  //   this.sharedDataService.replaceSupplierInIngredients$.subscribe(
+  //     ({ oldSupplierId, newSupplierId, ingredientIds }) => {
+  //       const updates = ingredientIds.map(id =>
+  //         firstValueFrom(this.updateIngredient(id, { supplier: newSupplierId }))
+  //       );
 
-        Promise.all(updates)
-          .then(() => {
-            console.log('✅ Tous les ingrédients ont été mis à jour avec le nouveau fournisseur.');
-            this.sharedDataService.emitReplaceSupplierInIngredientsComplete(true);
-          })
-          .catch((error) => {
-            console.error('❌ Erreur lors de la mise à jour des ingrédients :', error);
-            this.sharedDataService.emitReplaceSupplierInIngredientsComplete(false);
-          });
-          console.log(`🔁 Remplacement du fournisseur ${oldSupplierId} → ${newSupplierId} pour :`, ingredientIds);
-      }
-    );
-  }
+  //       Promise.all(updates)
+  //         .then(() => {
+  //           console.log('✅ Tous les ingrédients ont été mis à jour avec le nouveau fournisseur.');
+  //           this.sharedDataService.emitReplaceSupplierInIngredientsComplete(true);
+  //         })
+  //         .catch((error) => {
+  //           console.error('❌ Erreur lors de la mise à jour des ingrédients :', error);
+  //           this.sharedDataService.emitReplaceSupplierInIngredientsComplete(false);
+  //         });
+  //         console.log(`🔁 Remplacement du fournisseur ${oldSupplierId} → ${newSupplierId} pour :`, ingredientIds);
+  //     }
+  //   );
+  // }
 
 
   deleteIngredient(id: string): Observable<{ message: string }> {

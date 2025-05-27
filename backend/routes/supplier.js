@@ -1,6 +1,7 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 const router = express.Router();
+const Ingredient = require('../models/ingredient');
 const Supplier = require('../models/supplier');
 const sanitize = require('mongo-sanitize');
 

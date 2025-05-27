@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SharedDataService, QuickCreateData } from './shared-data.service';
 import { Category } from '../models/category';
-import { Ingredient } from '../models/ingredient';
+// import { Ingredient } from '../models/ingredient';
 import { Supplier } from '../models/supplier';
 import { firstValueFrom } from 'rxjs';
 
@@ -79,35 +79,35 @@ describe('SharedDataService', () => {
     service.notifySupplierUpdate();
   });
 
-    it('devrait émettre une demande de remplacement de supplier dans les ingrédients', async () => {
-    const payload = {
-      oldSupplierId: 'supplier-1',
-      newSupplierId: 'default-supplier',
-      ingredientIds: ['ing1', 'ing2']
-    };
+  //   it('devrait émettre une demande de remplacement de supplier dans les ingrédients', async () => {
+  //   const payload = {
+  //     oldSupplierId: 'supplier-1',
+  //     newSupplierId: 'default-supplier',
+  //     ingredientIds: ['ing1', 'ing2']
+  //   };
 
-    firstValueFrom(service.replaceSupplierInIngredients$).then((data) => {
-      expect(data).toEqual(payload);
-    });
+  //   firstValueFrom(service.replaceSupplierInIngredients$).then((data) => {
+  //     expect(data).toEqual(payload);
+  //   });
 
-    service.emitReplaceSupplierInIngredients(payload.oldSupplierId, payload.newSupplierId, payload.ingredientIds);
-  });
+  //   service.emitReplaceSupplierInIngredients(payload.oldSupplierId, payload.newSupplierId, payload.ingredientIds);
+  // });
 
-    it('devrait émettre la confirmation du remplacement des suppliers dans les ingrédients', async () => {
-    firstValueFrom(service.replaceSupplierInIngredientsComplete$).then((success) => {
-      expect(success).toBeTrue();
-    });
+  //   it('devrait émettre la confirmation du remplacement des suppliers dans les ingrédients', async () => {
+  //   firstValueFrom(service.replaceSupplierInIngredientsComplete$).then((success) => {
+  //     expect(success).toBeTrue();
+  //   });
 
-    service.emitReplaceSupplierInIngredientsComplete(true);
-  });
+  //   service.emitReplaceSupplierInIngredientsComplete(true);
+  // });
 
-  it('devrait émettre un échec de remplacement des suppliers dans les ingrédients', async () => {
-    firstValueFrom(service.replaceSupplierInIngredientsComplete$).then((success) => {
-      expect(success).toBeFalse();
-    });
+  // it('devrait émettre un échec de remplacement des suppliers dans les ingrédients', async () => {
+  //   firstValueFrom(service.replaceSupplierInIngredientsComplete$).then((success) => {
+  //     expect(success).toBeFalse();
+  //   });
 
-    service.emitReplaceSupplierInIngredientsComplete(false);
-  });
+  //   service.emitReplaceSupplierInIngredientsComplete(false);
+  // });
 
   it('devrait notifier une demande de création d\'ingrédient', async () => {
     firstValueFrom(service.requestNewIngredient$).then(() => {

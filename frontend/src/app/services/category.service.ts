@@ -22,22 +22,18 @@ export class CategoryService {
     private sharedDataService: SharedDataService,
     private dialog: MatDialog
   ) {
-    this.loadCategories(); // Charger les catégories au démarrage
+    this.loadCategories();
 
     this.sharedDataService.categoryListUpdate$.subscribe(() => {
-      // console.log('[CATEGORY SERVICE] 📥 categoryListUpdate$');
       this.loadCategories();
     });
 
     this.sharedDataService.productListUpdate$.subscribe(() => {
-      // console.log('[CATEGORY SERVICE] 📥 productListUpdate$');
       this.loadCategories();
     });
   }
 
-  // Charge les catégories et met à jour le BehaviorSubject
   private loadCategories(): void {
-    // console.log('[CATEGORY SERVICE] 📥 loadCategories() called');
     this.http
       .get<Category[]>(this.apiUrl)
       .pipe(
@@ -56,7 +52,6 @@ export class CategoryService {
                 : 0
             );
           }
-          // console.log('[CATEGORY SERVICE] 📦 Categories fetched from API:', categories);
           this.categoriesSubject.next(categories);
         }),
         catchError((error) => {
@@ -64,7 +59,7 @@ export class CategoryService {
             '❌ Erreur lors de la récupération des catégories :',
             error
           );
-          this.categoriesSubject.next([DEFAULT_CATEGORY]); // Sécurise le frontend pour éviter un crash
+          this.categoriesSubject.next([DEFAULT_CATEGORY]);
           return throwError(
             () => new Error('Erreur lors du chargement des catégories')
           );
@@ -73,33 +68,29 @@ export class CategoryService {
       .subscribe();
   }
 
-  // Récupérer toutes les catégories
   getCategories(): Observable<Category[]> {
     return this.categories$;
   }
 
-  // Récupérer une catégorie par son ID
   getCategoryById(id: string): Observable<Category> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.get<Category>(url);
   }
 
-  // Créer une nouvelle catégorie
   createCategory(payload: any): Observable<Category> {
     return this.http.post<Category>(this.apiUrl, payload).pipe(
       tap(() => {
-        this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
+        this.sharedDataService.notifyCategoryUpdate();
       }),
       catchError(this.handleError.bind(this))
     );
   }
 
-  // Mettre à jour une catégorie existante
   updateCategory(id: string, payload: any): Observable<Category> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Category>(url, payload).pipe(
       tap(() => {
-        this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
+        this.sharedDataService.notifyCategoryUpdate();
       }),
       catchError(this.handleError.bind(this))
     );
@@ -108,11 +99,9 @@ export class CategoryService {
   // Supprimer une catégorie
   deleteCategory(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
-    console.log('Service -> deleteCategory -> url', url);
-    console.log('Service -> deleteCategory -> id', id);
     return this.http.delete<{ message: string }>(url).pipe(
       tap(() => {
-        this.sharedDataService.notifyCategoryUpdate(); // Notifie les abonnés
+        this.sharedDataService.notifyCategoryUpdate();
       }),
       catchError(this.handleError.bind(this))
     );
