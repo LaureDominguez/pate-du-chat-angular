@@ -6,9 +6,10 @@
     (cdkDropListDropped)="onDrop($event)">
     <div 
         class="carousel-image" 
-
         [class.expanded]="activeControlIndex === i && !isDragging"
         [ngClass]="{ 'active': activeControlIndex === i && !isDragging }"
+        (mouseenter)="onMouseEnter(i)"
+        (mouseleave)="onMouseLeave()"
         *ngFor="let img of images; let i = index"
         
     >

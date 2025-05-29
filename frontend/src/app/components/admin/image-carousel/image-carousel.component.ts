@@ -47,6 +47,28 @@ onDrop(event: CdkDragDrop<ProcessedImage[]>) {
   }
 }
 
+hoverTimeout: any = null;
+
+onMouseEnter(index: number): void {
+  this.clearHoverTimeout(); // au cas où
+  this.hoverTimeout = setTimeout(() => {
+    this.activeControlIndex = index;
+  }, 300); // 0.3 seconde
+}
+
+onMouseLeave(): void {
+  this.clearHoverTimeout();
+  this.activeControlIndex = null;
+}
+
+private clearHoverTimeout(): void {
+  if (this.hoverTimeout) {
+    clearTimeout(this.hoverTimeout);
+    this.hoverTimeout = null;
+  }
+}
+
+
   disableAnimation() {
     console.log('disableAnimation', this.controller);
     this.controller?.disable();
@@ -63,41 +85,23 @@ onDrop(event: CdkDragDrop<ProcessedImage[]>) {
 
   moveImageLeft(index: number): void {
     if (index > 0) {
-      moveItemInArray(this.images, index, index - 1); // ✅ En place
+      moveItemInArray(this.images, index, index - 1); 
       requestAnimationFrame(() => {
         this.reorder.emit(this.images);
       });
       this.activeControlIndex = index - 1;
     }
   }
-  
-  // moveImageLeft(index: number): void {
-  //   if (index > 0) {
-  //     const newImages = [...this.images];
-  //     [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
-  //     this.reorder.emit(newImages);
-  //     this.activeControlIndex = index - 1; // Move the active control to the left image
-  //   }
-  // }
 
   moveImageRight(index: number): void {
     if (index < this.images.length - 1) {
-      moveItemInArray(this.images, index, index + 1); // ✅ En place
+      moveItemInArray(this.images, index, index + 1); 
       requestAnimationFrame(() => {
         this.reorder.emit(this.images);
       });
       this.activeControlIndex = index + 1;
     }
   }
-
-  // moveImageRight(index: number): void {
-  //   if (index < this.images.length - 1) {
-  //     const newImages = [...this.images];
-  //     [newImages[index + 1], newImages[index]] = [newImages[index], newImages[index + 1]];
-  //     this.reorder.emit(newImages);
-  //     this.activeControlIndex = index + 1; // Move the active control to the right image
-  //   }
-  // }  
 
   removeImage(image: ProcessedImage): void {
     this.remove.emit(image);
