@@ -25,82 +25,100 @@ describe('DialogService', () => {
     expect(service).toBeTruthy();
   });
 
-  // it('devrait ouvrir une InfoDialog avec showInfo()', () => {
-  //   service.showInfo('Test message', 'success');
+  it('devrait ouvrir une InfoDialog avec info()', () => {
+    service.info('Message info', 'Titre info');
 
-  //   expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
-  //     width: '400px',
-  //     data: { message: 'Test message', type: 'success' }
-  //   });
-  // });
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Message info', title: 'Titre info' }
+    });
+  });
 
-  // it('devrait afficher une erreur 400 multiple via showHttpError()', () => {
-  //   const error = new HttpErrorResponse({
-  //     status: 400,
-  //     error: { errors: [{ msg: 'Erreur A' }, { msg: 'Erreur B' }] }
-  //   });
+  it('devrait ouvrir une InfoDialog avec success()', () => {
+    service.success('Succès !');
 
-  //   service.showHttpError(error);
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Succès !', title: 'Succès' }
+    });
+  });
 
-  //   expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
-  //     width: '400px',
-  //     data: { message: 'Erreur A<br>Erreur B', type: 'error' }
-  //   });
-  // });
+  it('devrait ouvrir une InfoDialog avec error()', () => {
+    service.error('Erreur !');
 
-  // it('devrait afficher une erreur 400 simple via showHttpError()', () => {
-  //   const error = new HttpErrorResponse({
-  //     status: 400,
-  //     error: { msg: 'Erreur simple' }
-  //   });
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Erreur !', title: 'Erreur' }
+    });
+  });
 
-  //   service.showHttpError(error);
+  it('devrait afficher une erreur 400 multiple via showHttpError()', () => {
+    const error = new HttpErrorResponse({
+      status: 400,
+      error: { errors: [{ msg: 'Erreur A' }, { msg: 'Erreur B' }] }
+    });
 
-  //   expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
-  //     width: '400px',
-  //     data: { message: 'Erreur simple', type: 'error' }
-  //   });
-  // });
+    service.showHttpError(error);
 
-  // it('devrait afficher une erreur 404 via showHttpError()', () => {
-  //   const error = new HttpErrorResponse({
-  //     status: 404,
-  //     error: { msg: 'Non trouvé' }
-  //   });
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Erreur A<br>Erreur B', title: 'Erreur' }
+    });
+  });
 
-  //   service.showHttpError(error);
+  it('devrait afficher une erreur 400 simple via showHttpError()', () => {
+    const error = new HttpErrorResponse({
+      status: 400,
+      error: { msg: 'Erreur simple' }
+    });
 
-  //   expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
-  //     width: '400px',
-  //     data: { message: 'Non trouvé', type: 'error' }
-  //   });
-  // });
+    service.showHttpError(error);
 
-  // it('devrait afficher une erreur 500 via showHttpError()', () => {
-  //   const error = new HttpErrorResponse({
-  //     status: 500,
-  //     error: {}
-  //   });
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Erreur simple', title: 'Erreur' }
+    });
+  });
 
-  //   service.showHttpError(error);
+  it('devrait afficher une erreur 404 via showHttpError()', () => {
+    const error = new HttpErrorResponse({
+      status: 404,
+      error: {}
+    });
 
-  //   expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
-  //     width: '400px',
-  //     data: { message: 'Erreur serveur. Veuillez réessayer plus tard.', type: 'error' }
-  //   });
-  // });
+    service.showHttpError(error);
 
-  // it('devrait afficher une erreur inconnue via showHttpError()', () => {
-  //   const error = new HttpErrorResponse({
-  //     status: 0,
-  //     error: {}
-  //   });
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Ressource introuvable.', title: 'Erreur' }
+    });
+  });
 
-  //   service.showHttpError(error);
+  it('devrait afficher une erreur 500 via showHttpError()', () => {
+    const error = new HttpErrorResponse({
+      status: 500,
+      error: {}
+    });
 
-  //   expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
-  //     width: '400px',
-  //     data: { message: 'Une erreur inconnue est survenue.', type: 'error' }
-  //   });
-  // });
+    service.showHttpError(error);
+
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Erreur serveur. Veuillez réessayer plus tard.', title: 'Erreur' }
+    });
+  });
+
+  it('devrait afficher une erreur inconnue via showHttpError()', () => {
+    const error = new HttpErrorResponse({
+      status: 0,
+      error: {}
+    });
+
+    service.showHttpError(error);
+
+    expect(dialogSpy.open).toHaveBeenCalledWith(jasmine.any(Function), {
+      width: '400px',
+      data: { message: 'Une erreur inconnue est survenue.', title: 'Erreur' }
+    });
+  });
 });

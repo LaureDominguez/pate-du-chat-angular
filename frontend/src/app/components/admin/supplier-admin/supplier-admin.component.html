@@ -162,7 +162,13 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedSuppliersColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedSuppliersColumns;"></tr>
+        <tr mat-row 
+            *matRowDef="let row; columns: displayedSuppliersColumns;"
+            [ngClass]="{ 
+                'highlighted-row': highlightedSupplierId && row._id === highlightedSupplierId && row._id !== editingSupplierId,
+                'editing-row': editingSupplierId && row._id === editingSupplierId 
+            }"
+        ></tr>
     </table>
 
     <mat-divider></mat-divider>

@@ -3,13 +3,11 @@ import { SupplierAdminComponent } from './supplier-admin.component';
 import { SupplierService } from '../../../services/supplier.service';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
-import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
 import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-
 
 describe('SupplierAdminComponent', () => {
   let component: SupplierAdminComponent;
@@ -17,7 +15,6 @@ describe('SupplierAdminComponent', () => {
   let supplierServiceSpy: jasmine.SpyObj<SupplierService>;
   let sharedDataServiceSpy: jasmine.SpyObj<SharedDataService>;
   let dialogServiceSpy: jasmine.SpyObj<DialogService>;
-  let matDialogSpy: jasmine.SpyObj<MatDialog>;
 
   beforeEach(async () => {
     supplierServiceSpy = jasmine.createSpyObj('SupplierService', [
@@ -26,20 +23,13 @@ describe('SupplierAdminComponent', () => {
 
     sharedDataServiceSpy = jasmine.createSpyObj(
       'SharedDataService',
-      ['sendSupplierToIngredientForm', 'notifySupplierUpdate', 'requestNewSupplier$',]
+      ['sendSupplierToIngredientForm', 'notifySupplierUpdate'],
+      { requestNewSupplier$: of() }
     );
-    
-    Object.defineProperty(sharedDataServiceSpy, 'requestNewSupplier$', {
-      value: of()
-    });
 
-    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['showInfo', 'showHttpError']);
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm']);
+    dialogServiceSpy.confirm.and.returnValue(of('confirm'));
 
-    matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
-    matDialogSpy.open.and.returnValue({
-      afterClosed: () => of('confirm'),
-      componentInstance: {}
-    } as any);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -54,14 +44,6 @@ describe('SupplierAdminComponent', () => {
         { provide: DialogService, useValue: dialogServiceSpy }
       ]
     }).compileComponents();
-
-    TestBed.overrideComponent(SupplierAdminComponent, {
-  set: {
-    providers: [
-      { provide: MatDialog, useValue: matDialogSpy }
-    ]
-  }
-});
 
     fixture = TestBed.createComponent(SupplierAdminComponent);
     component = fixture.componentInstance;
@@ -98,39 +80,31 @@ describe('SupplierAdminComponent', () => {
 
   it('devrait refuser de supprimer le fournisseur par défaut', () => {
     component.deleteSupplier(DEFAULT_SUPPLIER);
-    expect(dialogServiceSpy.showInfo).toHaveBeenCalledWith(
-      'Le fournisseur par défaut ne peut pas être supprimé.',
-      'info'
+    expect(dialogServiceSpy.info).toHaveBeenCalledWith(
+      'Vous ne pouvez pas supprimer le fournisseur "Sans fournisseur".'
     );
     expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
   });
 
-it('devrait supprimer un fournisseur après confirmation', fakeAsync(() => {
-  const supplier: Supplier = {
-    _id: 'abc123',
-    name: 'Test Supplier',
-    description: '',
-    ingredientCount: 0
-  };
+  it('devrait supprimer un fournisseur après confirmation', fakeAsync(() => {
+    const supplier: Supplier = {
+      _id: 'abc123',
+      name: 'Test Supplier',
+      description: '',
+      ingredientCount: 0
+    };
 
-  supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'Fournisseur supprimé avec succès.' }));
+    supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'Fournisseur supprimé avec succès.' }));
 
-  component.deleteSupplier(supplier);
-  tick();
+    component.deleteSupplier(supplier);
+    tick();
 
-  expect(matDialogSpy.open).toHaveBeenCalled();
-  expect(supplierServiceSpy.deleteSupplier).toHaveBeenCalledWith('abc123');
-  expect(dialogServiceSpy.showInfo).toHaveBeenCalledWith(
-    'Fournisseur supprimé avec succès.',
-    'success'
-  );
-}));
+    expect(supplierServiceSpy.deleteSupplier).toHaveBeenCalledWith('abc123');
+    expect(dialogServiceSpy.info).toHaveBeenCalledWith('Fournisseur supprimé avec succès.');
+  }));
 
   it('ne devrait rien faire si l’utilisateur annule la suppression', () => {
-    matDialogSpy.open.and.returnValue({
-      afterClosed: () => of('cancel'),
-      componentInstance: {}
-    } as any);
+    dialogServiceSpy.confirm.and.returnValue(of('cancel')); // Ajout pour ce test précis
 
     const supplier: Supplier = {
       _id: 'abc123',
@@ -140,7 +114,28 @@ it('devrait supprimer un fournisseur après confirmation', fakeAsync(() => {
     };
 
     component.deleteSupplier(supplier);
-
     expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
   });
+  
+  it('devrait retourner \\u0000 pour le fournisseur highlighté (hors édition)', () => {
+    const supplier: Supplier = { _id: '2', name: 'Nom', description: '', ingredientCount: 0 };
+
+    component.highlightedSupplierId = '2';
+    component.editingSupplierId = null;
+
+    const result = component.suppliers.sortingDataAccessor(supplier, 'name');
+    expect(result).toBe('\u0000');
+  });
+
+  it('ne devrait pas retourner \\u0000 si le fournisseur est en cours d’édition', () => {
+    const supplier: Supplier = { _id: '2', name: 'Nom', description: '', ingredientCount: 0 };
+
+    component.highlightedSupplierId = '2';
+    component.editingSupplierId = '2'; // même ID que highlighté
+
+    const result = component.suppliers.sortingDataAccessor(supplier, 'name');
+    expect(result).toBe('Nom');
+  });
+
+
 });
