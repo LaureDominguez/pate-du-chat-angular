@@ -74,7 +74,7 @@ export class ProductFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
-    private imageService: ImageService,
+    // private imageService: ImageService,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -118,14 +118,19 @@ export class ProductFormComponent implements OnInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^(?=.*\S)[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/),
+          Validators.pattern(/\S+/),
+          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ],
       ],
-      category: [data.product?.category || '', [Validators.required]],
+      category: [
+        data.product?.category || '', 
+        [Validators.required]
+      ],
       description: [
         data.product?.description || '',
         [
           Validators.maxLength(500),
+          Validators.pattern(/\S+/),
           Validators.pattern(
             /^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
           ),
@@ -140,6 +145,7 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.required,
           Validators.maxLength(50),
+          Validators.pattern(/\S+/),
           Validators.pattern(
             /^(?=.*\S)[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
           ),
@@ -149,6 +155,7 @@ export class ProductFormComponent implements OnInit {
         isCustom ? existingDlc : '',
         [
           Validators.maxLength(50),
+          Validators.pattern(/\S+/),
           Validators.pattern(
             /^(?=.*\S)[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
           ),
@@ -159,6 +166,7 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.required,
           Validators.maxLength(250),
+          Validators.pattern(/\S+/),
           Validators.pattern(
             /^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
           ),
@@ -167,11 +175,12 @@ export class ProductFormComponent implements OnInit {
       stock: [data.product?.stock || false],
       stockQuantity: [
         data.product?.stockQuantity !== null &&
-        data.product?.stockQuantity !== undefined
+          data.product?.stockQuantity !== undefined
           ? data.product?.stockQuantity
           : null,
         [
           Validators.required,
+          Validators.pattern(/\S+/),
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
           Validators.min(0),
         ],
@@ -187,6 +196,7 @@ export class ProductFormComponent implements OnInit {
         [
           Validators.required,
           Validators.min(0),
+          Validators.pattern(/\S+/),
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
         ],
       ],
@@ -202,7 +212,7 @@ export class ProductFormComponent implements OnInit {
     this.setupAutoComplete();
     this.subscribeToDataUpdates();
     this.updateProcessedImages();
-    this.updateStockToggleState(); 
+    this.updateStockToggleState();
 
     this.productForm.get('stockQuantity')?.valueChanges.subscribe(() => {
       this.updateStockToggleState(); // Réévalue à chaque changement
@@ -345,14 +355,14 @@ export class ProductFormComponent implements OnInit {
     const stockCtrl = this.stock;
     const value = this.stockQuantity?.value;
     const numericValue = parseFloat(value);
-  
+
     const shouldEnable =
       value !== null &&
       value !== undefined &&
       value !== '' &&
       !isNaN(numericValue) &&
       numericValue > 0;
-  
+
     if (shouldEnable) {
       stockCtrl?.enable({ emitEvent: false });
     } else {
@@ -360,7 +370,7 @@ export class ProductFormComponent implements OnInit {
       stockCtrl?.disable({ emitEvent: false });
     }
   }
-  
+
 
   //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
@@ -406,10 +416,6 @@ export class ProductFormComponent implements OnInit {
     this.sharedDataService.ingredientCreated$.subscribe((newIngredient) =>
       this.updateList(newIngredient, this.ingredients, 'ingredient')
     );
-    // console.log(
-    //   'product-form -> subscribeToDataUpdates -> ingredients :',
-    //   this.ingredients
-    // );
   }
 
   private updateList(
@@ -435,7 +441,7 @@ export class ProductFormComponent implements OnInit {
       this.categoryCtrl.setValue('');
     } else {
       this.productForm.patchValue({ category: category });
-      this.categoryCtrl.setValue(category ? category.name : 'Sans catégorie');
+      this.categoryCtrl.setValue(category ? category.name : '');
     }
   }
 
@@ -449,14 +455,14 @@ export class ProductFormComponent implements OnInit {
             label: 'Nom de la catégorie',
             required: true,
             maxLength: 50,
-            pattern: /^(?=.*\S)[a-zA-Z0-9À-ÿŒœ\s-']+$/,
+            pattern: /^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/,
             defaultValue: this.formatNameInput(searchedValue),
           },
           {
             name: 'description',
             label: 'Description de la catégorie',
             maxLength: 100,
-            pattern: /^(?=.*\S)[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/,
+            pattern: /^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/,
           },
         ],
       },
@@ -465,16 +471,17 @@ export class ProductFormComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sharedDataService.requestCategoryCreation(result);
+        console.log('📋 Catégorie créée :', result);
       }
     });
   }
   onCategoryBlur(): void {
     const inputValue = this.categoryCtrl.value;
     const selectedCategory = this.productForm.get('category')?.value;
-  
+
     if (!selectedCategory) {
       this.category?.markAsTouched();
-  
+
       // Cas 1 : texte saisi mais aucun choix sélectionné
       if (inputValue && typeof inputValue === 'string') {
         this.category?.setErrors({ invalidSelection: true });
@@ -490,9 +497,9 @@ export class ProductFormComponent implements OnInit {
     this.categoryCtrl.setValue('');
     this.productForm.get('category')?.reset();
   }
-  
-  
-  
+
+
+
 
   /////////////////////////////////////////////////////////////////////////////////
   ////////// Gestion des ingrédients
@@ -571,7 +578,7 @@ export class ProductFormComponent implements OnInit {
   clearIngredientSearch(): void {
     this.ingredientCtrl.setValue('');
   }
-  
+
 
   getIngredientTooltip(ingredient: Ingredient): string {
     return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
@@ -584,7 +591,7 @@ export class ProductFormComponent implements OnInit {
   onIngredientBlur(): void {
     const typedValue = this.ingredientCtrl.value;
     const currentComposition = this.composition;
-  
+
     if (currentComposition.length === 0) {
       // Cas 1 : l'utilisateur a écrit mais n'a rien sélectionné
       if (typedValue && typeof typedValue === 'string') {
@@ -593,14 +600,11 @@ export class ProductFormComponent implements OnInit {
         // Cas 2 : il n'a rien fait du tout
         this.productForm.get('composition')?.setErrors({ required: true });
       }
-  
+
       this.productForm.get('composition')?.markAsTouched();
     }
   }
-  
 
-  /////////////////////////////////////////////////////////////////////////////////
-  // ///////////////////////// Gestion des images
 
   /////////////////////////////////////////////////////////////////////////////////
   // ///////////////////////// Gestion des images
@@ -716,7 +720,7 @@ export class ProductFormComponent implements OnInit {
           this.validateAndSubmit();
         }
       });
-      
+
     } else {
       this.validateAndSubmit();
     }

@@ -12,16 +12,27 @@ import { SharedDataService } from '../../../../services/shared-data.service';
 import { map, Observable, startWith, Subject } from 'rxjs';
 import { Supplier } from '../../../../models/supplier';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
+import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
+import { ProcessedImage } from '../../../../models/image';
 
 @Component({
   selector: 'app-ingredient-form',
   standalone: true,
-  imports: [AdminModule],
+  imports: [AdminModule, ImageCarouselComponent],
   templateUrl: './ingredient-form.component.html',
   styleUrls: ['./ingredient-form.component.scss'],
 })
 export class IngredientFormComponent {
   ingredientForm: FormGroup;
+
+  @Output() checkNameExists = new EventEmitter<string>();
+  @Output() formValidated = new EventEmitter<{
+    ingredientData: any;
+    selectedFiles: File[];
+    removedExistingImages: string[];
+    imageOrder: string[];
+  }>();
+
 
   // Fournisseurs
   suppliers: Supplier[] = [];
@@ -39,14 +50,9 @@ export class IngredientFormComponent {
   subIngredientNotFound: boolean = false;
   
   // Images
-  selectedFiles: File[] = [];
-  filePreviews: string[] = [];
-  existingImages: string[] = [];
-  existingImageUrls: string[] = [];
-  removedExistingImages: string[] = [];
-
-  ////////////////// je sais pas ce que c'est ???
-  @Output() downloadImageEvent = new EventEmitter<string>();
+    selectedFiles: File[] = [];
+    removedExistingImages: string[] = [];
+    processedImages: ProcessedImage[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -55,20 +61,33 @@ export class IngredientFormComponent {
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
-      imageUrls: string[];
+      // imageUrls: string[];
       ingredient: Ingredient | null;
       allergenesList: string[];
       suppliers: Supplier[];
       originesList: { label: string; options: string[] }[];
       searchedValue: string;
       ingredients: Ingredient[];
+      
+      imageUrls: string[];
+      imagePaths: string[];
     }
   ) {
-    console.log('📢 Données reçues dans ingredient-form:', this.data);
-    // console.log('✅ Origines reçues:', this.data.originesList);
-
     this.suppliers = data.suppliers || [];
     this.allIngredients = data.ingredients || [];
+
+    if (
+      data.imageUrls &&
+      data.imagePaths &&
+      data.imageUrls.length === data.imagePaths.length
+    ) {
+      this.processedImages = data.imageUrls.map((url, index) => ({
+        type: 'existing',
+        data: url,
+        path: data.imagePaths[index],
+        originalIndex: index,
+      }));
+    }
 
     this.ingredientForm = this.fb.group({
       name: [
@@ -77,7 +96,8 @@ export class IngredientFormComponent {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/),
+          Validators.pattern(/\S+/),
+          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ],
       ],
       bio: [
@@ -87,7 +107,7 @@ export class IngredientFormComponent {
         }
       ], // ✅ Désactiver si composé
       supplier: [
-        data.ingredient?.supplier || null,
+        data.ingredient?.supplier || '',
         [Validators.required],
       ],
       type: [data.ingredient?.type || 'simple'],
@@ -99,70 +119,88 @@ export class IngredientFormComponent {
           )
         )
       ),
-      origin: [data.ingredient?.origin || ''],
+      origin: [
+        data.ingredient?.origin || '',
+        [Validators.required],
+      ],
       vegan: [data.ingredient?.vegan || false],
       vegeta: [data.ingredient?.vegeta || false],
+      images: [data.ingredient?.images || []],
     });
 
-    // Charger les images existantes si l'ingrédient est fourni
-    if (data.ingredient?.images) {
-      this.existingImages = [...data.ingredient.images];
-      this.existingImageUrls = [...data.imageUrls];
-    }
 
-    // if (data.ingredient?.subIngredients) {
-    //   this.selectedSubIngredients = [...data.ingredient.subIngredients];
+    // const supplier = this.supplier?.value;
+
+    // if (supplier && typeof supplier === 'object') {
+    //   this.supplierCtrl.setValue(supplier.name);
+    // } else {
+    //   this.supplierCtrl.setValue('');
     // }
-
-    console.log('🚀 ingredient-form -> onInit -> Ingrédient mis à jour :', data.ingredient);
-    // console.log('liste des suppliers :', this.suppliers);
-
-    const supplier = this.supplier?.value;
-
-    if (supplier && typeof supplier === 'object') {
-      this.supplierCtrl.setValue(supplier.name);
-    } else {
-      this.supplierCtrl.setValue('');
-    }
+    this.supplierCtrl.setValue(this.ingredientForm.value.supplier?.name || '');
   }
 
   ngOnInit(): void {
+    this.subscribeToDataUpdates();
     this.setupAutoComplete();
+    this.setupBioToggle();
+    this.setupSubIngredientsValidator();
+    this.updateProcessedImages();
+  }
 
+  private subscribeToDataUpdates(): void {
     this.sharedDataService.supplierCreated$.subscribe((newSupplier: Supplier) => {
+      if (!newSupplier || !newSupplier._id || !newSupplier.name) {
+        console.warn('❌ Données invalides reçues pour le nouveau fournisseur !');
+        return;
+      }
+
       console.log('🚀 Nouveau fournisseur créé:', newSupplier);
       console.log(' Type de fournisseur:', typeof newSupplier.name);
       console.log('contenu complet :', JSON.stringify(newSupplier, null, 2));
 
-      if (!newSupplier || !newSupplier._id || !newSupplier.name) {
-        console.warn('❌ Données invalides reçues pour le nouveau supplier !');
-      }
-
       this.suppliers.push(newSupplier);
       this.supplierNotFound = false;
 
-      
       const label = typeof newSupplier === 'string' ? newSupplier : newSupplier.name;
       console.log('🔵 Valeur envoyée à supplierCtrl :', label);
 
-      this.supplierCtrl.setValue(newSupplier.name);
       this.ingredientForm.patchValue({ supplier: newSupplier });
-    })
+      this.supplierCtrl.setValue(newSupplier.name);
+    });
+  }
 
-    // Désactiver "bio" si l'ingrédient est "compose"
+  private setupBioToggle(): void {
+    // Appliquer la règle initialement
+    if (this.type?.value === 'compose') {
+      this.bio?.disable();
+    }
+
+    // Réagir aux changements
     this.type?.valueChanges.subscribe((newType: string) => {
       if (newType === 'compose') {
         this.bio?.disable();
-        this.bio?.setValue(false); // S'assure que bio est désactivé
+        this.bio?.setValue(false);
       } else {
         this.bio?.enable();
       }
     });
+  }
 
-    // // Vérifier au chargement si le champ doit être désactivé
-    if (this.type?.value === 'compose') {
-      this.bio?.disable();
-    }  
+  private setupSubIngredientsValidator(): void {
+    this.type?.valueChanges.subscribe((typeValue: string) => {
+      const subIngControl = this.ingredientForm.get('subIngredients');
+      if (!subIngControl) return;
+
+      if (typeValue === 'compose') {
+        subIngControl.setValidators([
+          Validators.required,
+          Validators.minLength(1)
+        ]);
+      } else {
+        subIngControl.clearValidators();
+      }
+      subIngControl.updateValueAndValidity();
+    });
   }
   
   get name() {
@@ -197,34 +235,33 @@ export class IngredientFormComponent {
   ////////////////// Innit du formulaire
 
   ///////// AutoComplete ///////////
-  private setupAutoComplete(): void {
-    // Fournisseurs
-    this.filteredSuppliers = this.supplierCtrl.valueChanges.pipe(
-      startWith(''),
-      map((value) => {
-        if (typeof value === 'string' && value !== 'supplierNotFound') {
-          this.searchedSupplier = value.trim();
-          this.supplierNotFound =
-            this.filterItems(value, this.suppliers).length === 0;
-        }
-        return this.filterItems(value, this.suppliers);
-      })
-    );
+private setupAutoComplete(): void {
+  // Fournisseurs
+  this.filteredSuppliers = this.supplierCtrl.valueChanges.pipe(
+    startWith(''),
+    map((value) => {
+      const filtered = this.filterItems(value, this.suppliers);
+      this.supplierNotFound = typeof value === 'string' && filtered.length === 0;
+      return filtered;
+    })
+  );
 
-    // Sous-ingrédients
-    this.filteredSubIngredients = this.subIngredientCtrl.valueChanges.pipe(
-      startWith(''),
-      map((value) => {
-        const results = this.filterItems(value, this.allIngredients);
-        this.subIngredientNotFound = results.length === 0; // ✅ Gestion du message "Aucun ingrédient trouvé"
-        return results.sort((a, b) => a.name.localeCompare(b.name));
-      })
-    );
-  }
+  // Sous-ingrédients
+  this.filteredSubIngredients = this.subIngredientCtrl.valueChanges.pipe(
+    startWith(''),
+    map((value) => {
+      const filtered = this.filterItems(value, this.allIngredients);
+      this.subIngredientNotFound = filtered.length === 0;
+      return filtered;
+    })
+  );
+}
 
   //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
-    if (!value) return list;
+    if (!value) {
+      return [...list].sort((a, b) => a.name.localeCompare(b.name)); 
+    };
 
     // Normaliser la valeur recherchée
     const normalizedValue = this.normalizeString(value);
@@ -259,9 +296,10 @@ export class IngredientFormComponent {
   addSupplier(supplier: Supplier | 'supplierNotFound' | null): void {
     if (supplier === 'supplierNotFound') {
       this.createSupplier(this.searchedSupplier);
+      this.supplierCtrl.setValue('');
     } else {
       this.ingredientForm.patchValue({ supplier: supplier });
-      this.supplierCtrl.setValue(supplier?.name || 'Sans fournisseur');
+      this.supplierCtrl.setValue(supplier ? supplier.name : '');
     }
   }
 
@@ -275,14 +313,14 @@ export class IngredientFormComponent {
             label: 'Nom du fournisseur', 
             required: true,
             maxLength: 50,
-            pattern: /^[a-zA-Z0-9À-ÿŒœ\s-']+$/,
+            pattern: /^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/,
             defaultValue: this.formatNameInput(searchedValue)
           },
           { 
             name: 'description', 
             label: 'Description du fournisseur', 
             maxLength: 100,
-            pattern: /^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"-]+$/,
+            pattern: /^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/,
           },
         ]
       }
@@ -291,6 +329,7 @@ export class IngredientFormComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sharedDataService.requestSupplierCreation(result);
+        console.log('🔵 Demande de création de fournisseur envoyée:', result);
       }
     })
   }
@@ -365,62 +404,144 @@ export class IngredientFormComponent {
     }
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
+  ///////////// Gestion des erreurs
+  onBlurChecks(): void {
+    const typeValue = this.type?.value;
+    const supplierValue = this.supplier?.value;
+    const supplierInput = this.supplierCtrl.value;
+    const originControl = this.origins;
+
+    if (!supplierValue) {
+      this.supplier?.markAsTouched();
+
+      if (supplierInput && typeof supplierInput === 'string') {
+        this.supplier?.setErrors({ invalidSelection: true });
+      } else {
+        this.supplier?.setErrors({ required: true });
+      }
+    }
+
+    // Vérifie le champ origine
+    if (!originControl?.value) {
+      originControl?.setErrors({ required: true });
+      originControl?.markAsTouched();
+    }
+
+    if (typeValue === 'compose') {
+      // Vérifie la sélection de sous-ingrédients
+      if (this.subIngredients.length === 0) {
+        this.ingredientForm.get('subIngredients')?.setErrors({ required: true });
+      } else {
+        this.ingredientForm.get('subIngredients')?.setErrors(null);
+      }
+    }
+  }
+
+  clearField(field: 'origin' | 'supplier' | 'subIngredients'): void {
+    switch (field) {
+      case 'origin':
+        this.ingredientForm.get('origin')?.reset();
+        break;
+
+      case 'supplier':
+        this.supplierCtrl.setValue('');
+        this.ingredientForm.get('supplier')?.reset();
+        break;
+
+      case 'subIngredients':
+        this.subIngredientCtrl.setValue('');
+        this.ingredientForm.get('subIngredients')?.reset();
+        break;
+    }
+  }
+
+
+
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Gestion des images
-  onFileSelected(event: any): void {
+    updateProcessedImages(): void {
+    this.processedImages = this.processedImages.map((img, index) => ({
+      ...img,
+      originalIndex: index,
+    }));
+  }
+  
+  onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const maxFileSize = 10 * 1024 * 1024;
+    const files = input.files;
+    const maxSize = 10 * 1024 * 1024;
+    const errors: string[] = [];
 
-    if (input.files) {
-      const validFiles = Array.from(input.files).filter((file) => {
-        if (!file.type.startsWith('image/')) {
-          alert(`${file.name} n'est pas une image valide.`);
-          return false;
-        } else if (file.size > maxFileSize) {
-          alert(`${file.name} dépasse la taille maximale autorisée de 10 Mo.`);
-          return false;
-        }
-        return true;
-      });
-      validFiles.forEach((file) => {
-        this.handleImagePreview(file);
-        if (validFiles.length > 0) {
-          input.value = '';
-          this.selectedFiles.push(...validFiles);
-        }
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        errors.push(`${file.name} n'est pas une image.`);
+        return;
+      }
+
+      if (file.size > maxSize) {
+        errors.push(`${file.name} dépasse 10 Mo.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.processedImages.push({
+          type: 'preview',
+          data: reader.result as string,
+          file: file,
+          originalIndex: this.processedImages.length,
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (errors.length > 0) {
+      this.dialog.open(InfoDialogComponent, {
+        data: { message: errors.join('<br>'), type: 'error' },
       });
     }
+
+    input.value = '';
   }
-  // Gérer la preview
-  private handleImagePreview(file: File): void {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        this.filePreviews.push(reader.result as string);
+
+  onRemoveImage(image: ProcessedImage): void {
+    const index = this.processedImages.indexOf(image);
+    if (index !== -1) {
+      this.processedImages.splice(index, 1);
+      if (image.type === 'existing' && image.path) {
+        this.removedExistingImages.push(image.path);
       }
-    };
-    reader.readAsDataURL(file);
+    }
   }
 
-  downloadImage(imagePath: string): void {
-    console.log('📢 Événement envoyé pour télécharger :', imagePath);
-    let ingredientName = this.data.ingredient?.name || 'Ingredient';
-    this.sharedDataService.emitDownloadImage(imagePath, ingredientName);
+  onReorderImages(images: ProcessedImage[]): void {
+    this.processedImages = [...images];
   }
 
-  removeFile(index: number): void {
-    this.selectedFiles.splice(index, 1);
-    this.filePreviews.splice(index, 1);
+  onDownloadImage(url: string): void {
+    this.sharedDataService.emitDownloadImage(url, this.data.ingredient?.name || 'Ingredient');
   }
 
-  removeExistingImage(index: number): void {
-    this.existingImageUrls.splice(index, 1);
-    const removed = this.existingImages.splice(index, 1)[0];
-    this.removedExistingImages.push(removed);
-  }
 
   save(): void {
+
+    Object.values(this.ingredientForm.controls).forEach((control) => {
+      control.markAsTouched(); // Marque tous les champs comme touchés
+    });
+
+    const name = this.ingredientForm.value.name;
+    if (name === '' || name === undefined) return;
+    else this.checkNameExists.emit(name);
+
+    console.log('🔵 Formulaire soumis avec les données :', this.ingredientForm.value);
+  }
+
+  validateAndSubmit(): void {
+    console.log('🔵 Validation et soumission du formulaire...');
     let formErrors: string[] = [];
 
     Object.keys(this.ingredientForm.controls).forEach((field) => {
@@ -429,6 +550,8 @@ export class IngredientFormComponent {
         formErrors.push(errorMsg);
       }
     });
+
+    console.log('🔵 Erreurs de formulaire détectées :', formErrors);
 
     if (formErrors.length > 0) {
       this.dialog.open(InfoDialogComponent, {
@@ -458,6 +581,22 @@ export class IngredientFormComponent {
       ? { ...supplier, name: this.formatNameInput(supplier.name) }
       : null;
 
+          // traitement des images
+    const selectedFiles: File[] = this.processedImages
+      .filter((img) => img.type === 'preview' && img.file)
+      .map((img) => img.file!); // `!` car on a déjà filtré
+    console.log('📁 Fichiers sélectionnés :', selectedFiles);
+
+    const existingImages: string[] = this.processedImages
+      .filter((img) => img.type === 'existing' && img.path)
+      .map((img) => img.path!);
+    console.log('📁 Images existantes :', existingImages);
+
+    const imageOrder: string[] = this.processedImages.map((img) =>
+      img.type === 'existing' ? img.path! : img.file!.name
+    );
+    console.log('📁 Ordre des images :', imageOrder);
+
     // update des donnéess à envoyer après close
     const ingredientData = {
       _id: this.data.ingredient?._id,
@@ -466,15 +605,25 @@ export class IngredientFormComponent {
       supplier: formattedSupplier,
       allergens: allergenesSelectionnes,
       // subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
-      existingImages: this.existingImages,
+      existingImages: existingImages,
     };
+    console.log('📋 Données de l\'ingrédient à envoyer :', ingredientData);
+
+    this.formValidated.emit({
+      ingredientData,
+      selectedFiles,
+      removedExistingImages: this.removedExistingImages,
+      imageOrder
+    });
+
 
     // envoi des données et fermuture du dialog
-    this.dialogRef.close({
-      ingredientData,
-      selectedFiles: this.selectedFiles,
-      removedExistingImages: this.removedExistingImages,
-    });
+    // this.dialogRef.close({
+    //   ingredientData,
+    //   selectedFiles,
+    //   removedExistingImages: this.removedExistingImages,
+    //   imageOrder
+    // });
   }
 
   private fieldLabels: { [key: string]: string } = {

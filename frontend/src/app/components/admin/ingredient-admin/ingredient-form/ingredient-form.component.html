@@ -32,9 +32,30 @@
                     matInput
                     [formControl]="supplierCtrl"
                     [matAutocomplete]="supplierAuto"
+                    formControlName="supplier"
                     placeholder="Rechercher un fournisseur"
+                    (blur)="onBlurChecks()"
                 />
-                <mat-autocomplete #supplierAuto="matAutocomplete" (optionSelected)="addSupplier($event.option.value)"> 
+                <!-- effacer -->
+                <button
+                    *ngIf="supplierCtrl.value"
+                    matSuffix
+                    mat-icon-button
+                    aria-label="Effacer la catégorie"
+                    (click)="clearField('supplier')"
+                    tabindex="-1"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+
+                <!-- erreurs -->
+                <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
+                <mat-error *ngIf="supplier?.hasError('invalidSelection')">Veuillez choisir un fournisseur valide.</mat-error>
+
+
+                <!-- autocomplete -->
+                <mat-autocomplete #supplierAuto="matAutocomplete" 
+                (optionSelected)="addSupplier($event.option.value)"> 
                     <mat-option *ngFor="let supplier of filteredSuppliers | async" [value]="supplier">
                         {{supplier.name}}
                     </mat-option>
@@ -56,6 +77,8 @@
                         </mat-optgroup>
                     </ng-container>
                 </mat-select>
+                <!-- erreurs -->
+                <mat-error *ngIf="origins?.hasError('required')">L'origine est obligatoire.</mat-error>
             </mat-form-field>
         </section>
         
@@ -167,51 +190,19 @@
     <!-- ----------------------------------------- -->
     <mat-divider></mat-divider>
     <!-- ----------------------------------------- -->
-
-    <!-- Images -->
-    <div class="images-fields">
-        <div class="file-upload">
+        <!------------- bloc images ------------->
+        <div class="bloc_images">
             <mat-label>Images</mat-label>
+
+            <app-image-carousel [images]="processedImages" (reorder)="onReorderImages($event)"
+                (remove)="onRemoveImage($event)" (download)="onDownloadImage($event)" />
             <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
-                <mat-icon>file_upload</mat-icon> Importer une image
+                <mat-icon>file_upload</mat-icon> Ajouter une image
             </button>
             <input #fileInput id="imageUpload" type="file" multiple (change)="onFileSelected($event)" accept="image/*"
                 style="display: none;" />
         </div>
-        
-        <div class="previews" *ngIf="filePreviews.length > 0">
-            <mat-label *ngIf="existingImageUrls.length > 0">Images à ajouter :</mat-label>
-            <div class="previews-container">
-                <div class="preview-item" *ngFor="let preview of filePreviews; let i = index">
-                    <mat-card>
-                        <img mat-card-image [src]="preview" alt="Image preview" />
-                        <button mat-icon-button class="delete" (click)="removeFile(i)">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                    </mat-card>
-                </div>
-            </div>
-        </div>
-        
-        <div class="existing-images" *ngIf="existingImageUrls.length > 0">
-            <mat-label *ngIf="filePreviews.length > 0">Images existantes :</mat-label>
-            <div class="previews-container">
-                <div class="preview-item" *ngFor="let image of existingImageUrls; let i = index">
-                    <mat-card>
-                        <img mat-card-image [src]="image" alt="Existing image" />
-                        <div>
-                            <button mat-icon-button (click)="removeExistingImage(i)">
-                                <mat-icon>delete</mat-icon>
-                            </button>
-                            <button mat-icon-button (click)="downloadImage(image)">
-                                <mat-icon>download</mat-icon>
-                            </button>
-                        </div>
-                    </mat-card>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <div mat-dialog-actions align="end">
         <button mat-button type="button" (click)="cancel()">Annuler</button>

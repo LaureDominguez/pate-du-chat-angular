@@ -4,6 +4,7 @@ const router = express.Router();
 const Ingredient = require('../models/ingredient');
 const upload = require('../../middleware/fileUpload');
 const sanitize = require('mongo-sanitize');
+const { default: mongoose } = require('mongoose');
 
 const validateRequest = (req, res, next) => {
 	const errors = validationResult(req);
@@ -23,8 +24,12 @@ router.get('/', async (req, res) => {
 
 		res.status(200).json(ingredients);
 	} catch (error) {
-		console.error(error.message);
-		res.status(500).send('Erreur serveur lors de la récupération des ingrédients');
+		console.error('Erreur serveur:', error);
+		res
+			.status(500)
+			.json({
+				message: 'Erreur serveur lors de la récupération des ingrédients'
+			});
 	}
 });
 
@@ -50,6 +55,25 @@ router.get('/:id', async (req, res) => {
 	}
 });
 
+router.get('/check-name/:name', async (req, res) => {
+	const name = req.params.name;
+	const excludedId = req.query.excludedId;
+
+	const query = {
+		name: new RegExp(`^${name}$`, 'i')
+	};
+	if (excludedId && mongoose.Types.ObjectId.isValid(excludedId)) {
+		query._id = { $ne: excludedId };
+	}
+	try {
+		const ingredient = await Ingredient.findOne(query);
+		res.json(!!ingredient);
+	} catch (error) {
+		console.error('Erreur dans /check-name:', error.message);
+		res.status(500).json({ error: 'Erreur serveur lors de la vérification du nom' });
+	}
+});
+
 // Ajouter un ingredient
 router.post(
 	'/',
@@ -62,7 +86,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -101,7 +125,7 @@ router.post(
 		check('vegeta')
 			.isBoolean()
 			.withMessage('Le champ "végétarien" doit être un booléen.'),
-			check('origin')
+		check('origin')
 			.notEmpty()
 			.withMessage('Le champ "origine" est obligatoire.'),
 	],
@@ -194,7 +218,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,!?()'"%°\-]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),

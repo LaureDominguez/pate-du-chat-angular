@@ -107,8 +107,10 @@
 
         <!-- Header and Row Declarations -->
         <tr mat-header-row *matHeaderRowDef="displayedIngredientsColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedIngredientsColumns;"></tr>
-
+        <tr mat-row
+            *matRowDef="let row; columns: displayedIngredientsColumns;"
+            [ngClass]="{ 'highlighted-row': row._id === highlightedIngredientId }"
+        ></tr>
     </table>
 
     <mat-divider></mat-divider>

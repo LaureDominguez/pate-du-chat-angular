@@ -10,27 +10,12 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
   styleUrls: ['./info-dialog.component.scss'],
 })
 export class InfoDialogComponent {
-
-  title: string = '';
   constructor(
     public dialogRef: MatDialogRef<InfoDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       message: string;
-      type: 'error' | 'info' | 'success';
+      title?: string;
     }
-  ) {
-    switch (data.type) {
-      case 'error':
-        this.title = 'Erreur';
-        break;
-      case 'info':
-        this.title = 'Information';
-        break;
-      case 'success':
-        this.title = 'Succès';
-        break;
-    }
-  }
-
+  ) {}
 }

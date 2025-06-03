@@ -20,7 +20,8 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 // Obtenir tous les produits
 router.get('/', async (req, res) => {
 	try {
-		let products = await Product.find()
+		let products = await Product
+			.find()
 			.populate('category')
 			.populate({
 				path: 'composition',
@@ -170,7 +171,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/)
+			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -338,7 +339,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/)
+			.matches(/^(?=.*\s)[a-zA-Z0-9À-ÿŒœ\s.,;:'"()\-®™&]+$/)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),

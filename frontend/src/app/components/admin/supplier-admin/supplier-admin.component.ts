@@ -6,7 +6,7 @@ import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { catchError, of, Subject, take, takeUntil, tap } from 'rxjs';
+import { catchError, of, Subject, takeUntil, tap } from 'rxjs';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { SupplierService } from '../../../services/supplier.service';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
@@ -25,7 +25,6 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   newSupplier: Supplier | null = null;
   editingSupplierId: string | null = null;
   editingSupplier: Supplier | null = null;
-  // isEditing = false;
 
   isDefaultSupplier(supplier: Supplier): boolean {
     return supplier._id === DEFAULT_SUPPLIER._id;
@@ -96,6 +95,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
+          Validators.pattern(/\S+/),
           Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/)
         ]
       ],
@@ -103,6 +103,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         this.editingSupplier.description,
         [
           Validators.maxLength(100),
+          Validators.pattern(/\S+/),
           Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/)
         ]
       ]
@@ -162,9 +163,8 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
 
     request$.pipe(
       tap(() => {
-        this.dialogService.showInfo(
-          supplier._id ? 'Fournisseur modifié avec succès.' : 'Fournisseur créé avec succès.',
-          'success'
+        this.dialogService.info(
+          supplier._id ? 'Fournisseur modifié avec succès.' : 'Fournisseur créé avec succès.'
         );
         this.cancelEditingSupplier();
       }),
@@ -189,7 +189,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
       .createSupplier(newSupplier)
       .subscribe({
         next: (createdSupplier) => {
-          this.dialogService.showInfo('Fournisseur créé avec succès.', 'success');
+          this.dialogService.info('Fournisseur créé avec succès.');
           this.sharedDataService.sendSupplierToIngredientForm(createdSupplier);
         },
         error: (err) => {
@@ -200,115 +200,68 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   
 deleteSupplier(supplier: Supplier): void {
   if (this.isDefaultSupplier(supplier)) {
-    this.dialogService.showInfo(
-      'Le fournisseur par défaut ne peut pas être supprimé.',
-      'info'
+    this.dialogService.info(
+      'Vous ne pouvez pas supprimer le fournisseur "Sans fournisseur".'
     );
     return;
   }
 
-  const hasIngredients = supplier.ingredientCount && supplier.ingredientCount > 0;
-
-  const message = hasIngredients
-    ? `Ce fournisseur est associé à <span class="bold-text">${supplier.ingredientCount}</span> ingrédient(s).<br>
-       Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
-       <span class="bold-text">"${supplier.name}"</span> ?`
+  const ingredientCount = supplier.ingredientCount || 0;
+  const message = ingredientCount > 0
+    ? `Ce fournisseur est associé à <span class="bold-text">${ingredientCount}</span> ingrédient(s).<br>
+        Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
+        <span class="bold-text">"${supplier.name}"</span> ?`
     : `Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
-       <span class="bold-text">"${supplier.name}"</span> ?`;
-
-  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-    width: '400px',
-    data: { message },
-  });
-
-  dialogRef.afterClosed().subscribe((result) => {
+        <span class="bold-text">"${supplier.name}"</span> ?`;
+  
+  this.dialogService.confirm(message, {
+    title: 'Suppression de fournisseur',
+    confirmText: 'Supprimer',
+    cancelText: 'Annuler'
+  }).subscribe(result => {
     if (result !== 'confirm') return;
 
     this.supplierService.deleteSupplier(supplier._id!).subscribe({
       next: () => {
-        this.dialogService.showInfo(
-          'Fournisseur supprimé avec succès.',
-          'success'
-        );
+        this.dialogService.info('Fournisseur supprimé avec succès.');
         this.sharedDataService.notifySupplierUpdate(); // Optionnel si reload
       },
       error: (err) => {
         this.dialogService.showHttpError(err);
-      },
+      }
     });
-  });
-}
+  })
 
+  // const hasIngredients = supplier.ingredientCount && supplier.ingredientCount > 0;
 
+  // const message = hasIngredients
+  //   ? `Ce fournisseur est associé à <span class="bold-text">${supplier.ingredientCount}</span> ingrédient(s).<br>
+  //     Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
+  //     <span class="bold-text">"${supplier.name}"</span> ?`
+  //   : `Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
+  //     <span class="bold-text">"${supplier.name}"</span> ?`;
 
-  //   deleteSupplier(supplier: Supplier): void {
-  //   console.log('🔵 deleteSupplier appelé dans .component pour', supplier);
-  //   if (this.isDefaultSupplier(supplier)) {
-  //     this.dialogService.showInfo(
-  //       'Le fournisseur par défaut ne peut pas être supprimé.', 
-  //       'info'
-  //     );
-  //     return;
-  //   }
+  // const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+  //   width: '400px',
+  //   data: { message },
+  // });
 
-  //   const hasIngredients = supplier.ingredientCount && supplier.ingredientCount > 0;
+  // dialogRef.afterClosed().subscribe((result) => {
+  //   if (result !== 'confirm') return;
 
-  //   const message = hasIngredients
-  //     ? `Ce fournisseur est associé à <span class="bold-text">${supplier.ingredientCount}</span> ingrédients.
-  //       <br> Êtes-vous sûr de vouloir supprimer le fournisseur : <br> 
-  //       <span class="bold-text">"${supplier.name}"</span>?`
-  //     : `Êtes-vous sûr de vouloir supprimer ce fournisseur : <br>
-  //       <span class="bold-text">"${supplier.name}"</span>?`;
-
-  //   const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-  //     width: '400px',
-  //     data: { message }
-  //   });
-  //   console.log('🟢 MatDialog ouvert dans .component', dialogRef);
-
-  //   dialogRef.afterClosed().subscribe((result) => {
-  //     if (result !== 'confirm') return;
-
-  //     if (hasIngredients) {
-  //       const ingredientIds = supplier.ingredients?.map((ing: any) => ing._id) || [];
-  //       console.log('🟡 afterClosed attaché dans .component');
-
-  //       this.sharedDataService.replaceSupplierInIngredientsComplete$
-  //         .pipe(takeUntil(this.unsubscribe$), take(1))
-  //         .subscribe((success) => {
-  //           if (success) {
-  //             this.supplierService.deleteSupplier(supplier._id!).subscribe({
-  //               next: () => {
-  //                 this.dialogService.showInfo('Fournisseur supprimé avec succès.', 'success');
-  //                 this.sharedDataService.notifySupplierUpdate(); // Optionnel
-  //               },
-  //               error: (err) => this.dialogService.showHttpError(err)
-  //             });
-  //           } else {
-  //             this.dialogService.showInfo(
-  //               'Échec lors du remplacement des fournisseurs liés. Suppression annulée.',
-  //               'error'
-  //             );
-  //           }
-  //         });
-
-  //       this.sharedDataService.emitReplaceSupplierInIngredients(
-  //         supplier._id!,
-  //         DEFAULT_SUPPLIER._id!,
-  //         ingredientIds
+  //   this.supplierService.deleteSupplier(supplier._id!).subscribe({
+  //     next: () => {
+  //       this.dialogService.info(
+  //         'Fournisseur supprimé avec succès.'
   //       );
-
-  //     } else {
-  //       this.supplierService.deleteSupplier(supplier._id!).subscribe({
-  //         next: () => {
-  //           this.dialogService.showInfo('Fournisseur supprimé avec succès.', 'success');
-  //           this.sharedDataService.notifySupplierUpdate(); // Optionnel
-  //         },
-  //         error: (err) => this.dialogService.showHttpError(err)
-  //       });
-  //     }
+  //       this.sharedDataService.notifySupplierUpdate(); // Optionnel si reload
+  //     },
+  //     error: (err) => {
+  //       this.dialogService.showHttpError(err);
+  //     },
   //   });
-  // }
+  // });
+}
 
 }
 

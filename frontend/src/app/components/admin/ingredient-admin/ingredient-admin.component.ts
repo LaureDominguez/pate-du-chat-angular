@@ -1,25 +1,23 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-
-import {
-  Ingredient,
-  IngredientService,
-} from '../../../services/ingredient.service';
-import { ImageService } from '../../../services/image.service';
-
-import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-
-import { AdminModule } from '../admin.module';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { SharedDataService } from '../../../services/shared-data.service';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
-import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
-import { ProductService } from '../../../services/product.service';
-import { DEFAULT_SUPPLIER } from '../../../models/supplier';
+import { AdminModule } from '../admin.module';
+
+import { Ingredient, IngredientService, } from '../../../services/ingredient.service';
 import { Supplier, SupplierService } from '../../../services/supplier.service';
+import { DEFAULT_SUPPLIER } from '../../../models/supplier';
+import { ProductService } from '../../../services/product.service';
+import { ImageService } from '../../../services/image.service';
+import { SharedDataService } from '../../../services/shared-data.service';
+
+import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
+
+import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
+import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
+
 
 @Component({
   selector: 'app-ingredient-admin',
@@ -34,6 +32,8 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
   suppliers: Supplier[] = [];
   originesList: string[] = [];
   originIcon: string = '';
+
+  highlightedIngredientId: string | null = null;
 
   private unsubscribe$ = new Subject<void>();
 
@@ -76,7 +76,31 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.ingredients.paginator = this.ingredientsPaginator;
     this.ingredients.sort = this.ingredientsSort;
 
-    // console.log('ingredients : ', this.ingredients)
+  setTimeout(() => {
+    this.ingredients.sort!.active = 'name';
+    this.ingredients.sort!.direction = 'asc';
+    this.ingredients.sort!.sortChange.emit({
+      active: 'name',
+      direction: 'asc'
+    });
+
+    this.ingredients.sortingDataAccessor = (item: Ingredient, property: string) => {
+      if (item._id === this.highlightedIngredientId) return '\u0000';
+      switch (property) {
+        case 'name':
+        case 'origin':
+          return item[property]?.normalize?.('NFD')?.replace(/[\u0300-\u036f]/g, '')?.toLowerCase() || '';
+        case 'supplier':
+          return (item.supplier as Supplier)?.name?.toLowerCase?.() || '';
+        case 'allergens':
+          return (item.allergens || []).join(', ');
+        default:
+          return (item as any)[property];
+      }
+    };
+  });
+
+    console.log('ingredients : ', this.ingredients)
   }
 
   loadData(): void {
@@ -114,6 +138,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         this.downloadIngredientImage(data.imagePath, data.objectName);
       }
     });
+    
   }
 
   fetchAllergenes(): void {
@@ -156,74 +181,114 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           originesList: this.originesList,
           suppliers: this.suppliers,
           imageUrls: imageUrls,
+          imagePaths: ingredient?.images || [],
           searchedValue: searchedValue,
           ingredients: this.allIngredients, // ✅ Passage des ingrédients disponibles
         },
       });
 
-      dialogRef.afterClosed().subscribe(
-        (
-          result:
-            | {
-                ingredientData: any;
-                selectedFiles: File[];
-                removedExistingImages: string[];
-              }
-            | undefined
-        ) => {
-          if (result) {
-            this.handleIngredientFormSubmit(result);
+      const instance = dialogRef.componentInstance;
+
+      instance.checkNameExists.subscribe((name: string) => {
+        const excludedId = ingredient?._id;
+
+        this.ingredientService.checkExistingIngredientName(name, excludedId).subscribe((exists: boolean) => {
+          if (exists) {
+            this.dialog.open(InfoDialogComponent, {
+              data: {
+                message: `Le nom "${name}" existe déjà.`,
+                type: 'error',
+              },
+            });
+          } else {
+            instance.validateAndSubmit();
           }
-        }
-      );
+        });
+      });
+
+      instance.formValidated.subscribe((formResult) => {
+        this.handleIngredientFormSubmit(formResult, dialogRef); // Ajoute le dialogRef
+      });
+
+
+      // dialogRef.afterClosed().subscribe(
+      //   (
+      //     result:
+      //       | {
+      //           ingredientData: any;
+      //           selectedFiles: File[];
+      //           removedExistingImages: string[];
+      //           imageOrder: string[];
+      //         }
+      //       | undefined
+      //   ) => {
+      //     if (result) {
+      //       this.handleIngredientFormSubmit(result);
+      //     }
+      //   }
+      // ),
+      //   (error: any) => {
+      //     console.error(
+      //       'Erreur lors du chargement des catégories ou des ingrédients :',
+      //       error
+      //     );
+      //   };
   }
 
-  handleIngredientFormSubmit(result: {
-    ingredientData: any;
-    selectedFiles: File[];
-    removedExistingImages: string[];
-  }): void {
-    const { ingredientData, selectedFiles, removedExistingImages } = result;
+  handleIngredientFormSubmit(
+    result: {
+      ingredientData: any;
+      selectedFiles: File[];
+      removedExistingImages: string[];
+      imageOrder: string[];
+    },
+    dialogRef: MatDialogRef<IngredientFormComponent>
+  ): void {
+    const { ingredientData, selectedFiles, removedExistingImages, imageOrder } = result;
     const ingredientId = ingredientData._id;
-    const existingImages = ingredientData.existingImages ?? [];
-    const finalImages = [...existingImages];
+    const onSuccess = () => {
+      dialogRef.close(result); // Fermer uniquement en cas de succès
 
-    delete ingredientData.existingImages;
+      console.log('Formulaire soumis avec succès !', result);
+    };
 
-    // 1️⃣ Supprimer les images marquées pour suppression
-    if (removedExistingImages?.length) {
-      removedExistingImages.forEach((imgPath) => {
-        const filename = imgPath.replace('/^/?uploads/?/', '');
-        this.imageService.deleteImage(filename).subscribe();
-      });
-    }
+    removedExistingImages.forEach((path) => {
+      const filename = path.replace(/^\/?uploads\/?/, '');
+      this.imageService.deleteImage(filename).subscribe();
+    });
 
-    // 2️⃣ Vérifier s’il y a des nouvelles images à uploader
     if (selectedFiles.length > 0) {
       this.imageService.uploadImages(selectedFiles).subscribe({
-        next: (uploadResponse) => {
-          finalImages.push(...uploadResponse.imagePath); // Ajouter les nouvelles images
+        next: (response) => {
+          const uploadedPaths = response.imagePath;
+          const uploadedNames = selectedFiles.map((f) => f.name);
+
+          ingredientData.images = imageOrder.map((entry) => {
+            if (entry.startsWith('/uploads/')) {
+              return entry;
+            }
+
+            const index = uploadedNames.findIndex((name) => entry.includes(name));
+            return uploadedPaths[index] || '';
+          }).filter(Boolean);
+
+          delete ingredientData.existingImages;
+          this.submitIngredientForm(ingredientId, ingredientData, onSuccess);
         },
-        error: (error) => {
-          this.showErrorDialog(error.message);
-        },
-        complete: () => {
-          this.submitIngredientForm(ingredientId, {
-            ...ingredientData,
-            images: finalImages,
-          });
-        },
+        error: (err) => this.showErrorDialog(err.message),
       });
     } else {
-      this.submitIngredientForm(ingredientId, {
-        ...ingredientData,
-        images: finalImages,
-      });
+      ingredientData.images = imageOrder.filter((entry) => entry.startsWith('/uploads/'));
+      this.submitIngredientForm(ingredientId, ingredientData, onSuccess);
     }
   }
 
   // 3️⃣ Soumettre le formulaire (création ou mise à jour)
-  submitIngredientForm(ingredientId?: string, ingredientData?: any): void {
+  submitIngredientForm(
+    ingredientId?: string, 
+    ingredientData?: any,
+    onSuccess?: () => void
+  ): void {
     if (ingredientId) {
       this.ingredientService
         .updateIngredient(ingredientId, ingredientData)
@@ -231,6 +296,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           next: () => {
             // console.log('ingredient-admin -> submitIngredientForm -> Ingrédient mis à jour !');
             this.sharedDataService.notifyIngredientCompositionUpdate();
+            onSuccess?.();
           },
           error: (error) => {
             this.showErrorDialog(error.message);
@@ -241,6 +307,8 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         next: (res) => {
           // console.log('ingredient-admin -> submitIngredientForm à SharedData -> res', res);
           this.sharedDataService.resultIngredientCreated(res);
+          this.highlightedIngredientId = res._id ?? null;
+          onSuccess?.();
         },
         error: (error) => {
           this.showErrorDialog(error.message);

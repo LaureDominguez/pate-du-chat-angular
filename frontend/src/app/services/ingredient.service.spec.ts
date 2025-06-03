@@ -114,6 +114,55 @@ const sharedDataServiceSpy = jasmine.createSpyObj(
     httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]); // Reload après delete
   });
 
+    it('devrait retourner true si un ingrédient existe déjà', (done) => {
+    const name = 'Tomate';
+    const excludedId = '123';
+
+    service.checkExistingIngredientName(name, excludedId).subscribe((exists) => {
+      expect(exists).toBeTrue();
+      done();
+    });
+
+    const req = httpMock.expectOne(
+      `http://localhost:5000/api/ingredients/check-name/${encodeURIComponent(name)}?excludedId=${encodeURIComponent(excludedId)}`
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush(true);
+  });
+
+  it('devrait retourner false si l\'ingrédient n\'existe pas', (done) => {
+    const name = 'Basilic';
+
+    service.checkExistingIngredientName(name).subscribe((exists) => {
+      expect(exists).toBeFalse();
+      done();
+    });
+
+    const req = httpMock.expectOne(
+      `http://localhost:5000/api/ingredients/check-name/${encodeURIComponent(name)}`
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush(false);
+  });
+
+  it('devrait gérer une erreur lors de la vérification du nom', (done) => {
+    const name = 'Erreur';
+
+    service.checkExistingIngredientName(name).subscribe({
+      next: () => fail('Une erreur était attendue'),
+      error: (err) => {
+        expect(err.message).toContain('Impossible de charger');
+        done();
+      },
+    });
+
+    const req = httpMock.expectOne(
+      `http://localhost:5000/api/ingredients/check-name/${encodeURIComponent(name)}`
+    );
+    req.flush({}, { status: 500, statusText: 'Erreur serveur' });
+  });
+
+
   it('devrait retourner une icône pour une origine connue', () => {
     const icon = service.getOriginIcon('France');
     expect(icon).toContain('fr'); // dépend de originFlag['France']
@@ -145,60 +194,6 @@ const sharedDataServiceSpy = jasmine.createSpyObj(
 
     httpMock.expectOne('../assets/data/origines.json').flush(mockOrigines);
   });
-  
-  // it('devrait remplacer le fournisseur pour plusieurs ingrédients via SharedDataService', (done) => {
-  //   const replaceSubject = new Subject<{
-  //     oldSupplierId: string;
-  //     newSupplierId: string;
-  //     ingredientIds: string[];
-  //   }>();
-
-  //   const sharedDataServiceSpy = jasmine.createSpyObj(
-  //     'SharedDataService',
-  //     ['notifyIngredientUpdate', 'notifySupplierUpdate', 'emitReplaceSupplierInIngredientsComplete'],
-  //     {
-  //       ingredientListUpdate$: of(),
-  //       supplierListUpdate$: of(),
-  //       // replaceSupplierInIngredients$: replaceSubject.asObservable(),
-  //     }
-  //   );
-
-  //   TestBed.resetTestingModule().configureTestingModule({
-  //     providers: [
-  //       provideHttpClient(),
-  //       provideHttpClientTesting(),
-  //       { provide: SharedDataService, useValue: sharedDataServiceSpy },
-  //       IngredientService,
-  //     ],
-  //   }).compileComponents().then(() => {
-  //     service = TestBed.inject(IngredientService);
-  //     httpMock = TestBed.inject(HttpTestingController);
-  //     sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
-
-  //     httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]);
-
-  //     const updateSpy = spyOn(service, 'updateIngredient').and.callFake((id: string, payload: any) => {
-  //       return of({ _id: id, name: 'Updated', supplier: payload.supplier } as Ingredient);
-  //     });
-
-  //     // 🔁 Émet l’événement
-  //     replaceSubject.next({
-  //       oldSupplierId: 'old123',
-  //       newSupplierId: 'new456',
-  //       ingredientIds: ['ing1', 'ing2']
-  //     });
-
-  //     // 💡 Petit délai pour laisser les Promises se résoudre
-  //     setTimeout(() => {
-  //       expect(updateSpy).toHaveBeenCalledTimes(2);
-  //       expect(updateSpy).toHaveBeenCalledWith('ing1', { supplier: 'new456' });
-  //       expect(updateSpy).toHaveBeenCalledWith('ing2', { supplier: 'new456' });
-  //       // expect(sharedDataService.emitReplaceSupplierInIngredientsComplete).toHaveBeenCalledWith(true);
-  //       done();
-  //     }, 0);
-  //   });
-  // });
-
 
   it('devrait gérer une erreur 500', (done) => {
     service.getOrigines().subscribe({

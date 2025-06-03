@@ -36,6 +36,7 @@
                                 placeholder="Rechercher une catégorie" 
                                 (blur)="onCategoryBlur()"
                             />
+                            <!-- effacer -->
                             <button
                                 *ngIf="categoryCtrl.value"
                                 matSuffix
@@ -44,14 +45,18 @@
                                 (click)="clearCategory()"
                                 tabindex="-1"
                             >
-                            <mat-icon>close</mat-icon>
-                        </button>
+                                <mat-icon>close</mat-icon>
+                            </button>
+
+                            <!-- erreurs -->
                             <mat-error *ngIf="category?.hasError('required')">
                                 La catégorie est obligatoire.
                             </mat-error>
                             <mat-error *ngIf="category?.hasError('invalidSelection')">
                                 Veuillez choisir une catégorie valide.
                             </mat-error>
+
+                            <!-- autocomplete -->
                             <mat-autocomplete #categoryAuto="matAutocomplete"
                                 (optionSelected)="addCategory($event.option.value)">
                                 <!-- Affichage des résultats filtrés -->
@@ -71,6 +76,7 @@
                     <mat-form-field appearance="fill" class="full-width">
                         <mat-label>Description</mat-label>
                         <textarea matInput formControlName="description" rows="3"></textarea>
+                        <!-- erreurs -->
                         <mat-error *ngIf="description?.hasError('maxlength')">Maximum 500 caractères.</mat-error>
                         <mat-error *ngIf="description?.hasError('pattern')">Certains caractères ne sont pas
                             autorisés.</mat-error>
@@ -93,6 +99,8 @@
                                 placeholder="0,00"
                             />
                             <span matTextSuffix>€</span>
+
+                            <!-- erreurs -->
                             <mat-error *ngIf="price?.hasError('required')">Le prix est obligatoire.</mat-error>
                             <mat-error *ngIf="price?.hasError('min')">Le prix doit être un nombre positif ou égale à
                                 0.</mat-error>
@@ -142,6 +150,8 @@
 
                             />
                             <span matTextSuffix> {{ quantityType }} </span>
+
+                            <!-- erreurs -->
                             <mat-error *ngIf="stockQuantity?.hasError('required')">
                                 La quantité est obligatoire.
                             </mat-error>
@@ -175,6 +185,7 @@
                             placeholder="Rechercher un ingrédient" 
                             (blur)="onIngredientBlur()"
                         />
+                        <!-- effacer -->
                         <button
                             *ngIf="ingredientCtrl.value"
                             matSuffix
@@ -183,14 +194,18 @@
                             (click)="clearIngredientSearch()"
                             tabindex="-1"
                         >
-                        <mat-icon>close</mat-icon>
-                    </button>
+                            <mat-icon>close</mat-icon>
+                        </button>
+
+                        <!-- erreurs -->
                         <mat-error *ngIf="productForm.get('composition')?.hasError('required')">
                             Ajoutez au moins un ingrédient.
                         </mat-error>
                           <mat-error *ngIf="productForm.get('composition')?.hasError('invalidSelection')">
                             Veuillez choisir un ingrédient dans la liste.
                         </mat-error>
+
+                        <!-- autocomplete -->
                         <mat-autocomplete #ingredientAuto="matAutocomplete"
                             (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
                             <!-- Affichage des résultats filtrés -->
@@ -245,6 +260,8 @@
                             placeholder="Ex : 10 minutes à 180°C"
                             rows="3"
                         ></textarea>
+
+                        <!-- erreurs -->
                         <mat-error *ngIf="cookInstructions?.hasError('required')">
                             Les instructions de cuisson sont obligatoires.
                         </mat-error>
@@ -269,6 +286,8 @@
                                 </mat-option>
                                 <mat-option value="Autre">Autre...</mat-option>
                             </mat-select>
+
+                            <!-- erreurs -->
                             <mat-error *ngIf="dlc?.hasError('required')">
                                 La DLC est obligatoire.
                             </mat-error>
@@ -289,6 +308,8 @@
                                 formControlName="customDlc" 
                                 placeholder="Ex : 9 mois, 18 jours, etc." 
                             />
+
+                            <!-- erreurs -->
                             <mat-error *ngIf="productForm.get('customDlc')?.hasError('maxlength')">
                                 Maximum 50 caractères.
                             </mat-error>

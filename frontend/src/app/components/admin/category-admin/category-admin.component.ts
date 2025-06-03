@@ -26,6 +26,9 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   editingCategoryId: string | null = null;
   editingCategory: Category | null = null;
 
+  highlightedCategoryId: string | null = null;
+
+
   isDefaultCategory(category: Category): boolean {
     return category._id === DEFAULT_CATEGORY._id;
   }
@@ -42,7 +45,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   constructor(
     private categoryService: CategoryService,
     private fb: FormBuilder,
-    private dialog: MatDialog,
+    // private dialog: MatDialog,
     private sharedDataService: SharedDataService,
     private dialogService: DialogService
   ) {}
@@ -72,24 +75,28 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   ngAfterViewInit(): void {
     this.categories.paginator = this.categoriesPaginator;
     this.categories.sort = this.categoriesSort;
+    this.categories.sortingDataAccessor = (item: Category, property: string): string | number => {
+      if (item._id && item._id === this.highlightedCategoryId && item._id !== this.editingCategoryId) {
+        return '\u0000';
+      }
+      return (item as any)[property];
+    };
   }
 
   startEditingCategory(category: Category | null = null, focusField?: 'name' | 'description'): void {
     if (this.editingCategory && this.editingCategory._id === null) {
       return;
     }
-
     if (this.editingCategory && this.editingCategory._id !== category?._id) {
       return;
     }
-
     if (category && this.isDefaultCategory(category)) {
       return; 
     }
 
     const autoFocusField: 'name' | 'description' | undefined = !category && !focusField ? 'name' : focusField;
-
     this.editingCategory = category ? { ...category } : { _id: null, name: '', description: '' };
+    this.editingCategoryId = this.editingCategory?._id || null;
 
     this.categoryForm = this.fb.group({
       name: [
@@ -98,6 +105,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
+          Validators.pattern(/\S+/),
           Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ],
       ],
@@ -105,6 +113,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
         this.editingCategory.description,
         [
           Validators.maxLength(100),
+          Validators.pattern(/\S+/),
           Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ]
       ]
@@ -133,6 +142,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     }
     setTimeout(() => {
       this.editingCategory = null;
+      this.editingCategoryId = null;
       this.categories.data = this.categories.data.filter(cat => cat._id !== null);
     }, 0);
   }
@@ -154,25 +164,30 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       description: this.formatNameInput(this.categoryForm.get('description')?.value),
     };
 
-    const request$ = category._id
-      ? this.categoryService.updateCategory(category._id, newCategory)
+    const isUpdate = !!category._id;
+    const request$ = isUpdate
+      ? this.categoryService.updateCategory(category._id!, newCategory)
       : this.categoryService.createCategory(newCategory);
 
     request$.pipe(
-      tap(() => {
-        this.dialogService.showInfo(
-          category._id ? 'Catégorie mise à jour' : 'Catégorie créée',
-          'success'
-        );
-        this.cancelEditingCategory()
-      }),
-      catchError((error) => {
-        this.cancelEditingCategory();
-        this.dialogService.showHttpError(error);
-        return of(null);
-      })
-    ).subscribe();
+    tap((savedCategory) => {
+      this.dialogService.info(
+        isUpdate ? 'Catégorie mise à jour avec succès.' : 'Catégorie créée avec succès.'
+      );
+      this.highlightedCategoryId = isUpdate ? null : savedCategory._id || null;
+      this.editingCategoryId = null;
+      this.editingCategory = null;
+    }),
+    catchError((error) => {
+      this.cancelEditingCategory();
+      this.dialogService.showHttpError(error);
+      return of(null);
+    })
+  ).subscribe();
     this.sharedDataService.notifyCategoryUpdate();
+    this.categories.sort!.active = 'name';
+    this.categories.sort!.direction = 'asc';
+    this.categories.sort!.sortChange.emit(); // ⚡️ Re-déclenche le tri
   }
 
   // Création depuis product-Form
@@ -187,11 +202,11 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       .createCategory(newCategory)
       .subscribe({
         next: (createdCategory) => {
-          this.dialogService.showInfo(
+          this.dialogService.info(
             'Catégorie créée avec succès.',
-            'success'
           );
           this.sharedDataService.sendCategoryToProductForm(createdCategory);
+          this.highlightedCategoryId = createdCategory._id || null;
         },
         error: (error) => {
           this.dialogService.showHttpError(error);
@@ -199,44 +214,34 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-
   deleteCategory(category: Category): void {
     if (this.isDefaultCategory(category)) {
-      this.dialogService.showInfo('Vous ne pouvez pas supprimer la catégorie "Sans catégorie".', 'info');
+      this.dialogService.info('Vous ne pouvez pas supprimer la catégorie "Sans catégorie".');
       return;
     }
+    const productCount = category.productCount || 0;
+    const message = productCount > 0
+      ? `Cette catégorie contient <span class="bold-text">${productCount} produit(s)</span>.<br>
+          Êtes-vous sûr de vouloir supprimer la catégorie : <br>
+          <span class="bold-text">"${category.name}"</span> ?`
+      : `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <span class="bold-text">"${category.name}"</span> ?`;
 
-    if (category.productCount && category.productCount > 0) {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        width: '400px',
-        data: {
-          message: `Cette catégorie contient <span class="bold-text"> ${category.productCount} produit(s)</span>. <br>
-          Êtes-vous sûr de vouloir supprimer la catégorie : <br>
-          <span class="bold-text">"${category.name}" ?`,
+    this.dialogService.confirm(message, {
+      title: 'Suppression de catégorie',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler'
+    }).subscribe(result => {
+      if (result !== 'confirm') return;
+
+      this.categoryService.deleteCategory(category._id!).subscribe({
+        next: () => {
+          this.dialogService.info('Catégorie supprimée avec succès.');
+          this.sharedDataService.notifyCategoryUpdate(); // Optionnel si reload
         },
-      });
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result  === 'confirm') {
-          this.categoryService
-            .deleteCategory(category._id!)
-            .subscribe(() => {});
+        error: (err) => {
+          this.dialogService.showHttpError(err);
         }
       });
-    } else {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        width: '400px',
-        data: {
-          message: `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <span class="bold-text">"${category.name}"</span> ?`,
-        },
-      });
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result === 'confirm') {
-          this.categoryService
-            .deleteCategory(category._id!)
-            .subscribe(() => {});
-        }
-      });
-    }
+    });
   }
-
 }

@@ -79,7 +79,7 @@
                             Maximum 250 caractères.
                         </mat-error>
                         <mat-error *ngIf="categoryForm.get('description')?.hasError('pattern')">
-                            Certains caractères ne sont pas autorisés.
+                            Caractères spéciaux interdits
                         </mat-error>
                     </mat-form-field>
                 </form>
@@ -162,7 +162,13 @@
 
         <!-- Header and Row Declarations -->
         <tr mat-header-row *matHeaderRowDef="displayedCategoriesColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedCategoriesColumns;"></tr>
+        <tr mat-row 
+            *matRowDef="let row; columns: displayedCategoriesColumns;"
+            [ngClass]="{ 
+                    'highlighted-row': highlightedCategoryId && row._id === highlightedCategoryId && row._id !== editingCategoryId,
+                    'editing-row': editingCategoryId && row._id === editingCategoryId 
+                }"
+        ></tr>
     </table>
 
     <mat-divider></mat-divider>
