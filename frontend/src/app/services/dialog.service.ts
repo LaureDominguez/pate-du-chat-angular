@@ -11,8 +11,8 @@ import { ConfirmDialogComponent } from '../components/dialog/confirm-dialog/conf
 export class DialogService {
   constructor(private dialog: MatDialog) {}
 
-  info(message: string, title = 'Information') {
-    this.openInfoDialog(message, title);
+  info(message: string, title = 'Information'): Observable<any> {
+    return this.openInfoDialog(message, title);
   }
 
   success(message: string, title = 'Succès') {
@@ -51,11 +51,12 @@ confirm(
     this.error(message);
   }
 
-  private openInfoDialog(message: string, title?: string) {
-    this.dialog.open(InfoDialogComponent, {
+  private openInfoDialog(message: string, title?: string): Observable<any> {
+    const dialogRef = this.dialog.open(InfoDialogComponent, {
       width: '400px',
       data: { message, title }
     });
+    return dialogRef.afterClosed();
   }
 
   private extractErrorMessage(error: HttpErrorResponse): string {

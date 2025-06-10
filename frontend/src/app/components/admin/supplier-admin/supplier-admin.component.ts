@@ -3,14 +3,15 @@ import { AdminModule } from '../admin.module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
-import { MatDialog } from '@angular/material/dialog';
+// import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { catchError, of, Subject, takeUntil, tap } from 'rxjs';
+import { catchError, firstValueFrom, of, Subject, takeUntil, tap } from 'rxjs';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { SupplierService } from '../../../services/supplier.service';
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
+// import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { DialogService } from '../../../services/dialog.service';
+import { IngredientService } from '../../../services/ingredient.service';
 
 @Component({
   selector: 'app-supplier-admin',
@@ -42,6 +43,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
 
   constructor(
     private supplierService: SupplierService,
+    private ingredientService: IngredientService,
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
     private dialogService: DialogService
@@ -219,6 +221,12 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   }
     
   deleteSupplier(supplier: Supplier): void {
+    this.checkIngredientsInSupplier(supplier)
+  }
+  private async checkIngredientsInSupplier(
+    supplier: Supplier,
+    canRetry: boolean = true
+  ): Promise<void> {
     if (this.isDefaultSupplier(supplier)) {
       this.dialogService.info(
         'Vous ne pouvez pas supprimer le fournisseur "Sans fournisseur".'
@@ -228,18 +236,26 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
 
     const ingredientCount = supplier.ingredientCount || 0;
     const message = ingredientCount > 0
-      ? `Ce fournisseur est associé à <span class="bold-text">${ingredientCount}</span> ingrédient(s).<br>
+      ? `Ce fournisseur est associé à <b>${ingredientCount}</b> ingrédient(s).<br>
           Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
-          <span class="bold-text">"${supplier.name}"</span> ?`
+          <b>"${supplier.name}"</b> ?`
       : `Êtes-vous sûr de vouloir supprimer le fournisseur : <br>
-          <span class="bold-text">"${supplier.name}"</span> ?`;
+          <b>"${supplier.name}"</b> ?`;
     
-    this.dialogService.confirm(message, {
-      title: 'Suppression de fournisseur',
-      confirmText: 'Supprimer',
-      cancelText: 'Annuler'
-    }).subscribe(result => {
-      if (result !== 'confirm') return;
+    const result = await firstValueFrom(
+      this.dialogService.confirm(message, {
+        title: 'Suppression de fournisseur',
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        extraText: ingredientCount > 0 ? 'Voir les ingrédients' : undefined,
+      })
+    );
+    // .subscribe(result => {
+    if (result === 'cancel') return;
+    if (result === 'extra' && canRetry) {
+      await this.showRelatedIngredients(supplier);
+      return this.checkIngredientsInSupplier(supplier, false); 
+    }
 
       this.supplierService.deleteSupplier(supplier._id!).subscribe({
         next: () => {
@@ -250,8 +266,32 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
           this.dialogService.showHttpError(err);
         }
       });
-    })
+    // })
   }
+
+  private async showRelatedIngredients(supplier: Supplier): Promise<void> {
+    try {
+      const ingredients = await firstValueFrom(
+        this.ingredientService.getIngredientsBySupplier(supplier._id!)
+      );
+      if (!ingredients.length) {
+        await firstValueFrom(
+          this.dialogService.info('Aucun ingrédient associé à ce fournisseur.', 'Ingrédients associés')
+        );
+        return;
+      }
+      const ingredientList = ingredients.map(ing => `<li>${ing.name}</li>`).join('');
+      await firstValueFrom(
+        this.dialogService.info(
+          `Ingrédients associés au fournisseur <b>"${supplier.name}"</b>:<br>${ingredientList}`,
+          'Ingrédients associés')
+      );
+    } catch (error) {
+      console.error('Erreur lors de la récupération des ingrédients associés:', error);
+      this.dialogService.error('Impossible de charger les ingrédients associés à ce fournisseur.');
+    }
+  }
+  
 
 }
 

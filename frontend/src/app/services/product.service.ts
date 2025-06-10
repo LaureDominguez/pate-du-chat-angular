@@ -103,6 +103,18 @@ export class ProductService {
     );
   }
 
+  getProductsByCategory(categoryId: string): Observable<Product[]> {
+    const url = `${this.apiUrl}/by-category/${categoryId}`;
+    return this.http.get<Product[]>(url).pipe(
+      map((products) =>
+        products.map((product) => ({
+          ...product,
+          category: product.category ? product.category : DEFAULT_CATEGORY,
+        }))
+      )
+    );
+  }
+
   getProductsByIngredient(ingredientId: string): Observable<Product[]> {
     const url = `${this.apiUrl}/by-ingredient/${ingredientId}`;
     return this.http.get<Product[]>(url).pipe(

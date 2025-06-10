@@ -86,7 +86,8 @@ router.get('/by-ingredient/:id', async (req, res) => {
 	}
 
 	try {
-		let products = await Product.find({ composition: req.params.id })
+		let products = await Product
+			.find({ composition: req.params.id })
 			.populate('category')
 			.populate('composition');
 
@@ -97,13 +98,34 @@ router.get('/by-ingredient/:id', async (req, res) => {
 	}
 });
 
+// Obtenir les produits par catégorie
+router.get('/by-category/:id', async (req, res) => {
+	if (!isValidObjectId(req.params.id)) {
+		return res.status(400).json({ message: 'ID catégorie invalide' });
+	}
+
+	try {
+		let products = await Product
+			.find({ category: req.params.id })
+			.populate('category')
+			.populate('composition');
+
+		res.status(200).json(products);
+	} catch (error) {
+		console.error(error.message);
+		res.status(500).send('Erreur serveur');
+	}
+});
+
+// Obtenir un produit par ID
 router.get('/:id', async (req, res) => {
 	if (!isValidObjectId(req.params.id)) {
 		return res.status(400).json({ message: 'ID produit invalide' });
 	}
 
 	try {
-		let product = await Product.findById(req.params.id)
+		let product = await Product
+			.findById(req.params.id)
 			.populate('category')
 			.populate('composition');
 

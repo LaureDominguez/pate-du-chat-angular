@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, catchError, firstValueFrom, map, Observable, tap, throwError } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
+import { DEFAULT_SUPPLIER } from '../models/supplier';
 import { SharedDataService } from './shared-data.service';
 import { originFlag } from '../../assets/data/origin-flags';
 
@@ -47,6 +48,18 @@ export class IngredientService {
   getIngredientById(id: string): Observable<Ingredient> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.get<Ingredient>(url);
+  }
+
+  getIngredientsBySupplier(supplierId: string): Observable<Ingredient[]> {
+    const url = `${this.apiUrl}/by-supplier/${supplierId}`;
+    return this.http.get<Ingredient[]>(url).pipe(
+      map((ingredients) => 
+        ingredients.map((ingredient) => ({
+          ...ingredient,
+          supplier: ingredient.supplier ? ingredient.supplier : DEFAULT_SUPPLIER,
+        }))
+      )
+    );
   }
 
   // Allergènes

@@ -12,11 +12,10 @@ import { DEFAULT_SUPPLIER } from '../../../models/supplier';
 import { ProductService } from '../../../services/product.service';
 import { ImageService } from '../../../services/image.service';
 import { SharedDataService } from '../../../services/shared-data.service';
+import { DialogService } from '../../../services/dialog.service';
 
 import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
 
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 
 
 @Component({
@@ -56,6 +55,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     private imageService: ImageService,
     private productService: ProductService,
     private supplierService: SupplierService,
+    private dialogService: DialogService,
     private dialog: MatDialog
   ) {}
 
@@ -116,12 +116,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         // console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', this.allIngredients);
       })
 
-    // this.ingredientService.getIngredients().subscribe((ingredients) => {
-    //   this.ingredients.data = ingredients;
-    //   this.allIngredients = ingredients;
-    //   console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', ingredients);
-    // });
-
     this.supplierService.suppliers$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((suppliers) => {
@@ -138,7 +132,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         this.downloadIngredientImage(data.imagePath, data.objectName);
       }
     });
-    
   }
 
   fetchAllergenes(): void {
@@ -187,6 +180,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         },
       });
 
+      // Vérification des infos avant de fermer la modale
       const instance = dialogRef.componentInstance;
 
       instance.checkNameExists.subscribe((name: string) => {
@@ -194,12 +188,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
 
         this.ingredientService.checkExistingIngredientName(name, excludedId).subscribe((exists: boolean) => {
           if (exists) {
-            this.dialog.open(InfoDialogComponent, {
-              data: {
-                message: `Le nom "${name}" existe déjà.`,
-                type: 'error',
-              },
-            });
+            this.dialogService.error(`Le nom "${name}" existe déjà.`);
           } else {
             instance.validateAndSubmit();
           }
@@ -207,32 +196,8 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       });
 
       instance.formValidated.subscribe((formResult) => {
-        this.handleIngredientFormSubmit(formResult, dialogRef); // Ajoute le dialogRef
+        this.handleIngredientFormSubmit(formResult, dialogRef);
       });
-
-
-      // dialogRef.afterClosed().subscribe(
-      //   (
-      //     result:
-      //       | {
-      //           ingredientData: any;
-      //           selectedFiles: File[];
-      //           removedExistingImages: string[];
-      //           imageOrder: string[];
-      //         }
-      //       | undefined
-      //   ) => {
-      //     if (result) {
-      //       this.handleIngredientFormSubmit(result);
-      //     }
-      //   }
-      // ),
-      //   (error: any) => {
-      //     console.error(
-      //       'Erreur lors du chargement des catégories ou des ingrédients :',
-      //       error
-      //     );
-      //   };
   }
 
   handleIngredientFormSubmit(
@@ -248,8 +213,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     const ingredientId = ingredientData._id;
     const onSuccess = () => {
       dialogRef.close(result); // Fermer uniquement en cas de succès
-
-      console.log('Formulaire soumis avec succès !', result);
+      // console.log('Formulaire soumis avec succès !', result);
     };
 
     removedExistingImages.forEach((path) => {
@@ -275,7 +239,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           delete ingredientData.existingImages;
           this.submitIngredientForm(ingredientId, ingredientData, onSuccess);
         },
-        error: (err) => this.showErrorDialog(err.message),
+        error: (err) => this.dialogService.error(err.message),
       });
     } else {
       ingredientData.images = imageOrder.filter((entry) => entry.startsWith('/uploads/'));
@@ -299,7 +263,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
             onSuccess?.();
           },
           error: (error) => {
-            this.showErrorDialog(error.message);
+            this.dialogService.error(error.message);
           },
         });
     } else {
@@ -311,17 +275,10 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           onSuccess?.();
         },
         error: (error) => {
-          this.showErrorDialog(error.message);
+          this.dialogService.error(error.message);
         },
       });
     }
-  }
-
-  // Afficher les erreurs dans une fenêtre modale
-  private showErrorDialog(message: string, type = 'error'): void {
-    this.dialog.open(InfoDialogComponent, {
-      data: { message, type },
-    });
   }
 
   ///////////////////////////////////////////////////////////////
@@ -331,8 +288,48 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
   }
 
   // >> Vérifier si l'ingrédient est utilisé dans un produit
+  // private async checkIngredientInProducts(
+  //   ingredient: Ingredient
+  // ): Promise<void> {
+  //   try {
+  //     const products = await firstValueFrom(
+  //       this.productService.getProductsByIngredient(ingredient._id!)
+  //     );
+
+  //     const isUsedInProducts = products.length > 0;
+  //     let message = `Êtes-vous sûr de vouloir supprimer cet ingrédient : <br> <b>"${ingredient.name}"</b> ?`;
+
+  //     if (isUsedInProducts) {
+  //       message = `L'ingrédient <b>"${ingredient.name}"</b> est utilisé dans <b>${products.length} produit(s)</b>.<br> Voulez-vous quand même le supprimer ?`;
+  //     }
+
+  //     const dialogRef = this.dialogService.confirm(message, {
+  //       confirmText: 'Supprimer',
+  //       cancelText: 'Annuler',
+  //       extraText: isUsedInProducts ? 'Vérifier les produits' : undefined,
+  //     });
+
+
+  //     const result = await firstValueFrom(dialogRef);
+
+  //     // console.log('result', result);
+
+  //     if (result === 'cancel') return;
+  //     if (result === 'extra') {
+  //       await this.showRelatedProducts(ingredient);
+  //       return;
+  //     }
+
+  //     this.checkIngredientImages(ingredient);
+  //   } catch (error) {
+  //     // console.error('❌ Erreur lors de la récupération des produits :', error);
+  //     this.dialogService.error(`Erreur lors de la vérification des produits liés à cet ingrédient.`);
+  //   }
+  // }
+
   private async checkIngredientInProducts(
-    ingredient: Ingredient
+    ingredient: Ingredient,
+    canRetry: boolean = true
   ): Promise<void> {
     try {
       const products = await firstValueFrom(
@@ -340,78 +337,98 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       );
 
       const isUsedInProducts = products.length > 0;
-      let message = `Êtes-vous sûr de vouloir supprimer cet ingrédient : <br> <span class="bold-text">"${ingredient.name}"</span> ?`;
+      let message = `Êtes-vous sûr de vouloir supprimer l’ingrédient <b>"${ingredient.name}"</b> ?`;
 
       if (isUsedInProducts) {
-        message = `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> est utilisé dans <span class="bold-text">${products.length} produit(s)</span>.<br> Voulez-vous quand même le supprimer ?`;
+        message = `L’ingrédient <b>"${ingredient.name}"</b> est utilisé dans <b>${products.length} produit(s)</b>.<br> Voulez-vous quand même le supprimer ?`;
       }
 
-      // Affichage de la confirmation utilisateur
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        width: '400px',
-        data: { message },
-      });
-
-      const result = await firstValueFrom(dialogRef.afterClosed());
-
-      // console.log('result', result);
+      const result = await firstValueFrom(
+        this.dialogService.confirm(message, {
+          confirmText: 'Supprimer',
+          cancelText: 'Annuler',
+          extraText: isUsedInProducts ? 'Voir les produits' : undefined,
+        })
+      );
 
       if (result === 'cancel') return;
 
+      if (result === 'extra' && canRetry) {
+        await this.showRelatedProducts(ingredient);
+        await this.checkIngredientInProducts(ingredient, false); // 🌀 recall avec canRetry = false
+        return;
+      }
+
       this.checkIngredientImages(ingredient);
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération des produits :', error);
-      this.dialog.open(InfoDialogComponent, {
-        width: '400px',
-        data: {
-          message:
-            'Erreur lors de la vérification des produits liés à cet ingrédient.',
-          type: 'error',
-        },
-      });
+      this.dialogService.error(
+        `Erreur lors de la vérification des produits liés à "${ingredient.name}".`
+      );
     }
   }
 
+  private async showRelatedProducts(ingredient: Ingredient): Promise<void> {
+  try {
+    const products = await firstValueFrom(
+      this.productService.getProductsByIngredient(ingredient._id!)
+    );
+
+    if (!products.length) {
+      await firstValueFrom(
+        this.dialogService.info(`Aucun produit n’utilise "${ingredient.name}".`, 'Produits liés')
+      );
+      return;
+    }
+
+    const productList = products.map((p) => `<li>${p.name}</li>`).join('');
+    await firstValueFrom(
+    this.dialogService.info(
+      `L’ingrédient <b>"${ingredient.name}"</b> est utilisé dans ${products.length} produit(s) :<br>${productList}`,
+      'Produits liés')
+    );
+  } catch (err) {
+    this.dialogService.error('Erreur lors de la récupération des produits liés.');
+  }
+}
+
+
   // >> Vérifier les images avant suppression
-  checkIngredientImages(ingredient: Ingredient): void {
+  async checkIngredientImages(ingredient: Ingredient): Promise<void> {
     // ✅ Pas d'images, on passe directement à la suppression
     if (!ingredient.images || ingredient.images.length === 0) {
       this.confirmIngredientDeletion(ingredient);
       return;
     }
     // ✅ L'ingrédient a des images, afficher la boîte de dialogue de confirmation
-    this.dialog
-      .open(ConfirmDialogComponent, {
-        width: '400px',
-        data: {
-          message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a <span class="bold-text">${ingredient.images?.length} image(s) associée(s)</span>.<br> Voulez-vous les télécharger avant suppression ?`,
-          confirmButtonText: 'Ignorer',
-          cancelButtonText: 'Annuler',
-          extraButton: 'Télécharger',
-        },
-      })
-      .afterClosed()
-      .subscribe((result) => {
-        // console.log('result', result);
-        switch (result) {
-          case 'cancel':
-            return;
-          case 'extra':
-            this.downloadIngredientImages(ingredient);
-            break;
-          case 'confirm':
-            break;
-          default:
-            break;
-        }
-        // ✅ Suppression des images avant suppression de l’ingrédient
-        ingredient.images?.forEach((imgPath) => {
-          const filename = imgPath.replace('/^/?uploads/?/', '');
-          this.imageService.deleteImage(filename).subscribe();
-        });
-        // ✅ Suppression finale de l’ingrédient
-        this.confirmIngredientDeletion(ingredient);
-      });
+    const dialogRef = this.dialogService.confirm(
+      `L'ingrédient <b>"${ingredient.name}"</b> a <b>${ingredient.images?.length} image(s) associée(s)</b>.<br> Voulez-vous les télécharger avant suppression ?`,
+      {
+        confirmText: 'Ignorer',
+        cancelText: 'Annuler',
+        extraText: 'Télécharger',
+      }
+    );
+    const result = await firstValueFrom(dialogRef);
+
+    switch (result) {
+      case 'cancel':
+        return;
+      case 'extra':
+        this.downloadIngredientImages(ingredient);
+        break;
+      case 'confirm':
+        break;
+      default:
+        break;
+    }
+
+    // ✅ Suppression des images avant suppression de l’ingrédient
+    ingredient.images?.forEach((imgPath) => {
+      const filename = imgPath.replace('/^/?uploads/?/', '');
+      this.imageService.deleteImage(filename).subscribe();
+    });
+    // ✅ Suppression finale de l’ingrédient
+    this.confirmIngredientDeletion(ingredient);
   }
 
   // >> Télécharger les images avant suppression
@@ -431,22 +448,9 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       await firstValueFrom(
         this.ingredientService.deleteIngredient(ingredient._id!)
       );
-      this.dialog.open(InfoDialogComponent, {
-        width: '400px',
-        data: {
-          message: `L'ingrédient <span class="bold-text">"${ingredient.name}"</span> a bien été supprimé.`,
-          type: 'success',
-        },
-      });
+      this.dialogService.success(`L'ingrédient <b>"${ingredient.name}"</b> a bien été supprimé.`);
     } catch (error) {
-      this.dialog.open(InfoDialogComponent, {
-        width: '400px',
-        data: {
-          message:
-            'Une erreur est survenue lors de la suppression de l’ingrédient :<br><span class="bold-text">"${ingredient.name}"</span>.',
-          type: 'error',
-        },
-      });
+      this.dialogService.error(`Une erreur est survenue lors de la suppression de l’ingrédient :<br><b>"${ingredient.name}"</b>.`);
     }
   }
 }

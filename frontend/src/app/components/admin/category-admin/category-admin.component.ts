@@ -9,8 +9,9 @@ import { MatSort } from '@angular/material/sort';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DEFAULT_CATEGORY } from '../../../models/category';
-import { catchError, of, Subject, takeUntil, tap } from 'rxjs';
+import { catchError, firstValueFrom, of, Subject, takeUntil, tap } from 'rxjs';
 import { DialogService } from '../../../services/dialog.service';
+import { ProductService } from '../../../services/product.service';
 
 @Component({
   selector: 'app-category-admin',
@@ -44,6 +45,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
   constructor(
     private categoryService: CategoryService,
+    private productService: ProductService, // Utilisé pour les produits associés
     private fb: FormBuilder,
     // private dialog: MatDialog,
     private sharedDataService: SharedDataService,
@@ -215,23 +217,37 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   }
 
   deleteCategory(category: Category): void {
+    this.checkProductsInCategory(category)
+  }
+  private async checkProductsInCategory(
+    category: Category,
+    canRetry: boolean = true
+  ): Promise<void> {
     if (this.isDefaultCategory(category)) {
       this.dialogService.info('Vous ne pouvez pas supprimer la catégorie "Sans catégorie".');
       return;
     }
     const productCount = category.productCount || 0;
     const message = productCount > 0
-      ? `Cette catégorie contient <span class="bold-text">${productCount} produit(s)</span>.<br>
+      ? `Cette catégorie contient <b>${productCount} produit(s)</b>.<br>
           Êtes-vous sûr de vouloir supprimer la catégorie : <br>
-          <span class="bold-text">"${category.name}"</span> ?`
-      : `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <span class="bold-text">"${category.name}"</span> ?`;
+          <b>"${category.name}"</b> ?`
+      : `Êtes-vous sûr de vouloir supprimer cette catégorie : <br> <b>"${category.name}"</b> ?`;
 
-    this.dialogService.confirm(message, {
-      title: 'Suppression de catégorie',
-      confirmText: 'Supprimer',
-      cancelText: 'Annuler'
-    }).subscribe(result => {
-      if (result !== 'confirm') return;
+    const result = await firstValueFrom(
+      this.dialogService.confirm(message, {
+        title: 'Suppression de catégorie',
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        extraText: productCount > 0 ? 'Voir les produits' : undefined,
+      })
+    );
+    // .subscribe(result => {
+    if (result === 'cancel') return;
+    if (result === 'extra' && canRetry) {
+      await this.showRelatedProducts(category);
+      return this.checkProductsInCategory(category, false);
+    }
 
       this.categoryService.deleteCategory(category._id!).subscribe({
         next: () => {
@@ -242,6 +258,29 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           this.dialogService.showHttpError(err);
         }
       });
-    });
+    // });
+  }
+
+  private async showRelatedProducts(category: Category): Promise<void> {
+    try {
+      const products = await firstValueFrom(
+        this.productService.getProductsByCategory(category._id!)
+      );
+      if (!products.length) {
+        await firstValueFrom(
+          this.dialogService.info('Aucun produit associé à cette catégorie.'
+          , 'Produits associés')
+        );
+        return;
+      }
+      const productNames = products.map((p) => `<li>${p.name}</li>`).join('');
+      await firstValueFrom(
+      this.dialogService.info(
+        `Produits associés à la catégorie <b>"${category.name}"</b>:<br>${productNames}`,
+        'Produits associés')
+      );
+    } catch (error) {
+      this.dialogService.error('Erreur lors de la récupération des produits liés.');
+    }
   }
 }

@@ -14,6 +14,8 @@ const validateRequest = (req, res, next) => {
 	next();
 };
 
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
 // Récupérer tous les ingredients
 router.get('/', async (req, res) => {
 	try {
@@ -30,6 +32,24 @@ router.get('/', async (req, res) => {
 			.json({
 				message: 'Erreur serveur lors de la récupération des ingrédients'
 			});
+	}
+});
+
+router.get('/by-supplier/:id', async (req, res) => {
+	if (!isValidObjectId(req.params.id)) {
+		return res.status(400).json({ msg: 'ID fournisseur invalide' });
+	}
+
+	try {
+		const ingredients = await Ingredient
+			.find({ supplier: req.params.id })
+			.populate('supplier')
+			.populate('subIngredients');
+
+		res.status(200).json(ingredients);
+	} catch (error) {
+		console.error(error.message);
+		res.status(500).send('Erreur serveur');
 	}
 });
 
