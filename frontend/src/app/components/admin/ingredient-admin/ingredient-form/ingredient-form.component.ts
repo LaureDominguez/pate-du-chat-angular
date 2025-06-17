@@ -14,6 +14,7 @@ import { Supplier } from '../../../../models/supplier';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { ProcessedImage } from '../../../../models/image';
+import { DialogService } from '../../../../services/dialog.service';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -57,6 +58,7 @@ export class IngredientFormComponent {
   constructor(
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
+    private dialogService: DialogService,
     private dialog: MatDialog,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -154,15 +156,15 @@ export class IngredientFormComponent {
         return;
       }
 
-      console.log('🚀 Nouveau fournisseur créé:', newSupplier);
-      console.log(' Type de fournisseur:', typeof newSupplier.name);
-      console.log('contenu complet :', JSON.stringify(newSupplier, null, 2));
+      // console.log('🚀 Nouveau fournisseur créé:', newSupplier);
+      // console.log(' Type de fournisseur:', typeof newSupplier.name);
+      // console.log('contenu complet :', JSON.stringify(newSupplier, null, 2));
 
       this.suppliers.push(newSupplier);
       this.supplierNotFound = false;
 
       const label = typeof newSupplier === 'string' ? newSupplier : newSupplier.name;
-      console.log('🔵 Valeur envoyée à supplierCtrl :', label);
+      // console.log('🔵 Valeur envoyée à supplierCtrl :', label);
 
       this.ingredientForm.patchValue({ supplier: newSupplier });
       this.supplierCtrl.setValue(newSupplier.name);
@@ -329,7 +331,7 @@ private setupAutoComplete(): void {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sharedDataService.requestSupplierCreation(result);
-        console.log('🔵 Demande de création de fournisseur envoyée:', result);
+        // console.log('🔵 Demande de création de fournisseur envoyée:', result);
       }
     })
   }
@@ -365,31 +367,6 @@ private setupAutoComplete(): void {
   removeSubIngredient(ingredient: Ingredient): void {
     this.updateSubIngredients(ingredient, false);
   }
-
-
-
-  // // ✅ Ajouter un sous-ingrédient
-  // addSubIngredient(ingredient: Ingredient): void {
-  //   if (!this.selectedSubIngredients.includes(ingredient)) {
-  //     this.selectedSubIngredients.push(ingredient);
-  //     this.subIngredientCtrl.setValue(''); // Réinitialise le champ de recherche
-  //   }
-  // }
-
-  // // ✅ Supprimer un sous-ingrédient
-  // removeSubIngredient(ingredient: Ingredient): void {
-  //   const index = this.selectedSubIngredients.indexOf(ingredient);
-  //   if (index >= 0) {
-  //     this.selectedSubIngredients.splice(index, 1);
-  //   }
-  // }
-
-  // // ✅ Vérifier si un ingrédient est déjà sélectionné
-  // isSubIngredientSelected(ingredient: Ingredient): boolean {
-  //   return this.selectedSubIngredients.some(
-  //     (ing) => ing._id === ingredient._id
-  //   );
-  // }
 
   // ✅ Gestion du tooltip des ingrédients
   getIngredientTooltip(ingredient: Ingredient): string {
@@ -500,9 +477,7 @@ private setupAutoComplete(): void {
     });
 
     if (errors.length > 0) {
-      this.dialog.open(InfoDialogComponent, {
-        data: { message: errors.join('<br>'), type: 'error' },
-      });
+      this.dialogService.error(errors.join('<br>'));
     }
 
     input.value = '';
@@ -537,11 +512,11 @@ private setupAutoComplete(): void {
     if (name === '' || name === undefined) return;
     else this.checkNameExists.emit(name);
 
-    console.log('🔵 Formulaire soumis avec les données :', this.ingredientForm.value);
+    // console.log('🔵 Formulaire soumis avec les données :', this.ingredientForm.value);
   }
 
   validateAndSubmit(): void {
-    console.log('🔵 Validation et soumission du formulaire...');
+    // console.log('🔵 Validation et soumission du formulaire...');
     let formErrors: string[] = [];
 
     Object.keys(this.ingredientForm.controls).forEach((field) => {
@@ -551,15 +526,10 @@ private setupAutoComplete(): void {
       }
     });
 
-    console.log('🔵 Erreurs de formulaire détectées :', formErrors);
+    // console.log('🔵 Erreurs de formulaire détectées :', formErrors);
 
     if (formErrors.length > 0) {
-      this.dialog.open(InfoDialogComponent, {
-        data: {
-          message: formErrors.join('<br>'),
-          type: 'error',
-        },
-      });
+      this.dialogService.error(formErrors.join('<br>'));
       return;
     }
 
@@ -585,17 +555,17 @@ private setupAutoComplete(): void {
     const selectedFiles: File[] = this.processedImages
       .filter((img) => img.type === 'preview' && img.file)
       .map((img) => img.file!); // `!` car on a déjà filtré
-    console.log('📁 Fichiers sélectionnés :', selectedFiles);
+    // console.log('📁 Fichiers sélectionnés :', selectedFiles);
 
     const existingImages: string[] = this.processedImages
       .filter((img) => img.type === 'existing' && img.path)
       .map((img) => img.path!);
-    console.log('📁 Images existantes :', existingImages);
+    // console.log('📁 Images existantes :', existingImages);
 
     const imageOrder: string[] = this.processedImages.map((img) =>
       img.type === 'existing' ? img.path! : img.file!.name
     );
-    console.log('📁 Ordre des images :', imageOrder);
+    // console.log('📁 Ordre des images :', imageOrder);
 
     // update des donnéess à envoyer après close
     const ingredientData = {
@@ -607,7 +577,7 @@ private setupAutoComplete(): void {
       // subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
       existingImages: existingImages,
     };
-    console.log('📋 Données de l\'ingrédient à envoyer :', ingredientData);
+    // console.log('📋 Données de l\'ingrédient à envoyer :', ingredientData);
 
     this.formValidated.emit({
       ingredientData,
@@ -616,14 +586,6 @@ private setupAutoComplete(): void {
       imageOrder
     });
 
-
-    // envoi des données et fermuture du dialog
-    // this.dialogRef.close({
-    //   ingredientData,
-    //   selectedFiles,
-    //   removedExistingImages: this.removedExistingImages,
-    //   imageOrder
-    // });
   }
 
   private fieldLabels: { [key: string]: string } = {

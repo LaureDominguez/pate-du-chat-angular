@@ -14,7 +14,6 @@ export interface QuickCreateData {
   description?: string;
 }
 
-
 @Injectable({
   providedIn: 'root',
 })

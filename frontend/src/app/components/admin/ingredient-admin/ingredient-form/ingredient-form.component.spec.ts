@@ -67,9 +67,6 @@ describe('IngredientFormComponent', () => {
     fixture.detectChanges();
   });
 
-
-
-
   // Innitialisation du formulaire
   it('devrait créer le composant', () => {
     expect(component).toBeTruthy();

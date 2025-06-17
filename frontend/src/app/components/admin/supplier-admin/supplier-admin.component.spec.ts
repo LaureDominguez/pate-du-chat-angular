@@ -8,11 +8,13 @@ import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
 import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
+import { Ingredient, IngredientService } from '../../../services/ingredient.service';
 
 describe('SupplierAdminComponent', () => {
   let component: SupplierAdminComponent;
   let fixture: ComponentFixture<SupplierAdminComponent>;
   let supplierServiceSpy: jasmine.SpyObj<SupplierService>;
+  let ingredientServiceSpy: jasmine.SpyObj<IngredientService>;
   let sharedDataServiceSpy: jasmine.SpyObj<SharedDataService>;
   let dialogServiceSpy: jasmine.SpyObj<DialogService>;
 
@@ -20,6 +22,7 @@ describe('SupplierAdminComponent', () => {
     supplierServiceSpy = jasmine.createSpyObj('SupplierService', [
       'getSuppliers', 'createSupplier', 'updateSupplier', 'deleteSupplier'
     ]);
+    ingredientServiceSpy = jasmine.createSpyObj('IngredientService', ['getIngredients', 'getIngredientsBySupplier']);
 
     sharedDataServiceSpy = jasmine.createSpyObj(
       'SharedDataService',
@@ -27,9 +30,9 @@ describe('SupplierAdminComponent', () => {
       { requestNewSupplier$: of() }
     );
 
-    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm']);
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm', 'error']);
     dialogServiceSpy.confirm.and.returnValue(of('confirm'));
-
+    dialogServiceSpy.info.and.returnValue(of(null));
 
     await TestBed.configureTestingModule({
       imports: [
@@ -40,6 +43,7 @@ describe('SupplierAdminComponent', () => {
       ],
       providers: [
         { provide: SupplierService, useValue: supplierServiceSpy },
+        {provide: IngredientService, useValue: ingredientServiceSpy },
         { provide: SharedDataService, useValue: sharedDataServiceSpy },
         { provide: DialogService, useValue: dialogServiceSpy }
       ]
@@ -103,8 +107,8 @@ describe('SupplierAdminComponent', () => {
     expect(dialogServiceSpy.info).toHaveBeenCalledWith('Fournisseur supprimé avec succès.');
   }));
 
-  it('ne devrait rien faire si l’utilisateur annule la suppression', () => {
-    dialogServiceSpy.confirm.and.returnValue(of('cancel')); // Ajout pour ce test précis
+  it('ne devrait rien faire si l’utilisateur annule la suppression', fakeAsync(() => {
+    dialogServiceSpy.confirm.and.returnValue(of('cancel'));
 
     const supplier: Supplier = {
       _id: 'abc123',
@@ -114,9 +118,63 @@ describe('SupplierAdminComponent', () => {
     };
 
     component.deleteSupplier(supplier);
+    tick();
+
     expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
-  });
-  
+  }));
+
+  it('devrait afficher les ingrédients liés si l’utilisateur clique sur "Voir les ingrédients" pendant la suppression', fakeAsync(() => {
+    const supplier: Supplier = {
+      _id: 'sup123',
+      name: 'Fournisseur associé',
+      description: '',
+      ingredientCount: 2
+    };
+
+    // Simule le clic initial sur "Voir les ingrédients", puis "Confirmer" après
+    let confirmCallCount = 0;
+    dialogServiceSpy.confirm.and.callFake(() => {
+      confirmCallCount++;
+      return of(confirmCallCount === 1 ? 'extra' : 'confirm');
+    });
+
+    // Simule deux ingrédients liés
+    const fakeIngredients = [
+      {
+        _id: 'i1',
+        name: 'Ingrédient A',
+        bio: true,
+        supplier: 'sup123',
+        type: 'simple',
+        allergens: [],
+        vegan: true,
+        vegeta: true,
+        origin: 'FR',
+        images: []
+      },
+      {
+        _id: 'i2',
+        name: 'Ingrédient B',
+        bio: false,
+        supplier: 'sup123',
+        type: 'simple',
+        allergens: [],
+        vegan: false,
+        vegeta: false,
+        origin: 'IT',
+        images: []
+      }
+    ];
+
+    // Fournit les ingrédients simulés
+    ingredientServiceSpy.getIngredientsBySupplier.and.returnValue(of(fakeIngredients as Ingredient[]));
+    supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'OK' }));
+
+    component.deleteSupplier(supplier);
+    tick(); // 1. confirm() → 'extra'
+  }));
+
+
   it('devrait retourner \\u0000 pour le fournisseur highlighté (hors édition)', () => {
     const supplier: Supplier = { _id: '2', name: 'Nom', description: '', ingredientCount: 0 };
 
@@ -131,11 +189,10 @@ describe('SupplierAdminComponent', () => {
     const supplier: Supplier = { _id: '2', name: 'Nom', description: '', ingredientCount: 0 };
 
     component.highlightedSupplierId = '2';
-    component.editingSupplierId = '2'; // même ID que highlighté
+    component.editingSupplierId = '2';
 
     const result = component.suppliers.sortingDataAccessor(supplier, 'name');
     expect(result).toBe('Nom');
   });
-
 
 });

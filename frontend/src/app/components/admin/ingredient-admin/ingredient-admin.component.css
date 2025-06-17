@@ -1,6 +1,19 @@
-table th:last-child, table td:last-child {
-  justify-content: center;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+}
+table th, table td {
+  padding: 8px 5px;
+}
+table th:not(:first-child, :nth-child(2)), table td:not(:first-child, :nth-child(2)) {
   text-align: center;
+}
+table th:not(:first-child, :nth-child(2)) ::ng-deep .mat-sort-header-container, table td:not(:first-child, :nth-child(2)) ::ng-deep .mat-sort-header-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .bio {

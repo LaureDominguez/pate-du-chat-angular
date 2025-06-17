@@ -1,7 +1,18 @@
 table {
-    th:last-child, td:last-child {
-        justify-content: center;
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    th, td {
+        padding: 8px 5px;
+    }
+    th:not(:first-child, :nth-child(2)), td:not(:first-child, :nth-child(2)) {
         text-align: center;
+        ::ng-deep .mat-sort-header-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     }
 }
 

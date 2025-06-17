@@ -1,4 +1,3 @@
-// dialog.service.ts
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -40,7 +39,7 @@ confirm(
       cancelButtonText: options?.cancelText || 'Non',
       extraButton: options?.extraText
     },
-    panelClass: 'confirm-dialog-panel' // utile si tu veux customiser le style
+    panelClass: 'confirm-dialog-panel'
   });
 
   return dialogRef.afterClosed();

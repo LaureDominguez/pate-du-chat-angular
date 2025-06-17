@@ -9,11 +9,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Product, ProductService } from '../../../services/product.service';
 
 describe('CategoryAdminComponent', () => {
   let component: CategoryAdminComponent;
   let fixture: ComponentFixture<CategoryAdminComponent>;
   let categoryServiceSpy: jasmine.SpyObj<CategoryService>;
+  let productServiceSpy: jasmine.SpyObj<ProductService>;
   let sharedDataServiceSpy: jasmine.SpyObj<SharedDataService>;
   let dialogServiceSpy: jasmine.SpyObj<DialogService>;
 
@@ -21,18 +23,17 @@ describe('CategoryAdminComponent', () => {
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', [
       'getCategories', 'createCategory', 'updateCategory', 'deleteCategory'
     ]);
+    productServiceSpy = jasmine.createSpyObj('ProductService', ['getProductsByCategory']);
 
     sharedDataServiceSpy = {
       ...jasmine.createSpyObj('SharedDataService', [
         'sendCategoryToProductForm', 'notifyCategoryUpdate'
       ]),
-      requestNewCategory$: of() // ✅ directement modifiable ici
+      requestNewCategory$: of()
     } as jasmine.SpyObj<SharedDataService>;
 
-
-    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm']);
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm', 'error']);
     dialogServiceSpy.confirm.and.returnValue(of('confirm'));
-
 
     await TestBed.configureTestingModule({
       imports: [
@@ -43,6 +44,7 @@ describe('CategoryAdminComponent', () => {
       ],
       providers: [
         { provide: CategoryService, useValue: categoryServiceSpy },
+        { provide: ProductService, useValue: productServiceSpy }, // Mock ProductService si nécessaire
         { provide: SharedDataService, useValue: sharedDataServiceSpy },
         { provide: DialogService, useValue: dialogServiceSpy }
       ]
@@ -179,6 +181,69 @@ describe('CategoryAdminComponent', () => {
     expect(categoryServiceSpy.deleteCategory).not.toHaveBeenCalled();
   });
 
+  it('devrait afficher les produits liés si l’utilisateur clique sur "Voir les produits" pendant la suppression', fakeAsync(() => {
+  const category: Category = {
+    _id: 'catWithProducts',
+    name: 'Catégorie liée',
+    description: '',
+    productCount: 2
+  };
+
+  let confirmCallCount = 0;
+  dialogServiceSpy.confirm.and.callFake(() => {
+    confirmCallCount++;
+    return of(confirmCallCount === 1 ? 'extra' : 'confirm');
+  });
+
+  const fakeProducts: Product[] = [
+    {
+      _id: 'p1',
+      name: 'Produit A',
+      category: 'catWithProducts',
+      description: 'Un produit lié',
+      composition: [],
+      dlc: '2025-12-31',
+      cookInstructions: 'Cuire 10 minutes',
+      stock: true,
+      stockQuantity: 5,
+      quantityType: 'g',
+      price: 4.99,
+      images: []
+    },
+    {
+      _id: 'p2',
+      name: 'Produit B',
+      category: 'catWithProducts',
+      description: 'Deuxième produit',
+      composition: [],
+      dlc: '2025-12-31',
+      cookInstructions: 'Cuire 5 minutes',
+      stock: true,
+      stockQuantity: 2,
+      quantityType: 'g',
+      price: 3.50,
+      images: []
+    }
+  ];
+
+  productServiceSpy.getProductsByCategory.and.returnValue(of(fakeProducts));
+  categoryServiceSpy.deleteCategory.and.returnValue(of({ message: 'OK' }));
+
+  component.deleteCategory(category);
+  tick(); // ⏱ appel à showRelatedProducts()
+  tick(); // ⏱ retour dans checkProductsInCategory() après afficher les produits
+  tick(); // ⏱ suppression effective
+
+  // Vérifications
+  expect(productServiceSpy.getProductsByCategory).toHaveBeenCalledWith('catWithProducts');
+  expect(dialogServiceSpy.info).toHaveBeenCalledWith(
+    jasmine.stringMatching(/Produits associés à la catégorie/),
+    'Produits associés'
+  );
+  expect(categoryServiceSpy.deleteCategory).toHaveBeenCalledWith('catWithProducts');
+}));
+
+
   it('devrait supprimer une catégorie vide après confirmation',  fakeAsync(() => {
     const category: Category = {
       _id: 'cat123',
@@ -210,7 +275,7 @@ describe('CategoryAdminComponent', () => {
     expect(categoryServiceSpy.deleteCategory).not.toHaveBeenCalled();
   });
     
-  it('devrait afficher une erreur si la suppression échoue', () => {
+  it('devrait afficher une erreur si la suppression échoue', fakeAsync(() => {
     dialogServiceSpy.confirm.and.returnValue(of('confirm'));
 
     const category: Category = {
@@ -228,9 +293,13 @@ describe('CategoryAdminComponent', () => {
     });
 
     categoryServiceSpy.deleteCategory.and.returnValue(throwError(() => fakeHttpError));
+
     component.deleteCategory(category);
+    tick();
+
     expect(dialogServiceSpy.showHttpError).toHaveBeenCalledWith(fakeHttpError);
-  });
+  }));
+
 
 
 
