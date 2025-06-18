@@ -2,193 +2,209 @@
     {{ data.ingredient ? 'Modifier un ingrédient' : 'Ajouter un ingrédient' }}
 </h2>
 <form [formGroup]="ingredientForm" (ngSubmit)="save()">
-    <div class="header-fields">
-        <section class="name">
-            <!-- Nom -->
-            <mat-form-field appearance="fill" class="full-width">
-                <mat-label>Nom</mat-label>
-                <input matInput formControlName="name" />
-                <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
-                <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
-                <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
-                <mat-error *ngIf="name?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
-            </mat-form-field>
-        
-            <!-- BIO -->
-            <mat-slide-toggle 
-                formControlName="bio" 
-                labelPosition="before"
-                >
-                Label BIO
-            </mat-slide-toggle>
-        </section>
-        
-        <!-- Fournisseur -->
-        <section class="supplier">
-            <mat-form-field appearance="fill">
-                <mat-label>Fournisseur</mat-label>
-                <input 
-                    type="text"
-                    matInput
-                    [formControl]="supplierCtrl"
-                    [matAutocomplete]="supplierAuto"
-                    formControlName="supplier"
-                    placeholder="Rechercher un fournisseur"
-                    (blur)="onBlurChecks()"
-                />
-                <!-- effacer -->
-                <button
-                    *ngIf="supplierCtrl.value"
-                    matSuffix
-                    mat-icon-button
-                    aria-label="Effacer la catégorie"
-                    (click)="clearField('supplier')"
-                    tabindex="-1"
-                >
-                    <mat-icon>close</mat-icon>
-                </button>
+        <div class="form_content">
+        <div class="shadow top-shadow"></div>
+        <div class="dynamic_columns">
+            <!------------- colonne gauche ------------->
+            <div class="form-column">
+                <div class="header-fields">
+                    <section class="name">
+                        <!-- Nom -->
+                        <mat-form-field appearance="fill" class="full-width">
+                            <mat-label>Nom</mat-label>
+                            <input matInput formControlName="name" />
+                            <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
+                            <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
+                            <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
+                            <mat-error *ngIf="name?.hasError('pattern')">Caractères spéciaux interdits.</mat-error>
+                        </mat-form-field>
+                    
+                        <!-- BIO -->
+                        <mat-slide-toggle 
+                            formControlName="bio" 
+                            labelPosition="before"
+                            >
+                            Label BIO
+                        </mat-slide-toggle>
+                    </section>
+                    
+                    <!-- Fournisseur -->
+                    <section class="supplier">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Fournisseur</mat-label>
+                            <input 
+                                type="text"
+                                matInput
+                                [formControl]="supplierCtrl"
+                                [matAutocomplete]="supplierAuto"
+                                formControlName="supplier"
+                                placeholder="Rechercher un fournisseur"
+                                (blur)="onBlurChecks()"
+                            />
+                            <!-- effacer -->
+                            <button
+                                *ngIf="supplierCtrl.value"
+                                matSuffix
+                                mat-icon-button
+                                aria-label="Effacer la catégorie"
+                                (click)="clearField('supplier')"
+                                tabindex="-1"
+                            >
+                                <mat-icon>close</mat-icon>
+                            </button>
 
-                <!-- erreurs -->
-                <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
-                <mat-error *ngIf="supplier?.hasError('invalidSelection')">Veuillez choisir un fournisseur valide.</mat-error>
+                            <!-- erreurs -->
+                            <mat-error *ngIf="supplier?.hasError('required')">Le fournisseur est obligatoire.</mat-error>
+                            <mat-error *ngIf="supplier?.hasError('invalidSelection')">Veuillez choisir un fournisseur valide.</mat-error>
 
 
-                <!-- autocomplete -->
-                <mat-autocomplete #supplierAuto="matAutocomplete" 
-                (optionSelected)="addSupplier($event.option.value)"> 
-                    <mat-option *ngFor="let supplier of filteredSuppliers | async" [value]="supplier">
-                        {{supplier.name}}
-                    </mat-option>
+                            <!-- autocomplete -->
+                            <mat-autocomplete #supplierAuto="matAutocomplete" 
+                            (optionSelected)="addSupplier($event.option.value)"> 
+                                <mat-option *ngFor="let supplier of filteredSuppliers | async" [value]="supplier">
+                                    {{supplier.name}}
+                                </mat-option>
 
-                    <mat-option *ngIf="supplierNotFound" [value]="'supplierNotFound'">
-                        Aucun résultat. Cliquez ici pour ajouter un nouveau forunisseur.
-                    </mat-option>
-                </mat-autocomplete>
-            </mat-form-field>
-
-            <mat-form-field>
-                <mat-label>Origine</mat-label>
-                <mat-select formControlName="origin">
-                    <ng-container *ngFor="let group of data.originesList">
-                        <mat-optgroup [label]="group.label">
-                            <mat-option *ngFor="let option of group.options" [value]="option">
-                                {{ option }}
-                            </mat-option>
-                        </mat-optgroup>
-                    </ng-container>
-                </mat-select>
-                <!-- erreurs -->
-                <mat-error *ngIf="origins?.hasError('required')">L'origine est obligatoire.</mat-error>
-            </mat-form-field>
-        </section>
-        
-        <!-- Type d'ingrédient -->
-        <section class="type">
-            <mat-label>Type d'ingrédient</mat-label>
-            <mat-button-toggle-group formControlName="type">
-                <mat-button-toggle value="simple">Ingrédient simple</mat-button-toggle>
-                <mat-button-toggle value="compose">Ingrédient composé</mat-button-toggle>
-            </mat-button-toggle-group>
-        </section>
-    </div>
-
-    <div 
-        class="dynamic-fields"
-        [ngClass]="{ 
-            'simple-active': ingredientForm.get('type')?.value !== 'compose', 
-            'compose-active': ingredientForm.get('type')?.value === 'compose' 
-        }"
-    >
-        <!-- Si ingrédient simple : -->
-        <section 
-            class="simple" 
-            *ngIf="ingredientForm.get('type')?.value === 'simple' 
-                || !ingredientForm.get('type')?.value"
-            [ngClass]="{'animation': ingredientForm.get('type')?.value === 'simple' 
-                || !ingredientForm.get('type')?.value}"
-        >
-            <!-- Allergènes -->
-            <div class="allergen-form-field">
-                <mat-label>Allergènes</mat-label>
-                <div formArrayName="allergens" class="allergen-grid">
-                    <mat-checkbox *ngFor="let control of allergens.controls; let i = index" [formControlName]="i">
-                        {{ data.allergenesList[i] }}
-                    </mat-checkbox>
+                                <mat-option *ngIf="supplierNotFound" [value]="'supplierNotFound'">
+                                    Aucun résultat. Cliquez ici pour ajouter un nouveau forunisseur.
+                                </mat-option>
+                            </mat-autocomplete>
+                        </mat-form-field>
+                    </section>
+                                            <mat-form-field>
+                            <mat-label>Origine</mat-label>
+                            <mat-select formControlName="origin">
+                                <ng-container *ngFor="let group of data.originesList">
+                                    <mat-optgroup [label]="group.label">
+                                        <mat-option *ngFor="let option of group.options" [value]="option">
+                                            {{ option }}
+                                        </mat-option>
+                                    </mat-optgroup>
+                                </ng-container>
+                            </mat-select>
+                            <!-- erreurs -->
+                            <mat-error *ngIf="origins?.hasError('required')">L'origine est obligatoire.</mat-error>
+                        </mat-form-field>
+                    
                 </div>
             </div>
-        
-            <!-- Régime alimentaire -->
-            <div class="regime">
-                <mat-label>Régime alimentaire</mat-label>
-                <div>
-                    <mat-checkbox formControlName="vegan" (change)="onVeganChange($event.checked)">Vegan</mat-checkbox>
-                    <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
+            <!------------- fin de colonne gauche ------------->
+            <mat-divider vertical="true" class="light"></mat-divider>
+
+            <!-- ------------------------------------------- -->
+
+            <!------------- colonne droite ------------->
+            <div class="form-column">
+                <!-- Type d'ingrédient -->
+                <section class="type">
+                    <mat-label>Type d'ingrédient</mat-label>
+                    <mat-button-toggle-group formControlName="type">
+                        <mat-button-toggle value="simple">Ingrédient simple</mat-button-toggle>
+                        <mat-button-toggle value="compose">Ingrédient composé</mat-button-toggle>
+                    </mat-button-toggle-group>
+                </section>
+
+                <div 
+                    class="dynamic-fields"
+                    [ngClass]="{ 
+                        'simple-active': ingredientForm.get('type')?.value !== 'compose', 
+                        'compose-active': ingredientForm.get('type')?.value === 'compose' 
+                    }"
+                >
+                    <!-- Si ingrédient simple : -->
+                    <section 
+                        class="simple" 
+                        *ngIf="ingredientForm.get('type')?.value === 'simple' 
+                            || !ingredientForm.get('type')?.value"
+                        [ngClass]="{'animation': ingredientForm.get('type')?.value === 'simple' 
+                            || !ingredientForm.get('type')?.value}"
+                    >
+                        <!-- Allergènes -->
+                        <div class="allergen-form-field">
+                            <mat-label>Allergènes</mat-label>
+                            <div formArrayName="allergens" class="allergen-grid">
+                                <mat-checkbox *ngFor="let control of allergens.controls; let i = index" [formControlName]="i">
+                                    {{ data.allergenesList[i] }}
+                                </mat-checkbox>
+                            </div>
+                        </div>
+                    
+                        <!-- Régime alimentaire -->
+                        <div class="regime">
+                            <mat-label>Régime alimentaire</mat-label>
+                            <div>
+                                <mat-checkbox formControlName="vegan" (change)="onVeganChange($event.checked)">Vegan</mat-checkbox>
+                                <mat-checkbox formControlName="vegeta">Végétarien</mat-checkbox>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Si ingrédient composé : -->
+                    <!-- Sélection des sous-ingrédients -->
+                    <section 
+                        class="compose" 
+                        *ngIf="ingredientForm.get('type')?.value === 'compose' 
+                            || !ingredientForm.get('type')?.value"
+                        [ngClass]="{'animation': ingredientForm.get('type')?.value === 'compose'}"
+                    >
+                        <mat-form-field appearance="fill">
+                            <mat-label>Ajouter un sous-ingrédient</mat-label>
+                            <input 
+                                type="text" 
+                                matInput 
+                                [formControl]="subIngredientCtrl" 
+                                [matAutocomplete]="subIngredientAuto"
+                                formControlName="subIngredients" 
+                                placeholder="Rechercher un ingrédient" 
+                            />
+                            <mat-error *ngIf="subIngredients.length === 0">Ajoutez au moins un ingrédient.</mat-error>
+                    
+                            <mat-autocomplete #subIngredientAuto="matAutocomplete" (optionSelected)="addSubIngredient($event.option.value)"
+                                hideSingleSelectionIndicator>
+                                <!-- Affichage des résultats filtrés -->
+                                <mat-option *ngFor="let ingredient of filteredSubIngredients | async" [value]="ingredient"
+                                    class="composition">
+                                    <span>{{ ingredient.name }}</span>
+                                    <span *ngIf="ingredient.bio" class="bio-label"> (Bio)</span>
+                                    <mat-icon *ngIf="isSubIngredientSelected(ingredient)">check</mat-icon>
+                                </mat-option>
+                    
+                                <!-- Message pour afficher qu'aucun ingrédient n'a été trouvé -->
+                                <mat-option *ngIf="subIngredientNotFound" disabled>
+                                    ❌ Aucun ingrédient trouvé
+                                </mat-option>
+                            </mat-autocomplete>
+                        </mat-form-field>
+                    
+                        <!-- Liste des sous-ingrédients sélectionnés -->
+                        <mat-chip-set *ngIf="subIngredients.length > 0; else noIngredients">
+                            <mat-chip 
+                                *ngFor="let ingredient of subIngredients" 
+                                [removable]="true"
+                                (removed)="removeSubIngredient(ingredient)" 
+                                [matTooltip]="getIngredientTooltip(ingredient)"
+                                matTooltipPosition="below" 
+                                matTooltipClass="custom-tooltip"
+                            >
+                                <span>{{ ingredient.name }}</span>
+                                <span *ngIf="ingredient.bio" class="bio-label"> (Bio)</span>
+                                <button mat-icon-button matChipRemove>
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip>
+                        </mat-chip-set>
+
+                        <ng-template #noIngredients>
+                            <p class="empty-message">Aucun ingrédient ajouté</p>
+                        </ng-template>
+                    </section>
                 </div>
             </div>
-        </section>
-        
-        <!-- Si ingrédient composé : -->
-        <!-- Sélection des sous-ingrédients -->
-        <section 
-            class="compose" 
-            *ngIf="ingredientForm.get('type')?.value === 'compose' 
-                || !ingredientForm.get('type')?.value"
-            [ngClass]="{'animation': ingredientForm.get('type')?.value === 'compose'}"
-        >
-            <mat-form-field appearance="fill">
-                <mat-label>Ajouter un sous-ingrédient</mat-label>
-                <input 
-                    type="text" 
-                    matInput 
-                    [formControl]="subIngredientCtrl" 
-                    [matAutocomplete]="subIngredientAuto"
-                    formControlName="subIngredients" 
-                    placeholder="Rechercher un ingrédient" 
-                />
-                <mat-error *ngIf="subIngredients.length === 0">Ajoutez au moins un ingrédient.</mat-error>
-        
-                <mat-autocomplete #subIngredientAuto="matAutocomplete" (optionSelected)="addSubIngredient($event.option.value)"
-                    hideSingleSelectionIndicator>
-                    <!-- Affichage des résultats filtrés -->
-                    <mat-option *ngFor="let ingredient of filteredSubIngredients | async" [value]="ingredient"
-                        class="composition">
-                        <span>{{ ingredient.name }}</span>
-                        <span *ngIf="ingredient.bio" class="bio-label"> (Bio)</span>
-                        <mat-icon *ngIf="isSubIngredientSelected(ingredient)">check</mat-icon>
-                    </mat-option>
-        
-                    <!-- Message pour afficher qu'aucun ingrédient n'a été trouvé -->
-                    <mat-option *ngIf="subIngredientNotFound" disabled>
-                        ❌ Aucun ingrédient trouvé
-                    </mat-option>
-                </mat-autocomplete>
-            </mat-form-field>
-        
-            <!-- Liste des sous-ingrédients sélectionnés -->
-            <mat-chip-set *ngIf="subIngredients.length > 0; else noIngredients">
-                <mat-chip 
-                    *ngFor="let ingredient of subIngredients" 
-                    [removable]="true"
-                    (removed)="removeSubIngredient(ingredient)" 
-                    [matTooltip]="getIngredientTooltip(ingredient)"
-                    matTooltipPosition="below" 
-                    matTooltipClass="custom-tooltip"
-                >
-                    {{ ingredient.name }}
-                    <button mat-icon-button matChipRemove>
-                        <mat-icon>cancel</mat-icon>
-                    </button>
-                </mat-chip>
-            </mat-chip-set>
+            <!------------- fin de colonne droite ------------->
+        </div>
+        <!------------- fin du bloc de 2 colonnes ------------->
 
-            <ng-template #noIngredients>
-                <p class="empty-message">Aucun ingrédient ajouté</p>
-            </ng-template>
-        </section>
-    </div>
-
-    <!-- ----------------------------------------- -->
-    <mat-divider></mat-divider>
+        <mat-divider class="light"></mat-divider>
     <!-- ----------------------------------------- -->
         <!------------- bloc images ------------->
         <div class="bloc_images">
@@ -202,8 +218,12 @@
             <input #fileInput id="imageUpload" type="file" multiple (change)="onFileSelected($event)" accept="image/*"
                 style="display: none;" />
         </div>
-    
+        <div class="shadow bottom-shadow"></div>
+    </div>
 
+    <!-- ------------------ -->
+
+    <!-- Validation -->
     <div mat-dialog-actions align="end">
         <button mat-button type="button" (click)="cancel()">Annuler</button>
         <button mat-raised-button color="primary" type="submit">Enregistrer</button>

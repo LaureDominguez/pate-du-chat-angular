@@ -1,61 +1,120 @@
 @use '@angular/material' as mat;
 
 ::ng-deep .mat-mdc-dialog-surface {
-    background-color: var(--background);
-    color: var(--on-background);
+    background-color: var(--surface-bright);
 }
 
-// ✅ Gestion de l'affichage des listes déroulantes (mat-select, mat-option, mat-optgroup)
-::ng-deep .mat-mdc-select-panel {
-    background-color: var(--surface-container) !important;
+
+form {
+    max-height: 90vh;
+    overflow: hidden;
+    padding: 0.5rem;
+
+    .light {
+        @include mat.divider-overrides((color: var(--surface-dim)));
+    }
 }
 
-::ng-deep .mat-mdc-option {
+.form_content {
+    max-height: 70vh;
+    overflow: auto;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.shadow {
+    position: sticky;
+    height: 12px;
+    width: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.top-shadow {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.bottom-shadow {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.08), transparent);
+}
+
+mat-form-field {
+    border-radius: 10px;
+    color: var(--on-surface);
+    background-color: var(--surface-bright);
+    transition: all 0.2s ease;
+    margin: 0.3rem 0;
+
+    &:hover {
+        color: var(--on-surface);
+        background-color: var(--surface-container-low);
+    }
+
+    &:focus-within {
+        color: var(--on-surface);
+        background-color: var(--surface-container-low);
+    }
+
+    &.ng-invalid.ng-touched {
+        color: var(--error);
+        background-color: var(--error-container);
+    }
+}
+
+mat-label {
+    font-weight: bold;
+}
+
+::ng-deep .mat-mdc-autocomplete-panel {
+    background-color: var(--surface-bright) !important;
     color: var(--on-surface) !important;
-    background-color: var(--surface-container) !important;
+    border-radius: 8px;
+}
+
+::ng-deep .mat-mdc-select-panel {
+    background-color: var(--surface-bright) !important;
+    color: var(--on-surface) !important;
+    border-radius: 8px;
+}
+
+::ng-deep mat-option {
+    color: var(--on-surface) !important;
+    background-color: var(--surface-bright) !important;
+
     &:hover {
         color: var(--on-primary-fixed) !important;
         background-color: var(--primary-fixed) !important;
     }
 }
 
-// ✅ Correction du label transparent sur mat-optgroup
-::ng-deep .mat-mdc-optgroup-label {
-    color: var(--on-surface) !important;
-    font-weight: bold;
-    background-color: var(--surface-container) !important;
-    padding: 8px 12px;
+
+mat-error, mat-hint, mat-label {
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-form {
+///////////////////////////////
+.dynamic_columns {
     display: flex;
-    align-items: stretch;
-    flex-direction: column;
-    justify-content: space-evenly;
-    height: 40rem;
-    width: 95%;
-    overflow: auto;
-    margin: auto;
-    mat-form-field {
-        border-radius: 5px;
-        width: 100%;
-        background-color: var(--background);
-        color: var(--on-background);
-        &:focus-within {
-            color: var(--on-surface);
-            background-color: var(--surface-container);
+    gap: 2rem;
+
+    .form-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        &:first-child {
+            flex: 2;
         }
-        &.ng-invalid.ng-touched {
-            color: var(--error);
-            background-color: var(--error-container);
+
+        &:last-child {
+            flex: 3;
         }
     }
 }
 
-mat-label {
-    font-weight: bold;
-    flex-shrink: 0;
-}
 
 .header-fields {
     display: flex;
@@ -74,13 +133,31 @@ mat-label {
         }
 
         @include mat.slide-toggle-overrides((
+            // forme
+            handle-shape: 50%,
+            track-shape: 50px,
+
+            // couleurs
+            handle-surface-color: var(--surface-container-low),
+            // bord externe
             track-outline-color: var(--outline-variant),
             selected-track-outline-color: var(--outline-variant),
+
+            // icone
             unselected-icon-color: var(--on-secondary-container),
             selected-icon-color: var(--on-tertiary-fixed-variant),
-            handle-surface-color: var(--tertiary-fixed-dim),
+
+            // track
+            selected-handle-color: var(--tertiary-fixed-dim),
+            selected-focus-handle-color: var(--tertiary-fixed-dim),
+            selected-hover-handle-color: var(--tertiary-fixed-dim),
+
             unselected-handle-color: var(--secondary-container),
+            unselected-focus-handle-color: var(--secondary-container),
             unselected-hover-handle-color: var(--secondary-container),
+
+            disabled-unselected-handle-color: var(--surface-dim),
+            // disabled-unselected-icon-color: var(--surface-bright),
             label-text-weight: 600
         ));
     }
@@ -118,9 +195,13 @@ mat-label {
 }
 
 .type {
+    mat-label {
+        padding: 1rem;
+    }
     @include mat.button-toggle-overrides((
         background-color: var(--surface-container),
-        selected-state-background-color: var(--primary-fixed)
+        selected-state-background-color: var(--primary-fixed),
+        shape: 50px,
     ));
 }
 
@@ -162,6 +243,9 @@ mat-label {
             transform: translateX(0);
             animation: slide-in-right 0.3s ease-out;
         }
+        mat-form-field {
+            width: 95%;
+        }
     }
 }
 
@@ -171,6 +255,7 @@ mat-label {
 }
 .allergen-grid {
     max-height: 150px;
+    width: 93%;
     overflow: auto;
     margin-top: 0.5rem;
     border: 2px solid var(--outline-variant);
