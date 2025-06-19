@@ -9,6 +9,7 @@ import { AdminModule } from '../../admin.module';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { Supplier } from '../../../../models/supplier';
 import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
+import { DialogService } from '../../../../services/dialog.service';
 
 describe('IngredientFormComponent', () => {
   let component: IngredientFormComponent;
@@ -20,6 +21,17 @@ describe('IngredientFormComponent', () => {
   const mockDialogRef = {
     close: jasmine.createSpy('close'),
   };
+
+  const matDialogRefStub = {
+    afterClosed: () => of(undefined), // Simule la fermeture immédiate du dialogue
+  };
+
+  const dialogServiceStub = {
+    error: jasmine.createSpy('error').and.returnValue(matDialogRefStub),
+    info: jasmine.createSpy('info').and.returnValue(matDialogRefStub),
+    confirm: jasmine.createSpy('confirm').and.returnValue(of(true)),
+  };
+
 
   const mockData = {
     ingredient: null,
@@ -53,6 +65,7 @@ describe('IngredientFormComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: mockData },
         { provide: SharedDataService, useValue: sharedDataServiceSpy },
         { provide: MatDialog, useValue: matDialogSpy },
+        { provide: DialogService, useValue: dialogServiceStub },
       ]
     }).overrideComponent(IngredientFormComponent, {
       set: {
@@ -155,6 +168,37 @@ describe('IngredientFormComponent', () => {
     expect(component.bio?.disabled).toBeTrue();
   });
 
+  it('devrait mettre bio à true si tous les sous-ingrédients sont bio en mode composé', () => {
+    const sub1 = { _id: '1', name: 'Ail', bio: true } as any;
+    const sub2 = { _id: '2', name: 'Oignon', bio: true } as any;
+
+    component.ingredientForm.patchValue({ type: 'compose' });
+    component.addSubIngredient(sub1);
+    component.addSubIngredient(sub2);
+
+    expect(component.bio?.disabled).toBeTrue();
+    expect(component.bio?.value).toBeTrue();
+  });
+
+  it('devrait mettre bio à false si un sous-ingrédient n’est pas bio', () => {
+    const sub1 = { _id: '1', name: 'Farine', bio: true } as any;
+    const sub2 = { _id: '2', name: 'Sucre', bio: false } as any;
+
+    component.ingredientForm.patchValue({ type: 'compose' });
+    component.addSubIngredient(sub1);
+    component.addSubIngredient(sub2);
+
+    expect(component.bio?.disabled).toBeTrue();
+    expect(component.bio?.value).toBeFalse();
+  });
+
+  it('devrait mettre bio à false si aucun sous-ingrédient n’est sélectionné', () => {
+    component.ingredientForm.patchValue({ type: 'compose', subIngredients: [] });
+    fixture.detectChanges();
+    expect(component.bio?.disabled).toBeTrue();
+    expect(component.bio?.value).toBeFalse();
+  });
+
   // VEGAN
   it('devrait cocher vegeta si vegan est coché', () => {
     component.ingredientForm.get('vegan')?.setValue(true);
@@ -188,7 +232,6 @@ describe('IngredientFormComponent', () => {
 
   it('ne doit pas émettre si le formulaire est invalide', () => {
     spyOn(component.formValidated, 'emit');
-    const dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
 
     component.ingredientForm.patchValue({
       name: '', // champ requis vide → invalide
@@ -198,12 +241,10 @@ describe('IngredientFormComponent', () => {
     component.validateAndSubmit();
 
     expect(component.formValidated.emit).not.toHaveBeenCalled();
-    expect(dialogSpy.open).toHaveBeenCalled();
+    expect(dialogServiceStub.error).toHaveBeenCalled();
   });
 
   it('devrait afficher un message d’erreur si le formulaire est invalide', () => {
-    const dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
-
     component.ingredientForm.patchValue({
       name: '',
       origin: ''
@@ -211,9 +252,9 @@ describe('IngredientFormComponent', () => {
 
     component.validateAndSubmit();
 
-    expect(dialogSpy.open).toHaveBeenCalled();
-    expect(dialogSpy.open.calls.mostRecent().args[0]).toBe(InfoDialogComponent);
+    expect(dialogServiceStub.error).toHaveBeenCalled();
   });
+
 
   it('devrait inclure les images sélectionnées et supprimées dans l’envoi', () => {
     spyOn(component.formValidated, 'emit');

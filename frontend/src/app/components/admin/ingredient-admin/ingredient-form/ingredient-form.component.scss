@@ -250,6 +250,13 @@ mat-error, mat-hint, mat-label {
 }
 
 // Liste des allergènes
+::ng-deep .custom-tooltip {
+    white-space: pre-line;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: left;
+}
+
 .allergen-form-field {
     padding-top: 0.5rem;
 }

@@ -172,21 +172,37 @@ export class IngredientFormComponent {
   }
 
   private setupBioToggle(): void {
+    // console.log('🔵 Initialisation de la règle bio...');
     // Appliquer la règle initialement
     if (this.type?.value === 'compose') {
       this.bio?.disable();
+      this.updateBioFromSubIngredients();
     }
 
     // Réagir aux changements
     this.type?.valueChanges.subscribe((newType: string) => {
       if (newType === 'compose') {
         this.bio?.disable();
-        this.bio?.setValue(false);
+        this.updateBioFromSubIngredients();
       } else {
         this.bio?.enable();
       }
     });
   }
+
+  private updateBioFromSubIngredients(): void {
+    // console.log('🔵 Mise à jour de la règle bio à partir des sous-ingrédients...');
+  const subIngredients: Ingredient[] = this.ingredientForm.get('subIngredients')?.value || [];
+
+  if (subIngredients.length === 0) {
+    this.bio?.setValue(false);
+    return;
+  }
+
+  const allBio = subIngredients.every((ing) => ing.bio === true);
+  this.bio?.setValue(allBio);
+}
+
 
   private setupSubIngredientsValidator(): void {
     this.type?.valueChanges.subscribe((typeValue: string) => {
@@ -348,6 +364,9 @@ private setupAutoComplete(): void {
     );
 
     this.subIngredientCtrl.setValue('');
+    if (this.type?.value === 'compose') {
+      this.updateBioFromSubIngredients();
+    }
   }
 
   private setSubIngredients(ingredients: Ingredient[]): void {
@@ -369,11 +388,12 @@ private setupAutoComplete(): void {
   }
 
   // ✅ Gestion du tooltip des ingrédients
-  getIngredientTooltip(ingredient: Ingredient): string {
-    return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
-    Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n
-    Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}`;
-  }
+getIngredientTooltip(ingredient: Ingredient): string {
+  return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n` +
+    `Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n` +
+    `Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}`;
+}
+
 
   onVeganChange(isVeganChecked: boolean): void {
     if (isVeganChecked) {
