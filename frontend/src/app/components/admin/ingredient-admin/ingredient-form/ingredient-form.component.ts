@@ -1,20 +1,16 @@
 import { Component, EventEmitter, Inject, Output } from '@angular/core';
+import { map, Observable, startWith } from 'rxjs';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import {
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-  MatDialog,
-} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+
 import { AdminModule } from '../../admin.module';
-import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Ingredient } from '../../../../models/ingredient';
-import { SharedDataService } from '../../../../services/shared-data.service';
-import { map, Observable, startWith, Subject } from 'rxjs';
 import { Supplier } from '../../../../models/supplier';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { ProcessedImage } from '../../../../models/image';
 import { DialogService } from '../../../../services/dialog.service';
+import { SharedDataService } from '../../../../services/shared-data.service';
 
 @Component({
   selector: 'app-ingredient-form',

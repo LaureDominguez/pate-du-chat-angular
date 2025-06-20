@@ -1,35 +1,17 @@
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Inject,
-  OnInit,
-  Output,
-  ViewChild,
-} from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { Component, ElementRef, EventEmitter, Inject, OnInit, Output, ViewChild }from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { map, Observable, startWith, take } from 'rxjs';
-import {
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-  MatDialog,
-} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+
 import { AdminModule } from '../../admin.module';
+import { DialogService } from '../../../../services/dialog.service';
 import { SharedDataService } from '../../../../services/shared-data.service';
-import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { Category } from '../../../../models/category';
 import { Ingredient } from '../../../../models/ingredient';
 import { Product } from '../../../../models/product';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { ProcessedImage } from '../../../../models/image';
-import { ImageService } from '../../../../services/image.service';
-import { ConfirmDialogComponent } from '../../../dialog/confirm-dialog/confirm-dialog.component';
 
 import autoAnimate from '@formkit/auto-animate';
 
@@ -46,6 +28,13 @@ export class ProductFormComponent implements OnInit {
   @ViewChild('dlcContainer') dlcContainer!: ElementRef;
 
   @Output() checkNameExists = new EventEmitter<string>();
+  @Output() formValidated = new EventEmitter<{
+    productData: any;
+    selectedFiles: File[];
+    removedExistingImages: string[];
+    imageOrder: string[];
+  }>();
+
 
   //Categories
   categories: Category[] = [];
@@ -74,7 +63,7 @@ export class ProductFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
-    // private imageService: ImageService,
+    private dialogService: DialogService,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductFormComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -91,7 +80,7 @@ export class ProductFormComponent implements OnInit {
     this.ingredients = data.ingredients || [];
     this.dlcsList = data.dlcs || [];
 
-    console.log('data :', data); // debug
+  // console.log('data :', data); // debug
 
     const existingDlc = data.product?.dlc || '';
     const isCustom = existingDlc && !this.dlcsList.includes(existingDlc);
@@ -203,8 +192,6 @@ export class ProductFormComponent implements OnInit {
       images: [data.product?.images || []],
     });
 
-    console.log('📋 Formulaire initialisé :', this.productForm.value); // LOG ICI 🔍
-
     this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
   }
 
@@ -225,27 +212,6 @@ export class ProductFormComponent implements OnInit {
         }, 0);
       }
     });
-
-    // this.stock?.disable({ emitEvent: false });
-
-    // this.productForm.get('stockQuantity')?.valueChanges.subscribe((value) => {
-    //   const stockCtrl = this.stock;
-    //   const numericValue = parseFloat(value);
-
-    //   const shouldEnable =
-    //     value !== null &&
-    //     value !== undefined &&
-    //     value !== '' &&
-    //     !isNaN(numericValue) &&
-    //     numericValue > 0;
-
-    //   if (shouldEnable) {
-    //     stockCtrl?.enable({ emitEvent: false });
-    //   } else {
-    //     stockCtrl?.setValue(false, { emitEvent: false });
-    //     stockCtrl?.disable({ emitEvent: false });
-    //   }
-    // });
 
     this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
       const stockCtrl = this.productForm.get('stockQuantity');
@@ -471,10 +437,11 @@ export class ProductFormComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sharedDataService.requestCategoryCreation(result);
-        console.log('📋 Catégorie créée :', result);
+      // console.log('📋 Catégorie créée :', result);
       }
     });
   }
+  
   onCategoryBlur(): void {
     const inputValue = this.categoryCtrl.value;
     const selectedCategory = this.productForm.get('category')?.value;
@@ -556,7 +523,7 @@ export class ProductFormComponent implements OnInit {
         }
       })
       .catch((error) => {
-        console.error('Erreur lors de la création de l’ingrédient :', error);
+        this.dialogService.error(`Une erreur est survenue lors de la création de l’ingrédient :<br><b>"${error}"</b>.`);
       });
   }
 
@@ -647,9 +614,7 @@ export class ProductFormComponent implements OnInit {
     });
 
     if (errors.length > 0) {
-      this.dialog.open(InfoDialogComponent, {
-        data: { message: errors.join('<br>'), type: 'error' },
-      });
+      this.dialogService.error(errors.join('<br>'));
     }
 
     input.value = '';
@@ -685,7 +650,7 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Validation du formulaire
   save(): void {
-    console.log('📋 Formulaire soumis :', this.productForm.value);
+  // console.log('📋 Formulaire soumis :', this.productForm.value);
 
     Object.values(this.productForm.controls).forEach(control => {
       control.markAsTouched();
@@ -704,17 +669,13 @@ export class ProductFormComponent implements OnInit {
     const stockValue = this.stockQuantity?.value;
 
     if (stockValue === null || stockValue === undefined || stockValue === '') {
-      const message = `Le champ "Quantité en stock" est vide. Souhaitez-vous le remplir avec 0 ? <br> Le produit ne sera pas visible dans le catalogue tant que la quantité est à 0.`;
+      const message = `Le champ "Quantité en stock" est vide. <br> Souhaitez-vous le remplir avec 0 ? <br> <i>Le produit ne sera pas visible dans le catalogue tant que la quantité en stock est à 0.</i>`;
 
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        data: {
-          message,
-          confirmButtonText: 'Oui',
-          cancelButtonText: 'Non',
-        },
-      });
-
-      dialogRef.afterClosed().subscribe((result) => {
+      this.dialogService.confirm(message, {
+        title: 'Stock vide',
+        confirmText: 'Oui',
+        cancelText: 'Non',
+      }).subscribe((result) => {
         if (result === 'confirm') {
           this.stockQuantity?.setValue(0);
           this.validateAndSubmit();
@@ -733,17 +694,15 @@ export class ProductFormComponent implements OnInit {
       this.productForm.get('stock')?.setValue(false);
     }
 
-    let formErrors: string[] = [];
+    let errors: string[] = [];
 
     Object.keys(this.productForm.controls).forEach((field) => {
       const errorMsg = this.getErrorMessage(field);
-      if (errorMsg) formErrors.push(errorMsg);
+      if (errorMsg) errors.push(errorMsg);
     });
 
-    if (formErrors.length > 0) {
-      this.dialog.open(InfoDialogComponent, {
-        data: { message: formErrors.join('<br>'), type: 'error' },
-      });
+    if (errors.length > 0) {
+      this.dialogService.error(errors.join('<br>'));
       return;
     }
 
@@ -769,14 +728,22 @@ export class ProductFormComponent implements OnInit {
       stock: this.stock?.value,
     };
 
-    console.log('📋 Données du produit avant envoi :', productData)
+  // console.log('📋 Données du produit avant envoi :', productData)
 
-    this.dialogRef.close({
+    this.formValidated.emit({
       productData,
       selectedFiles,
       removedExistingImages: this.removedExistingImages,
       imageOrder,
     });
+
+
+    // this.dialogRef.close({
+    //   productData,
+    //   selectedFiles,
+    //   removedExistingImages: this.removedExistingImages,
+    //   imageOrder,
+    // });
   }
 
   formatNameInput(name: string): string {

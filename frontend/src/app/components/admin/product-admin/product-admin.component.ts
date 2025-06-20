@@ -15,7 +15,7 @@ import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
 
 import { AdminModule } from '../admin.module';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -23,6 +23,7 @@ import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dial
 import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
 import { DEFAULT_CATEGORY } from '../../../models/category';
 import { DeviceService } from '../../../services/device.service';
+import { DialogService } from '../../../services/dialog.service';
 
 @Component({
   selector: 'app-product-admin',
@@ -63,7 +64,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private imageService: ImageService,
     private deviceService: DeviceService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -143,40 +145,46 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
       this.productService.checkExistingProducName(name, excludedId).subscribe((exists: boolean) => {
         if (exists) {
-          this.dialog.open(InfoDialogComponent, {
-            data: {
-              message: `Le nom "${name}" existe déjà.`,
-              type: 'error',
-            },
-          });
+            this.dialogService.error(`Le nom "${name}" existe déjà.`);
+
+          // this.dialog.open(InfoDialogComponent, {
+          //   data: {
+          //     message: `Le nom "${name}" existe déjà.`,
+          //     type: 'error',
+          //   },
+          // });
         } else {
           instance.validateStockAndPrice();
         }
       });
     });
 
-    dialogRef.afterClosed().subscribe(
-      (
-        result:
-          | {
-              productData: any;
-              selectedFiles: File[];
-              removedExistingImages: string[];
-              imageOrder: string[];
-            }
-          | undefined
-      ) => {
-        if (result) {
-          this.handleProductFormSubmit(result);
-        }
-      }
-    ),
-      (error: any) => {
-        console.error(
-          'Erreur lors du chargement des catégories ou des ingrédients :',
-          error
-        );
-      };
+    instance.formValidated.subscribe((formResult) => {
+      this.handleProductFormSubmit(formResult, dialogRef);
+    });
+
+    // dialogRef.afterClosed().subscribe(
+    //   (
+    //     result:
+    //       | {
+    //           productData: any;
+    //           selectedFiles: File[];
+    //           removedExistingImages: string[];
+    //           imageOrder: string[];
+    //         }
+    //       | undefined
+    //   ) => {
+    //     if (result) {
+    //       this.handleProductFormSubmit(result);
+    //     }
+    //   }
+    // ),
+    //   (error: any) => {
+    //     console.error(
+    //       'Erreur lors du chargement des catégories ou des ingrédients :',
+    //       error
+    //     );
+    //   };
   }
 
   handleProductFormSubmit(result: {
@@ -184,10 +192,14 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     selectedFiles: File[];
     removedExistingImages: string[];
     imageOrder: string[];
-  }): void {
+  },
+  dialogRef: MatDialogRef<ProductFormComponent>
+): void {
     const { productData, selectedFiles, removedExistingImages, imageOrder } = result;
     const productId = productData._id;
-    // const existingImages = productData.existingImages ?? [];
+    const onSuccess = () => {
+      dialogRef.close(result);
+    };
 
     removedExistingImages.forEach((path) => {
       const filename = path.replace(/^\/?uploads\/?/, '');
@@ -210,26 +222,42 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           }).filter(Boolean);
 
           delete productData.existingImages;
-          this.submitProductForm(productId, productData);
+          this.submitProductForm(productId, productData, onSuccess);
         },
         error: (err) => this.showErrorDialog(err.message),
       });
     } else {
       productData.images = imageOrder.filter((entry) => entry.startsWith('/uploads/'));
-      this.submitProductForm(productId, productData);
+      this.submitProductForm(productId, productData, onSuccess);
     }
   }
   
 
-  submitProductForm(productId?: string, productData?: any): void {
-    console.log('🚀 Envoi du produit au backend :', productData); // LOG ICI 🔍
+  submitProductForm(
+    productId?: string, 
+    productData?: any,
+    onSuccess?: () => void
+  ): void {
+    // console.log('🚀 Envoi du produit au backend :', productData); // LOG ICI 🔍
     if (productId) {
-      this.productService.updateProduct(productId, productData).subscribe({
-        error: (error) => this.showErrorDialog(error.message, 'error'),
-      });
+      this.productService
+        .updateProduct(productId, productData)
+        .subscribe({
+          next: () => {
+            onSuccess?.();
+          },
+          error: (error) => {
+            this.dialogService.error(error.message);
+          },
+        });
     } else {
       this.productService.createProduct(productData).subscribe({
-        error: (error) => this.showErrorDialog(error.message, 'error'),
+        next: () => {
+          onSuccess?.();
+        },
+        error: (error) => {
+          this.dialogService.error(error.message);
+        },
       });
     }
   }
