@@ -32,7 +32,6 @@ describe('IngredientFormComponent', () => {
     confirm: jasmine.createSpy('confirm').and.returnValue(of(true)),
   };
 
-
   const mockData = {
     ingredient: null,
     allergenesList: ['gluten', 'lait'],

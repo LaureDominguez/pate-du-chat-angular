@@ -2,28 +2,20 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
-import {
-  Ingredient,
-  IngredientService,
-} from '../../../services/ingredient.service';
-import {
-  FinalProduct,
-  Product,
-  ProductService,
-} from '../../../services/product.service';
+import { Ingredient, IngredientService } from '../../../services/ingredient.service';
+import { FinalProduct, Product, ProductService } from '../../../services/product.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
 
 import { AdminModule } from '../admin.module';
+import { DEFAULT_CATEGORY } from '../../../models/category';
+import { DeviceService } from '../../../services/device.service';
+import { DialogService } from '../../../services/dialog.service';
+
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-import { InfoDialogComponent } from '../../dialog/info-dialog/info-dialog.component';
-import { DEFAULT_CATEGORY } from '../../../models/category';
-import { DeviceService } from '../../../services/device.service';
-import { DialogService } from '../../../services/dialog.service';
 
 @Component({
   selector: 'app-product-admin',
@@ -146,13 +138,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       this.productService.checkExistingProducName(name, excludedId).subscribe((exists: boolean) => {
         if (exists) {
             this.dialogService.error(`Le nom "${name}" existe déjà.`);
-
-          // this.dialog.open(InfoDialogComponent, {
-          //   data: {
-          //     message: `Le nom "${name}" existe déjà.`,
-          //     type: 'error',
-          //   },
-          // });
         } else {
           instance.validateStockAndPrice();
         }
@@ -161,30 +146,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
     instance.formValidated.subscribe((formResult) => {
       this.handleProductFormSubmit(formResult, dialogRef);
+      console.log('Formulaire validé avec succès :', formResult);
     });
-
-    // dialogRef.afterClosed().subscribe(
-    //   (
-    //     result:
-    //       | {
-    //           productData: any;
-    //           selectedFiles: File[];
-    //           removedExistingImages: string[];
-    //           imageOrder: string[];
-    //         }
-    //       | undefined
-    //   ) => {
-    //     if (result) {
-    //       this.handleProductFormSubmit(result);
-    //     }
-    //   }
-    // ),
-    //   (error: any) => {
-    //     console.error(
-    //       'Erreur lors du chargement des catégories ou des ingrédients :',
-    //       error
-    //     );
-    //   };
   }
 
   handleProductFormSubmit(result: {
@@ -224,7 +187,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           delete productData.existingImages;
           this.submitProductForm(productId, productData, onSuccess);
         },
-        error: (err) => this.showErrorDialog(err.message),
+        error: (error) => {
+          this.dialogService.error(error.message);
+        },
       });
     } else {
       productData.images = imageOrder.filter((entry) => entry.startsWith('/uploads/'));
@@ -244,6 +209,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         .updateProduct(productId, productData)
         .subscribe({
           next: () => {
+            this.dialogService.success(`Le produit <span class="bold-text">"${productData.name}"</span> a bien été modifié.`);
             onSuccess?.();
           },
           error: (error) => {
@@ -253,6 +219,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     } else {
       this.productService.createProduct(productData).subscribe({
         next: () => {
+          this.dialogService.success(`Le produit <span class="bold-text">"${productData.name}"</span> a bien été créé.`);
           onSuccess?.();
         },
         error: (error) => {
@@ -260,12 +227,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         },
       });
     }
-  }
-
-  private showErrorDialog(message: string, type = 'error'): void {
-    this.dialog.open(InfoDialogComponent, {
-      data: { message, type },
-    });
   }
 
   ///////////////////////////////////////////////////////////////
@@ -276,36 +237,53 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.dialog
-      .open(ConfirmDialogComponent, {
-        width: '400px',
-        data: {
-          message: `Le produit <br> <span class="bold-text">"${product.name}"</span> a <span class="bold-text">${product.images.length}</span> image(s). <br> Voulez-vous les télécharger avant suppression ?`,
-          confirmButtonText: 'Ignorer',
-          cancelButtonText: 'Annuler',
-          extraButton: 'Télécharger',
-        },
-      })
-      .afterClosed()
-      .subscribe((result) => {
-        switch (result) {
-          case 'cancel':
-            return;
-          case 'extra':
-            this.downloadProductImages(product);
-            break;
-          case 'confirm':
-            break;
-          default:
-            break;
-        }
-        product.images?.forEach((imageUrl) => {
-          const filename = imageUrl.replace('/^/?uploads/?/', '');
-          this.imageService.deleteImage(filename).subscribe();
-        });
-        this.confirmDeleteProduct(product);
-      });
+    this.dialogService.confirm(
+      `Le produit <br> <span class="bold-text">"${product.name}"</span> a <span class="bold-text">${product.images.length}</span> image(s). <br> Voulez-vous les télécharger avant suppression ?`,
+      {
+        confirmText: 'Ignorer',
+        cancelText: 'Annuler',
+        extraText: 'Télécharger',
+      }
+    ).subscribe((result) => {
+      switch (result) {
+        case 'cancel':
+          return;
+
+        case 'extra':
+          this.downloadProductImages(product);
+          // ✅ On relance ensuite une confirmation explicite
+          this.dialogService.confirm(
+            `Les images ont été téléchargées.<br>Souhaitez-vous supprimer le produit <span class="bold-text">"${product.name}"</span> ?`,
+            {
+              confirmText: 'Oui',
+              cancelText: 'Non',
+            }
+          ).subscribe((secondResult) => {
+            if (secondResult === 'confirm') {
+              this.removeProductAndImages(product);
+            }
+          });
+          return;
+
+        case 'confirm':
+          this.removeProductAndImages(product);
+          return;
+
+        default:
+          return;
+      }
+    });
   }
+
+  // ⏬ Nouvelle méthode explicite
+  private removeProductAndImages(product: Product): void {
+    product.images?.forEach((imageUrl) => {
+      const filename = imageUrl.replace(/^\/?uploads\/?/, '');
+      this.imageService.deleteImage(filename).subscribe();
+    });
+    this.confirmDeleteProduct(product);
+  }
+
 
   // >> Télécharger les images avant suppression
   private downloadProductImages(product: Product): void {
@@ -319,22 +297,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   private async confirmDeleteProduct(product: Product): Promise<void> {
     try {
       await firstValueFrom(this.productService.deleteProduct(product._id!));
-
-      this.dialog.open(InfoDialogComponent, {
-        width: '400px',
-        data: {
-          message: `Le produit <br> <span class="bold-text">"${product.name}"</span> a bien été supprimé.`,
-          type: 'success',
-        },
-      });
+      this.dialogService.success(`Le produit <br> <span class="bold-text">"${product.name}"</span> a bien été supprimé.`);
     } catch (error) {
-      this.dialog.open(InfoDialogComponent, {
-        width: '400px',
-        data: {
-          message: `Une erreur est survenue lors de la suppression du produit :<br> <span class="bold-text">"${product.name}"</span>`,
-          type: 'error',
-        }
-      });
+      this.dialogService.error('Une erreur est survenue lors de la suppression du produit :<br> <span class="bold-text">"${product.name}"</span>');
     }
   }
 }

@@ -201,4 +201,88 @@ describe('IngredientAdminComponent', () => {
 
     expect(dialogServiceSpy.info).toHaveBeenCalled();
   }));
+
+it('devrait télécharger les images et poursuivre la suppression si l’utilisateur clique sur "Télécharger"', fakeAsync(() => {
+  const ingr = {
+    _id: 'id1',
+    name: 'Tomate',
+    images: ['uploads/image1.jpg', 'uploads/image2.jpg']
+  } as Ingredient;
+
+  // Aucun produit lié
+  productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
+
+  dialogServiceSpy.confirm.and.returnValues(
+    of('confirm'), // étape 1 : confirmation de suppression
+    of('extra'),   // étape 2 : télécharger les images
+    of('confirm')  // étape 3 : confirmer suppression après téléchargement
+  );
+
+  // Images : download et delete
+  imageServiceSpy.downloadImage.and.returnValue(Promise.resolve());
+  imageServiceSpy.deleteImage.and.returnValue(of({ message: 'Image supprimée' }));
+
+  // Suppression finale
+  ingredientServiceSpy.deleteIngredient.and.returnValue(of({ message: 'Ingrédient supprimé' }));
+
+  component.deleteIngredient(ingr);
+  tick();
+
+  // Téléchargement des images
+  expect(imageServiceSpy.downloadImage).toHaveBeenCalledWith('uploads/image1.jpg', 'Tomate');
+  expect(imageServiceSpy.downloadImage).toHaveBeenCalledWith('uploads/image2.jpg', 'Tomate');
+
+  // Suppression des images
+  expect(imageServiceSpy.deleteImage).toHaveBeenCalledWith('image1.jpg');
+  expect(imageServiceSpy.deleteImage).toHaveBeenCalledWith('image2.jpg');
+
+  // Suppression finale
+  expect(ingredientServiceSpy.deleteIngredient).toHaveBeenCalledWith('id1');
+  expect(dialogServiceSpy.success).toHaveBeenCalled();
+}));
+
+
+  it('devrait ignorer le téléchargement et supprimer si l’utilisateur clique sur "Ignorer"', fakeAsync(() => {
+    const ingr = {
+      _id: 'id1',
+      name: 'Tomate',
+      images: ['uploads/image1.jpg']
+    } as Ingredient;
+
+    productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
+    dialogServiceSpy.confirm.and.returnValues(
+      of('confirm'), // première confirmation pour suppression
+      of('confirm')  // confirmation d’ignorer le téléchargement
+    );
+    imageServiceSpy.deleteImage.and.returnValue(of({ message: 'Image supprimée' }));
+    ingredientServiceSpy.deleteIngredient.and.returnValue(of({ message: 'Ingrédient supprimé' }));
+
+    component.deleteIngredient(ingr);
+    tick();
+
+    expect(imageServiceSpy.deleteImage).toHaveBeenCalledWith('image1.jpg');
+    expect(ingredientServiceSpy.deleteIngredient).toHaveBeenCalledWith('id1');
+    expect(dialogServiceSpy.success).toHaveBeenCalled();
+  }));
+
+  it('ne devrait rien faire si l’utilisateur annule la suppression des images', fakeAsync(() => {
+    const ingr = {
+      _id: 'id1',
+      name: 'Tomate',
+      images: ['uploads/image1.jpg']
+    } as Ingredient;
+
+    productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
+    dialogServiceSpy.confirm.and.returnValues(
+      of('confirm'), // première confirmation de suppression
+      of('cancel')   // annulation sur la boîte des images
+    );
+
+    component.deleteIngredient(ingr);
+    tick();
+
+    expect(imageServiceSpy.deleteImage).not.toHaveBeenCalled();
+    expect(ingredientServiceSpy.deleteIngredient).not.toHaveBeenCalled();
+  }));
+
 });

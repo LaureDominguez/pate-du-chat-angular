@@ -100,7 +100,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     };
   });
 
-    console.log('ingredients : ', this.ingredients)
+    // console.log('ingredients : ', this.ingredients)
   }
 
   loadData(): void {
@@ -287,46 +287,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.checkIngredientInProducts(ingredient);
   }
 
-  // >> Vérifier si l'ingrédient est utilisé dans un produit
-  // private async checkIngredientInProducts(
-  //   ingredient: Ingredient
-  // ): Promise<void> {
-  //   try {
-  //     const products = await firstValueFrom(
-  //       this.productService.getProductsByIngredient(ingredient._id!)
-  //     );
-
-  //     const isUsedInProducts = products.length > 0;
-  //     let message = `Êtes-vous sûr de vouloir supprimer cet ingrédient : <br> <b>"${ingredient.name}"</b> ?`;
-
-  //     if (isUsedInProducts) {
-  //       message = `L'ingrédient <b>"${ingredient.name}"</b> est utilisé dans <b>${products.length} produit(s)</b>.<br> Voulez-vous quand même le supprimer ?`;
-  //     }
-
-  //     const dialogRef = this.dialogService.confirm(message, {
-  //       confirmText: 'Supprimer',
-  //       cancelText: 'Annuler',
-  //       extraText: isUsedInProducts ? 'Vérifier les produits' : undefined,
-  //     });
-
-
-  //     const result = await firstValueFrom(dialogRef);
-
-  //     // console.log('result', result);
-
-  //     if (result === 'cancel') return;
-  //     if (result === 'extra') {
-  //       await this.showRelatedProducts(ingredient);
-  //       return;
-  //     }
-
-  //     this.checkIngredientImages(ingredient);
-  //   } catch (error) {
-  //     // console.error('❌ Erreur lors de la récupération des produits :', error);
-  //     this.dialogService.error(`Erreur lors de la vérification des produits liés à cet ingrédient.`);
-  //   }
-  // }
-
   private async checkIngredientInProducts(
     ingredient: Ingredient,
     canRetry: boolean = true
@@ -394,42 +354,51 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
 
   // >> Vérifier les images avant suppression
   async checkIngredientImages(ingredient: Ingredient): Promise<void> {
-    // ✅ Pas d'images, on passe directement à la suppression
     if (!ingredient.images || ingredient.images.length === 0) {
-      this.confirmIngredientDeletion(ingredient);
+      await this.confirmIngredientDeletion(ingredient);
       return;
     }
-    // ✅ L'ingrédient a des images, afficher la boîte de dialogue de confirmation
-    const dialogRef = this.dialogService.confirm(
-      `L'ingrédient <b>"${ingredient.name}"</b> a <b>${ingredient.images?.length} image(s) associée(s)</b>.<br> Voulez-vous les télécharger avant suppression ?`,
-      {
-        confirmText: 'Ignorer',
-        cancelText: 'Annuler',
-        extraText: 'Télécharger',
-      }
-    );
-    const result = await firstValueFrom(dialogRef);
 
-    switch (result) {
-      case 'cancel':
-        return;
-      case 'extra':
-        this.downloadIngredientImages(ingredient);
-        break;
-      case 'confirm':
-        break;
-      default:
-        break;
+    const result = await firstValueFrom(
+      this.dialogService.confirm(
+        `L'ingrédient <b>"${ingredient.name}"</b> a <b>${ingredient.images.length} image(s) associée(s)</b>.<br> Voulez-vous les télécharger avant suppression ?`,
+        {
+          confirmText: 'Ignorer',
+          cancelText: 'Annuler',
+          extraText: 'Télécharger',
+        }
+      )
+    );
+
+    if (result === 'cancel') return;
+
+    if (result === 'extra') {
+      this.downloadIngredientImages(ingredient);
+
+      // ✅ Ajout : demander explicitement si on poursuit la suppression
+      const confirmResult = await firstValueFrom(
+        this.dialogService.confirm(
+          `Les images ont été téléchargées.<br>Souhaitez-vous supprimer l’ingrédient <b>"${ingredient.name}"</b> ?`,
+          {
+            confirmText: 'Supprimer',
+            cancelText: 'Annuler',
+          }
+        )
+      );
+
+      if (confirmResult !== 'confirm') return;
     }
 
-    // ✅ Suppression des images avant suppression de l’ingrédient
-    ingredient.images?.forEach((imgPath) => {
-      const filename = imgPath.replace('/^/?uploads/?/', '');
+    // ✅ Suppression des images
+    for (const imgPath of ingredient.images) {
+      const filename = imgPath.replace(/^\/?uploads\/?/, '');
       this.imageService.deleteImage(filename).subscribe();
-    });
-    // ✅ Suppression finale de l’ingrédient
-    this.confirmIngredientDeletion(ingredient);
+    }
+
+    await this.confirmIngredientDeletion(ingredient);
   }
+
+
 
   // >> Télécharger les images avant suppression
   private downloadIngredientImages(ingredient: Ingredient): void {
