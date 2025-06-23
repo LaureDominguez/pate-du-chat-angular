@@ -44,7 +44,7 @@ describe('CategoryAdminComponent', () => {
       ],
       providers: [
         { provide: CategoryService, useValue: categoryServiceSpy },
-        { provide: ProductService, useValue: productServiceSpy }, // Mock ProductService si nécessaire
+        { provide: ProductService, useValue: productServiceSpy },
         { provide: SharedDataService, useValue: sharedDataServiceSpy },
         { provide: DialogService, useValue: dialogServiceSpy }
       ]

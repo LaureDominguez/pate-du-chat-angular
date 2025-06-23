@@ -85,10 +85,8 @@ export class AdminComponent implements OnInit {
   }
 
   togglePanel(panelKey: string) {
-    // this.panels.forEach(panel => panel.hidden = true);
     const target = this.panels.find(p => p.key === panelKey);
     if (target) {
-      // target.hidden = false;
       this.activePanel = panelKey;
     }
   }
@@ -99,7 +97,7 @@ export class AdminComponent implements OnInit {
   
 
   closePanel(event: Event) {
-    event.stopPropagation(); // Empêche le clic de fermer immédiatement après l'ouverture
+    event.stopPropagation();
     this.activePanel = null;
   }
 

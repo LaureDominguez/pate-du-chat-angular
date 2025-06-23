@@ -13,10 +13,10 @@ export class ProductService {
   private apiUrl = 'http://localhost:5000/api/products';
 
   private productSubject = new BehaviorSubject<Product[]>([]);
-  products$ = this.productSubject.asObservable(); // Observable écoutable
+  products$ = this.productSubject.asObservable();
 
   private finalProductSubject = new BehaviorSubject<FinalProduct[]>([]);
-  finalProducts$ = this.finalProductSubject.asObservable(); // Observable écoutable
+  finalProducts$ = this.finalProductSubject.asObservable();
 
   private dlcsUrl = '../assets/data/dlcs.json';
 
@@ -45,8 +45,11 @@ export class ProductService {
 
   ////////////////////////
   //////// Public products
+  public loadFinalProducts(): void {
+    this.loadPrivateFinalProducts(); // méthode privée
+  }
 
-  loadFinalProducts(): void {
+  private loadPrivateFinalProducts(): void {
     this.http
       .get<FinalProduct[]>(`${this.apiUrl}?view=full`).pipe(
         map((products) => products.map((product) => ({
@@ -76,7 +79,7 @@ export class ProductService {
   ////////////////////////
   //////// Admin products
 
-  loadProducts(): void {
+  private loadProducts(): void {
     this.http.get<Product[]>(this.apiUrl).pipe(
       map((products) =>
         products.map((product) => ({

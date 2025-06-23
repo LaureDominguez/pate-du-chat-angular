@@ -56,7 +56,6 @@ describe('ProductAdminComponent', () => {
     });
     productServiceSpy.getDlcs.and.returnValue(of([]));
 
-
     ingredientServiceSpy = jasmine.createSpyObj('IngredientService', [], {
       ingredients$: new BehaviorSubject([]),
     });
