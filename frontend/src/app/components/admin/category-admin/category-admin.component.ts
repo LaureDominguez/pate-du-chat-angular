@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
@@ -42,6 +42,8 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   @ViewChild('categoryNameInput') categoryNameInput!: ElementRef;
   @ViewChild('categoryDescriptionInput') categoryDescriptionInput!: ElementRef;
 
+  @Output() countChanged = new EventEmitter<number>();
+
 
   constructor(
     private categoryService: CategoryService,
@@ -60,6 +62,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           categories.unshift(DEFAULT_CATEGORY);
         }
         this.categories.data = categories;
+        this.countChanged.emit(categories.length);
       });
 
     this.sharedDataService.requestNewCategory$

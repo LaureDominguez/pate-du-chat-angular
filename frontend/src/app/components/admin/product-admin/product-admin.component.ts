@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
@@ -50,6 +50,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   @ViewChild('productsPaginator') productsPaginator!: MatPaginator;
   @ViewChild('productsSort') productsSort!: MatSort;
 
+  @Output() countChanged = new EventEmitter<number>();
+
+
   constructor(
     private productService: ProductService,
     private ingredientService: IngredientService,
@@ -91,7 +94,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           ...product,
           category: product.category ? product.category : DEFAULT_CATEGORY,
         }));
+        this.countChanged.emit(products.length);
       });
+
 
     this.categoryService.categories$
       .pipe(takeUntil(this.unsubscribe$))

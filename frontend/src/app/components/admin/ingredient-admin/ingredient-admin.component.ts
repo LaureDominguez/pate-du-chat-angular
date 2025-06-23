@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -48,6 +48,9 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
 
   @ViewChild('ingredientsPaginator') ingredientsPaginator!: MatPaginator;
   @ViewChild('ingredientsSort') ingredientsSort!: MatSort;
+
+  @Output() countChanged = new EventEmitter<number>();
+
 
   constructor(
     private sharedDataService: SharedDataService,
@@ -113,7 +116,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
           originIcon: this.ingredientService.getOriginIcon(ingredient.origin),
         }))
         this.allIngredients = ingredients;
-        // console.log('🚀 ingredient-admin -> onInit -> Ingrédients mis à jour :', this.allIngredients);
+        this.countChanged.emit(ingredients.length);
       })
 
     this.supplierService.suppliers$

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { AdminModule } from '../admin.module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
@@ -41,6 +41,9 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   @ViewChild('supplierNameInput') supplierNameInput!: ElementRef;
   @ViewChild('supplierDescriptionInput') supplierDescriptionInput!: ElementRef;
 
+  @Output() countChanged = new EventEmitter<number>();
+
+
   constructor(
     private supplierService: SupplierService,
     private ingredientService: IngredientService,
@@ -57,6 +60,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
           suppliers.unshift(DEFAULT_SUPPLIER);
         }
         this.suppliers.data = suppliers;
+        this.countChanged.emit(suppliers.length);
       });
 
     this.sharedDataService.requestNewSupplier$
