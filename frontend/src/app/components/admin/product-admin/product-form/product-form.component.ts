@@ -153,7 +153,7 @@ export class ProductFormComponent implements OnInit {
       cookInstructions: [
         data.product?.cookInstructions || '',
         [
-          Validators.required,
+          // Validators.required,
           Validators.maxLength(250),
           Validators.pattern(/\S+/),
           Validators.pattern(
@@ -168,7 +168,7 @@ export class ProductFormComponent implements OnInit {
           ? data.product?.stockQuantity
           : null,
         [
-          Validators.required,
+          // Validators.required,
           Validators.pattern(/\S+/),
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
           Validators.min(0),
@@ -192,7 +192,9 @@ export class ProductFormComponent implements OnInit {
       images: [data.product?.images || []],
     });
 
+    this.applyStockQuantityValidators(this.productForm.get('quantityType')?.value);
     this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
+
   }
 
   ngOnInit(): void {
@@ -201,7 +203,7 @@ export class ProductFormComponent implements OnInit {
     this.updateProcessedImages();
     this.updateStockToggleState();
 
-    this.productForm.get('stockQuantity')?.valueChanges.subscribe(() => {
+    this.stockQuantity?.valueChanges.subscribe(() => {
       this.updateStockToggleState(); // Réévalue à chaque changement
     });
 
@@ -214,23 +216,27 @@ export class ProductFormComponent implements OnInit {
     });
 
     this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
-      const stockCtrl = this.productForm.get('stockQuantity');
-      // console.log('📋 Type de quantité :', value); // LOG ICI 🔍
-      if (value === 'piece') {
-        // console.log('📋 pieces :', stockCtrl?.value); // LOG ICI 🔍
-        stockCtrl?.setValidators([
-          Validators.required,
-          Validators.pattern(/^\d+$/),
-        ]);
-      } else {
-        // console.log('📋 kg :', stockCtrl?.value); // LOG ICI 🔍
-        stockCtrl?.setValidators([
-          Validators.required,
-          Validators.pattern(/^\d+(\.\d{1,2})?$/),
-        ]);
-      }
-      stockCtrl?.updateValueAndValidity();
+      this.applyStockQuantityValidators(value);
     });
+
+    // this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
+    //   const stockCtrl = this.productForm.get('stockQuantity');
+    //   // console.log('📋 Type de quantité :', value); // LOG ICI 🔍
+    //   if (value === 'piece') {
+    //     // console.log('📋 pieces :', stockCtrl?.value); // LOG ICI 🔍
+    //     stockCtrl?.setValidators([
+    //       Validators.required,
+    //       Validators.pattern(/^\d+$/),
+    //     ]);
+    //   } else {
+    //     // console.log('📋 kg :', stockCtrl?.value); // LOG ICI 🔍
+    //     stockCtrl?.setValidators([
+    //       Validators.required,
+    //       Validators.pattern(/^\d+(\.\d{1,2})?$/),
+    //     ]);
+    //   }
+    //   stockCtrl?.updateValueAndValidity();
+    // });
   }
 
   ngAfterViewInit(): void {
@@ -316,28 +322,6 @@ export class ProductFormComponent implements OnInit {
     );
   }
 
-  // toggle du bouton stock
-  private updateStockToggleState(): void {
-    const stockCtrl = this.stock;
-    const value = this.stockQuantity?.value;
-    const numericValue = parseFloat(value);
-
-    const shouldEnable =
-      value !== null &&
-      value !== undefined &&
-      value !== '' &&
-      !isNaN(numericValue) &&
-      numericValue > 0;
-
-    if (shouldEnable) {
-      stockCtrl?.enable({ emitEvent: false });
-    } else {
-      stockCtrl?.setValue(false, { emitEvent: false });
-      stockCtrl?.disable({ emitEvent: false });
-    }
-  }
-
-
   //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
     if (!value) return list;
@@ -363,15 +347,59 @@ export class ProductFormComponent implements OnInit {
       .trim(); // Supprime les espaces inutiles
   }
 
-  ////// Autocomplete des champs price et stock
-  setDefaultIfEmpty(controlName: string): void {
-    const control = this.productForm.get(controlName);
-    const value = control?.value;
+  //////////////////////////////////////
+  //// Stock & Quantity
+  
+  private applyStockQuantityValidators(quantityType: string): void {
+    const stockCtrl = this.productForm.get('stockQuantity');
+    if (!stockCtrl) return;
 
-    if (control && (value === null || value === undefined || value === '')) {
-      control?.setValue(0);
+    const validators = [];
+
+    // Champ facultatif (valeur `null` acceptée)
+    validators.push(Validators.min(0));
+
+    if (quantityType === 'piece') {
+      validators.push(Validators.pattern(/^\d+$/)); // entier positif
+    } else if (quantityType === 'kg') {
+      validators.push(Validators.pattern(/^\d+(\.\d{1,2})?$/)); // décimal avec 2 chiffres max
+    }
+
+    stockCtrl.setValidators(validators);
+    stockCtrl.updateValueAndValidity();
+  }
+
+  // toggle du bouton stock
+  private updateStockToggleState(): void {
+    const stockCtrl = this.stock;
+    const value = this.stockQuantity?.value;
+    const numericValue = parseFloat(value);
+
+    const shouldEnable =
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      !isNaN(numericValue) &&
+      numericValue >= 0;
+
+    if (shouldEnable) {
+      stockCtrl?.enable({ emitEvent: false });
+    } else {
+      stockCtrl?.setValue(false, { emitEvent: false });
+      stockCtrl?.disable({ emitEvent: false });
     }
   }
+
+
+  ////// Autocomplete des champs price et stock
+  // setDefaultIfEmpty(controlName: string): void {
+  //   const control = this.productForm.get(controlName);
+  //   const value = control?.value;
+
+  //   if (control && (value === null || value === undefined || value === '')) {
+  //     control?.setValue(0);
+  //   }
+  // }
 
   //////////////////////////////////////
   //// Ecoute de shared-data
@@ -664,34 +692,38 @@ export class ProductFormComponent implements OnInit {
     else this.checkNameExists.emit(name);
   }
 
-  validateStockAndPrice(): void {
-    // const stockControl = this.productForm.get('stockQuantity');
-    const stockValue = this.stockQuantity?.value;
+  // validateStockAndPrice(): void {
+  //   // const stockControl = this.productForm.get('stockQuantity');
+  //   const stockValue = this.stockQuantity?.value;
 
-    if (stockValue === null || stockValue === undefined || stockValue === '') {
-      const message = `Le champ "Quantité en stock" est vide. <br> Souhaitez-vous le remplir avec 0 ? <br> <i>Le produit ne sera pas visible dans le catalogue tant que la quantité en stock est à 0.</i>`;
+  //   if (stockValue === null || stockValue === undefined || stockValue === '') {
+  //     const message = `Le champ "Quantité en stock" est vide. <br> Souhaitez-vous le remplir avec 0 ? <br> <i>Le produit ne sera pas visible dans le catalogue tant que la quantité en stock est à 0.</i>`;
 
-      this.dialogService.confirm(message, {
-        title: 'Stock vide',
-        confirmText: 'Oui',
-        cancelText: 'Non',
-      }).subscribe((result) => {
-        if (result === 'confirm') {
-          this.stockQuantity?.setValue(0);
-          this.validateAndSubmit();
-        }
-      });
+  //     this.dialogService.confirm(message, {
+  //       title: 'Stock vide',
+  //       confirmText: 'Oui',
+  //       cancelText: 'Non',
+  //     }).subscribe((result) => {
+  //       if (result === 'confirm') {
+  //         this.stockQuantity?.setValue(0);
+  //         this.validateAndSubmit();
+  //       }
+  //     });
 
-    } else {
-      this.validateAndSubmit();
-    }
-  }
+  //   } else {
+  //     this.validateAndSubmit();
+  //   }
+  // }
 
   validateAndSubmit(): void {
     // vérifier si le champ stockQuantity
-    const quantity = this.productForm.get('stockQuantity')?.value;
-    if (!quantity || parseFloat(quantity) === 0) {
-      this.productForm.get('stock')?.setValue(false);
+    // const quantity = this.productForm.get('stockQuantity')?.value;
+    // if (!quantity || parseFloat(quantity) === 0) {
+    //   this.productForm.get('stock')?.setValue(false);
+    // }
+    const quantity = this.stockQuantity?.value;
+    if (quantity === null || quantity === undefined || quantity === '') {
+      this.stockQuantity?.setValue(null);
     }
 
     let errors: string[] = [];

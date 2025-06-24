@@ -8,9 +8,9 @@ export interface Product {
     description?: string;
     composition?: (string | Ingredient)[];
     dlc: string;
-    cookInstructions: string;
+    cookInstructions?: string;
     stock: boolean;
-    stockQuantity: number;
+    stockQuantity?: number;
     quantityType: string;
     price: number;
     images?: string[];

@@ -24,8 +24,7 @@ const ProductSchema = new mongoose.Schema({
 		required: true,
 	},
 	cookInstructions: {
-		type: String,
-		required: true,
+		type: String
 	},
 	stock: {
 		type: Boolean,
@@ -33,8 +32,7 @@ const ProductSchema = new mongoose.Schema({
 	},
 	stockQuantity: {
 		type: Number,
-		min: 0,
-		default: 0,
+		min: 0
 	},
 	quantityType: {
 		type: String,

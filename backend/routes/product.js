@@ -236,12 +236,13 @@ router.post(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
 		check('cookInstructions')
+			.optional()
 			.trim()
-			.notEmpty()
-			.withMessage('Le champ "instructions de cuisson" est obligatoire.')
-			.isLength({ min: 2, max: 250 })
+			// .notEmpty()
+			// .withMessage('Le champ "instructions de cuisson" est obligatoire.')
+			.isLength({ max: 250 })
 			.withMessage(
-				'Le champ "instructions de cuisson" doit avoir une longueur comprise entre 2 et 250 caractères.'
+				'Le champ "instructions de cuisson" doit avoir une longueur maximale de 250 caractères.'
 			)
 			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
 			.withMessage(
@@ -255,7 +256,11 @@ router.post(
 				const type = req.body.quantityType;
 
 				if (value === undefined || value === null || value === '') {
-					throw new Error('La quantité en stock est requise.');
+					// throw new Error('La quantité en stock est requise.');
+					return true;
+				}
+				if (typeof value !== 'string' && typeof value !== 'number') {
+					throw new Error('La quantité en stock doit être une valeur numérique.');
 				}
 
 				const num = parseFloat(value);
@@ -295,7 +300,7 @@ router.post(
 			const resolvedStock =
 			typeof stock === 'boolean'
 				? stock
-				: !isNaN(numericQuantity) && numericQuantity > 0;
+				: !isNaN(numericQuantity) && numericQuantity >= 0;
 
 			// Nettoyage des entrées utilisateur
 			name = sanitize(name);
@@ -305,7 +310,7 @@ router.post(
 			dlc = sanitize(dlc);
 			cookInstructions = sanitize(cookInstructions);
 			stock = resolvedStock;
-			stockQuantity = numericQuantity;
+			stockQuantity = isNaN(numericQuantity) ? null : numericQuantity;
 			quantityType = sanitize(quantityType);
 			images = sanitize(images);
 
@@ -428,7 +433,10 @@ router.put(
 			.custom((value, { req }) => {
 				const type = req.body.quantityType;
 				if (value === undefined || value === null || value === '') {
-					throw new Error('La quantité en stock est requise.');
+					return true;
+				}
+				if (typeof value !== 'string' && typeof value !== 'number') {
+					throw new Error('La quantité en stock doit être une valeur numérique.');
 				}
 				const num = parseFloat(value);
 				if (isNaN(num) || num < 0) {
@@ -489,11 +497,11 @@ router.put(
 			if ('stock' in req.body) {
 				product.stock = sanitize(stock);
 				} else if (!isNaN(numericQuantity)) {
-				product.stock = numericQuantity > 0;
+				product.stock = numericQuantity >= 0;
 				} else {
 				product.stock = false;
 			}
-			product.stockQuantity = !isNaN(numericQuantity) ? numericQuantity : 0;
+			product.stockQuantity = !isNaN(numericQuantity) ? numericQuantity : null;
 			product.quantityType = sanitize(quantityType) || product.quantityType;
 			product.price = sanitize(price) || product.price;
 			product.images = sanitize(images) || product.images;

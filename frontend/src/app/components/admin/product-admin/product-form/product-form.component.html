@@ -133,12 +133,15 @@
                                 </mat-slide-toggle>
                             </div>
                             <mat-hint *ngIf="stock?.disabled" class="hint slow-reveal">
-                                Ajoutez une quantité pour activer ce champ
+                                Ajoutez du stock pour rendre visible
+                            </mat-hint>
+                            <mat-hint *ngIf="stockQuantity?.value === 0 && stock?.value === true" class="hint slow-reveal">
+                                Sera affiché en rupture de stock
                             </mat-hint>
                         </section>
 
                         <!-- Quantité -->
-                        <mat-form-field appearance="fill" class="">
+                        <mat-form-field appearance="fill" class="quantity">
                             <mat-label>Quantité en stock</mat-label>
                             <input 
                                 matInput 
@@ -151,13 +154,12 @@
                             />
                             <span matTextSuffix> {{ quantityType }} </span>
 
-                            <!-- erreurs -->
-                            <mat-error *ngIf="stockQuantity?.hasError('required')">
-                                La quantité est obligatoire.
-                            </mat-error>
+                            <!-- <mat-hint>
+                                Produit masqué si vide
+                            </mat-hint> -->
                             
                             <mat-error *ngIf="stockQuantity?.hasError('min')">
-                                Doit être supérieur ou égal à 0
+                                Doit être positif ou égal à 0.
                             </mat-error>
                         </mat-form-field>
                     </div>

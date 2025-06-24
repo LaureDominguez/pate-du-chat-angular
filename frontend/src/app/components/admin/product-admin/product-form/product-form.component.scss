@@ -103,6 +103,15 @@ mat-error, mat-hint, mat-label {
     overflow: hidden;
 }
 
+mat-hint {
+    font-size: 0.8rem;
+    color: var(--outline);
+    font-style: italic;
+    letter-spacing: 0.05em;
+    padding: 0 0.5rem;
+    // transition: opacity 0.3s ease;
+}
+
 ///////////////////////////////
 .dynamic_columns {
     display: flex;
@@ -122,6 +131,11 @@ mat-error, mat-hint, mat-label {
     flex-direction: column;
 }
 
+.divider {
+    display: flex;
+    align-items: center;
+}
+
 .name_category {
     display: flex;
     gap: 1rem;
@@ -139,11 +153,26 @@ mat-error, mat-hint, mat-label {
 .stock_quantity {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
 
     span {
         margin-left: 0.5rem;
+    }
+    .stock, .quantity {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .stock {
+        width: 60%;
+        display: flex;
+        align-content: stretch;
+        flex-direction: column;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    .quantity {
+        width: 40%;
     }
 }
 
@@ -151,27 +180,34 @@ mat-error, mat-hint, mat-label {
     mat-label {
         padding: 1rem;
     }
-    mat-hint {
-        font-size: 0.8rem;
-        color: var(--outline);
-        font-style: italic;
-        letter-spacing: 0.05em;
-        padding: 0 0.5rem;
-        transition: opacity 0.3s ease;
-    }
 
     @include mat.slide-toggle-overrides((
-        handle-surface-color: var(--secondary-fixed),
-        unselected-handle-color: var(--secondary-container),
-        selected-handle-color: var(--tertiary-container),
+        // forme
+        handle-shape: 50%,
+        track-shape: 50px,
+
+        // couleurs
+        handle-surface-color: var(--surface-container-low),
+        // bord externe
+        track-outline-color: var(--outline-variant),
+        selected-track-outline-color: var(--outline-variant),
+
+        // icone
+        unselected-icon-color: var(--on-secondary-container),
+        selected-icon-color: var(--on-tertiary-fixed-variant),
+
+        // track
+        selected-handle-color: var(--tertiary-fixed-dim),
         selected-focus-handle-color: var(--tertiary-fixed-dim),
         selected-hover-handle-color: var(--tertiary-fixed-dim),
-        disabled-unselected-handle-color: var(--surface-container),
-        unselected-icon-color: var(--on-secondary-container),
-        selected-icon-color: var(--on-tertiary-container),
-        track-outline-color: var(--surface-dim),
-        selected-track-outline-color: var(--tertiary-fixed-dim),
-        disabled-unselected-track-color: var(--surface-dim)
+
+        unselected-handle-color: var(--secondary-container),
+        unselected-focus-handle-color: var(--secondary-container),
+        unselected-hover-handle-color: var(--secondary-container),
+
+        disabled-unselected-handle-color: var(--surface-dim),
+        // disabled-unselected-icon-color: var(--surface-bright),
+        label-text-weight: 600
     ));
 }
 

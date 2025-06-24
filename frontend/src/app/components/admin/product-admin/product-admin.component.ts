@@ -144,7 +144,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         if (exists) {
             this.dialogService.error(`Le nom "${name}" existe déjà.`);
         } else {
-          instance.validateStockAndPrice();
+          instance.validateAndSubmit();
         }
       });
     });

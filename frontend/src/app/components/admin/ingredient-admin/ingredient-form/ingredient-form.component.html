@@ -23,7 +23,9 @@
                         <mat-slide-toggle 
                             formControlName="bio" 
                             labelPosition="before"
-                            >
+                            [matTooltip]="bioToggle.disabled ? 'Réservé aux ingrédients simples (automatique pour les composés)' : ''"
+                            [matTooltipDisabled]="!bioToggle.disabled"
+                            #bioToggle>
                             Label BIO
                         </mat-slide-toggle>
                     </section>
