@@ -93,6 +93,10 @@ mat-divider {
         color: var(--tertiary-container);
     }
 
+    &.warning {
+        color: var(--primary-container);
+    }
+
     &.error {
         color: var(--error);
     }

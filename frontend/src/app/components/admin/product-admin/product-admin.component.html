@@ -124,7 +124,11 @@
         <!-- Quantity Column -->
         <ng-container matColumnDef="stockQuantity">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
-            <td mat-cell *matCellDef="let product">{{ product.stockQuantity }}</td>
+            <td mat-cell *matCellDef="let product">
+                <span [ngStyle]="{ 'font-weight': product.stockQuantity === 0 ? 'bold' : 'normal' }">
+                    {{ product.stockQuantity }}
+                </span>
+            </td>
         </ng-container>
 
         <!-- Unite Column -->
@@ -138,7 +142,8 @@
         <ng-container matColumnDef="stock">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>En vente</th>
             <td mat-cell *matCellDef="let product">
-                <mat-icon class="success" *ngIf="product.stock">check_circle</mat-icon>
+                <mat-icon class="success" *ngIf="product.stock && product.stockQuantity > 0">check_circle</mat-icon>
+                <mat-icon class="warning" *ngIf="product.stock && product.stockQuantity === 0" matTooltip="En rupture">do_not_disturb_on</mat-icon>
                 <mat-icon class="error" *ngIf="!product.stock">cancel</mat-icon>
             </td>
         </ng-container>
