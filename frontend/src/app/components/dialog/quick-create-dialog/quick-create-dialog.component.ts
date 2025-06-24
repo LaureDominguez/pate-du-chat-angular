@@ -42,6 +42,8 @@ export class QuickCreateDialogComponent {
         this.fb.control(field.defaultValue || '', validators)
       );
     });
+
+    console.log('Form initialized with fields:', this.data.fields);
   } 
   
   save(): void {

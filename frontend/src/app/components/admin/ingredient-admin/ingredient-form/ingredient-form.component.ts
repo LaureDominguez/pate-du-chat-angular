@@ -148,7 +148,7 @@ export class IngredientFormComponent {
   private subscribeToDataUpdates(): void {
     this.sharedDataService.supplierCreated$.subscribe((newSupplier: Supplier) => {
       if (!newSupplier || !newSupplier._id || !newSupplier.name) {
-        console.warn('❌ Données invalides reçues pour le nouveau fournisseur !');
+        this.dialogService.error('❌ Données invalides reçues pour le nouveau fournisseur !');
         return;
       }
 
@@ -160,7 +160,9 @@ export class IngredientFormComponent {
       this.supplierNotFound = false;
 
       const label = typeof newSupplier === 'string' ? newSupplier : newSupplier.name;
-      // console.log('🔵 Valeur envoyée à supplierCtrl :', label);
+      console.log('🔵 Valeur de label :', label);
+      console.log('🔵 Valeur de supplierCtrl :', this.supplierCtrl.value)
+      console.log('🔵 Valeur de newSupplier :', newSupplier);
 
       this.ingredientForm.patchValue({ supplier: newSupplier });
       this.supplierCtrl.setValue(newSupplier.name);
@@ -254,9 +256,16 @@ private setupAutoComplete(): void {
   this.filteredSuppliers = this.supplierCtrl.valueChanges.pipe(
     startWith(''),
     map((value) => {
-      const filtered = this.filterItems(value, this.suppliers);
-      this.supplierNotFound = typeof value === 'string' && filtered.length === 0;
-      return filtered;
+      if (typeof value === 'string' && value != 'supplierNotFound') {
+        this.searchedSupplier = value.trim();
+        this.supplierNotFound = this.filterItems(value, this.suppliers).length === 0;
+      }
+      // console.log('🔵 Valeur de searchedSupplier :', this.searchedSupplier);
+      // console.log('🔵 Valeur renvoyées :', value, this.supplier);
+      return this.filterItems(value, this.suppliers);
+      // const filtered = this.filterItems(value, this.suppliers);
+      // this.supplierNotFound = typeof value === 'string' && filtered.length === 0;
+      // return filtered;
     })
   );
 
@@ -264,18 +273,21 @@ private setupAutoComplete(): void {
   this.filteredSubIngredients = this.subIngredientCtrl.valueChanges.pipe(
     startWith(''),
     map((value) => {
-      const filtered = this.filterItems(value, this.allIngredients);
-      this.subIngredientNotFound = filtered.length === 0;
-      return filtered;
+      if (typeof value === 'string' && value != 'subIngredientNotFound') {
+        // this.searchedSubIngredient = value.trim();
+        this.subIngredientNotFound = this.filterItems(value, this.allIngredients).length === 0;
+      }
+      return this.filterItems(value, this.allIngredients);
+      // const filtered = this.filterItems(value, this.allIngredients);
+      // this.subIngredientNotFound = filtered.length === 0;
+      // return filtered;
     })
   );
 }
 
   //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
-    if (!value) {
-      return [...list].sort((a, b) => a.name.localeCompare(b.name)); 
-    };
+        if (!value) return list;
 
     // Normaliser la valeur recherchée
     const normalizedValue = this.normalizeString(value);
@@ -285,6 +297,18 @@ private setupAutoComplete(): void {
         this.normalizeString(item.name).includes(normalizedValue)
       )
       .sort((a, b) => a.name.localeCompare(b.name));
+    // if (!value) {
+    //   return [...list].sort((a, b) => a.name.localeCompare(b.name)); 
+    // };
+
+    // // Normaliser la valeur recherchée
+    // const normalizedValue = this.normalizeString(value);
+
+    // return list
+    //   .filter((item) =>
+    //     this.normalizeString(item.name).includes(normalizedValue)
+    //   )
+    //   .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   //// Fonction de normalisation des accents et ligatures
@@ -300,14 +324,21 @@ private setupAutoComplete(): void {
 
   ///// Fonction de normalisation des noms
   formatNameInput(name: string): string {
-    if (!name) return "";
-    return name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
+    if (!name) return '';
+    let trimmedName = name.replace(/\s+/g, ' ').trim();
+    return (
+      trimmedName.trim().charAt(0).toUpperCase() + trimmedName.trim().slice(1)
+    );
+    // if (!name) return "";
+    // return name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
   }
 
   //////////////////////////////////////
   // Ajouter un fournisseur 
 
   addSupplier(supplier: Supplier | 'supplierNotFound' | null): void {
+    console.log('🔵 Ajout du fournisseur :', supplier);
+    console.log('🔵 Valeur de searchedSupplier :', this.searchedSupplier);
     if (supplier === 'supplierNotFound') {
       this.createSupplier(this.searchedSupplier);
       this.supplierCtrl.setValue('');
@@ -317,7 +348,8 @@ private setupAutoComplete(): void {
     }
   }
 
-  private createSupplier(searchedValue: string): void {
+  private createSupplier(searchedIngredient: string): void {
+    console.log('🔵 Création d\'un nouveau fournisseur avec la valeur :', searchedIngredient);
     const dialogRef = this.dialog.open(QuickCreateDialogComponent, {
       data: {
         title: 'Créer un nouveau fournisseur',
@@ -328,7 +360,7 @@ private setupAutoComplete(): void {
             required: true,
             maxLength: 50,
             pattern: /^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/,
-            defaultValue: this.formatNameInput(searchedValue)
+            defaultValue: this.formatNameInput(searchedIngredient)
           },
           { 
             name: 'description', 
@@ -339,6 +371,8 @@ private setupAutoComplete(): void {
         ]
       }
     });
+
+    console.log('données envoyées :', dialogRef.componentInstance.data);
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
