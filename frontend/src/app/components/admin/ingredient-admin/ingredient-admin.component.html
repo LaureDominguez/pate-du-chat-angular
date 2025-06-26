@@ -110,6 +110,7 @@
         <tr mat-row
             *matRowDef="let row; columns: displayedIngredientsColumns;"
             [ngClass]="{ 'highlighted-row': row._id === highlightedIngredientId }"
+            (click)="onRowClick($event, row)"
         ></tr>
     </table>
 

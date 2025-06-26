@@ -170,7 +170,9 @@
 
         <!-- Header and Row Declarations -->
         <tr mat-header-row *matHeaderRowDef="displayedProductsColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedProductsColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedProductsColumns;"
+            [ngClass]="{ 'highlighted-row': row._id === highlightedProductId }"
+            (click)="onRowClick($event, row)"></tr>
 
     </table>
 

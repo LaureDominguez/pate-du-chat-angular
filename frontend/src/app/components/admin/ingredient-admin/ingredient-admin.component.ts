@@ -79,31 +79,29 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.ingredients.paginator = this.ingredientsPaginator;
     this.ingredients.sort = this.ingredientsSort;
 
-  setTimeout(() => {
-    this.ingredients.sort!.active = 'name';
-    this.ingredients.sort!.direction = 'asc';
-    this.ingredients.sort!.sortChange.emit({
-      active: 'name',
-      direction: 'asc'
+    setTimeout(() => {
+      this.ingredients.sort!.active = 'name';
+      this.ingredients.sort!.direction = 'asc';
+      this.ingredients.sort!.sortChange.emit({
+        active: 'name',
+        direction: 'asc'
+      });
+
+      this.ingredients.sortingDataAccessor = (item: Ingredient, property: string) => {
+        if (item._id === this.highlightedIngredientId) return '\u0000';
+        switch (property) {
+          case 'name':
+          case 'origin':
+            return item[property]?.normalize?.('NFD')?.replace(/[\u0300-\u036f]/g, '')?.toLowerCase() || '';
+          case 'supplier':
+            return (item.supplier as Supplier)?.name?.toLowerCase?.() || '';
+          case 'allergens':
+            return (item.allergens || []).join(', ');
+          default:
+            return (item as any)[property];
+        }
+      };
     });
-
-    this.ingredients.sortingDataAccessor = (item: Ingredient, property: string) => {
-      if (item._id === this.highlightedIngredientId) return '\u0000';
-      switch (property) {
-        case 'name':
-        case 'origin':
-          return item[property]?.normalize?.('NFD')?.replace(/[\u0300-\u036f]/g, '')?.toLowerCase() || '';
-        case 'supplier':
-          return (item.supplier as Supplier)?.name?.toLowerCase?.() || '';
-        case 'allergens':
-          return (item.allergens || []).join(', ');
-        default:
-          return (item as any)[property];
-      }
-    };
-  });
-
-    // console.log('ingredients : ', this.ingredients)
   }
 
   loadData(): void {
@@ -152,7 +150,21 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       error: (err) => console.error('❌ Erreur de récupération des origines:', err),
     });
   }
-  
+
+  onRowClick(event: MouseEvent, ingredient: Ingredient): void {
+    const target = event.target as HTMLElement;
+
+    // Ne pas ouvrir le formulaire si l'utilisateur clique sur un bouton ou un icône
+    if (
+      target.closest('button') ||         // clique sur un bouton
+      target.closest('mat-icon-button') || // clique sur un bouton Angular Material
+      target.tagName === 'MAT-ICON'        // clique directement sur l'icône
+    ) {
+      return;
+    }
+
+    this.openIngredientForm(ingredient);
+  }
 
   // Télécharger une image
   downloadIngredientImage(imagePath: string, ingredientName: string) {

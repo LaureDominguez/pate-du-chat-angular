@@ -30,6 +30,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   ingredients: Ingredient[] = [];
   dlcsList: string[] = [];
 
+  highlightedProductId: string | null = null; 
   isMobile = false;
 
   private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
@@ -84,6 +85,48 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   ngAfterViewInit(): void {
     this.products.paginator = this.productsPaginator;
     this.products.sort = this.productsSort;
+
+    setTimeout(() => {
+      this.products.sort!.active = 'name';
+      this.products.sort!.direction = 'asc';
+      this.products.sort!.sortChange.emit({
+        active: 'name',
+        direction: 'asc',
+      });
+      
+      this.products.sortingDataAccessor = (item: FinalProduct, property: string) => {
+        if (item._id === this.highlightedProductId) {
+          switch (property) {
+            case 'price':
+            case 'stockQuantity':
+            case 'stock':
+              return -Infinity; // pour les valeurs numériques
+            default:
+              return '\u0000';   // pour les strings
+          }
+        }
+        switch (property) {
+          case 'name':
+            return item.name.toLowerCase();
+          case 'category':
+            return (item.category as Category)?.name.toLowerCase() || '';
+          case 'allergens':
+            return (item.allergens || []).join(', ');
+          case 'vegan':
+            return item.vegan ? 'Oui' : 'Non';
+          case 'vegeta':
+            return item.vegeta ? 'Oui' : 'Non';
+          case 'price':
+            return item.price ? parseFloat(item.price.toString()) : 0;
+          case 'stockQuantity':
+            return item.stockQuantity ? parseFloat(item.stockQuantity.toString()) : 0;
+          case 'stock':
+            return item.stock ? 'Oui' : 'Non';
+          default:
+            return (item as any)[property];
+        }
+      };
+    });
   }
 
   loadData(): void {
@@ -117,6 +160,22 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       this.dlcsList = dlcs;
     });
   }
+
+  onRowClick(event: MouseEvent, product: Product): void {
+    const target = event.target as HTMLElement;
+
+    // Ne pas ouvrir le formulaire si l'utilisateur clique sur un bouton ou un icône
+    if (
+      target.closest('button') ||         // clique sur un bouton
+      target.closest('mat-icon-button') || // clique sur un bouton Angular Material
+      target.tagName === 'MAT-ICON'        // clique directement sur l'icône
+    ) {
+      return;
+    }
+
+    this.openProductForm(product);
+  }
+
 
   openProductForm(product: Product | null): void {
     const imageUrls =
@@ -223,8 +282,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         });
     } else {
       this.productService.createProduct(productData).subscribe({
-        next: () => {
+        next: (res) => {
           this.dialogService.success(`Le produit <span class="bold-text">"${productData.name}"</span> a bien été créé.`);
+          this.highlightedProductId = res._id ?? null; // Mettre en surbrillance le produit créé
           onSuccess?.();
         },
         error: (error) => {
