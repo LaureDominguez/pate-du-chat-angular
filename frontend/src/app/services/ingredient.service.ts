@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, firstValueFrom, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, firstValueFrom, map, merge, Observable, tap, throwError } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
 import { DEFAULT_SUPPLIER } from '../models/supplier';
@@ -24,20 +24,27 @@ export class IngredientService {
   ) {
     this.loadIngredients();
 
-    this.sharedDataService.ingredientListUpdate$.subscribe(() => {
+    merge(
+      this.sharedDataService.ingredientListUpdate$,
+      this.sharedDataService.supplierListUpdate$
+    ).subscribe(() => {
       this.loadIngredients();
-    });
+    })
 
-    this.sharedDataService.supplierListUpdate$.subscribe(() => {
-      this.loadIngredients();
-    });
+    // this.sharedDataService.ingredientListUpdate$.subscribe(() => {
+    //   this.loadIngredients();
+    // });
 
+    // this.sharedDataService.supplierListUpdate$.subscribe(() => {
+    //   this.loadIngredients();
+    // });
   }
 
   // Charge les ingrédients et met à jour le BehaviorSubject
   private loadIngredients(): void {
+    console.trace('Chargement des ingrédients depuis le serveur...');
     this.http.get<Ingredient[]>(this.apiUrl).subscribe((ingredients) => {
-      this.ingredientsSubject.next(ingredients); // Met à jour les abonnés        
+      this.ingredientsSubject.next(ingredients); 
     });
   }
 
@@ -89,8 +96,6 @@ export class IngredientService {
     let url = `${this.apiUrl}/check-name/${encodeURIComponent(name)}`;
     if (excludedId) {
       url += `?excludedId=${encodeURIComponent(excludedId)}`;
-      console.log('Excluded ID:', excludedId);
-      console.log('URL:', url);
     }
     return this.http
       .get<boolean>(url)
@@ -106,10 +111,8 @@ export class IngredientService {
     return this.http.post<Ingredient>(this.apiUrl, payload).pipe(
       catchError(this.handleError),
       tap(() => {
-        this.loadIngredients()
-        this.sharedDataService.notifySupplierUpdate();
-      }), // Recharge la liste après création
-      // tap(() => this.sharedDataService.notifySupplierUpdate())
+        this.sharedDataService.notifyIngredientUpdate();
+      }),
 
     );
   }
@@ -119,10 +122,8 @@ export class IngredientService {
     return this.http.put<Ingredient>(url, payload).pipe(
       catchError(this.handleError),
       tap(() => {
-        this.loadIngredients()
-        this.sharedDataService.notifySupplierUpdate();
-      }), // Recharge la liste après modification
-      // tap(() => this.sharedDataService.notifySupplierUpdate())
+        this.sharedDataService.notifyIngredientUpdate();
+      }), 
     );
   }
 
@@ -130,7 +131,9 @@ export class IngredientService {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
       catchError(this.handleError),
-      tap(() => this.loadIngredients()) // Recharge la liste après suppression
+      tap(() => {
+        this.sharedDataService.notifyIngredientUpdate();
+      })
     );
   }
 

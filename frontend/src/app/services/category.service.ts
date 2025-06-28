@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, merge, Observable, tap, throwError } from 'rxjs';
 
 import { Category, DEFAULT_CATEGORY } from '../models/category';
 import { SharedDataService } from './shared-data.service';
@@ -24,16 +24,24 @@ export class CategoryService {
   ) {
     this.loadCategories();
 
-    this.sharedDataService.categoryListUpdate$.subscribe(() => {
+    merge(
+      this.sharedDataService.categoryListUpdate$,
+      this.sharedDataService.productListUpdate$
+    ).subscribe(() => {
       this.loadCategories();
-    });
+    })
 
-    this.sharedDataService.productListUpdate$.subscribe(() => {
-      this.loadCategories();
-    });
+    // this.sharedDataService.categoryListUpdate$.subscribe(() => {
+    //   this.loadCategories();
+    // });
+
+    // this.sharedDataService.productListUpdate$.subscribe(() => {
+    //   this.loadCategories();
+    // });
   }
 
   private loadCategories(): void {
+    // console.trace('Chargement des catégories depuis le serveur...');
     this.http
       .get<Category[]>(this.apiUrl)
       .pipe(

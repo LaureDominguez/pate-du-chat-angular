@@ -3,7 +3,7 @@ import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import { Ingredient, IngredientService } from '../../../services/ingredient.service';
-import { FinalProduct, Product, ProductService } from '../../../services/product.service';
+import { Product, ProductService } from '../../../services/product.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
 
@@ -25,7 +25,7 @@ import { MatTableDataSource } from '@angular/material/table';
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
 export class ProductAdminComponent implements OnInit, OnDestroy {
-  products = new MatTableDataSource<FinalProduct>([]);
+  products = new MatTableDataSource<Product>([]);
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
   dlcsList: string[] = [];
@@ -33,7 +33,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   highlightedProductId: string | null = null; 
   isMobile = false;
 
-  private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
+  private unsubscribe$ = new Subject<void>();
 
   displayedProductsColumns: string[] = [
     'name',
@@ -94,7 +94,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         direction: 'asc',
       });
       
-      this.products.sortingDataAccessor = (item: FinalProduct, property: string) => {
+      this.products.sortingDataAccessor = (item: Product, property: string) => {
         if (item._id === this.highlightedProductId) {
           switch (property) {
             case 'price':
@@ -130,14 +130,43 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   }
 
   loadData(): void {
-    this.productService.finalProducts$
+    this.productService.products$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((products) => {
-        this.products.data = products.map((product) => ({
-          ...product,
-          category: product.category ? product.category : DEFAULT_CATEGORY,
-        }));
-        this.countChanged.emit(products.length);
+        this.products.data = products.map((product) => {
+          const hasNoComposition = !product.composition || product.composition.length === 0;
+
+          const productWithMeta: Product & { invalidComposition?: boolean } = {
+            ...product,
+            category: product.category || DEFAULT_CATEGORY,
+            invalidComposition: hasNoComposition,
+          };
+
+          if (hasNoComposition && product.stock) {
+            productWithMeta.stock = false;
+
+            this.productService.updateProduct(product._id!, {
+              ...product,
+              stock: false,
+            }).subscribe({
+              next: () => {
+                this.dialogService.info(`Le produit "${product.name}" a été retiré de la vente car sa composition est vide.`, 'Attention');
+              },
+              error: (err) => {
+                this.dialogService.error(`❌ Erreur mise à jour produit "${product.name}" :`, err);
+              },
+            });
+          }
+
+          if (hasNoComposition) {
+            console.error(`⚠️ Produit "${product.name}" sans composition détecté`);
+            // this.dialogService.error(`⚠️ Produit "${product.name}" sans composition détecté`);
+          }
+
+          return productWithMeta;
+        });
+
+        this.countChanged.emit(this.products.data.length);
       });
 
 
@@ -151,7 +180,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((ingredients) => {
         this.ingredients = ingredients;
-        this.productService.loadFinalProducts();
       });
   }
 
@@ -161,6 +189,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Ouvrir le formulaire de modif en cliquant sur la ligne
   onRowClick(event: MouseEvent, product: Product): void {
     const target = event.target as HTMLElement;
 
@@ -196,10 +225,14 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
     const instance = dialogRef.componentInstance;
 
+    instance.downloadImage.subscribe((data: { imagePath: string; objectName: string }) => {
+      this.imageService.downloadImage(data.imagePath, data.objectName);
+    });
+
     instance.checkNameExists.subscribe((name: string) => {
       const excludedId = product?._id;
 
-      this.productService.checkExistingProducName(name, excludedId).subscribe((exists: boolean) => {
+      this.productService.checkExistingProductName(name, excludedId).subscribe((exists: boolean) => {
         if (exists) {
             this.dialogService.error(`Le nom "${name}" existe déjà.`);
         } else {
@@ -315,7 +348,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
           return;
 
         case 'extra':
-          this.downloadProductImages(product);
+          this.downloadProductImagesBeforeDelete(product);
           // ✅ On relance ensuite une confirmation explicite
           this.dialogService.confirm(
             `Les images ont été téléchargées.<br>Souhaitez-vous supprimer le produit <span class="bold-text">"${product.name}"</span> ?`,
@@ -351,7 +384,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
 
   // >> Télécharger les images avant suppression
-  private downloadProductImages(product: Product): void {
+  private downloadProductImagesBeforeDelete(product: Product): void {
     if (product.images?.length) {
       product.images.forEach((imageUrl) => {
         this.imageService.downloadImage(imageUrl, product.name);

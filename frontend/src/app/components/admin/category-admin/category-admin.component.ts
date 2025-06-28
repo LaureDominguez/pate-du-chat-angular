@@ -3,8 +3,6 @@ import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
 import { MatPaginator } from '@angular/material/paginator';
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -49,13 +47,12 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private productService: ProductService, // Utilisé pour les produits associés
     private fb: FormBuilder,
-    // private dialog: MatDialog,
     private sharedDataService: SharedDataService,
     private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
-    this.categoryService.getCategories()
+    this.categoryService.categories$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((categories) => {
         if (!categories.some((cat) => cat._id === DEFAULT_CATEGORY._id)) {
@@ -189,7 +186,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       return of(null);
     })
   ).subscribe();
-    this.sharedDataService.notifyCategoryUpdate();
+    // this.sharedDataService.notifyCategoryUpdate();
     this.categories.sort!.active = 'name';
     this.categories.sort!.direction = 'asc';
     this.categories.sort!.sortChange.emit(); // ⚡️ Re-déclenche le tri
@@ -255,7 +252,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       this.categoryService.deleteCategory(category._id!).subscribe({
         next: () => {
           this.dialogService.info('Catégorie supprimée avec succès.');
-          this.sharedDataService.notifyCategoryUpdate(); // Optionnel si reload
+          // this.sharedDataService.notifyCategoryUpdate(); // Optionnel si reload
         },
         error: (err) => {
           this.dialogService.showHttpError(err);

@@ -17,7 +17,6 @@ import { DialogService } from '../../../services/dialog.service';
 import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
 
 
-
 @Component({
   selector: 'app-ingredient-admin',
   imports: [AdminModule],
@@ -66,8 +65,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.loadData();    
     this.fetchAllergenes();
     this.fetchOrigines();
-
-    // console.log('fournisseurs :', this.suppliers)
   }
 
   ngOnDestroy(): void {
@@ -127,12 +124,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       const searchedValue = this.sharedDataService.getSearchedIngredient();
       this.openIngredientForm(null, searchedValue);
     });
-
-    this.sharedDataService.downloadImage$.subscribe((data) => {
-      if (data) {
-        this.downloadIngredientImage(data.imagePath, data.objectName);
-      }
-    });
   }
 
   fetchAllergenes(): void {
@@ -151,6 +142,10 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     });
   }
 
+    downloadImage(data: {imagePath: string, objectName: string}): void {
+      this.imageService.downloadImage(data.imagePath, data.objectName);
+    }
+
   onRowClick(event: MouseEvent, ingredient: Ingredient): void {
     const target = event.target as HTMLElement;
 
@@ -166,7 +161,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.openIngredientForm(ingredient);
   }
 
-  // Télécharger une image
+  // // Télécharger une image
   downloadIngredientImage(imagePath: string, ingredientName: string) {
     this.imageService.downloadImage(imagePath, ingredientName);
   }
@@ -198,6 +193,10 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
       // Vérification des infos avant de fermer la modale
       const instance = dialogRef.componentInstance;
 
+      instance.downloadImage.subscribe((data: { imagePath: string; objectName: string }) => {
+        this.imageService.downloadImage(data.imagePath, data.objectName);
+      });
+
       instance.checkNameExists.subscribe((name: string) => {
         const excludedId = ingredient?._id;
 
@@ -228,7 +227,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     const ingredientId = ingredientData._id;
     const onSuccess = () => {
       dialogRef.close(result); // Fermer uniquement en cas de succès
-      // console.log('Formulaire soumis avec succès !', result);
     };
 
     removedExistingImages.forEach((path) => {
@@ -273,8 +271,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         .updateIngredient(ingredientId, ingredientData)
         .subscribe({
           next: () => {
-            // console.log('ingredient-admin -> submitIngredientForm -> Ingrédient mis à jour !');
-            this.sharedDataService.notifyIngredientCompositionUpdate();
             onSuccess?.();
           },
           error: (error) => {
@@ -284,7 +280,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     } else {
       this.ingredientService.createIngredient(ingredientData).subscribe({
         next: (res) => {
-          // console.log('ingredient-admin -> submitIngredientForm à SharedData -> res', res);
           this.sharedDataService.resultIngredientCreated(res);
           this.highlightedIngredientId = res._id ?? null;
           onSuccess?.();
@@ -388,7 +383,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     if (result === 'cancel') return;
 
     if (result === 'extra') {
-      this.downloadIngredientImages(ingredient);
+      this.downloadIngredientImagesBeforeDelete(ingredient);
 
       // ✅ Ajout : demander explicitement si on poursuit la suppression
       const confirmResult = await firstValueFrom(
@@ -414,9 +409,8 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
   }
 
 
-
   // >> Télécharger les images avant suppression
-  private downloadIngredientImages(ingredient: Ingredient): void {
+  private downloadIngredientImagesBeforeDelete(ingredient: Ingredient): void {
     if (ingredient.images?.length) {
       ingredient.images.forEach((imageUrl) => {
         this.imageService.downloadImage(imageUrl, ingredient.name);

@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
 				populate: { path: 'subIngredients' }
 			});
 
-		if (req.query.view === 'full') {
+		// if (req.query.view === 'full') {
 			try {
 				products = products.map((product) => {
 					const allergensSet = new Set();
@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
 					.status(500)
 					.json({ message: 'Erreur lors du traitement des produits.' });
 			}
-		}
+		// }
 		res.status(200).json(products);
 	} catch (error) {
 		console.error('Erreur serveur:', error);
@@ -134,7 +134,7 @@ router.get('/:id', async (req, res) => {
 		}
 
 		// Si "view=full", calculer les allergènes et régimes alimentaires
-		if (req.query.view === 'full') {
+		// if (req.query.view === 'full') {
 			const allergensSet = new Set();
 			let isVegan = true;
 			let isVegeta = true;
@@ -151,7 +151,7 @@ router.get('/:id', async (req, res) => {
 				vegan: isVegan,
 				vegeta: isVegeta,
 			};
-		}
+		// }
 
 		res.json(product);
 	} catch (error) {
@@ -219,10 +219,13 @@ router.post(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
 		check('composition')
-			.isArray({ min: 1 })
-			.withMessage(
-				'Le champ "composition" doit contenir au moins un ingrédient.'
-			),
+			.optional()
+			.isArray()
+			.withMessage('Le champ "composition" doit être un tableau.'),
+			// .isArray({ min: 1 })
+			// .withMessage(
+			// 	'Le champ "composition" doit contenir au moins un ingrédient.'
+			// ),
 		check('dlc')
 			.trim()
 			.notEmpty()
@@ -398,10 +401,14 @@ router.put(
 			),
 		check('composition')
 			.optional()
-			.isArray({ min: 1 })
+			.isArray()
 			.withMessage(
-				'Le champ "composition" doit contenir au moins un ingrédient.'
+				'Le champ "composition" doit être un tableau.'
 			),
+			// .isArray({ min: 1 })
+			// .withMessage(
+			// 	'Le champ "composition" doit contenir au moins un ingrédient.'
+			// ),
 		check('dlc')
 			.optional()
 			.trim()

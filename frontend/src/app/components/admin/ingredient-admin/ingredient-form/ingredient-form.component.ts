@@ -22,6 +22,8 @@ import { SharedDataService } from '../../../../services/shared-data.service';
 export class IngredientFormComponent {
   ingredientForm: FormGroup;
 
+  @Output() downloadImage = new EventEmitter<{ imagePath: string; objectName: string }>()
+
   @Output() checkNameExists = new EventEmitter<string>();
   @Output() formValidated = new EventEmitter<{
     ingredientData: any;
@@ -547,8 +549,9 @@ getIngredientTooltip(ingredient: Ingredient): string {
     this.processedImages = [...images];
   }
 
-  onDownloadImage(url: string): void {
-    this.sharedDataService.emitDownloadImage(url, this.data.ingredient?.name || 'Ingredient');
+  onDownloadImage(imageUrl: string): void {
+    const ingredientName = this.data.ingredient?.name || 'Ingrédient';
+    this.downloadImage.emit({imagePath: imageUrl, objectName: ingredientName});
   }
 
 

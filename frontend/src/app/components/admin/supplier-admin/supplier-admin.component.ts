@@ -3,13 +3,11 @@ import { AdminModule } from '../admin.module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
-// import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { catchError, firstValueFrom, of, Subject, takeUntil, tap } from 'rxjs';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { SupplierService } from '../../../services/supplier.service';
-// import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { DialogService } from '../../../services/dialog.service';
 import { IngredientService } from '../../../services/ingredient.service';
 
@@ -33,7 +31,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
     return supplier._id === DEFAULT_SUPPLIER._id;
   }
 
-  private unsubscribe$ = new Subject<void>(); // Permet de gérer les souscriptions
+  private unsubscribe$ = new Subject<void>();
 
   @ViewChild('suppliersPaginator') suppliersPaginator!: MatPaginator;
   @ViewChild('suppliersSort') suppliersSort!: MatSort;
@@ -53,7 +51,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.supplierService.getSuppliers()
+    this.supplierService.suppliers$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((suppliers) => {
         if (!suppliers.some((sup) => sup._id === DEFAULT_SUPPLIER._id)) {
@@ -195,7 +193,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         return of(null);
       })
     ).subscribe();
-    this.sharedDataService.notifySupplierUpdate();
+    // this.sharedDataService.notifySupplierUpdate();
   }
 
   // create new supplier depuis ingredient-form
@@ -264,7 +262,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
       this.supplierService.deleteSupplier(supplier._id!).subscribe({
         next: () => {
           this.dialogService.info('Fournisseur supprimé avec succès.');
-          this.sharedDataService.notifySupplierUpdate(); // Optionnel si reload
+          // this.sharedDataService.notifySupplierUpdate(); // Optionnel si reload
         },
         error: (err) => {
           this.dialogService.showHttpError(err);

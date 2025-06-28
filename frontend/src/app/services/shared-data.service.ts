@@ -4,11 +4,6 @@ import { Ingredient } from '../models/ingredient';
 import { Category } from '../models/category';
 import { Supplier } from './supplier.service';
 
-interface DownloadImageData {
-  imagePath: string;
-  objectName: string;
-}
-
 export interface QuickCreateData {
   name: string;
   description?: string;
@@ -25,8 +20,6 @@ export class SharedDataService {
 
   private requestNewCategorySubject = new ReplaySubject<QuickCreateData>(1);
   requestNewCategory$ = this.requestNewCategorySubject.asObservable();
-  // private requestNewCategorySubject = new Subject<QuickCreateData>();
-  // requestNewCategory$ = this.requestNewCategorySubject.asObservable();
 
   private categoryCreatedSubject = new Subject<Category>();
   categoryCreated$ = this.categoryCreatedSubject.asObservable();
@@ -55,8 +48,6 @@ export class SharedDataService {
 
   private requestNewSupplierSubject = new ReplaySubject<QuickCreateData>(1);
   requestNewSupplier$ = this.requestNewSupplierSubject.asObservable();
-  // private requestNewSupplierSubject = new Subject<string>();
-  // requestNewSupplier$ = this.requestNewSupplierSubject.asObservable();
 
   private supplierCreatedSubject = new Subject<Supplier>();
   supplierCreated$ = this.supplierCreatedSubject.asObservable();
@@ -82,21 +73,8 @@ export class SharedDataService {
   private ingredientListUpdateSubject = new Subject<void>();
   ingredientListUpdate$ = this.ingredientListUpdateSubject.asObservable();
 
-  // Notifier que les ingrédients doivent être rechargés après une mise à jour
-  private ingredientCompositionUpdateSubject = new Subject<void>();
-  ingredientCompositionUpdate$ = this.ingredientCompositionUpdateSubject.asObservable();
-
-  // Méthode pour déclencher la mise à jour
-  notifyIngredientCompositionUpdate() {
-    this.ingredientCompositionUpdateSubject.next();
-  }
-
-
   private requestNewIngredientSubject = new ReplaySubject<void>(1);
   requestNewIngredient$: Observable<void> = this.requestNewIngredientSubject.asObservable();
-  // private openIngredientFormSubject = new Subject<void>();
-  // openIngredientForm$: Observable<void> =
-  //   this.openIngredientFormSubject.asObservable();
 
   private ingredientCreatedSubject = new Subject<Ingredient>();
   ingredientCreated$: Observable<Ingredient> =
@@ -137,16 +115,5 @@ export class SharedDataService {
   // Notifier les abonnés de la mise à jour
   notifyProductUpdate() {
     this.productListUpdateSubject.next();
-  }
-
-  ///////////////////////////////////////////
-  //////////////// Images ///////////////////
-  private downloadImageSubject = new BehaviorSubject<DownloadImageData | null>(
-    null
-  );
-  downloadImage$ = this.downloadImageSubject.asObservable();
-
-  emitDownloadImage(imagePath: string, objectName: string) {
-    this.downloadImageSubject.next({ imagePath, objectName });
   }
 }

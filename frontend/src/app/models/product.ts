@@ -14,10 +14,10 @@ export interface Product {
     quantityType: string;
     price: number;
     images?: string[];
-}
+// }
 
-export interface FinalProduct extends Product {
-    allergens: string[];
-    vegan: boolean;
-    vegeta: boolean;
+// export interface FinalProduct extends Product {
+    allergens?: string[];
+    vegan?: boolean;
+    vegeta?: boolean;
 }

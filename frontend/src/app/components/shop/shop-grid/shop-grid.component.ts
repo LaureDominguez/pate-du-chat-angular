@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FinalProduct } from '../../../models/product';
+import { Product } from '../../../models/product';
 import { ProductService } from '../../../services/product.service';
 import { ShopDetailComponent } from "../shop-detail/shop-detail.component";
 import { AppModule } from '../../../app.module';
@@ -15,13 +15,13 @@ import { ImageService } from '../../../services/image.service';
   styleUrls: ['./shop-grid.component.scss']
 })
 export class ShopGridComponent implements OnInit{
-  products: FinalProduct[] = [];
-  selectedProduct: FinalProduct | null = null;
+  products: Product[] = [];
+  selectedProduct: Product | null = null;
 
   // Grille d'affichage
   cols: number = 5;
-  grid1: FinalProduct[] = [];
-  grid2: FinalProduct[] = [];
+  grid1: Product[] = [];
+  grid2: Product[] = [];
 
   constructor(
     private productService: ProductService,
@@ -33,7 +33,7 @@ export class ShopGridComponent implements OnInit{
   }
 
   loadProducts(): void {
-    this.productService.getFinalProducts().subscribe((products) => {
+    this.productService.getProducts().subscribe((products) => {
       this.products = products.map((product) => ({
         ...product,
         images: product.images?.map((imagePath) => this.imageService.getImageUrl(imagePath))
@@ -43,7 +43,7 @@ export class ShopGridComponent implements OnInit{
     });
   }
 
-  onSelectProduct(product: FinalProduct): void {
+  onSelectProduct(product: Product): void {
     this.selectedProduct = product;
     console.log('🚀 Produit sélectionné :', this.selectedProduct);
     this.updateGrid();

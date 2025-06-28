@@ -27,6 +27,8 @@ export class ProductFormComponent implements OnInit {
   @ViewChild('stockSection') stockSection!: ElementRef;
   @ViewChild('dlcContainer') dlcContainer!: ElementRef;
 
+  @Output() downloadImage = new EventEmitter<{ imagePath: string; objectName: string }>();
+
   @Output() checkNameExists = new EventEmitter<string>();
   @Output() formValidated = new EventEmitter<{
     productData: any;
@@ -648,9 +650,10 @@ export class ProductFormComponent implements OnInit {
     input.value = '';
   }
 
-  downloadImage(imageUrl: string): void {
+  onDownloadImage(imageUrl: string): void {
     const productName = this.data.product?.name || 'Produit';
-    this.sharedDataService.emitDownloadImage(imageUrl, productName);
+    console.log('📋 Form -> Téléchargement de l’image :', imageUrl, 'pour le produit :', productName);
+    this.downloadImage.emit({ imagePath: imageUrl, objectName: productName });
   }
 
   onImageRemoved(image: ProcessedImage): void {

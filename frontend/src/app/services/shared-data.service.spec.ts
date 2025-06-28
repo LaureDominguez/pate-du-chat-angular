@@ -127,13 +127,13 @@ describe('SharedDataService', () => {
 
   ///////////////////////////////////////////
   /////////////// Ingredients ///////////////
-  it('devrait notifier une mise à jour de la composition des ingrédients', async () => {
-    firstValueFrom(service.ingredientCompositionUpdate$).then(() => {
-      expect(true).toBeTrue();
-    });
+  // it('devrait notifier une mise à jour de la composition des ingrédients', async () => {
+  //   firstValueFrom(service.ingredientCompositionUpdate$).then(() => {
+  //     expect(true).toBeTrue();
+  //   });
 
-    service.notifyIngredientCompositionUpdate();
-  });
+  //   service.notifyIngredientCompositionUpdate();
+  // });
 
   it('devrait notifier une mise à jour des produits', async () => {
     firstValueFrom(service.productListUpdate$).then(() => {

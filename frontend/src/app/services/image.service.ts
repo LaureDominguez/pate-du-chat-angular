@@ -37,6 +37,7 @@ export class ImageService {
     imagePath: string,
     customFilename: string
   ): Promise<void> {
+    // console.log('📋 Service image - Téléchargement de l’image :', imagePath, 'avec le nom personnalisé :', customFilename);
     try {
       let cleanPath = imagePath;
 

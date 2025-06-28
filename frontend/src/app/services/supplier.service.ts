@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, merge, Observable, tap, throwError } from 'rxjs';
 import { SharedDataService } from './shared-data.service';
 import { DEFAULT_SUPPLIER, Supplier } from '../models/supplier';
 import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
@@ -22,16 +22,24 @@ export class SupplierService {
   ) {
     this.loadSuppliers();
 
-    this.sharedDataService.supplierListUpdate$.subscribe(() => {
+    merge(
+      this.sharedDataService.supplierListUpdate$,
+      this.sharedDataService.ingredientListUpdate$
+    ).subscribe(() => {
       this.loadSuppliers();
     });
 
-    this.sharedDataService.ingredientListUpdate$.subscribe(() => {
-      this.loadSuppliers();
-    });
+    // this.sharedDataService.supplierListUpdate$.subscribe(() => {
+    //   this.loadSuppliers();
+    // });
+
+    // this.sharedDataService.ingredientListUpdate$.subscribe(() => {
+    //   this.loadSuppliers();
+    // });
   }
 
   private loadSuppliers(): void {
+    // console.trace('Chargement des fournisseurs depuis le serveur...');
     this.http
       .get<Supplier[]>(this.apiUrl)
       .pipe(

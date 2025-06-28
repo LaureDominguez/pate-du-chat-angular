@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, merge, Observable, tap, throwError } from 'rxjs';
 
-import { FinalProduct, Product } from '../models/product';
+import { Product } from '../models/product';
 import { DEFAULT_CATEGORY } from '../models/category';
 import { SharedDataService } from './shared-data.service';
 
@@ -15,71 +15,39 @@ export class ProductService {
   private productSubject = new BehaviorSubject<Product[]>([]);
   products$ = this.productSubject.asObservable();
 
-  private finalProductSubject = new BehaviorSubject<FinalProduct[]>([]);
-  finalProducts$ = this.finalProductSubject.asObservable();
-
   private dlcsUrl = '../assets/data/dlcs.json';
+
 
   constructor(
     private http: HttpClient,
     private sharedDataService: SharedDataService
   ) {
-    this.loadProducts(); // Charger les produits au démarrage
-    this.loadFinalProducts(); // Charger les produits finaux au démarrage
+    this.loadProducts();
 
-    this.sharedDataService.productListUpdate$.subscribe(() => {
+    merge(
+      this.sharedDataService.productListUpdate$,
+      this.sharedDataService.categoryListUpdate$,
+      this.sharedDataService.ingredientListUpdate$
+    ).subscribe(() => {
       this.loadProducts();
-      this.loadFinalProducts();
-    });
+    })
 
-    this.sharedDataService.categoryListUpdate$.subscribe(() => {
-      this.loadProducts();
-      this.loadFinalProducts();
-    });
+    // this.sharedDataService.productListUpdate$.subscribe(() => {
+    //   this.loadProducts();
+    // });
 
-    this.sharedDataService.ingredientListUpdate$.subscribe(() => {
-      this.loadProducts();
-      this.loadFinalProducts();
-    });
+    // this.sharedDataService.categoryListUpdate$.subscribe(() => {
+    //   this.loadProducts();
+    // });
+
+    // this.sharedDataService.ingredientListUpdate$.subscribe(() => {
+    //   this.loadProducts();
+    // });
+
   }
-
-  ////////////////////////
-  //////// Public products
-  public loadFinalProducts(): void {
-    this.loadPrivateFinalProducts(); // méthode privée
-  }
-
-  private loadPrivateFinalProducts(): void {
-    this.http
-      .get<FinalProduct[]>(`${this.apiUrl}?view=full`).pipe(
-        map((products) => products.map((product) => ({
-          ...product,
-          category: product.category ? product.category : DEFAULT_CATEGORY,
-        })))
-      )
-      .subscribe((products) => {
-        this.finalProductSubject.next(products); // Met à jour les abonnés
-      });
-  }
-
-  getFinalProducts(): Observable<FinalProduct[]> {
-    return this.finalProducts$;
-  }
-
-  getFinalProductById(id: string): Observable<FinalProduct> {
-    const url = `${this.apiUrl}/${id}?view=full`;
-    return this.http.get<FinalProduct>(url).pipe(
-      map((product) => ({
-        ...product,
-        category: product.category ? product.category : DEFAULT_CATEGORY,
-      }))
-    );
-  }
-
-  ////////////////////////
-  //////// Admin products
 
   private loadProducts(): void {
+    console.trace('Chargement des produits depuis le serveur...');
     this.http.get<Product[]>(this.apiUrl).pipe(
       map((products) =>
         products.map((product) => ({
@@ -88,7 +56,7 @@ export class ProductService {
         }))
       )
     ).subscribe((products) => {
-      this.productSubject.next(products); // Met à jour les abonnés
+      this.productSubject.next(products); 
     });
   }
 
@@ -101,7 +69,7 @@ export class ProductService {
     return this.http.get<Product>(url).pipe(
       map((product) => ({
         ...product,
-        category: product.category ? product.category : DEFAULT_CATEGORY,
+        category: product.category || DEFAULT_CATEGORY,
       }))
     );
   }
@@ -112,7 +80,7 @@ export class ProductService {
       map((products) =>
         products.map((product) => ({
           ...product,
-          category: product.category ? product.category : DEFAULT_CATEGORY,
+          category: product.category || DEFAULT_CATEGORY,
         }))
       )
     );
@@ -124,7 +92,7 @@ export class ProductService {
       map((products) =>
         products.map((product) => ({
           ...product,
-          category: product.category ? product.category : DEFAULT_CATEGORY,
+          category: product.category || DEFAULT_CATEGORY,
         }))
       )
     );
@@ -141,7 +109,7 @@ export class ProductService {
       );
   }
 
-  checkExistingProducName(name: string, excludedId?: string): Observable<boolean> {
+  checkExistingProductName(name: string, excludedId?: string): Observable<boolean> {
     let url = `${this.apiUrl}/check-name/${encodeURIComponent(name)}`;
     if (excludedId) {
       url += `?excludedId=${excludedId}`;
@@ -162,9 +130,8 @@ export class ProductService {
     return this.http.post<Product>(this.apiUrl, payload).pipe(
       catchError(this.handleError),
       tap(() => {
-        this.loadFinalProducts()
         this.sharedDataService.notifyProductUpdate();
-      }) // Recharge la liste après création
+      }) 
     );
   }
 
@@ -173,9 +140,8 @@ export class ProductService {
     return this.http.put<Product>(url, payload).pipe(
       catchError(this.handleError),
       tap(() => {
-        this.loadFinalProducts()
         this.sharedDataService.notifyProductUpdate();
-      }) // Recharge la liste après création
+      }) 
     );
   }
 
@@ -184,7 +150,6 @@ export class ProductService {
     return this.http.delete<{ message: string }>(url).pipe(
       catchError(this.handleError),
       tap(() => {
-        this.loadFinalProducts()
         this.sharedDataService.notifyProductUpdate();
       })
     );
@@ -214,4 +179,4 @@ export class ProductService {
     return throwError(() => new Error(errorMessage));
   }
 }
-export { FinalProduct, Product };
+export { Product };

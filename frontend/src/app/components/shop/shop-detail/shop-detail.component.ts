@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
-import { FinalProduct } from '../../../models/product';
+import { Product } from '../../../models/product';
 import { AppModule } from '../../../app.module';
 import { Ingredient } from '../../../models/ingredient';
 
@@ -10,7 +10,7 @@ import { Ingredient } from '../../../models/ingredient';
   styleUrls: ['./shop-detail.component.scss']
 })
 export class ShopDetailComponent {
-  @Input() product!: FinalProduct;
+  @Input() product!: Product;
   @Output() close = new EventEmitter<void>();
   ingredientsList: Ingredient[] = [];
   ingredientsFormatted: string = '';

@@ -334,7 +334,7 @@
             <mat-label>Images</mat-label>
 
             <app-image-carousel [images]="processedImages" (reorder)="onReorder($event)"
-                (remove)="onImageRemoved($event)" (download)="downloadImage($event)" />
+                (remove)="onImageRemoved($event)" (download)="onDownloadImage($event)" />
             <button mat-raised-button color="primary" type="button" (click)="fileInput.click()">
                 <mat-icon>file_upload</mat-icon> Ajouter une image
             </button>
