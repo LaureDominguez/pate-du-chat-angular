@@ -3,8 +3,8 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
-import { AppModule } from '../../app.module';
 import { ThemeService } from '../../services/theme.service';
+import { MATERIAL_IMPORTS } from '../../app-material';
 
 @Component({
   selector: 'app-nav',
@@ -12,7 +12,7 @@ import { ThemeService } from '../../services/theme.service';
   styleUrls: ['./nav.component.scss'],
   standalone: true,
   imports: [
-    AppModule,
+    MATERIAL_IMPORTS,
     RouterModule,
   ],
 })

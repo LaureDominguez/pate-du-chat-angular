@@ -6,7 +6,7 @@ import { DialogService } from '../../../services/dialog.service';
 import { of, throwError } from 'rxjs';
 import { DEFAULT_CATEGORY, Category } from '../../../models/category';
 import { ReactiveFormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Product, ProductService } from '../../../services/product.service';

@@ -40,7 +40,7 @@ export class IngredientService {
 
   // Charge les ingrédients et met à jour le BehaviorSubject
   private loadIngredients(): void {
-    console.trace('Chargement des ingrédients depuis le serveur...');
+    // console.trace('Chargement des ingrédients depuis le serveur...');
     this.http.get<Ingredient[]>(this.apiUrl).subscribe((ingredients) => {
       this.ingredientsSubject.next(ingredients); 
     });
@@ -116,7 +116,7 @@ export class IngredientService {
   }
 
   updateIngredient(id: string, payload: any): Observable<Ingredient> {
-    console.trace('Mise à jour de l\'ingrédient avec ID:', id);
+    // console.trace('Mise à jour de l\'ingrédient avec ID:', id);
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Ingredient>(url, payload).pipe(
       catchError(this.handleError),

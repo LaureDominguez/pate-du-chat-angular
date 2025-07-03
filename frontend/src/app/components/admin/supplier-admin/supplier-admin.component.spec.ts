@@ -6,7 +6,7 @@ import { DialogService } from '../../../services/dialog.service';
 import { of } from 'rxjs';
 import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
 import { ReactiveFormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
 import { Ingredient, IngredientService } from '../../../services/ingredient.service';
 

@@ -1,5 +1,5 @@
-import { ApplicationRef, Component, EventEmitter, NgZone, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { debounceTime, filter, first, firstValueFrom, Subject, take, takeUntil } from 'rxjs';
+import { ApplicationRef, Component, EventEmitter, Inject, inject, NgZone, OnDestroy, OnInit, Output, PLATFORM_ID, ViewChild } from '@angular/core';
+import { debounceTime, filter, first, firstValueFrom, forkJoin, Subject, switchMap, take, takeUntil, timer } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import { Ingredient, IngredientService } from '../../../services/ingredient.service';
@@ -7,7 +7,6 @@ import { Product, ProductService } from '../../../services/product.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { ImageService } from '../../../services/image.service';
 
-import { AdminModule } from '../admin.module';
 import { DEFAULT_CATEGORY } from '../../../models/category';
 import { DeviceService } from '../../../services/device.service';
 import { DialogService } from '../../../services/dialog.service';
@@ -16,11 +15,15 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+import { ADMIN_SHARED_PROVIDERS } from '../admin.providers';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-product-admin',
   standalone: true,
-  imports: [AdminModule],
+  imports: [ADMIN_SHARED_IMPORTS],
+  providers: [ADMIN_SHARED_PROVIDERS],
   templateUrl: './product-admin.component.html',
   styleUrls: ['./product-admin.component.scss', '../admin.component.scss'],
 })
@@ -34,8 +37,13 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   isMobile = false;
 
   private unsubscribe$ = new Subject<void>();
-  // private firstLoadDone = false;
-  noComposition: string[] = []; // Liste des produits sans composition
+
+  private isInitialLoad = true;
+  private initialLoadSubject = new Subject<void>();
+  private initialLoadComplete = false;
+  private shownWarningOnce = false;
+  // noComposition: string[] = [];
+  noCompositionID: string[] = [];
 
 
   displayedProductsColumns: string[] = [
@@ -65,8 +73,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     private deviceService: DeviceService,
     private dialog: MatDialog,
     private dialogService: DialogService,
-      private ngZone: NgZone,
-  private appRef: ApplicationRef,
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +87,12 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         // console.log('OS :', this.deviceService.os);
         // console.log('Navigateur :', this.deviceService.browser);
       });
-      // console.log('pas de composition oninit :', this.noComposition);
+
+    setTimeout(() => {
+      this.initialLoadComplete = true;
+      this.initialLoadSubject.next();
+      this.initialLoadSubject.complete();
+    }, 500);
   }
 
   ngOnDestroy(): void {
@@ -89,8 +101,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // console.log('pas de composition afterinit :', this.noComposition);
-
     this.products.paginator = this.productsPaginator;
     this.products.sort = this.productsSort;
 
@@ -140,28 +150,39 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   loadData(): void {
     this.productService.products$
     .pipe(takeUntil(this.unsubscribe$))
+      // filter(() => this.isInitialLoad))
     .subscribe((products) => {
-            this.noComposition = [];
+      this.isInitialLoad = false;
+      this.products.data = products.map(product => ({
+        ...product,
+        category: product.category || DEFAULT_CATEGORY,
+        invalidComposition: !product.composition?.length
+      }));
 
-      this.products.data = products.map(product => {
-        const hasNoComposition = !product.composition || product.composition.length === 0;
+      const currentNoComp = products.filter(product => !product.composition?.length);
+      this.noCompositionID = currentNoComp.map(product => product._id!);
 
-        if (hasNoComposition) {
-          this.noComposition.push(`- ${product.name}`);
-        }
+      const inStock = currentNoComp.filter(product => product.stock);
+      const outOfStock = currentNoComp.filter(product => !product.stock);
 
-        return {
-          ...product,
-          category: product.category || DEFAULT_CATEGORY,
-          invalidComposition: hasNoComposition,
-        };
-      });
+      // console.log('Produits sans composition:', currentNoComp);
+      // console.log('produit retenus: ', inStock, outOfStock);
+
+      if (inStock.length) {
+        // console.log('Produits en stock:', inStock);
+        this.shownWarningOnce = true;
+        this.processInStockProducts(inStock);
+      }
+
+      if (outOfStock.length && !this.shownWarningOnce) {
+        // console.log('Produits hors stock:', outOfStock);
+        this.shownWarningOnce = true;
+        // this.waitForDialogsToClose().then(() => {
+          this.showNoCompositionWarning(outOfStock);
+        // });      
+      }
 
       this.countChanged.emit(this.products.data.length);
-
-      if (this.noComposition.length > 0) {
-        this.showNoCompositionWarning();
-      }
     });
 
     this.categoryService.categories$
@@ -177,13 +198,92 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       });
   }
 
-  private showNoCompositionWarning(): void {
-    const message = `⚠️ Produits sans composition détectés :\n\n${this.noComposition.join('\n')}`;
-    requestAnimationFrame(() => {
-      this.dialogService.error(message, 'Produits incomplets');
-    });
+  // private waitForDialogsToClose(): Promise<void> {
+  //   if (typeof document === 'undefined') {
+  //     return Promise.resolve();
+  //   }
+  //   return new Promise((resolve) => {
+  //     // Si aucun dialogue n'est ouvert, résoudre immédiatement
+  //     if (document.querySelectorAll('mat-dialog-container').length === 0) {
+  //       resolve();
+  //       return;
+  //     }
+
+  //     // Sinon, observer les changements de dialogues
+  //     const observer = new MutationObserver((mutations) => {
+  //       if (document.querySelectorAll('mat-dialog-container').length === 0) {
+  //         observer.disconnect();
+  //         resolve();
+  //       }
+  //     });
+
+  //     // Observer uniquement les changements dans le corps du document
+  //     observer.observe(document.body, {
+  //       childList: true,
+  //       subtree: true
+  //     });
+
+  //     // Timeout de sécurité (10 secondes max)
+  //     setTimeout(() => {
+  //       observer.disconnect();
+  //       resolve();
+  //       console.warn('Dialog close timeout reached');
+  //     }, 10000);
+  //   });
+  // }
+
+  private processInStockProducts(products: Product[]): void {
+    console.log('processInStockProducts:', products);
+    const updates = products.map(product => 
+      this.productService.updateProduct(product._id!, { ...product, stock: false })
+    );
+  forkJoin(updates).subscribe(() => {
+    // Retour à l'approche simple avec un délai minimal
+    setTimeout(() => {
+      const names = products.map(product => product.name);
+      this.dialogService.info(
+        `Produits retirés du stock (composition vide) :<br>${names.join('<br>')}`,
+        'Mise à jour automatique'
+      );
+    }, 300); // Délai court pour laisser les autres dialogues se fermer
+  });
+    // forkJoin(updates).subscribe(() => {
+    //   this.waitForDialogsToClose().then(() => {
+    //     const names = products.map(product => product.name);
+    //     this.dialogService.info(
+    //       `Produits retirés du stock (composition vide) :<br>${names.join('<br>')}`,
+    //       'Mise à jour automatique'
+    //     );
+    //   });
+    // });
   }
 
+
+  private showNoCompositionWarning(products: Product[]): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    console.log('showNoCompositionWarning:', products);
+
+    const existingErrorDialog = document.querySelector('.error-dialog-container');
+    if (existingErrorDialog) return;
+
+    // const isBrowser = isPlatformBrowser(this.platformId);
+    const message = `⚠️ Produits sans composition :<br>${products.map(product => product.name).join('<br>')}`;
+    
+    // if (isBrowser) {
+      const existingDialogs = Array.from(document.querySelectorAll('.mat-dialog-container'));
+      const isAlreadyOpen = existingDialogs.some(dialog => 
+        dialog.textContent?.includes('Produits sans composition')
+      );
+    
+      if (!isAlreadyOpen) {
+        this.dialogService.error(message, 'Produits incomplets');
+      }
+      // requestAnimationFrame(() => {
+      //   this.dialogService.error(message, 'Produits incomplets');
+      // });
+    // }
+  }
 
   fetchDlcs(): void {
     this.productService.getDlcs().subscribe((dlcs) => {

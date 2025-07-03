@@ -3,7 +3,6 @@ import { map, Observable, startWith } from 'rxjs';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 
-import { AdminModule } from '../../admin.module';
 import { Ingredient } from '../../../../models/ingredient';
 import { Supplier } from '../../../../models/supplier';
 import { QuickCreateDialogComponent } from '../../../dialog/quick-create-dialog/quick-create-dialog.component';
@@ -11,11 +10,12 @@ import { ImageCarouselComponent } from '../../image-carousel/image-carousel.comp
 import { ProcessedImage } from '../../../../models/image';
 import { DialogService } from '../../../../services/dialog.service';
 import { SharedDataService } from '../../../../services/shared-data.service';
+import { ADMIN_SHARED_IMPORTS } from '../../admin-material';
+import { MATERIAL_IMPORTS } from '../../../../app-material';
 
 @Component({
   selector: 'app-ingredient-form',
-  standalone: true,
-  imports: [AdminModule, ImageCarouselComponent],
+  imports: [MATERIAL_IMPORTS, ADMIN_SHARED_IMPORTS, ImageCarouselComponent],
   templateUrl: './ingredient-form.component.html',
   styleUrls: ['./ingredient-form.component.scss'],
 })
@@ -154,17 +154,10 @@ export class IngredientFormComponent {
         return;
       }
 
-      // console.log('🚀 Nouveau fournisseur créé:', newSupplier);
-      // console.log(' Type de fournisseur:', typeof newSupplier.name);
-      // console.log('contenu complet :', JSON.stringify(newSupplier, null, 2));
-
       this.suppliers.push(newSupplier);
       this.supplierNotFound = false;
 
       const label = typeof newSupplier === 'string' ? newSupplier : newSupplier.name;
-      console.log('🔵 Valeur de label :', label);
-      console.log('🔵 Valeur de supplierCtrl :', this.supplierCtrl.value)
-      console.log('🔵 Valeur de newSupplier :', newSupplier);
 
       this.ingredientForm.patchValue({ supplier: newSupplier });
       this.supplierCtrl.setValue(newSupplier.name);
@@ -172,7 +165,6 @@ export class IngredientFormComponent {
   }
 
   private setupBioToggle(): void {
-    // console.log('🔵 Initialisation de la règle bio...');
     // Appliquer la règle initialement
     if (this.type?.value === 'compose') {
       this.bio?.disable();
@@ -191,7 +183,6 @@ export class IngredientFormComponent {
   }
 
   private updateBioFromSubIngredients(): void {
-    // console.log('🔵 Mise à jour de la règle bio à partir des sous-ingrédients...');
   const subIngredients: Ingredient[] = this.ingredientForm.get('subIngredients')?.value || [];
 
   if (subIngredients.length === 0) {
@@ -262,12 +253,7 @@ private setupAutoComplete(): void {
         this.searchedSupplier = value.trim();
         this.supplierNotFound = this.filterItems(value, this.suppliers).length === 0;
       }
-      // console.log('🔵 Valeur de searchedSupplier :', this.searchedSupplier);
-      // console.log('🔵 Valeur renvoyées :', value, this.supplier);
       return this.filterItems(value, this.suppliers);
-      // const filtered = this.filterItems(value, this.suppliers);
-      // this.supplierNotFound = typeof value === 'string' && filtered.length === 0;
-      // return filtered;
     })
   );
 
@@ -280,9 +266,6 @@ private setupAutoComplete(): void {
         this.subIngredientNotFound = this.filterItems(value, this.allIngredients).length === 0;
       }
       return this.filterItems(value, this.allIngredients);
-      // const filtered = this.filterItems(value, this.allIngredients);
-      // this.subIngredientNotFound = filtered.length === 0;
-      // return filtered;
     })
   );
 }
@@ -299,18 +282,6 @@ private setupAutoComplete(): void {
         this.normalizeString(item.name).includes(normalizedValue)
       )
       .sort((a, b) => a.name.localeCompare(b.name));
-    // if (!value) {
-    //   return [...list].sort((a, b) => a.name.localeCompare(b.name)); 
-    // };
-
-    // // Normaliser la valeur recherchée
-    // const normalizedValue = this.normalizeString(value);
-
-    // return list
-    //   .filter((item) =>
-    //     this.normalizeString(item.name).includes(normalizedValue)
-    //   )
-    //   .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   //// Fonction de normalisation des accents et ligatures
@@ -331,16 +302,12 @@ private setupAutoComplete(): void {
     return (
       trimmedName.trim().charAt(0).toUpperCase() + trimmedName.trim().slice(1)
     );
-    // if (!name) return "";
-    // return name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
   }
 
   //////////////////////////////////////
   // Ajouter un fournisseur 
 
   addSupplier(supplier: Supplier | 'supplierNotFound' | null): void {
-    console.log('🔵 Ajout du fournisseur :', supplier);
-    console.log('🔵 Valeur de searchedSupplier :', this.searchedSupplier);
     if (supplier === 'supplierNotFound') {
       this.createSupplier(this.searchedSupplier);
       this.supplierCtrl.setValue('');
@@ -351,7 +318,6 @@ private setupAutoComplete(): void {
   }
 
   private createSupplier(searchedIngredient: string): void {
-    console.log('🔵 Création d\'un nouveau fournisseur avec la valeur :', searchedIngredient);
     const dialogRef = this.dialog.open(QuickCreateDialogComponent, {
       data: {
         title: 'Créer un nouveau fournisseur',
@@ -374,12 +340,9 @@ private setupAutoComplete(): void {
       }
     });
 
-    console.log('données envoyées :', dialogRef.componentInstance.data);
-
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sharedDataService.requestSupplierCreation(result);
-        // console.log('🔵 Demande de création de fournisseur envoyée:', result);
       }
     })
   }
@@ -564,12 +527,9 @@ getIngredientTooltip(ingredient: Ingredient): string {
     const name = this.ingredientForm.value.name;
     if (name === '' || name === undefined) return;
     else this.checkNameExists.emit(name);
-
-    // console.log('🔵 Formulaire soumis avec les données :', this.ingredientForm.value);
   }
 
   validateAndSubmit(): void {
-    // console.log('🔵 Validation et soumission du formulaire...');
     let formErrors: string[] = [];
 
     Object.keys(this.ingredientForm.controls).forEach((field) => {
@@ -578,8 +538,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
         formErrors.push(errorMsg);
       }
     });
-
-    // console.log('🔵 Erreurs de formulaire détectées :', formErrors);
 
     if (formErrors.length > 0) {
       this.dialogService.error(formErrors.join('<br>'));
@@ -608,17 +566,14 @@ getIngredientTooltip(ingredient: Ingredient): string {
     const selectedFiles: File[] = this.processedImages
       .filter((img) => img.type === 'preview' && img.file)
       .map((img) => img.file!); // `!` car on a déjà filtré
-    // console.log('📁 Fichiers sélectionnés :', selectedFiles);
 
     const existingImages: string[] = this.processedImages
       .filter((img) => img.type === 'existing' && img.path)
       .map((img) => img.path!);
-    // console.log('📁 Images existantes :', existingImages);
 
     const imageOrder: string[] = this.processedImages.map((img) =>
       img.type === 'existing' ? img.path! : img.file!.name
     );
-    // console.log('📁 Ordre des images :', imageOrder);
 
     // update des donnéess à envoyer après close
     const ingredientData = {
@@ -630,7 +585,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
       // subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
       existingImages: existingImages,
     };
-    // console.log('📋 Données de l\'ingrédient à envoyer :', ingredientData);
 
     this.formValidated.emit({
       ingredientData,

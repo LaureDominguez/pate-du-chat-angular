@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { Product } from '../../../models/product';
 import { ProductService } from '../../../services/product.service';
 import { ShopDetailComponent } from "../shop-detail/shop-detail.component";
-import { AppModule } from '../../../app.module';
 import { ImageService } from '../../../services/image.service';
+import { MATERIAL_IMPORTS } from '../../../app-material';
 
 @Component({
   selector: 'app-shop-grid',
   imports: [
-    AppModule, 
+    MATERIAL_IMPORTS, 
     ShopDetailComponent
   ],
   templateUrl: './shop-grid.component.html',

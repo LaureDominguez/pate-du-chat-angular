@@ -4,7 +4,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
-import { AdminModule } from '../admin.module';
 
 import { Ingredient, IngredientService, } from '../../../services/ingredient.service';
 import { Supplier, SupplierService } from '../../../services/supplier.service';
@@ -15,11 +14,14 @@ import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
 
 import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+import { ADMIN_SHARED_PROVIDERS } from '../admin.providers';
 
 
 @Component({
   selector: 'app-ingredient-admin',
-  imports: [AdminModule],
+  imports: [ADMIN_SHARED_IMPORTS],
+  providers: [ADMIN_SHARED_PROVIDERS],
   templateUrl: './ingredient-admin.component.html',
   styleUrls: ['./ingredient-admin.component.scss', '../admin.component.scss'],
 })
@@ -136,7 +138,6 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
     this.ingredientService.getOrigines().subscribe({
       next: (origines) => {
         this.originesList = origines;
-        // console.log('🚀 Liste des origines dans ingredient-admin:', this.originesList);
       },
       error: (err) => console.error('❌ Erreur de récupération des origines:', err),
     });

@@ -10,8 +10,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideHttpClient(withFetch()),
-    provideRouter(APP_ROUTES, withRouterConfig({ onSameUrlNavigation: 'reload' })), // Reload on same URL
-    provideClientHydration(),
+    provideRouter(APP_ROUTES, withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    // provideClientHydration(),
     provideAnimations(),
     // provideNoopAnimations()
   ],

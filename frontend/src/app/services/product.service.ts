@@ -38,7 +38,7 @@ export class ProductService {
   }
 
   private loadProducts(): void {
-    console.trace('Chargement des produits depuis le serveur...');
+    // console.trace('Chargement des produits depuis le serveur...');
     this.http.get<Product[]>(this.apiUrl).pipe(
       map((products) =>
         products.map((product) => ({
@@ -104,8 +104,8 @@ export class ProductService {
     let url = `${this.apiUrl}/check-name/${encodeURIComponent(name)}`;
     if (excludedId) {
       url += `?excludedId=${excludedId}`;
-      console.log('Excluded ID:', excludedId);
-      console.log('URL:', url);
+      // console.log('Excluded ID:', excludedId);
+      // console.log('URL:', url);
     }
     return this.http
       .get<boolean>(url)
@@ -127,7 +127,7 @@ export class ProductService {
   }
 
   updateProduct(id: string, payload: any): Observable<Product> {
-    console.trace('Mise à jour du produit avec ID:', id);
+    // console.trace('Mise à jour du produit avec ID:', id);
     this.isProcessing = true; // Indique que le traitement est en cours
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Product>(url, payload).pipe(

@@ -1,11 +1,10 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -27,39 +26,32 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle'
 import {MatExpansionModule} from '@angular/material/expansion';
 import { getFrenchPaginatorIntl } from '../../../assets/utils/french-paginator-intl';
 
-@NgModule({
-    exports: [
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-
-        A11yModule,
-        MatAutocompleteModule,
-        MatExpansionModule,
-        MatButtonModule,
-        MatButtonToggleModule,
-        MatCardModule,
-        MatCheckboxModule,
-        MatChipsModule,
-        MatDialogModule,
-        MatDividerModule,
-        MatFormFieldModule,
-        MatGridListModule,
-        MatIconModule,
-        MatInputModule,
-        MatListModule,
-        MatOptionModule,
-        MatPaginatorModule,
-        MatRadioModule,
-        MatSelectModule,
-        MatSlideToggleModule,
-        MatSortModule,
-        MatTableModule,
-        MatToolbarModule,
-        MatTooltipModule
-    ],
-    providers: [
-        { provide: MatPaginatorIntl, useValue: getFrenchPaginatorIntl() }
-    ]
-})
-export class AdminModule {}
+export const ADMIN_SHARED_IMPORTS = [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    A11yModule,
+    MatAutocompleteModule,
+    MatExpansionModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatCardModule,
+    MatCheckboxModule,
+    MatChipsModule,
+    MatDialogModule,
+    MatDividerModule,
+    MatFormFieldModule,
+    MatGridListModule,
+    MatIconModule,
+    MatInputModule,
+    MatListModule,
+    MatOptionModule,
+    MatPaginatorModule,
+    MatRadioModule,
+    MatSelectModule,
+    MatSlideToggleModule,
+    MatSortModule,
+    MatTableModule,
+    MatToolbarModule,
+    MatTooltipModule
+];

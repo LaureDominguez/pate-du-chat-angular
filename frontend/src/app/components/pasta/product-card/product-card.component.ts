@@ -8,7 +8,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { FinalProduct } from '../../../services/product.service';
+import { Product } from '../../../services/product.service';
 
 @Component({
   selector: 'app-product-card',
@@ -17,7 +17,7 @@ import { FinalProduct } from '../../../services/product.service';
   imports: [CommonModule, MatCardModule],
 })
 export class ProductCardComponent implements OnChanges {
-  @Input() product!: FinalProduct;
+  @Input() product!: Product;
   @Input() isSelected!: boolean;
   @Output() closeClick: EventEmitter<void> = new EventEmitter<void>();
 

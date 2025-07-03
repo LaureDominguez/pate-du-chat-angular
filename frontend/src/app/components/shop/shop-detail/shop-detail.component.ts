@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { Product } from '../../../models/product';
-import { AppModule } from '../../../app.module';
 import { Ingredient } from '../../../models/ingredient';
+import { MATERIAL_IMPORTS } from '../../../app-material';
 
 @Component({
   selector: 'app-shop-detail',
-  imports: [AppModule],
+  imports: [MATERIAL_IMPORTS],
   templateUrl: './shop-detail.component.html',
   styleUrls: ['./shop-detail.component.scss']
 })

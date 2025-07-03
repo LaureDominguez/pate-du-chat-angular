@@ -1,16 +1,16 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import { AdminModule } from '../admin.module';
-import { AppModule } from '../../../app.module';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ProcessedImage } from '../../../models/image';
 
 import autoAnimate from '@formkit/auto-animate';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+import { MATERIAL_IMPORTS } from '../../../app-material';
 
 @Component({
   selector: 'app-image-carousel',
   imports: [
-    AdminModule,
-    AppModule,
+    ADMIN_SHARED_IMPORTS,
+    MATERIAL_IMPORTS,
   ],
   templateUrl: './image-carousel.component.html',
   styleUrls: ['./image-carousel.component.scss'],
@@ -70,12 +70,12 @@ private clearHoverTimeout(): void {
 
 
   disableAnimation() {
-    console.log('disableAnimation', this.controller);
+    // console.log('disableAnimation', this.controller);
     this.controller?.disable();
   }
 
   enableAnimation() {
-    console.log('enableAnimation', this.controller);
+    // console.log('enableAnimation', this.controller);
     this.controller?.enable();
   }
 

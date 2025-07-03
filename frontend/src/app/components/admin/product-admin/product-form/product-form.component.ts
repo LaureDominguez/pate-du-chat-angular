@@ -3,7 +3,6 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { map, Observable, startWith, take } from 'rxjs';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 
-import { AdminModule } from '../../admin.module';
 import { DialogService } from '../../../../services/dialog.service';
 import { SharedDataService } from '../../../../services/shared-data.service';
 import { Category } from '../../../../models/category';
@@ -14,10 +13,12 @@ import { ImageCarouselComponent } from '../../image-carousel/image-carousel.comp
 import { ProcessedImage } from '../../../../models/image';
 
 import autoAnimate from '@formkit/auto-animate';
+import { ADMIN_SHARED_IMPORTS } from '../../admin-material';
+import { MATERIAL_IMPORTS } from '../../../../app-material';
 
 @Component({
   selector: 'app-product-form',
-  imports: [AdminModule, ImageCarouselComponent],
+  imports: [MATERIAL_IMPORTS, ADMIN_SHARED_IMPORTS, ImageCarouselComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss'],
 })
@@ -82,7 +83,6 @@ export class ProductFormComponent implements OnInit {
     this.ingredients = data.ingredients || [];
     this.dlcsList = data.dlcs || [];
 
-  // console.log('data :', data); // debug
 
     const existingDlc = data.product?.dlc || '';
     const isCustom = existingDlc && !this.dlcsList.includes(existingDlc);
@@ -92,7 +92,6 @@ export class ProductFormComponent implements OnInit {
       data.imagePaths &&
       data.imageUrls.length === data.imagePaths.length
     ) {
-      // console.log('📋 data.imageUrls :', data.imageUrls);
       this.processedImages = data.imageUrls.map((url, index) => ({
         type: 'existing',
         data: url,
@@ -220,25 +219,6 @@ export class ProductFormComponent implements OnInit {
     this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
       this.applyStockQuantityValidators(value);
     });
-
-    // this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
-    //   const stockCtrl = this.productForm.get('stockQuantity');
-    //   // console.log('📋 Type de quantité :', value); // LOG ICI 🔍
-    //   if (value === 'piece') {
-    //     // console.log('📋 pieces :', stockCtrl?.value); // LOG ICI 🔍
-    //     stockCtrl?.setValidators([
-    //       Validators.required,
-    //       Validators.pattern(/^\d+$/),
-    //     ]);
-    //   } else {
-    //     // console.log('📋 kg :', stockCtrl?.value); // LOG ICI 🔍
-    //     stockCtrl?.setValidators([
-    //       Validators.required,
-    //       Validators.pattern(/^\d+(\.\d{1,2})?$/),
-    //     ]);
-    //   }
-    //   stockCtrl?.updateValueAndValidity();
-    // });
   }
 
   ngAfterViewInit(): void {
@@ -392,17 +372,6 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
-
-  ////// Autocomplete des champs price et stock
-  // setDefaultIfEmpty(controlName: string): void {
-  //   const control = this.productForm.get(controlName);
-  //   const value = control?.value;
-
-  //   if (control && (value === null || value === undefined || value === '')) {
-  //     control?.setValue(0);
-  //   }
-  // }
-
   //////////////////////////////////////
   //// Ecoute de shared-data
   private subscribeToDataUpdates(): void {
@@ -467,7 +436,6 @@ export class ProductFormComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sharedDataService.requestCategoryCreation(result);
-      // console.log('📋 Catégorie créée :', result);
       }
     });
   }
@@ -522,8 +490,6 @@ export class ProductFormComponent implements OnInit {
 
   // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
-    // console.log('product-form -> addIngredient -> ingredient :', ingredient);
-
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
       this.ingredientCtrl.setValue('');
@@ -652,7 +618,6 @@ export class ProductFormComponent implements OnInit {
 
   onDownloadImage(imageUrl: string): void {
     const productName = this.data.product?.name || 'Produit';
-    console.log('📋 Form -> Téléchargement de l’image :', imageUrl, 'pour le produit :', productName);
     this.downloadImage.emit({ imagePath: imageUrl, objectName: productName });
   }
 
@@ -681,49 +646,16 @@ export class ProductFormComponent implements OnInit {
   /////////////////////////////////////////////////////////////////////////////////
   ////////////////// Validation du formulaire
   save(): void {
-  // console.log('📋 Formulaire soumis :', this.productForm.value);
-
     Object.values(this.productForm.controls).forEach(control => {
       control.markAsTouched();
-      // this.categoryCtrl.markAsTouched();
-      // this.ingredientCtrl.markAsTouched();
     });
 
     const name = this.productForm.value.name;
-    // console.log("📋 Vérification de l'existence du nom :", name);
     if (name === '' || name === undefined) return;
     else this.checkNameExists.emit(name);
   }
 
-  // validateStockAndPrice(): void {
-  //   // const stockControl = this.productForm.get('stockQuantity');
-  //   const stockValue = this.stockQuantity?.value;
-
-  //   if (stockValue === null || stockValue === undefined || stockValue === '') {
-  //     const message = `Le champ "Quantité en stock" est vide. <br> Souhaitez-vous le remplir avec 0 ? <br> <i>Le produit ne sera pas visible dans le catalogue tant que la quantité en stock est à 0.</i>`;
-
-  //     this.dialogService.confirm(message, {
-  //       title: 'Stock vide',
-  //       confirmText: 'Oui',
-  //       cancelText: 'Non',
-  //     }).subscribe((result) => {
-  //       if (result === 'confirm') {
-  //         this.stockQuantity?.setValue(0);
-  //         this.validateAndSubmit();
-  //       }
-  //     });
-
-  //   } else {
-  //     this.validateAndSubmit();
-  //   }
-  // }
-
   validateAndSubmit(): void {
-    // vérifier si le champ stockQuantity
-    // const quantity = this.productForm.get('stockQuantity')?.value;
-    // if (!quantity || parseFloat(quantity) === 0) {
-    //   this.productForm.get('stock')?.setValue(false);
-    // }
     const quantity = this.stockQuantity?.value;
     if (quantity === null || quantity === undefined || quantity === '') {
       this.stockQuantity?.setValue(null);
@@ -763,22 +695,12 @@ export class ProductFormComponent implements OnInit {
       stock: this.stock?.value,
     };
 
-  // console.log('📋 Données du produit avant envoi :', productData)
-
     this.formValidated.emit({
       productData,
       selectedFiles,
       removedExistingImages: this.removedExistingImages,
       imageOrder,
     });
-
-
-    // this.dialogRef.close({
-    //   productData,
-    //   selectedFiles,
-    //   removedExistingImages: this.removedExistingImages,
-    //   imageOrder,
-    // });
   }
 
   formatNameInput(name: string): string {

@@ -1,5 +1,4 @@
 import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { AdminModule } from '../admin.module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
@@ -10,10 +9,13 @@ import { SharedDataService } from '../../../services/shared-data.service';
 import { SupplierService } from '../../../services/supplier.service';
 import { DialogService } from '../../../services/dialog.service';
 import { IngredientService } from '../../../services/ingredient.service';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+import { ADMIN_SHARED_PROVIDERS } from '../admin.providers';
 
 @Component({
   selector: 'app-supplier-admin',
-  imports: [AdminModule],
+  imports: [ADMIN_SHARED_IMPORTS],
+  providers: [ADMIN_SHARED_PROVIDERS],
   templateUrl: './supplier-admin.component.html',
   styleUrls: ['./supplier-admin.component.scss', '../admin.component.scss']
 })
@@ -193,7 +195,6 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         return of(null);
       })
     ).subscribe();
-    // this.sharedDataService.notifySupplierUpdate();
   }
 
   // create new supplier depuis ingredient-form
@@ -252,23 +253,20 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         extraText: ingredientCount > 0 ? 'Voir les ingrédients' : undefined,
       })
     );
-    // .subscribe(result => {
     if (result === 'cancel') return;
     if (result === 'extra' && canRetry) {
       await this.showRelatedIngredients(supplier);
       return this.checkIngredientsInSupplier(supplier, false); 
     }
 
-      this.supplierService.deleteSupplier(supplier._id!).subscribe({
-        next: () => {
-          this.dialogService.info('Fournisseur supprimé avec succès.');
-          // this.sharedDataService.notifySupplierUpdate(); // Optionnel si reload
-        },
-        error: (err) => {
-          this.dialogService.showHttpError(err);
-        }
-      });
-    // })
+    this.supplierService.deleteSupplier(supplier._id!).subscribe({
+      next: () => {
+        this.dialogService.info('Fournisseur supprimé avec succès.');
+      },
+      error: (err) => {
+        this.dialogService.showHttpError(err);
+      }
+    });
   }
 
   private async showRelatedIngredients(supplier: Supplier): Promise<void> {
@@ -294,7 +292,6 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
     }
   }
   
-
 }
 
 

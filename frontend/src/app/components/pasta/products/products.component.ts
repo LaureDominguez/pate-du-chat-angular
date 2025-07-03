@@ -8,35 +8,35 @@ import {
 
 import {
   ProductService,
-  FinalProduct,
+  Product,
 } from '../../../services/product.service';
 
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { ProductCardComponent } from '../product-card/product-card.component';
-import { AppModule } from '../../../app.module';
+import { MATERIAL_IMPORTS } from '../../../app-material';
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss'],
   standalone: true,
-  imports: [AppModule, ProductCardComponent],
+  imports: [MATERIAL_IMPORTS, ProductCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   // Observables pour les produits et les ingrédients
-  products$: Observable<FinalProduct[]> = this.productService.getFinalProducts();
+  products$: Observable<Product[]> = this.productService.getProducts();
 
   // Données locales
-  products: FinalProduct[] = [];
+  products: Product[] = [];
 
   // Grille d'affichage
   cols: number = 5;
-  grid1: FinalProduct[] = [];
-  grid2: FinalProduct[] = [];
+  grid1: Product[] = [];
+  grid2: Product[] = [];
 
   // Gestion de la sélection
-  selectedProduct: FinalProduct | null = null;
+  selectedProduct: Product | null = null;
   isSelected: boolean = false;
 
   // Observable pour la destruction
@@ -56,7 +56,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   // Sélectionner un produit
-  selectProduct(product: FinalProduct): void {
+  selectProduct(product: Product): void {
     if (!this.products || this.products.length === 0) {
       console.warn('Les produits ne sont pas encore chargés.');
       return;

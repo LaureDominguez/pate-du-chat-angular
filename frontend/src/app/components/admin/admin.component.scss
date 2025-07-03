@@ -1,14 +1,5 @@
 @use '@angular/material' as mat;
 
-mat-table {
-    overflow: auto;
-}
-
-.highlighted-row {
-    background-color: var(--tertiary-fixed) !important;
-    transition: background-color 0.4s ease-in-out;
-}
-
 ::ng-deep .mat-mdc-tooltip-panel {
     background-color: var(--secondary-container) !important;
     color: var(--on-secondary-container) !important;
@@ -74,6 +65,22 @@ mat-table {
             justify-content: center;
         }
     }
+}
+
+// Table styles
+
+mat-table {
+    overflow: auto;
+}
+
+.highlighted-row {
+    background-color: var(--tertiary-fixed) !important;
+    transition: background-color 0.4s ease-in-out;
+}
+
+.warning-row {
+    background-color: var(--primary-fixed-dim);
+    color: var(--on-primary-container);
 }
 
 tr:not(thead tr) {

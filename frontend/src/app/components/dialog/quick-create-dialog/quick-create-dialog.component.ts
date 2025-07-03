@@ -1,7 +1,8 @@
 import { Component, Inject } from '@angular/core';
-import { AdminModule } from '../../admin/admin.module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MATERIAL_IMPORTS } from '../../../app-material';
+import { ADMIN_SHARED_IMPORTS } from '../../admin/admin-material';
 
 interface QuickCreateDialogData {
   title: string;
@@ -18,7 +19,7 @@ interface QuickCreateDialogData {
 @Component({
   selector: 'app-quick-create-dialog',
   standalone: true,
-  imports: [AdminModule],
+  imports: [MATERIAL_IMPORTS, ADMIN_SHARED_IMPORTS],
   templateUrl: './quick-create-dialog.component.html',
   styleUrls: ['./quick-create-dialog.component.scss']
 })

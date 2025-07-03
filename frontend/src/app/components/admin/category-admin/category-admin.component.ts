@@ -1,5 +1,4 @@
 import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { AdminModule } from '../admin.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { Category, CategoryService } from '../../../services/category.service';
 import { MatPaginator } from '@angular/material/paginator';
@@ -10,10 +9,13 @@ import { DEFAULT_CATEGORY } from '../../../models/category';
 import { catchError, firstValueFrom, of, Subject, takeUntil, tap } from 'rxjs';
 import { DialogService } from '../../../services/dialog.service';
 import { ProductService } from '../../../services/product.service';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+import { ADMIN_SHARED_PROVIDERS } from '../admin.providers';
 
 @Component({
   selector: 'app-category-admin',
-  imports: [AdminModule],
+  imports: [ADMIN_SHARED_IMPORTS],
+  providers: [ADMIN_SHARED_PROVIDERS],
   templateUrl: './category-admin.component.html',
   styleUrls: ['./category-admin.component.scss', '../admin.component.scss'],
 })
@@ -186,7 +188,6 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       return of(null);
     })
   ).subscribe();
-    // this.sharedDataService.notifyCategoryUpdate();
     this.categories.sort!.active = 'name';
     this.categories.sort!.direction = 'asc';
     this.categories.sort!.sortChange.emit(); // ⚡️ Re-déclenche le tri
@@ -242,23 +243,20 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
         extraText: productCount > 0 ? 'Voir les produits' : undefined,
       })
     );
-    // .subscribe(result => {
     if (result === 'cancel') return;
     if (result === 'extra' && canRetry) {
       await this.showRelatedProducts(category);
       return this.checkProductsInCategory(category, false);
     }
 
-      this.categoryService.deleteCategory(category._id!).subscribe({
-        next: () => {
-          this.dialogService.info('Catégorie supprimée avec succès.');
-          // this.sharedDataService.notifyCategoryUpdate(); // Optionnel si reload
-        },
-        error: (err) => {
-          this.dialogService.showHttpError(err);
-        }
-      });
-    // });
+    this.categoryService.deleteCategory(category._id!).subscribe({
+      next: () => {
+        this.dialogService.info('Catégorie supprimée avec succès.');
+      },
+      error: (err) => {
+        this.dialogService.showHttpError(err);
+      }
+    });
   }
 
   private async showRelatedProducts(category: Category): Promise<void> {

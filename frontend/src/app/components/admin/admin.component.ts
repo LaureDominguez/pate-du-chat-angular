@@ -1,21 +1,25 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { AdminModule } from './admin.module';
 import { IngredientAdminComponent } from './ingredient-admin/ingredient-admin.component';
 import { ProductAdminComponent } from './product-admin/product-admin.component';
 import { CategoryAdminComponent } from './category-admin/category-admin.component';
 import { SupplierAdminComponent } from './supplier-admin/supplier-admin.component';
 import autoAnimate from '@formkit/auto-animate';
+import { ADMIN_SHARED_IMPORTS } from './admin-material';
+import { MATERIAL_IMPORTS } from '../../app-material';
+import { ADMIN_SHARED_PROVIDERS } from './admin.providers';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
   imports: [
-    AdminModule,
+    MATERIAL_IMPORTS,
+    ADMIN_SHARED_IMPORTS,
     CategoryAdminComponent,
     SupplierAdminComponent,
     IngredientAdminComponent,
     ProductAdminComponent
   ],
+  providers: [ADMIN_SHARED_PROVIDERS],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
 })

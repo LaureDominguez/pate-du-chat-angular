@@ -17,5 +17,5 @@ export class InfoDialogComponent {
       message: string;
       title?: string;
     }
-  ) {console.trace('InfoDialogComponent initialized with data:', data);}
+  ) {}
 }

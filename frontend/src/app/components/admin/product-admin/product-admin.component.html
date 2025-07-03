@@ -171,8 +171,13 @@
         <!-- Header and Row Declarations -->
         <tr mat-header-row *matHeaderRowDef="displayedProductsColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedProductsColumns;"
-            [ngClass]="{ 'highlighted-row': row._id === highlightedProductId }"
-            (click)="onRowClick($event, row)"></tr>
+            [ngClass]="{ 
+                'highlighted-row': row._id === highlightedProductId, 
+                'warning-row': noCompositionID.includes(row._id), 
+                }"
+            (click)="onRowClick($event, row)"
+            matTooltip="{{ noCompositionID.includes(row._id) ? 'La composition de ce produit est vide, veuillez ajouter au moins un ingrédient' : '' }}"
+        ></tr>
 
     </table>
 

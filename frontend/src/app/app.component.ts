@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { NavComponent } from './components/nav/nav.component';
 import { ThemeService } from './services/theme.service';
-import { AppModule } from './app.module';
+import { MATERIAL_IMPORTS } from './app-material';
 // import { DeviceService } from './services/device.service';
 
 @Component({
   selector: 'app-root',
-  imports: [NavComponent, AppModule],
+  imports: [NavComponent, MATERIAL_IMPORTS],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })

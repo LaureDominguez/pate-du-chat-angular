@@ -9,7 +9,7 @@ import { DialogService } from '../../../services/dialog.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { AdminModule } from '../admin.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Ingredient } from '../../../models/ingredient';
 import { Product } from '../../../models/product';
 import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
