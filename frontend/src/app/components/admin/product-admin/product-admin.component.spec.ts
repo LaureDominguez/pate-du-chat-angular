@@ -11,7 +11,7 @@ import { AdminModule } from '../admin.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, BehaviorSubject } from 'rxjs';
 import { ProductFormComponent } from './product-form/product-form.component';
-import { FinalProduct } from '../../../models/product';
+import { Product } from '../../../models/product';
 
 describe('ProductAdminComponent', () => {
   let component: ProductAdminComponent;
@@ -25,7 +25,7 @@ describe('ProductAdminComponent', () => {
 
   const matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
 
-  const mockFinalProduct: FinalProduct = {
+  const mockProduct: Product = {
     _id: '1',
     name: 'Produit A',
     category: {
@@ -50,9 +50,9 @@ describe('ProductAdminComponent', () => {
 
   beforeEach(async () => {
     productServiceSpy = jasmine.createSpyObj('ProductService', [
-      'loadFinalProducts', 'getDlcs', 'createProduct', 'updateProduct', 'deleteProduct', 'checkExistingProducName'
+      'loadProducts', 'getDlcs', 'createProduct', 'updateProduct', 'deleteProduct', 'checkExistingProducName'
     ], {
-      finalProducts$: new BehaviorSubject<FinalProduct[]>([]),
+      Products$: new BehaviorSubject<Product[]>([]),
     });
     productServiceSpy.getDlcs.and.returnValue(of([]));
 
@@ -88,7 +88,7 @@ describe('ProductAdminComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         AdminModule,
-        BrowserAnimationsModule,
+        // BrowserAnimationsModule,
         ProductAdminComponent,
         ProductFormComponent
       ],
@@ -112,7 +112,7 @@ describe('ProductAdminComponent', () => {
     });
 
     productServiceSpy.getDlcs.and.returnValue(of([]));
-    (productServiceSpy.finalProducts$ as BehaviorSubject<FinalProduct[]>).next([mockFinalProduct]);
+    // (productServiceSpy.Products$ as BehaviorSubject<Product[]>).next([mockProduct]);
 
     fixture = TestBed.createComponent(ProductAdminComponent);
     component = fixture.componentInstance;
@@ -127,7 +127,7 @@ describe('ProductAdminComponent', () => {
     component.loadData();
     expect(component.products.data.length).toBe(1);
     expect(component.products.data[0].name).toBe('Produit A');
-    expect(component.products.data[0].category).toEqual(mockFinalProduct.category);
+    expect(component.products.data[0].category).toEqual(mockProduct.category);
   });
 
 
@@ -139,7 +139,7 @@ describe('ProductAdminComponent', () => {
     } as any;
 
     imageServiceSpy.getImageUrl.and.returnValue('http://localhost/uploads/test.jpg');
-    productServiceSpy.checkExistingProducName.and.returnValue(of(false));
+    // productServiceSpy.checkExistingProducName.and.returnValue(of(false));
 
     component.openProductForm(produit);
 
@@ -155,7 +155,7 @@ describe('ProductAdminComponent', () => {
 
 
   it('devrait afficher une erreur si le nom existe déjà', fakeAsync(() => {
-    productServiceSpy.checkExistingProducName.and.returnValue(of(true));
+    // productServiceSpy.checkExistingProducName.and.returnValue(of(true));
     component.openProductForm({ name: 'Produit test' } as any);
     tick();
     expect(dialogServiceSpy.error).toHaveBeenCalledWith('Le nom "Produit test" existe déjà.');
@@ -174,7 +174,7 @@ describe('ProductAdminComponent', () => {
       message: 'Upload réussi'
     }));
     imageServiceSpy.deleteImage.and.returnValue(of({ message: 'Suppression simulée' }));
-    productServiceSpy.createProduct.and.returnValue(of(mockFinalProduct));
+    productServiceSpy.createProduct.and.returnValue(of(mockProduct));
 
     const fakeDialogRef = { close: jasmine.createSpy('close') } as any;
     component.handleProductFormSubmit(resultMock, fakeDialogRef);
@@ -193,7 +193,7 @@ describe('ProductAdminComponent', () => {
       imageOrder: ['/uploads/existante.jpg']
     };
 
-    productServiceSpy.createProduct.and.returnValue(of(mockFinalProduct));
+    productServiceSpy.createProduct.and.returnValue(of(mockProduct));
 
     const fakeDialogRef = { close: jasmine.createSpy('close') } as any;
 
@@ -207,7 +207,7 @@ describe('ProductAdminComponent', () => {
   }));
 
   it('devrait appeler updateProduct et afficher un succès', fakeAsync(() => {
-    productServiceSpy.updateProduct.and.returnValue(of(mockFinalProduct));
+    productServiceSpy.updateProduct.and.returnValue(of(mockProduct));
 
     component.submitProductForm('123', { name: 'Produit modifié' }, () => {
       dialogServiceSpy.success('ok');

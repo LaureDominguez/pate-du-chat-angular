@@ -8,6 +8,8 @@ import { ConfirmDialogComponent } from '../components/dialog/confirm-dialog/conf
 @Injectable({ providedIn: 'root' })
 
 export class DialogService {
+  private shownMessages = new Set<string>();
+
   constructor(private dialog: MatDialog) {}
 
   info(message: string, title = 'Information'): Observable<any> {
@@ -49,6 +51,7 @@ confirm(
     const message = this.extractErrorMessage(error);
     this.error(message);
   }
+
 
   private openInfoDialog(message: string, title?: string): Observable<any> {
     const dialogRef = this.dialog.open(InfoDialogComponent, {

@@ -35,7 +35,7 @@ describe('QuickCreateDialogComponent', () => {
     await TestBed.configureTestingModule({
       imports: [QuickCreateDialogComponent, ReactiveFormsModule],
       providers: [
-        provideNoopAnimations(),
+        // provideNoopAnimations(),
         { provide: MAT_DIALOG_DATA, useValue: mockData },
         { provide: MatDialogRef, useValue: dialogRefSpy }
       ]

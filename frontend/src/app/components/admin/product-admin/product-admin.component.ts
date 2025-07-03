@@ -1,5 +1,5 @@
-import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { firstValueFrom, Subject, takeUntil } from 'rxjs';
+import { ApplicationRef, Component, EventEmitter, NgZone, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { debounceTime, filter, first, firstValueFrom, Subject, take, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import { Ingredient, IngredientService } from '../../../services/ingredient.service';
@@ -34,6 +34,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   isMobile = false;
 
   private unsubscribe$ = new Subject<void>();
+  // private firstLoadDone = false;
+  noComposition: string[] = []; // Liste des produits sans composition
+
 
   displayedProductsColumns: string[] = [
     'name',
@@ -61,7 +64,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     private imageService: ImageService,
     private deviceService: DeviceService,
     private dialog: MatDialog,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+      private ngZone: NgZone,
+  private appRef: ApplicationRef,
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +80,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         // console.log('OS :', this.deviceService.os);
         // console.log('Navigateur :', this.deviceService.browser);
       });
+      // console.log('pas de composition oninit :', this.noComposition);
   }
 
   ngOnDestroy(): void {
@@ -83,6 +89,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    // console.log('pas de composition afterinit :', this.noComposition);
+
     this.products.paginator = this.productsPaginator;
     this.products.sort = this.productsSort;
 
@@ -126,49 +134,35 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
             return (item as any)[property];
         }
       };
-    });
+    });      
   }
 
   loadData(): void {
     this.productService.products$
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((products) => {
-        this.products.data = products.map((product) => {
-          const hasNoComposition = !product.composition || product.composition.length === 0;
+    .pipe(takeUntil(this.unsubscribe$))
+    .subscribe((products) => {
+            this.noComposition = [];
 
-          const productWithMeta: Product & { invalidComposition?: boolean } = {
-            ...product,
-            category: product.category || DEFAULT_CATEGORY,
-            invalidComposition: hasNoComposition,
-          };
+      this.products.data = products.map(product => {
+        const hasNoComposition = !product.composition || product.composition.length === 0;
 
-          if (hasNoComposition && product.stock) {
-            productWithMeta.stock = false;
+        if (hasNoComposition) {
+          this.noComposition.push(`- ${product.name}`);
+        }
 
-            this.productService.updateProduct(product._id!, {
-              ...product,
-              stock: false,
-            }).subscribe({
-              next: () => {
-                this.dialogService.info(`Le produit "${product.name}" a été retiré de la vente car sa composition est vide.`, 'Attention');
-              },
-              error: (err) => {
-                this.dialogService.error(`❌ Erreur mise à jour produit "${product.name}" :`, err);
-              },
-            });
-          }
-
-          if (hasNoComposition) {
-            console.error(`⚠️ Produit "${product.name}" sans composition détecté`);
-            // this.dialogService.error(`⚠️ Produit "${product.name}" sans composition détecté`);
-          }
-
-          return productWithMeta;
-        });
-
-        this.countChanged.emit(this.products.data.length);
+        return {
+          ...product,
+          category: product.category || DEFAULT_CATEGORY,
+          invalidComposition: hasNoComposition,
+        };
       });
 
+      this.countChanged.emit(this.products.data.length);
+
+      if (this.noComposition.length > 0) {
+        this.showNoCompositionWarning();
+      }
+    });
 
     this.categoryService.categories$
       .pipe(takeUntil(this.unsubscribe$))
@@ -182,6 +176,14 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         this.ingredients = ingredients;
       });
   }
+
+  private showNoCompositionWarning(): void {
+    const message = `⚠️ Produits sans composition détectés :\n\n${this.noComposition.join('\n')}`;
+    requestAnimationFrame(() => {
+      this.dialogService.error(message, 'Produits incomplets');
+    });
+  }
+
 
   fetchDlcs(): void {
     this.productService.getDlcs().subscribe((dlcs) => {
@@ -243,7 +245,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
     instance.formValidated.subscribe((formResult) => {
       this.handleProductFormSubmit(formResult, dialogRef);
-      console.log('Formulaire validé avec succès :', formResult);
+      // console.log('Formulaire validé avec succès :', formResult);
     });
   }
 

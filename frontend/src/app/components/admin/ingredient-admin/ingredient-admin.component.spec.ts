@@ -79,7 +79,7 @@ describe('IngredientAdminComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         AdminModule,
-        BrowserAnimationsModule,
+        // BrowserAnimationsModule,
         IngredientAdminComponent,
         IngredientFormComponent
       ],

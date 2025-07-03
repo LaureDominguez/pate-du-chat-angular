@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, map, merge, Observable, tap, throwError } from 'rxjs';
+import { auditTime, BehaviorSubject, catchError, finalize, map, merge, Observable, tap, throwError } from 'rxjs';
 
 import { Product } from '../models/product';
 import { DEFAULT_CATEGORY } from '../models/category';
@@ -16,7 +16,7 @@ export class ProductService {
   products$ = this.productSubject.asObservable();
 
   private dlcsUrl = '../assets/data/dlcs.json';
-
+  private isProcessing = false;
 
   constructor(
     private http: HttpClient,
@@ -28,22 +28,13 @@ export class ProductService {
       this.sharedDataService.productListUpdate$,
       this.sharedDataService.categoryListUpdate$,
       this.sharedDataService.ingredientListUpdate$
-    ).subscribe(() => {
-      this.loadProducts();
+    )
+      .pipe(auditTime(50))
+      .subscribe(() => {
+        if (!this.isProcessing) {
+          this.loadProducts();
+        }
     })
-
-    // this.sharedDataService.productListUpdate$.subscribe(() => {
-    //   this.loadProducts();
-    // });
-
-    // this.sharedDataService.categoryListUpdate$.subscribe(() => {
-    //   this.loadProducts();
-    // });
-
-    // this.sharedDataService.ingredientListUpdate$.subscribe(() => {
-    //   this.loadProducts();
-    // });
-
   }
 
   private loadProducts(): void {
@@ -136,12 +127,17 @@ export class ProductService {
   }
 
   updateProduct(id: string, payload: any): Observable<Product> {
+    console.trace('Mise à jour du produit avec ID:', id);
+    this.isProcessing = true; // Indique que le traitement est en cours
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Product>(url, payload).pipe(
       catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyProductUpdate();
-      }) 
+      }),
+      finalize(() => {
+        this.isProcessing = false; // Réinitialise l'état de traitement
+      })
     );
   }
 

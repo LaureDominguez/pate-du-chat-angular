@@ -23,7 +23,7 @@ describe('ImageCarouselComponent', () => {
       imports: [
         ImageCarouselComponent,
         AdminModule,
-        BrowserAnimationsModule,
+        // BrowserAnimationsModule,
         DragDropModule
       ]
     }).compileComponents();

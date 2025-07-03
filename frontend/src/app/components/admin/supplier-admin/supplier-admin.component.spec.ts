@@ -38,7 +38,7 @@ describe('SupplierAdminComponent', () => {
       imports: [
         SupplierAdminComponent,
         ReactiveFormsModule,
-        BrowserAnimationsModule,
+        // BrowserAnimationsModule,
         ConfirmDialogComponent
       ],
       providers: [

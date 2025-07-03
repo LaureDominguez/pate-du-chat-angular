@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, firstValueFrom, map, merge, Observable, tap, throwError } from 'rxjs';
+import { audit, auditTime, BehaviorSubject, catchError, finalize, firstValueFrom, map, merge, Observable, tap, throwError } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
 import { DEFAULT_SUPPLIER } from '../models/supplier';
@@ -17,6 +17,7 @@ export class IngredientService {
 
   private ingredientsSubject = new BehaviorSubject<Ingredient[]>([]);
   ingredients$ = this.ingredientsSubject.asObservable(); // Observable écoutable
+  private isProcessing = false; // Indicateur de traitement en cours
 
   constructor(
     private http: HttpClient,
@@ -27,17 +28,14 @@ export class IngredientService {
     merge(
       this.sharedDataService.ingredientListUpdate$,
       this.sharedDataService.supplierListUpdate$
-    ).subscribe(() => {
-      this.loadIngredients();
+    )
+      .pipe(auditTime(50))
+      .subscribe(() => {
+        if (!this.isProcessing) {
+          this.loadIngredients();
+        }
     })
 
-    // this.sharedDataService.ingredientListUpdate$.subscribe(() => {
-    //   this.loadIngredients();
-    // });
-
-    // this.sharedDataService.supplierListUpdate$.subscribe(() => {
-    //   this.loadIngredients();
-    // });
   }
 
   // Charge les ingrédients et met à jour le BehaviorSubject
@@ -118,6 +116,7 @@ export class IngredientService {
   }
 
   updateIngredient(id: string, payload: any): Observable<Ingredient> {
+    console.trace('Mise à jour de l\'ingrédient avec ID:', id);
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Ingredient>(url, payload).pipe(
       catchError(this.handleError),
@@ -128,11 +127,15 @@ export class IngredientService {
   }
 
   deleteIngredient(id: string): Observable<{ message: string }> {
+    this.isProcessing = true; // Indique que le traitement est en cours
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
       catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyIngredientUpdate();
+      }),
+      finalize(() => {
+        this.isProcessing = false; // Réinitialise l'état de traitement
       })
     );
   }

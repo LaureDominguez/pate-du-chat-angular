@@ -271,6 +271,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         .updateIngredient(ingredientId, ingredientData)
         .subscribe({
           next: () => {
+            this.dialogService.success(`L’ingrédient <b>"${ingredientData.name}"</b> a bien été modifié.`);
             onSuccess?.();
           },
           error: (error) => {
@@ -282,6 +283,7 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
         next: (res) => {
           this.sharedDataService.resultIngredientCreated(res);
           this.highlightedIngredientId = res._id ?? null;
+          this.dialogService.success(`L’ingrédient <b>"${res.name}"</b> a bien été créé.`);
           onSuccess?.();
         },
         error: (error) => {

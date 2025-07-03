@@ -39,7 +39,7 @@ describe('CategoryAdminComponent', () => {
       imports: [
         CategoryAdminComponent,
         ReactiveFormsModule,
-        BrowserAnimationsModule,
+        // BrowserAnimationsModule,
         ConfirmDialogComponent
       ],
       providers: [
