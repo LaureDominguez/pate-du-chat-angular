@@ -8,41 +8,7 @@ import { ConfirmDialogComponent } from '../components/dialog/confirm-dialog/conf
 @Injectable({ providedIn: 'root' })
 
 export class DialogService {
-  private dialogRefs: MatDialogRef<any>[] = [];
-  private dialogsClosedSubject = new ReplaySubject<void>(1);
-  
-  afterAllDialogsClosed$ = this.dialogsClosedSubject.asObservable();
-
-  constructor(private dialog: MatDialog) {
-    console.log('DialogService initialized');
-    this.dialogsClosedSubject.next();
-    
-    this.dialog.afterOpened.subscribe((ref: MatDialogRef<any>) => {
-      console.log('Dialog opened', ref.id);
-      this.dialogRefs.push(ref);
-      
-      ref.afterClosed().subscribe(() => {
-        console.log('Dialog closed', ref.id);
-        // Retirer le dialogue fermé
-        this.dialogRefs = this.dialogRefs.filter(r => r !== ref);
-        
-        // Émettre si plus de dialogues
-        if (this.dialogRefs.length === 0) {
-          timer(300).subscribe(() => {
-            this.dialogsClosedSubject.next();
-          });
-        }
-      });
-    });
-  }
-
-  // Nouvelle méthode pour déclencher manuellement si nécessaire
-  checkDialogsClosed(): void {
-    console.log('checkDialogsClosed');
-    if (this.dialogRefs.length === 0) {
-      this.dialogsClosedSubject.next();
-    }
-  }
+  constructor(private dialog: MatDialog) {}
 
   info(message: string, title = 'Information'): Observable<any> {
     return this.openInfoDialog(message, title);

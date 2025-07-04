@@ -38,11 +38,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
   private unsubscribe$ = new Subject<void>();
 
-  private isInitialLoad = true;
-  private initialLoadSubject = new Subject<void>();
-  private initialLoadComplete = false;
   private shownWarningOnce = false;
-  // noComposition: string[] = [];
   noCompositionID: string[] = [];
 
 
@@ -87,12 +83,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
         // console.log('OS :', this.deviceService.os);
         // console.log('Navigateur :', this.deviceService.browser);
       });
-
-    setTimeout(() => {
-      this.initialLoadComplete = true;
-      this.initialLoadSubject.next();
-      this.initialLoadSubject.complete();
-    }, 500);
   }
 
   ngOnDestroy(): void {
@@ -150,9 +140,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   loadData(): void {
     this.productService.products$
     .pipe(takeUntil(this.unsubscribe$))
-      // filter(() => this.isInitialLoad))
     .subscribe((products) => {
-      this.isInitialLoad = false;
       this.products.data = products.map(product => ({
         ...product,
         category: product.category || DEFAULT_CATEGORY,
@@ -165,21 +153,14 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       const inStock = currentNoComp.filter(product => product.stock);
       const outOfStock = currentNoComp.filter(product => !product.stock);
 
-      // console.log('Produits sans composition:', currentNoComp);
-      // console.log('produit retenus: ', inStock, outOfStock);
-
       if (inStock.length) {
-        // console.log('Produits en stock:', inStock);
         this.shownWarningOnce = true;
         this.processInStockProducts(inStock);
       }
 
       if (outOfStock.length && !this.shownWarningOnce) {
-        // console.log('Produits hors stock:', outOfStock);
         this.shownWarningOnce = true;
-        // this.waitForDialogsToClose().then(() => {
-          this.showNoCompositionWarning(outOfStock);
-        // });      
+        this.showNoCompositionWarning(outOfStock);
       }
 
       this.countChanged.emit(this.products.data.length);
@@ -198,91 +179,46 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       });
   }
 
-  // private waitForDialogsToClose(): Promise<void> {
-  //   if (typeof document === 'undefined') {
-  //     return Promise.resolve();
-  //   }
-  //   return new Promise((resolve) => {
-  //     // Si aucun dialogue n'est ouvert, résoudre immédiatement
-  //     if (document.querySelectorAll('mat-dialog-container').length === 0) {
-  //       resolve();
-  //       return;
-  //     }
-
-  //     // Sinon, observer les changements de dialogues
-  //     const observer = new MutationObserver((mutations) => {
-  //       if (document.querySelectorAll('mat-dialog-container').length === 0) {
-  //         observer.disconnect();
-  //         resolve();
-  //       }
-  //     });
-
-  //     // Observer uniquement les changements dans le corps du document
-  //     observer.observe(document.body, {
-  //       childList: true,
-  //       subtree: true
-  //     });
-
-  //     // Timeout de sécurité (10 secondes max)
-  //     setTimeout(() => {
-  //       observer.disconnect();
-  //       resolve();
-  //       console.warn('Dialog close timeout reached');
-  //     }, 10000);
-  //   });
-  // }
-
   private processInStockProducts(products: Product[]): void {
-    console.log('processInStockProducts:', products);
     const updates = products.map(product => 
       this.productService.updateProduct(product._id!, { ...product, stock: false })
     );
-  forkJoin(updates).subscribe(() => {
-    // Retour à l'approche simple avec un délai minimal
-    setTimeout(() => {
-      const names = products.map(product => product.name);
+    forkJoin(updates).subscribe(() => {
+          const names = products.map(p => p.name);
+    const openInfo = () =>
       this.dialogService.info(
-        `Produits retirés du stock (composition vide) :<br>${names.join('<br>')}`,
-        'Mise à jour automatique'
+        `Ces produits ont été retirés de la vente <br> (composition vide) :` +
+        `<ul style="margin:0;padding-left:20px">
+          ${names.map(n => `<li>${n}</li>`).join('')}
+        </ul>`,
+        'Mise à jour automatique',
       );
-    }, 300); // Délai court pour laisser les autres dialogues se fermer
-  });
-    // forkJoin(updates).subscribe(() => {
-    //   this.waitForDialogsToClose().then(() => {
-    //     const names = products.map(product => product.name);
-    //     this.dialogService.info(
-    //       `Produits retirés du stock (composition vide) :<br>${names.join('<br>')}`,
-    //       'Mise à jour automatique'
-    //     );
-    //   });
-    // });
+
+      if (this.dialog.openDialogs.length) {
+        this.dialog.afterAllClosed.pipe(take(1)).subscribe(openInfo);
+      } else {
+        openInfo();
+      }
+    });
   }
 
 
   private showNoCompositionWarning(products: Product[]): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+      if (!isPlatformBrowser(this.platformId) || !products.length) return;
 
-    console.log('showNoCompositionWarning:', products);
+  const message =
+    'Il y a des produits sans composition :' +
+    `<ul>
+      ${products.map(p => `<li>${p.name}</li>`).join('')}
+    </ul>`;
 
-    const existingErrorDialog = document.querySelector('.error-dialog-container');
-    if (existingErrorDialog) return;
+  const openError = () => this.dialogService.error(message, 'Produits incomplets');
 
-    // const isBrowser = isPlatformBrowser(this.platformId);
-    const message = `⚠️ Produits sans composition :<br>${products.map(product => product.name).join('<br>')}`;
-    
-    // if (isBrowser) {
-      const existingDialogs = Array.from(document.querySelectorAll('.mat-dialog-container'));
-      const isAlreadyOpen = existingDialogs.some(dialog => 
-        dialog.textContent?.includes('Produits sans composition')
-      );
-    
-      if (!isAlreadyOpen) {
-        this.dialogService.error(message, 'Produits incomplets');
-      }
-      // requestAnimationFrame(() => {
-      //   this.dialogService.error(message, 'Produits incomplets');
-      // });
-    // }
+  if (this.dialog.openDialogs.length) {
+    this.dialog.afterAllClosed.pipe(take(1)).subscribe(openError);
+  } else {
+    openError();
+  }
   }
 
   fetchDlcs(): void {
@@ -291,11 +227,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Ouvrir le formulaire de modif en cliquant sur la ligne
   onRowClick(event: MouseEvent, product: Product): void {
     const target = event.target as HTMLElement;
 
-    // Ne pas ouvrir le formulaire si l'utilisateur clique sur un bouton ou un icône
     if (
       target.closest('button') ||         // clique sur un bouton
       target.closest('mat-icon-button') || // clique sur un bouton Angular Material
@@ -345,7 +279,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
 
     instance.formValidated.subscribe((formResult) => {
       this.handleProductFormSubmit(formResult, dialogRef);
-      // console.log('Formulaire validé avec succès :', formResult);
     });
   }
 
@@ -402,7 +335,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     productData?: any,
     onSuccess?: () => void
   ): void {
-    // console.log('🚀 Envoi du produit au backend :', productData); // LOG ICI 🔍
     if (productId) {
       this.productService
         .updateProduct(productId, productData)
