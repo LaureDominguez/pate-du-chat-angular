@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, catchError, merge, Observable, tap, throwError } from 'rxjs';
 import { SharedDataService } from './shared-data.service';
 import { DEFAULT_SUPPLIER, Supplier } from '../models/supplier';
-import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
+import { DialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +18,7 @@ export class SupplierService {
   constructor(
     private http: HttpClient,
     private sharedDataService: SharedDataService,
-    private dialog: MatDialog
+    private dialogService: DialogService
   ) {
     this.loadSuppliers();
 
@@ -28,18 +28,9 @@ export class SupplierService {
     ).subscribe(() => {
       this.loadSuppliers();
     });
-
-    // this.sharedDataService.supplierListUpdate$.subscribe(() => {
-    //   this.loadSuppliers();
-    // });
-
-    // this.sharedDataService.ingredientListUpdate$.subscribe(() => {
-    //   this.loadSuppliers();
-    // });
   }
 
   private loadSuppliers(): void {
-    // console.trace('Chargement des fournisseurs depuis le serveur...');
     this.http
       .get<Supplier[]>(this.apiUrl)
       .pipe(
@@ -124,11 +115,7 @@ export class SupplierService {
     } else if (error.status === 500) {
       errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
     }
-
-    this.dialog.open(InfoDialogComponent, {
-      width: '400px',
-      data: { message: errorMessage, type: 'error' },
-    });
+    this.dialogService.error(errorMessage);
 
     return throwError(() => new Error(errorMessage));
   }

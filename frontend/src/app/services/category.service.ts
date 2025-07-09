@@ -4,23 +4,20 @@ import { BehaviorSubject, catchError, merge, Observable, tap, throwError } from 
 
 import { Category, DEFAULT_CATEGORY } from '../models/category';
 import { SharedDataService } from './shared-data.service';
-import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CategoryService {
   private apiUrl = 'http://localhost:5000/api/categories';
-
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
-  categories$ = this.categoriesSubject.asObservable(); // Observable écoutable
-
+  categories$ = this.categoriesSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private sharedDataService: SharedDataService,
-    private dialog: MatDialog
+    private dialogService: DialogService
   ) {
     this.loadCategories();
 
@@ -30,18 +27,9 @@ export class CategoryService {
     ).subscribe(() => {
       this.loadCategories();
     })
-
-    // this.sharedDataService.categoryListUpdate$.subscribe(() => {
-    //   this.loadCategories();
-    // });
-
-    // this.sharedDataService.productListUpdate$.subscribe(() => {
-    //   this.loadCategories();
-    // });
   }
 
   private loadCategories(): void {
-    // console.trace('Chargement des catégories depuis le serveur...');
     this.http
       .get<Category[]>(this.apiUrl)
       .pipe(
@@ -104,7 +92,6 @@ export class CategoryService {
     );
   }
 
-  // Supprimer une catégorie
   deleteCategory(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
@@ -125,11 +112,7 @@ export class CategoryService {
     } else if (error.status === 500) {
       errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
     }
-
-    this.dialog.open(InfoDialogComponent, {
-      width: '400px',
-      data: { message: errorMessage, type: 'error' },
-    });
+    this.dialogService.error(errorMessage);
 
     return throwError(() => new Error(errorMessage));
   }

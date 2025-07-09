@@ -5,6 +5,7 @@ import { auditTime, BehaviorSubject, catchError, finalize, map, merge, Observabl
 import { Product } from '../models/product';
 import { DEFAULT_CATEGORY } from '../models/category';
 import { SharedDataService } from './shared-data.service';
+import { DialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +21,8 @@ export class ProductService {
 
   constructor(
     private http: HttpClient,
-    private sharedDataService: SharedDataService
+    private sharedDataService: SharedDataService,
+    private dialogService: DialogService
   ) {
     this.loadProducts();
 
@@ -38,7 +40,6 @@ export class ProductService {
   }
 
   private loadProducts(): void {
-    // console.trace('Chargement des produits depuis le serveur...');
     this.http.get<Product[]>(this.apiUrl).pipe(
       map((products) =>
         products.map((product) => ({
@@ -104,8 +105,6 @@ export class ProductService {
     let url = `${this.apiUrl}/check-name/${encodeURIComponent(name)}`;
     if (excludedId) {
       url += `?excludedId=${excludedId}`;
-      // console.log('Excluded ID:', excludedId);
-      // console.log('URL:', url);
     }
     return this.http
       .get<boolean>(url)
@@ -119,35 +118,30 @@ export class ProductService {
 
   createProduct(payload: any): Observable<Product> {
     return this.http.post<Product>(this.apiUrl, payload).pipe(
-      catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyProductUpdate();
-      }) 
+      }),
+      catchError(this.handleError.bind(this))
     );
   }
 
   updateProduct(id: string, payload: any): Observable<Product> {
-    // console.trace('Mise à jour du produit avec ID:', id);
-    this.isProcessing = true; // Indique que le traitement est en cours
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Product>(url, payload).pipe(
-      catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyProductUpdate();
       }),
-      finalize(() => {
-        this.isProcessing = false; // Réinitialise l'état de traitement
-      })
+      catchError(this.handleError.bind(this))
     );
   }
 
   deleteProduct(id: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
-      catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyProductUpdate();
-      })
+      }),
+      catchError(this.handleError.bind(this))
     );
   }
 
@@ -156,12 +150,10 @@ export class ProductService {
 
     if (error.status === 400) {
       if (error.error.errors) {
-        // Express Validator envoie un tableau d'erreurs → on concatène les messages
         errorMessage = error.error.errors
           .map((err: any) => err.msg)
           .join('<br>');
       } else if (error.error.msg) {
-        // Cas d'une erreur unique (ex: "Cet ingrédient existe déjà.")
         errorMessage = error.error.msg;
       } else {
         errorMessage = 'Requête invalide. Vérifiez vos champs.';
@@ -171,6 +163,7 @@ export class ProductService {
     } else if (error.status === 500) {
       errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
     }
+    this.dialogService.error(errorMessage);
 
     return throwError(() => new Error(errorMessage));
   }

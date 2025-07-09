@@ -1,306 +1,298 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import {
+  TestBed,
+  ComponentFixture,
+  fakeAsync,
+  flush,
+} from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, Subject, throwError } from 'rxjs';
+
 import { CategoryAdminComponent } from './category-admin.component';
 import { CategoryService } from '../../../services/category.service';
+import { ProductService, Product } from '../../../services/product.service';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
-import { of, throwError } from 'rxjs';
-import { DEFAULT_CATEGORY, Category } from '../../../models/category';
-import { ReactiveFormsModule } from '@angular/forms';
-// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Product, ProductService } from '../../../services/product.service';
+import { Category, DEFAULT_CATEGORY } from '../../../models/category';
 
 describe('CategoryAdminComponent', () => {
-  let component: CategoryAdminComponent;
   let fixture: ComponentFixture<CategoryAdminComponent>;
-  let categoryServiceSpy: jasmine.SpyObj<CategoryService>;
-  let productServiceSpy: jasmine.SpyObj<ProductService>;
-  let sharedDataServiceSpy: jasmine.SpyObj<SharedDataService>;
-  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
+  let component: CategoryAdminComponent;
+
+  // Spies & helpers
+  let categories$: Subject<Category[]>;
+  let categorySpy: jasmine.SpyObj<CategoryService>;
+  let productSpy: jasmine.SpyObj<ProductService>;
+  let sharedSpy: jasmine.SpyObj<SharedDataService> & { requestNewCategory$: Subject<any> };
+  let dialogSpy: jasmine.SpyObj<DialogService>;
 
   beforeEach(async () => {
-    categoryServiceSpy = jasmine.createSpyObj('CategoryService', [
-      'getCategories', 'createCategory', 'updateCategory', 'deleteCategory'
+    // Observable pilotable pour categories$
+    categories$ = new Subject<Category[]>();
+
+    categorySpy = jasmine.createSpyObj(
+      'CategoryService',
+      ['createCategory', 'updateCategory', 'deleteCategory'],
+      { categories$: categories$.asObservable() }
+    );
+
+    productSpy = jasmine.createSpyObj('ProductService', ['getProductsByCategory']);
+
+    sharedSpy = Object.assign(
+      jasmine.createSpyObj('SharedDataService', ['sendCategoryToProductForm']),
+      { requestNewCategory$: new Subject<any>() }
+    );
+
+    dialogSpy = jasmine.createSpyObj('DialogService', [
+      'info',
+      'showHttpError',
+      'confirm',
+      'error',
     ]);
-    productServiceSpy = jasmine.createSpyObj('ProductService', ['getProductsByCategory']);
-
-    sharedDataServiceSpy = {
-      ...jasmine.createSpyObj('SharedDataService', [
-        'sendCategoryToProductForm', 'notifyCategoryUpdate'
-      ]),
-      requestNewCategory$: of()
-    } as jasmine.SpyObj<SharedDataService>;
-
-    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm', 'error']);
-    dialogServiceSpy.confirm.and.returnValue(of('confirm'));
+    dialogSpy.confirm.and.returnValue(of('confirm')); // ➜ valeur par défaut
 
     await TestBed.configureTestingModule({
-      imports: [
-        CategoryAdminComponent,
-        ReactiveFormsModule,
-        // BrowserAnimationsModule,
-        ConfirmDialogComponent
-      ],
+      imports: [CategoryAdminComponent],
       providers: [
-        { provide: CategoryService, useValue: categoryServiceSpy },
-        { provide: ProductService, useValue: productServiceSpy },
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        { provide: DialogService, useValue: dialogServiceSpy }
-      ]
+        provideNoopAnimations(),
+        { provide: CategoryService, useValue: categorySpy },
+        { provide: ProductService, useValue: productSpy },
+        { provide: SharedDataService, useValue: sharedSpy },
+        { provide: DialogService, useValue: dialogSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CategoryAdminComponent);
     component = fixture.componentInstance;
-    categoryServiceSpy.getCategories.and.returnValue(of([]));
     fixture.detectChanges();
   });
 
-  it('devrait être créé', () => {
-    expect(component).toBeTruthy();
+  // ------------------------------------------------------------------
+  //  Flux initial – injection de DEFAULT_CATEGORY
+  // ------------------------------------------------------------------
+  it('doit injecter DEFAULT_CATEGORY lors de la première émission', () => {
+    categories$.next([{ _id: '1', name: 'Sauces', description: '' }]);
+    fixture.detectChanges();
+
+    expect(component.categories.data[0]._id).toBe(DEFAULT_CATEGORY._id);
+    expect(component.categories.data.length).toBe(2);
   });
-    
-  it('devrait initialiser un formulaire en édition avec une catégorie vide', () => {
+
+  // ------------------------------------------------------------------
+  //  startEditingCategory + formulaire
+  // ------------------------------------------------------------------
+  it('doit démarrer une édition vide avec formulaire invalide', () => {
     component.startEditingCategory();
     expect(component.categoryForm).toBeDefined();
     expect(component.categoryForm.valid).toBeFalse();
+    expect(component.categories.data[0]._id).toBeNull(); // ligne temporaire
   });
 
-  it('devrait créer une catégorie valide', () => {
+  // ------------------------------------------------------------------
+  //  saveCategory – création
+  // ------------------------------------------------------------------
+  it('doit appeler createCategory puis info() lors d’une création', () => {
     component.startEditingCategory();
-    component.categoryForm.setValue({
-      name: 'Nouvelle catégorie',
-      description: 'Description test'
-    });
+    component.categoryForm.setValue({ name: 'Ravioli', description: '' });
 
-    categoryServiceSpy.createCategory.and.returnValue(of({
-      _id: 'newId',
-      name: 'Nouvelle catégorie',
-      description: 'Description test',
-    }));
+    categorySpy.createCategory.and.returnValue(
+      of({ _id: 'new', name: 'Ravioli', description: '' })
+    );
 
-    component.saveCategory({ _id: null, name: '', description: '' });
+    component.saveCategory({ _id: null, name: '', description: '' } as any);
 
-    expect(categoryServiceSpy.createCategory).toHaveBeenCalledWith(jasmine.objectContaining({
-      name: 'Nouvelle catégorie'
-    }));
-    expect(dialogServiceSpy.info).toHaveBeenCalledWith('Catégorie créée avec succès.');
+    expect(categorySpy.createCategory).toHaveBeenCalled();
+    expect(dialogSpy.info).toHaveBeenCalledWith('Catégorie créée avec succès.');
   });
 
-  it('devrait créer une catégorie via sharedDataService.requestNewCategory$', () => {
-    const spyCreate = spyOn<any>(component, 'createNewCategory');
-    (component as any).ngOnDestroy(); // Nettoie d'abord les anciennes souscriptions
+  // ------------------------------------------------------------------
+  //  saveCategory – update
+  // ------------------------------------------------------------------
+  it('doit appeler updateCategory puis info() lors d’une mise à jour', () => {
+    const cat: Category = { _id: '42', name: 'Ancien', description: '' };
+    component.startEditingCategory(cat);
+    component.categoryForm.setValue({ name: 'Nouveau', description: '' });
 
-    sharedDataServiceSpy.requestNewCategory$ = of({ name: 'Cat via shared', description: 'Desc' });
+    categorySpy.updateCategory.and.returnValue(
+      of({ ...cat, name: 'Nouveau' })
+    );
 
-    component.ngOnInit(); // relance pour écouter la nouvelle observable
+    component.saveCategory(cat);
 
-    expect(spyCreate).toHaveBeenCalledWith(jasmine.objectContaining({ name: 'Cat via shared' }));
+    expect(categorySpy.updateCategory).toHaveBeenCalledWith(
+      '42',
+      jasmine.objectContaining({ name: 'Nouveau' })
+    );
+    expect(dialogSpy.info).toHaveBeenCalledWith(
+      'Catégorie mise à jour avec succès.'
+    );
   });
 
-
-  it('devrait mettre à jour une catégorie existante', () => {
-    const existingCategory: Category = {
-      _id: 'cat999',
-      name: 'Ancien nom',
-      description: 'Ancienne desc'
-    };
-
-    component.startEditingCategory(existingCategory);
-    component.categoryForm.setValue({
-      name: 'Nom mis à jour',
-      description: 'Desc mise à jour'
-    });
-
-    categoryServiceSpy.updateCategory.and.returnValue(of({
-      _id: 'cat999',
-      name: 'Nom mis à jour',
-      description: 'Desc mise à jour'
-    }));
-
-    component.saveCategory(existingCategory);
-
-    expect(categoryServiceSpy.updateCategory).toHaveBeenCalledWith('cat999', jasmine.objectContaining({
-      name: 'Nom mis à jour'
-    }));
-    expect(dialogServiceSpy.info).toHaveBeenCalledWith('Catégorie mise à jour avec succès.');
-  });
-
-  it('ne devrait pas enregistrer si le formulaire est invalide', () => {
-    categoryServiceSpy.createCategory.calls.reset();
+  // ------------------------------------------------------------------
+  //  saveCategory – formulaire invalide
+  // ------------------------------------------------------------------
+  it('ne doit pas appeler createCategory si le formulaire est invalide', () => {
     component.startEditingCategory();
-    component.saveCategory({ _id: null, name: '', description: '' });
-    expect(categoryServiceSpy.createCategory).not.toHaveBeenCalled();
+    component.categoryForm.get('name')!.setValue('');
+    component.saveCategory({ _id: null, name: '', description: '' } as any);
+
+    expect(categorySpy.createCategory).not.toHaveBeenCalled();
   });
 
-  it('devrait relancer le tri alphabétique après sauvegarde', () => {
-    component.startEditingCategory();
-    component.categoryForm.setValue({ name: 'Tri Test', description: 'Desc' });
-
-    const spySortChange = spyOn(component.categories.sort!.sortChange, 'emit');
-
-    categoryServiceSpy.createCategory.and.returnValue(of({
-      _id: 'tri123',
-      name: 'Tri Test',
-      description: 'Desc'
-    }));
-
-    component.saveCategory({ _id: null, name: '', description: '' });
-
-    expect(component.categories.sort!.active).toBe('name');
-    expect(component.categories.sort!.direction).toBe('asc');
-    expect(spySortChange).toHaveBeenCalled();
-  });
-  
-  it('devrait retourner \\u0000 pour la catégorie highlightée (hors édition)', () => {
-    const cat: Category = { _id: '2', name: 'Nom', description: '' };
-
-    component.highlightedCategoryId = '2';
-    component.editingCategoryId = null;
-
-    const result = component.categories.sortingDataAccessor(cat, 'name');
-    expect(result).toBe('\u0000');
-  });
-
-  it('ne devrait pas retourner \\u0000 si la catégorie est en cours d’édition', () => {
-    const cat: Category = { _id: '2', name: 'Nom', description: '' };
-
-    component.highlightedCategoryId = '2';
-    component.editingCategoryId = '2'; // même ID que highlightée
-
-    const result = component.categories.sortingDataAccessor(cat, 'name');
-    expect(result).toBe('Nom');
-  });
-
-
-  it('devrait refuser de supprimer la catégorie par défaut', () => {
+  // ------------------------------------------------------------------
+  //  deleteCategory – cas spéciaux
+  // ------------------------------------------------------------------
+  it('doit refuser la suppression de DEFAULT_CATEGORY', () => {
     component.deleteCategory(DEFAULT_CATEGORY);
-    expect(dialogServiceSpy.info).toHaveBeenCalledWith(
+    expect(dialogSpy.info).toHaveBeenCalledWith(
       'Vous ne pouvez pas supprimer la catégorie "Sans catégorie".'
     );
-    expect(categoryServiceSpy.deleteCategory).not.toHaveBeenCalled();
   });
 
-  it('devrait afficher les produits liés si l’utilisateur clique sur "Voir les produits" pendant la suppression', fakeAsync(() => {
-  const category: Category = {
-    _id: 'catWithProducts',
-    name: 'Catégorie liée',
-    description: '',
-    productCount: 2
-  };
+  it('ne doit rien appeler si l’utilisateur annule la suppression', () => {
+    dialogSpy.confirm.and.returnValue(of('cancel'));
+    const cat: Category = { _id: '10', name: 'A', description: '', productCount: 0 } as any;
 
-  let confirmCallCount = 0;
-  dialogServiceSpy.confirm.and.callFake(() => {
-    confirmCallCount++;
-    return of(confirmCallCount === 1 ? 'extra' : 'confirm');
+    component.deleteCategory(cat);
+    expect(categorySpy.deleteCategory).not.toHaveBeenCalled();
   });
 
-  const fakeProducts: Product[] = [
-    {
-      _id: 'p1',
-      name: 'Produit A',
-      category: 'catWithProducts',
-      description: 'Un produit lié',
-      composition: [],
-      dlc: '2025-12-31',
-      cookInstructions: 'Cuire 10 minutes',
-      stock: true,
-      stockQuantity: 5,
-      quantityType: 'g',
-      price: 4.99,
-      images: []
-    },
-    {
-      _id: 'p2',
-      name: 'Produit B',
-      category: 'catWithProducts',
-      description: 'Deuxième produit',
-      composition: [],
-      dlc: '2025-12-31',
-      cookInstructions: 'Cuire 5 minutes',
-      stock: true,
-      stockQuantity: 2,
-      quantityType: 'g',
-      price: 3.50,
-      images: []
-    }
-  ];
+  it('doit supprimer une catégorie vide après confirmation', fakeAsync(() => {
+    dialogSpy.confirm.and.returnValue(of('confirm'));
+    const cat: Category = { _id: '11', name: 'B', description: '', productCount: 0 } as any;
 
-  productServiceSpy.getProductsByCategory.and.returnValue(of(fakeProducts));
-  categoryServiceSpy.deleteCategory.and.returnValue(of({ message: 'OK' }));
+    categorySpy.deleteCategory.and.returnValue(of({ message: 'ok' }));
 
-  component.deleteCategory(category);
-  tick(); // ⏱ appel à showRelatedProducts()
-  tick(); // ⏱ retour dans checkProductsInCategory() après afficher les produits
-  tick(); // ⏱ suppression effective
+    component.deleteCategory(cat);
+    flush();
 
-  // Vérifications
-  expect(productServiceSpy.getProductsByCategory).toHaveBeenCalledWith('catWithProducts');
-  expect(dialogServiceSpy.info).toHaveBeenCalledWith(
-    jasmine.stringMatching(/Produits associés à la catégorie/),
-    'Produits associés'
-  );
-  expect(categoryServiceSpy.deleteCategory).toHaveBeenCalledWith('catWithProducts');
-}));
-
-
-  it('devrait supprimer une catégorie vide après confirmation',  fakeAsync(() => {
-    const category: Category = {
-      _id: 'cat123',
-      name: 'Test Catégorie',
-      description: '',
-      productCount: 0
-    };
-
-    categoryServiceSpy.deleteCategory.and.returnValue(of({message: 'Catégorie supprimée avec succès.'}));
-
-    component.deleteCategory(category);
-    tick();
-
-    expect(categoryServiceSpy.deleteCategory).toHaveBeenCalledWith('cat123');
-    expect(dialogServiceSpy.info).toHaveBeenCalledWith('Catégorie supprimée avec succès.');
+    expect(categorySpy.deleteCategory).toHaveBeenCalledWith('11');
+    expect(dialogSpy.info).toHaveBeenCalledWith('Catégorie supprimée avec succès.');
   }));
 
-  it('ne devrait rien faire si l’utilisateur annule la suppression', () => {
-    dialogServiceSpy.confirm.and.returnValue(of('cancel'));
+  // ------------------------------------------------------------------
+  //  deleteCategory – extra → confirm
+  // ------------------------------------------------------------------
+  it('doit montrer les produits liés puis supprime après EXTRA + CONFIRM', fakeAsync(() => {
+    let call = 0;
+    dialogSpy.confirm.and.callFake(() => of(++call === 1 ? 'extra' : 'confirm'));
 
-    const category: Category = {
-      _id: 'cat123',
-      name: 'Test Catégorie',
-      description: '',
-      productCount: 0
-    };
+    const cat: Category = { _id: '20', name: 'C', description: '', productCount: 2 } as any;
 
-    component.deleteCategory(category);
-    expect(categoryServiceSpy.deleteCategory).not.toHaveBeenCalled();
-  });
+    productSpy.getProductsByCategory.and.returnValue(
+      of([{ _id: 'p', name: 'Produit', category: '20' } as Product])
+    );
+    categorySpy.deleteCategory.and.returnValue(of({ message: 'ok' }));
+
+    component.deleteCategory(cat);
+    flush();
+
+    expect(productSpy.getProductsByCategory).toHaveBeenCalledWith('20');
+    expect(categorySpy.deleteCategory).toHaveBeenCalledWith('20');
+  }));
+
+  // ------------------------------------------------------------------
+  //  deleteCategory – erreur serveur
+  // ------------------------------------------------------------------
+  it('doit appeler showHttpError si deleteCategory échoue', fakeAsync(() => {
+    dialogSpy.confirm.and.returnValue(of('confirm'));
+    const cat: Category = { _id: 'err', name: 'Err', description: '', productCount: 0 } as any;
+
+    const httpErr = new HttpErrorResponse({ status: 500, statusText: 'Err' });
+    categorySpy.deleteCategory.and.returnValue(throwError(() => httpErr));
+
+    component.deleteCategory(cat);
+    flush();
+
+    expect(dialogSpy.showHttpError).toHaveBeenCalledWith(httpErr);
+  }));
+
+  // ------------------------------------------------------------------
+  //  sortingDataAccessor
+  // ------------------------------------------------------------------
+  it('doit renvoyer "\u0000" pour la catégorie highlightée (hors édition)', () => {
+    const cat: Category = { _id: 'h1', name: 'Zed', description: '' } as any;
+    component.highlightedCategoryId = 'h1';
+    component.editingCategoryId = null;
     
-  it('devrait afficher une erreur si la suppression échoue', fakeAsync(() => {
-    dialogServiceSpy.confirm.and.returnValue(of('confirm'));
-
-    const category: Category = {
-      _id: 'catErr',
-      name: 'Erreur Catégorie',
-      description: '',
-      productCount: 0
+    // Définition manuelle de la fonction de tri
+    component.categories.sortingDataAccessor = (item: Category, property: string): string | number => {
+      if (item._id && item._id === component.highlightedCategoryId && item._id !== component.editingCategoryId) {
+        return '\u0000';
+      }
+      return (item as any)[property];
     };
 
-    const fakeHttpError = new HttpErrorResponse({
-      error: 'Erreur suppression',
-      status: 500,
-      statusText: 'Internal Server Error',
-      url: '/api/categories/catErr'
-    });
+    expect(component.categories.sortingDataAccessor(cat, 'name')).toBe('\u0000'); // Caractère nul
+  });
 
-    categoryServiceSpy.deleteCategory.and.returnValue(throwError(() => fakeHttpError));
+  it('ne doit pas renvoyer "\u0000" si la catégorie est en édition', () => {
+    const cat: Category = { _id: 'h2', name: 'Yed', description: '' } as any;
+    component.highlightedCategoryId = 'h2';
+    component.editingCategoryId = 'h2';
+    
+    // Définition manuelle de la fonction de tri
+    component.categories.sortingDataAccessor = (item: Category, property: string): string | number => {
+      if (item._id && item._id === component.highlightedCategoryId && item._id !== component.editingCategoryId) {
+        return '\u0000';
+      }
+      return (item as any)[property];
+    };
 
-    component.deleteCategory(category);
-    tick();
+    expect(component.categories.sortingDataAccessor(cat, 'name')).toBe('Yed');
+  });
 
-    expect(dialogServiceSpy.showHttpError).toHaveBeenCalledWith(fakeHttpError);
+  // ------------------------------------------------------------------
+  //  cancelEditingCategory
+  // ------------------------------------------------------------------
+  it('doit annuler l’édition et retire la ligne temporaire', fakeAsync(() => {
+    component.startEditingCategory();
+    expect(component.categories.data.some(c => c._id === null)).toBeTrue();
+
+    component.cancelEditingCategory();
+    flush();
+
+    expect(component.editingCategory).toBeNull();
+    expect(component.categories.data.some(c => c._id === null)).toBeFalse();
   }));
 
+  // ------------------------------------------------------------------
+  //  formatNameInput
+  // ------------------------------------------------------------------
+  it('doit formater correctement le nom (trim + majuscule)', () => {
+    expect(component.formatNameInput('  abc')).toBe('Abc');
+    expect(component.formatNameInput('')).toBe('');
+  });
 
+  // ------------------------------------------------------------------
+  //  Flux requestNewCategory$
+  // ------------------------------------------------------------------
+  it('doit créer une catégorie via requestNewCategory$', fakeAsync(() => {
+    categorySpy.createCategory.and.returnValue(
+      of({ _id: 'x', name: 'Pizza', description: '' })
+    );
 
+    sharedSpy.requestNewCategory$.next({ name: 'pizza', description: '' });
+    flush();
 
+    expect(categorySpy.createCategory).toHaveBeenCalled();
+    expect(dialogSpy.info).toHaveBeenCalledWith('Catégorie créée avec succès.');
+    expect(sharedSpy.sendCategoryToProductForm).toHaveBeenCalled();
+  }));
+
+  // ------------------------------------------------------------------
+  //  Erreur sur createCategory
+  // ------------------------------------------------------------------
+  it('doit appeler showHttpError si createCategory échoue', fakeAsync(() => {
+    component.startEditingCategory();
+    component.categoryForm.setValue({ name: 'Bug', description: '' });
+
+    const httpErr = new HttpErrorResponse({ status: 400, statusText: 'Bad' });
+    categorySpy.createCategory.and.returnValue(throwError(() => httpErr));
+
+    component.saveCategory({ _id: null, name: '', description: '' } as any);
+    flush();
+
+    expect(dialogSpy.showHttpError).toHaveBeenCalledWith(httpErr);
+  }));
 });

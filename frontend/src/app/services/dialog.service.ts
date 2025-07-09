@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, ReplaySubject, Subject, timer } from 'rxjs';
+import { Observable } from 'rxjs';
 import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
 import { ConfirmDialogComponent } from '../components/dialog/confirm-dialog/confirm-dialog.component';
 

@@ -8,7 +8,9 @@ import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
-import { AdminModule } from '../admin.module';
+// import { AdminModule } from '../admin.module';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+
 // import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Ingredient } from '../../../models/ingredient';
 import { Product } from '../../../models/product';
@@ -78,7 +80,7 @@ describe('IngredientAdminComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [
-        AdminModule,
+        ADMIN_SHARED_IMPORTS,
         // BrowserAnimationsModule,
         IngredientAdminComponent,
         IngredientFormComponent

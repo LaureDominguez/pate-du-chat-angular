@@ -1,29 +1,33 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { By } from '@angular/platform-browser';
+
+// ------------------------------------------------------------------
+//  Spécifications – ConfirmDialogComponent
+// ------------------------------------------------------------------
+//  Vérifie : rendu message + libellés, actions confirm/cancel/extra
+// ------------------------------------------------------------------
 
 describe('ConfirmDialogComponent', () => {
-  let component: ConfirmDialogComponent;
   let fixture: ComponentFixture<ConfirmDialogComponent>;
+  let component: ConfirmDialogComponent;
   let dialogRefSpy: jasmine.SpyObj<MatDialogRef<ConfirmDialogComponent>>;
+
+  const dialogData = {
+    message: 'Confirmer ?',
+    confirmButtonText: 'Oui',
+    cancelButtonText: 'Non',
+    extraButton: 'Autre',
+  };
 
   beforeEach(async () => {
     dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
 
     await TestBed.configureTestingModule({
-      imports: [ConfirmDialogComponent],
+      imports: [ConfirmDialogComponent], // stand‑alone
       providers: [
         { provide: MatDialogRef, useValue: dialogRefSpy },
-        {
-          provide: MAT_DIALOG_DATA,
-          useValue: {
-            message: 'Confirmer cette action ?',
-            confirmButtonText: 'Oui',
-            cancelButtonText: 'Non',
-            extraButton: 'Autre',
-          },
-        },
+        { provide: MAT_DIALOG_DATA, useValue: dialogData },
       ],
     }).compileComponents();
 
@@ -32,21 +36,29 @@ describe('ConfirmDialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('devrait être créé', () => {
+  it('doit être créé', () => {
     expect(component).toBeTruthy();
   });
 
-  it('devrait fermer la boîte avec "confirm" quand on clique sur confirmer', () => {
+  it('doit afficher le message et les libellés dans le DOM', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain(dialogData.message);
+    expect(el.textContent).toContain(dialogData.confirmButtonText);
+    expect(el.textContent).toContain(dialogData.cancelButtonText);
+    expect(el.textContent).toContain(dialogData.extraButton);
+  });
+
+  it('doit fermer avec "confirm" lorsque onConfirm() est appelé', () => {
     component.onConfirm();
     expect(dialogRefSpy.close).toHaveBeenCalledWith('confirm');
   });
 
-  it('devrait fermer la boîte avec "cancel" quand on clique sur annuler', () => {
+  it('doit fermer avec "cancel" lorsque onCancel() est appelé', () => {
     component.onCancel();
     expect(dialogRefSpy.close).toHaveBeenCalledWith('cancel');
   });
 
-  it('devrait fermer la boîte avec "extra" quand on clique sur extra', () => {
+  it('doit fermer avec "extra" lorsque onExtra() est appelé', () => {
     component.onExtra();
     expect(dialogRefSpy.close).toHaveBeenCalledWith('extra');
   });

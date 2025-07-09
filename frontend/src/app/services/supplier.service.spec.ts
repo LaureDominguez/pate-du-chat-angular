@@ -1,148 +1,148 @@
 import { TestBed } from '@angular/core/testing';
-import { SupplierService, Supplier } from './supplier.service';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { SharedDataService } from './shared-data.service';
-import { MatDialog } from '@angular/material/dialog';
-import { of } from 'rxjs';
-import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
 import { provideHttpClient } from '@angular/common/http';
+import {
+  provideHttpClientTesting,
+  HttpTestingController,
+} from '@angular/common/http/testing';
+import { SupplierService } from './supplier.service';
+import { SharedDataService } from './shared-data.service';
+import { DialogService } from './dialog.service';
+import { of } from 'rxjs';
+import { Supplier, DEFAULT_SUPPLIER } from '../models/supplier';
+
+// ------------------------------------------------------------------
+//  Spécifications du SupplierService (Angular 19 providers)
+// ------------------------------------------------------------------
+//  – Utilise provideHttpClient / provideHttpClientTesting
+//  – Teste : chargement initial, CRUD, gestion d'erreur, tri + fournisseur par défaut
+// ------------------------------------------------------------------
 
 describe('SupplierService', () => {
   let service: SupplierService;
   let httpMock: HttpTestingController;
-  let sharedDataService: jasmine.SpyObj<SharedDataService>;
-  let dialogSpy: jasmine.SpyObj<MatDialog>;
+  let sharedDataSpy: jasmine.SpyObj<SharedDataService>;
+  let dialogSpy: jasmine.SpyObj<DialogService>;
 
-  const mockSuppliers: Supplier[] = [
-    { _id: '1', name: 'Supplier 1', description: 'Description 1' },
-    { _id: '2', name: 'Supplier 2', description: 'Description 2' },
+  const apiUrl = 'http://localhost:5000/api/suppliers';
+  const baseSuppliers: Supplier[] = [
+    { _id: '1', name: 'Fournisseur A', description: 'Desc 1' } as Supplier,
+    { _id: '2', name: 'Fournisseur B', description: 'Desc 2' } as Supplier,
   ];
 
   beforeEach(() => {
-    const sharedDataServiceSpy = jasmine.createSpyObj('SharedDataService', [
-      'notifySupplierUpdate'
-    ], {
-      supplierListUpdate$: of(), // ✅ mock Observable vide
-      ingredientListUpdate$: of() // ✅ mock Observable vide
-    });
+    sharedDataSpy = jasmine.createSpyObj(
+      'SharedDataService',
+      ['notifySupplierUpdate'],
+      {
+        supplierListUpdate$: of(),
+        ingredientListUpdate$: of(),
+      }
+    );
 
-    const dialogSpyObj = jasmine.createSpyObj('MatDialog', ['open']);
+    dialogSpy = jasmine.createSpyObj('DialogService', ['error']);
 
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         SupplierService,
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        { provide: MatDialog, useValue: dialogSpyObj }
-      ]
+        { provide: SharedDataService, useValue: sharedDataSpy },
+        { provide: DialogService, useValue: dialogSpy },
+      ],
     });
 
     service = TestBed.inject(SupplierService);
     httpMock = TestBed.inject(HttpTestingController);
-    sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
-    dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
 
-    // Intercepte le GET déclenché automatiquement au démarrage
-    httpMock.expectOne('http://localhost:5000/api/suppliers').flush([]);
+    // Intercepte le GET initial déclenché dans le constructeur (réponse vide)
+    httpMock.expectOne(apiUrl).flush([]);
   });
 
   afterEach(() => {
     httpMock.verify();
   });
 
-  it('devrait être créé', () => {
-    console.log('SupplierService créé');
+  // ---------------------------------------------------------------
+  //  Construction & chargement initial
+  // ---------------------------------------------------------------
+  it('doit être créé', () => {
     expect(service).toBeTruthy();
   });
 
-  it('devrait charger les fournisseurs au démarrage', (done) => {
-    console.log('Chargement des fournisseurs au démarrage');
-    const mockSuppliers: Supplier[] = [
-      { _id: '1', name: 'Supplier 1', description: 'Description 1' },
-      { _id: '2', name: 'Supplier 2', description: 'Description 2' },
-    ];
-    console.log('Fournisseurs simulés:', mockSuppliers);
-
-    service['loadSuppliers'](); // 💡 force une nouvelle requête
-    httpMock.expectOne('http://localhost:5000/api/suppliers').flush(mockSuppliers);
-
+  it("doit ajouter DEFAULT_SUPPLIER lorsqu'aucun fournisseur n’est trouvé", (done) => {
     service.getSuppliers().subscribe((suppliers) => {
-      console.log('🧪 Fournisseurs reçus:', suppliers);
-      expect(suppliers.length).toBe(2);
-      expect(suppliers[0].name).toBe('Supplier 1');
+      expect(suppliers.length).toBe(1);
+      expect(suppliers[0]._id).toBe(DEFAULT_SUPPLIER._id);
       done();
     });
   });
 
-  it('devrait ajouter le fournisseur par défaut si aucun fournisseur trouvé', () => {
-    console.log('Ajout du fournisseur par défaut si aucun trouvé');
+  it('doit charger et diffuser les fournisseurs triés', (done) => {
+    // Réponse serveur contenant DEFAULT_SUPPLIER en dernier pour tester le tri
+    const serverResponse: Supplier[] = [...baseSuppliers, DEFAULT_SUPPLIER];
+
+    service['loadSuppliers'](); // force un nouveau chargement
+
+    httpMock.expectOne(apiUrl).flush(serverResponse);
+
     service.getSuppliers().subscribe((suppliers) => {
-      expect(suppliers.length).toBe(1);
-      expect(suppliers[0].name).toBe('Sans fournisseur');
-      console.log('Fournisseur par défaut ajouté:', suppliers);
+      expect(suppliers.length).toBe(3); // DEFAULT_SUPPLIER + 2 mocks
+      expect(suppliers[0]._id).toBe(DEFAULT_SUPPLIER._id); // tri OK
+      done();
     });
-
-    service['loadSuppliers']();
-    httpMock.expectOne('http://localhost:5000/api/suppliers').flush([]);
   });
 
-  it('devrait créer un fournisseur et notifier la mise à jour', () => {
-    console.log('Création d\'un fournisseur et notification de la mise à jour');
-    const newSupplier = { name: 'New Supplier' };
+  // ---------------------------------------------------------------
+  //  CRUD
+  // ---------------------------------------------------------------
+  it('doit créer un fournisseur et notifier la mise à jour', () => {
+    const payload = { name: 'Nouveau four' };
 
-    service.createSupplier(newSupplier).subscribe((supplier) => {
-      expect(supplier.name).toBe('New Supplier');
-      expect(sharedDataService.notifySupplierUpdate).toHaveBeenCalled();
-      console.log('Fournisseur créé:', supplier);
+    service.createSupplier(payload as any).subscribe((created) => {
+      expect(created.name).toBe(payload.name);
+      expect(sharedDataSpy.notifySupplierUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/suppliers').flush(newSupplier);
+    httpMock.expectOne(apiUrl).flush({ _id: '9', name: payload.name });
   });
 
-  it('devrait mettre à jour un fournisseur et notifier la mise à jour', () => {
-    console.log('Mise à jour d\'un fournisseur et notification de la mise à jour');
-    const updatedSupplier = { _id: '1', name: 'Updated Supplier' };
+  it('doit mettre à jour un fournisseur et notifier la mise à jour', () => {
+    const updated = { _id: '1', name: 'Maj four' } as Supplier;
 
-    service.updateSupplier('1', updatedSupplier).subscribe((supplier) => {
-      expect(supplier.name).toBe('Updated Supplier');
-      expect(sharedDataService.notifySupplierUpdate).toHaveBeenCalled();
-      console.log('Fournisseur mis à jour:', supplier);
+    service.updateSupplier('1', updated).subscribe((resp) => {
+      expect(resp.name).toBe(updated.name);
+      expect(sharedDataSpy.notifySupplierUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/suppliers/1').flush(updatedSupplier);
+    httpMock.expectOne(`${apiUrl}/1`).flush(updated);
   });
 
-  it('devrait supprimer un fournisseur et notifier la mise à jour', () => {
-    console.log('Suppression d\'un fournisseur et notification de la mise à jour');
-    service.deleteSupplier('1').subscribe((response) => {
-      expect(response.message).toBe('Fournisseur supprimé');
-      expect(sharedDataService.notifySupplierUpdate).toHaveBeenCalled();
-      console.log('Fournisseur supprimé:', response);
+  it('doit supprimer un fournisseur et notifier la mise à jour', () => {
+    service.deleteSupplier('1').subscribe((res) => {
+      expect(res.message).toBe('deleted');
+      expect(sharedDataSpy.notifySupplierUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/suppliers/1').flush({ message: 'Fournisseur supprimé' });
+    httpMock.expectOne(`${apiUrl}/1`).flush({ message: 'deleted' });
   });
 
-  it('devrait gérer les erreurs et afficher une boîte de dialogue', () => {
-    console.log('Gestion des erreurs et affichage d\'une boîte de dialogue');
+  // ---------------------------------------------------------------
+  //  Gestion d’erreurs
+  // ---------------------------------------------------------------
+  it('doit gérer les erreurs serveur et appeler DialogService.error', () => {
+    const payload = { name: 'Bad four' };
     const errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
 
-    service.createSupplier({ name: 'Invalid Supplier' }).subscribe({
-      next: () => fail('La requête aurait dû échouer.'),
-      error: (error) => {
-        expect(error.message).toBe(errorMessage);
-        expect(dialogSpy.open).toHaveBeenCalledWith(InfoDialogComponent, {
-          width: '400px',
-          data: { message: errorMessage, type: 'error' },
-        });
-        console.log('Erreur gérée et boîte de dialogue affichée:', error);
-      }
+    service.createSupplier(payload as any).subscribe({
+      next: () => fail('La requête aurait dû échouer'),
+      error: (err) => {
+        expect(err.message).toBe(errorMessage);
+        expect(dialogSpy.error).toHaveBeenCalledWith(errorMessage);
+      },
     });
 
-    httpMock.expectOne('http://localhost:5000/api/suppliers').flush(
-      { message: errorMessage },
+    httpMock.expectOne(apiUrl).flush(
+      { msg: errorMessage },
       { status: 500, statusText: 'Server Error' }
     );
   });

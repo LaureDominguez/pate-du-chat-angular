@@ -7,11 +7,12 @@ import { ImageService } from '../../../services/image.service';
 import { DeviceService } from '../../../services/device.service';
 import { DialogService } from '../../../services/dialog.service';
 import { MatDialog } from '@angular/material/dialog';
-import { AdminModule } from '../admin.module';
+// import { AdminModule } from '../admin.module';
 // import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of, BehaviorSubject } from 'rxjs';
 import { ProductFormComponent } from './product-form/product-form.component';
 import { Product } from '../../../models/product';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
 
 describe('ProductAdminComponent', () => {
   let component: ProductAdminComponent;
@@ -87,7 +88,7 @@ describe('ProductAdminComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [
-        AdminModule,
+        ADMIN_SHARED_IMPORTS,
         // BrowserAnimationsModule,
         ProductAdminComponent,
         ProductFormComponent

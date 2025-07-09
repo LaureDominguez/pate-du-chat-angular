@@ -1,140 +1,148 @@
 import { TestBed } from '@angular/core/testing';
-import { CategoryService, Category } from './category.service';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
+import { CategoryService } from './category.service';
 import { SharedDataService } from './shared-data.service';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from './dialog.service';
 import { of } from 'rxjs';
-import { InfoDialogComponent } from '../components/dialog/info-dialog/info-dialog.component';
+import { Category, DEFAULT_CATEGORY } from '../models/category';
 import { provideHttpClient } from '@angular/common/http';
+
+// ------------------------------------------------------------------
+//  Spécifications du CategoryService
+// ------------------------------------------------------------------
+//  – Couvre : chargement initial, CRUD, gestion d'erreur, tri + catégorie par défaut
+//  – Mocke SharedDataService (spies) & DialogService (spy)
+// ------------------------------------------------------------------
 
 describe('CategoryService', () => {
   let service: CategoryService;
   let httpMock: HttpTestingController;
-  let sharedDataService: jasmine.SpyObj<SharedDataService>;
-  let dialogSpy: jasmine.SpyObj<MatDialog>;
+  let sharedDataSpy: jasmine.SpyObj<SharedDataService>;
+  let dialogSpy: jasmine.SpyObj<DialogService>;
 
+  const apiUrl = 'http://localhost:5000/api/categories';
   const mockCategories: Category[] = [
-    { _id: '1', name: 'Category 1', description: 'Description 1' },
-    { _id: '2', name: 'Category 2', description: 'Description 2' },
+    { _id: '1', name: 'Pâtes fraîches', description: 'Desc 1' },
+    { _id: '2', name: 'Sauces', description: 'Desc 2' },
   ];
 
   beforeEach(() => {
-    const sharedDataServiceSpy = jasmine.createSpyObj('SharedDataService', [
-      'notifyCategoryUpdate'
+    sharedDataSpy = jasmine.createSpyObj('SharedDataService', [
+      'notifyCategoryUpdate',
     ], {
-      categoryListUpdate$: of(), // mock observables
-      productListUpdate$: of()
+      categoryListUpdate$: of(),
+      productListUpdate$: of(),
     });
 
-    const dialogSpyObj = jasmine.createSpyObj('MatDialog', ['open']);
+    dialogSpy = jasmine.createSpyObj('DialogService', ['error']);
 
     TestBed.configureTestingModule({
-      providers: [
+      
+      providers: [        
         provideHttpClient(),
         provideHttpClientTesting(),
         CategoryService,
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        { provide: MatDialog, useValue: dialogSpyObj }
-      ]
+        { provide: SharedDataService, useValue: sharedDataSpy },
+        { provide: DialogService, useValue: dialogSpy },
+      ],
     });
 
     service = TestBed.inject(CategoryService);
     httpMock = TestBed.inject(HttpTestingController);
-    sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
-    dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
 
-    // Intercepter le GET automatique au démarrage
-    httpMock.expectOne('http://localhost:5000/api/categories').flush([]);
+    // Intercepte le GET auto déclenché dans le constructeur
+    httpMock.expectOne(apiUrl).flush([]); // renvoie vide pour tester la catégorie par défaut
   });
 
   afterEach(() => {
     httpMock.verify();
   });
 
-  it('devrait être créé', () => {
-    console.log('CategoryService créé');
+  // ---------------------------------------------------------------
+  //  Construction & chargement initial
+  // ---------------------------------------------------------------
+  it('doit être créé', () => {
     expect(service).toBeTruthy();
   });
 
-  it('devrait charger les catégories au démarrage', (done) => {
-    console.log('Chargement des catégories au démarrage');
-    // const req = httpMock.expectOne('http://localhost:5000/api/categories');
-    // req.flush(mockCategories);
-    const mockCategories: Category[] = [
-      { _id: '1', name: 'Category 1', description: 'Description 1' },
-      { _id: '2', name: 'Category 2', description: 'Description 2' },
-    ];
-    console.log('Mock categories:', mockCategories);
-
-    service['loadCategories'](); // force une nouvelle requête
-    httpMock.expectOne('http://localhost:5000/api/categories').flush(mockCategories);
-
-    service.getCategories().subscribe(categories => {
-      expect(categories.length).toBe(2);
-      expect(categories[0].name).toBe('Category 1');
+  it('doit ajouter DEFAULT_CATEGORY lorsque aucune catégorie n’est trouvée', (done) => {
+    service.getCategories().subscribe((categories) => {
+      expect(categories.length).toBe(1);
+      expect(categories[0]._id).toBe(DEFAULT_CATEGORY._id);
       done();
     });
   });
 
-  it('devrait ajouter la catégorie par défaut si aucune n’est trouvée', () => {
-    console.log('Aucune catégorie trouvée, ajout de la catégorie par défaut');
-    service.getCategories().subscribe(categories => {
-      expect(categories.length).toBe(1);
-      expect(categories[0].name).toBe('Sans catégorie');
-    });
+  it('doit charger et diffuser les catégories triées', (done) => {
+    const serverResponse: Category[] = [...mockCategories, DEFAULT_CATEGORY];
 
-    service['loadCategories'](); // appel manuel
-    httpMock.expectOne('http://localhost:5000/api/categories').flush([]);
+    service['loadCategories'](); // forcer un nouveau chargement
+
+    httpMock.expectOne(apiUrl).flush(serverResponse);
+
+    service.getCategories().subscribe((categories) => {
+      expect(categories.length).toBe(3); // DEFAULT_CATEGORY + 2 mocks
+      expect(categories[0]._id).toBe(DEFAULT_CATEGORY._id);
+      done();
+    });
   });
 
-  it('devrait créer une catégorie et notifier la mise à jour', () => {
-    const newCategory = { name: 'New Category' };
+  // ---------------------------------------------------------------
+  //  CRUD
+  // ---------------------------------------------------------------
+  it('doit créer une catégorie et notifier la mise à jour', () => {
+    const payload = { name: 'Nouvelle cat' };
 
-    service.createCategory(newCategory).subscribe(category => {
-      expect(category.name).toBe('New Category');
-      expect(sharedDataService.notifyCategoryUpdate).toHaveBeenCalled();
+    service.createCategory(payload as any).subscribe((created) => {
+      expect(created.name).toBe(payload.name);
+      expect(sharedDataSpy.notifyCategoryUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/categories').flush(newCategory);
+    httpMock.expectOne(apiUrl).flush({ _id: '9', name: payload.name });
   });
 
-  it('devrait mettre à jour une catégorie et notifier la mise à jour', () => {
-    const updatedCategory = { _id: '1', name: 'Updated Category' };
+  it('doit mettre à jour une catégorie et notifier la mise à jour', () => {
+    const updated = { _id: '1', name: 'Maj cat' } as Category;
 
-    service.updateCategory('1', updatedCategory).subscribe(category => {
-      expect(category.name).toBe('Updated Category');
-      expect(sharedDataService.notifyCategoryUpdate).toHaveBeenCalled();
+    service.updateCategory('1', updated).subscribe((response) => {
+      expect(response.name).toBe(updated.name);
+      expect(sharedDataSpy.notifyCategoryUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/categories/1').flush(updatedCategory);
+    httpMock
+      .expectOne(`${apiUrl}/1`)
+      .flush({ _id: '1', name: updated.name });
   });
 
-  it('devrait supprimer une catégorie et notifier la mise à jour', () => {
-    service.deleteCategory('1').subscribe(response => {
-      expect(response.message).toBe('Catégorie supprimée');
-      expect(sharedDataService.notifyCategoryUpdate).toHaveBeenCalled();
+  it('doit supprimer une catégorie et notifier la mise à jour', () => {
+    service.deleteCategory('1').subscribe((res) => {
+      expect(res.message).toBe('deleted');
+      expect(sharedDataSpy.notifyCategoryUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/categories/1').flush({ message: 'Catégorie supprimée' });
+    httpMock.expectOne(`${apiUrl}/1`).flush({ message: 'deleted' });
   });
 
-  it('devrait gérer les erreurs et afficher une boîte de dialogue', () => {
+  // ---------------------------------------------------------------
+  //  Gestion d’erreurs
+  // ---------------------------------------------------------------
+  it('doit gérer les erreurs serveur et appeler DialogService.error', () => {
+    const payload = { name: 'Cat KO' };
     const errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
 
-    service.createCategory({ name: 'Invalid Category' }).subscribe({
-      next: () => fail('La requête aurait dû échouer.'),
-      error: (error) => {
-        expect(error.message).toBe(errorMessage);
-        expect(dialogSpy.open).toHaveBeenCalledWith(InfoDialogComponent, {
-          width: '400px',
-          data: { message: errorMessage, type: 'error' },
-        });
-      }
+    service.createCategory(payload as any).subscribe({
+      next: () => fail('La requête aurait dû échouer'),
+      error: (err) => {
+        expect(err.message).toBe(errorMessage);
+        expect(dialogSpy.error).toHaveBeenCalledWith(errorMessage);
+      },
     });
 
-    httpMock.expectOne('http://localhost:5000/api/categories').flush(
-      { message: errorMessage },
+    httpMock.expectOne(apiUrl).flush(
+      { msg: errorMessage },
       { status: 500, statusText: 'Server Error' }
     );
   });

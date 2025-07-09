@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { audit, auditTime, BehaviorSubject, catchError, finalize, firstValueFrom, map, merge, Observable, tap, throwError } from 'rxjs';
+import { auditTime, BehaviorSubject, catchError, finalize, firstValueFrom, map, merge, Observable, tap, throwError } from 'rxjs';
 
 import { Ingredient } from '../models/ingredient';
 import { DEFAULT_SUPPLIER } from '../models/supplier';
 import { SharedDataService } from './shared-data.service';
 import { originFlag } from '../../assets/data/origin-flags';
+import { DialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root',
@@ -21,7 +22,8 @@ export class IngredientService {
 
   constructor(
     private http: HttpClient,
-    private sharedDataService: SharedDataService
+    private sharedDataService: SharedDataService,
+    private dialogService: DialogService
   ) {
     this.loadIngredients();
 
@@ -35,12 +37,9 @@ export class IngredientService {
           this.loadIngredients();
         }
     })
-
   }
 
-  // Charge les ingrédients et met à jour le BehaviorSubject
   private loadIngredients(): void {
-    // console.trace('Chargement des ingrédients depuis le serveur...');
     this.http.get<Ingredient[]>(this.apiUrl).subscribe((ingredients) => {
       this.ingredientsSubject.next(ingredients); 
     });
@@ -67,14 +66,12 @@ export class IngredientService {
     );
   }
 
-  // Allergènes
   getAllergenes(): Observable<string[]> {
     return this.http
       .get<{ allergenes: string[] }>(this.allergenesUrl)
       .pipe(map((data) => data.allergenes));
   }
   
-  // Origines
   getOrigines(): Observable<any> {
     return this.http
       .get(this.originesUrl)
@@ -107,36 +104,30 @@ export class IngredientService {
 
   createIngredient(payload: any): Observable<Ingredient> {
     return this.http.post<Ingredient>(this.apiUrl, payload).pipe(
-      catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyIngredientUpdate();
       }),
-
+      catchError(this.handleError.bind(this))
     );
   }
 
   updateIngredient(id: string, payload: any): Observable<Ingredient> {
-    // console.trace('Mise à jour de l\'ingrédient avec ID:', id);
     const url = `${this.apiUrl}/${id}`;
     return this.http.put<Ingredient>(url, payload).pipe(
-      catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyIngredientUpdate();
       }), 
+      catchError(this.handleError.bind(this))
     );
   }
 
   deleteIngredient(id: string): Observable<{ message: string }> {
-    this.isProcessing = true; // Indique que le traitement est en cours
     const url = `${this.apiUrl}/${id}`;
     return this.http.delete<{ message: string }>(url).pipe(
-      catchError(this.handleError),
       tap(() => {
         this.sharedDataService.notifyIngredientUpdate();
       }),
-      finalize(() => {
-        this.isProcessing = false; // Réinitialise l'état de traitement
-      })
+      catchError(this.handleError.bind(this)),
     );
   }
 
@@ -145,12 +136,10 @@ export class IngredientService {
 
     if (error.status === 400) {
       if (error.error.errors) {
-        // Express Validator envoie un tableau d'erreurs → on concatène les messages
         errorMessage = error.error.errors
           .map((err: any) => err.msg)
           .join('<br>');
       } else if (error.error.msg) {
-        // Cas d'une erreur unique (ex: "Cet ingrédient existe déjà.")
         errorMessage = error.error.msg;
       } else {
         errorMessage = 'Requête invalide. Vérifiez vos champs.';
@@ -160,6 +149,7 @@ export class IngredientService {
     } else if (error.status === 500) {
       errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
     }
+    this.dialogService.error(errorMessage);
 
     return throwError(() => new Error(errorMessage));
   }

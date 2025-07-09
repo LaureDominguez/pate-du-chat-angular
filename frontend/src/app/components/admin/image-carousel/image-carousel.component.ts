@@ -68,14 +68,11 @@ private clearHoverTimeout(): void {
   }
 }
 
-
   disableAnimation() {
-    // console.log('disableAnimation', this.controller);
     this.controller?.disable();
   }
 
   enableAnimation() {
-    // console.log('enableAnimation', this.controller);
     this.controller?.enable();
   }
 

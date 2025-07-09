@@ -3,7 +3,9 @@ import { ImageCarouselComponent } from './image-carousel.component';
 import { ProcessedImage } from '../../../models/image';
 // import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { AdminModule } from '../admin.module';
+// import { AdminModule } from '../admin.module';
+import { ADMIN_SHARED_IMPORTS } from '../admin-material';
+
 
 describe('ImageCarouselComponent', () => {
   let component: ImageCarouselComponent;
@@ -22,7 +24,7 @@ describe('ImageCarouselComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         ImageCarouselComponent,
-        AdminModule,
+        ADMIN_SHARED_IMPORTS,
         // BrowserAnimationsModule,
         DragDropModule
       ]

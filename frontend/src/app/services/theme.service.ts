@@ -1,19 +1,15 @@
-// src/app/services/theme.service.ts
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-// import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ThemeService {
-  // private themeUrl = 'assets/themes/theme.json';
   private isBrowser: boolean;
   private activeTheme$ = new BehaviorSubject<string>('light');
 
   constructor(
-    // private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -53,29 +49,5 @@ export class ThemeService {
       body.classList.remove('dark');
     }
   }
-
-  // setTheme(theme: 'light' | 'dark'): void {
-  //   this.loadTheme().subscribe((themesData) => {
-  //     this.applyTheme(themesData, theme);
-  //     this.activeTheme$.next(theme);
-  //     localStorage.setItem('theme', theme); // Sauvegarder dans localStorage
-  //   });
-  // }
-
-  // private loadTheme(): Observable<any> {
-  //   return this.http.get(this.themeUrl);
-  // }
-
-  // private applyTheme(themesData: any, theme: string): void {
-  //   if (this.isBrowser) {
-  //     const root = document.documentElement;
-  //     const selectedTheme = themesData.schemes[theme];
-  //     if (selectedTheme) {
-  //       Object.keys(selectedTheme).forEach((key) => {
-  //         root.style.setProperty(`--${key}`, selectedTheme[key]);
-  //       });
-  //     }
-  //   }
-  // }
 }
 

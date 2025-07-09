@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { SharedDataService, QuickCreateData } from './shared-data.service';
 import { Category } from '../models/category';
-// import { Ingredient } from '../models/ingredient';
 import { Supplier } from '../models/supplier';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, take } from 'rxjs';
+import { Ingredient } from '../models/ingredient';
 
 describe('SharedDataService', () => {
   let service: SharedDataService;
@@ -15,148 +15,112 @@ describe('SharedDataService', () => {
     service = TestBed.inject(SharedDataService);
   });
 
-  it('devrait être créé', () => {
+  it('doit être créé', () => {
     expect(service).toBeTruthy();
   });
 
   ///////////////////////////////////////////
   /////////////// Categories  ///////////////
-  it('devrait émettre une demande de création de catégorie', async () => {
-    const testData: QuickCreateData = { name: 'Test Category' };
+  it('doit émettre une demande de création de catégorie', async () => {
+    const data: QuickCreateData = { name: 'Catégorie A', description: 'desc' };
 
-    firstValueFrom(service.requestNewCategory$).then((data) => {
-      expect(data).toEqual(testData);
-    });
+    const emitted = firstValueFrom(service.requestNewCategory$);
+    service.requestCategoryCreation(data);
 
-    service.requestCategoryCreation(testData);
+    await expectAsync(emitted).toBeResolvedTo(data);
   });
 
-  it('devrait envoyer une catégorie créée au product-form', async () => {
-    const testCategory: Category = { _id: '1', name: 'Test Category' };
+  it('doit émettre Category lorsque sendCategoryToProductForm est appelé', async () => {
+    const category: Category = { _id: '1', name: 'Catégorie A' } as Category;
 
-    firstValueFrom(service.categoryCreated$).then((category) => {
-      expect(category).toEqual(testCategory);
-    });
+    const emitted = firstValueFrom(service.categoryCreated$);
+    service.sendCategoryToProductForm(category);
 
-    service.sendCategoryToProductForm(testCategory);
+    await expectAsync(emitted).toBeResolvedTo(category);
   });
 
-  it('devrait notifier une mise à jour des catégories', async () => {
-    firstValueFrom(service.categoryListUpdate$).then(() => {
-      expect(true).toBeTrue();
-    });
-
+  it('doit notifier les abonnés lors d’une mise à jour de catégorie', async () => {
+    const notified = firstValueFrom(service.categoryListUpdate$.pipe(take(1)));
     service.notifyCategoryUpdate();
+    await expectAsync(notified).toBeResolved();
   });
 
   ///////////////////////////////////////////
   /////////////// Suppliers  ////////////////
-  it('devrait émettre une demande de création de fournisseur', async () => {
-    const testData: QuickCreateData = { name: 'Test Supplier' };
+  it('doit émettre une demande de création de fournisseur', async () => {
+    const data: QuickCreateData = { name: 'Fournisseur X' };
 
-    firstValueFrom(service.requestNewSupplier$).then((data) => {
-      expect(data).toEqual(testData);
-    });
+    const emitted = firstValueFrom(service.requestNewSupplier$);
+    service.requestSupplierCreation(data);
 
-    service.requestSupplierCreation(testData);
+    await expectAsync(emitted).toBeResolvedTo(data);
   });
 
-  it('devrait envoyer un fournisseur créé à ingredient-form', async () => {
-    const testSupplier: Supplier = { _id: '1', name: 'Test Supplier' };
+  it('doit envoyer un fournisseur créé à ingredient-form', async () => {
+    const supplier: Supplier = { _id: 'sup1', name: 'Fournisseur X' } as Supplier;
 
-    firstValueFrom(service.supplierCreated$).then((supplier) => {
-      expect(supplier).toEqual(testSupplier);
-    });
+    const emitted = firstValueFrom(service.supplierCreated$);
+    service.sendSupplierToIngredientForm(supplier);
 
-    service.sendSupplierToIngredientForm(testSupplier);
+    await expectAsync(emitted).toBeResolvedTo(supplier);
   });
 
-  it('devrait notifier une mise à jour des fournisseurs', async () => {
-    firstValueFrom(service.supplierListUpdate$).then(() => {
-      expect(true).toBeTrue();
-    });
-
+  it('doit notifier une mise à jour des fournisseurs', async () => {
+    const notified = firstValueFrom(service.supplierListUpdate$.pipe(take(1)));
     service.notifySupplierUpdate();
+    await expectAsync(notified).toBeResolved();
   });
-
-  //   it('devrait émettre une demande de remplacement de supplier dans les ingrédients', async () => {
-  //   const payload = {
-  //     oldSupplierId: 'supplier-1',
-  //     newSupplierId: 'default-supplier',
-  //     ingredientIds: ['ing1', 'ing2']
-  //   };
-
-  //   firstValueFrom(service.replaceSupplierInIngredients$).then((data) => {
-  //     expect(data).toEqual(payload);
-  //   });
-
-  //   service.emitReplaceSupplierInIngredients(payload.oldSupplierId, payload.newSupplierId, payload.ingredientIds);
-  // });
-
-  //   it('devrait émettre la confirmation du remplacement des suppliers dans les ingrédients', async () => {
-  //   firstValueFrom(service.replaceSupplierInIngredientsComplete$).then((success) => {
-  //     expect(success).toBeTrue();
-  //   });
-
-  //   service.emitReplaceSupplierInIngredientsComplete(true);
-  // });
-
-  // it('devrait émettre un échec de remplacement des suppliers dans les ingrédients', async () => {
-  //   firstValueFrom(service.replaceSupplierInIngredientsComplete$).then((success) => {
-  //     expect(success).toBeFalse();
-  //   });
-
-  //   service.emitReplaceSupplierInIngredientsComplete(false);
-  // });
-
-  it('devrait notifier une demande de création d\'ingrédient', async () => {
-    firstValueFrom(service.requestNewIngredient$).then(() => {
-      expect(true).toBeTrue();
-    });
-
-    service.requestOpenIngredientForm('TestValue');
-  });
-
-  it('devrait récupérer la valeur recherchée pour un ingrédient', () => {
-    service.requestOpenIngredientForm('pomme');
-    const value = service.getSearchedIngredient();
-    expect(value).toBe('pomme');
-  });
-
 
 
   ///////////////////////////////////////////
   /////////////// Ingredients ///////////////
-  // it('devrait notifier une mise à jour de la composition des ingrédients', async () => {
-  //   firstValueFrom(service.ingredientCompositionUpdate$).then(() => {
-  //     expect(true).toBeTrue();
-  //   });
 
-  //   service.notifyIngredientCompositionUpdate();
-  // });
+  it("doit émettre un événement et stocker la valeur recherchée lorsqu'on appelle requestOpenIngredientForm", async () => {
+    const search = 'Tomate';
 
-  it('devrait notifier une mise à jour des produits', async () => {
-    firstValueFrom(service.productListUpdate$).then(() => {
-      expect(true).toBeTrue();
-    });
+    const emitted = firstValueFrom(service.requestNewIngredient$.pipe(take(1)));
+    service.requestOpenIngredientForm(search);
 
-    service.notifyProductUpdate();
+    await expectAsync(emitted).toBeResolved();
+    expect(service.getSearchedIngredient()).toBe(search);
   });
 
-  ///////////////////////////////////////////
-  // //////////////// Images ///////////////////
-  it('devrait émettre une demande de téléchargement d\'image', async () => {
-    const imagePath = '/uploads/test.jpg';
-    const objectName = 'Test Image';
+  it('doit retourner une chaîne vide par défaut pour getSearchedIngredient', () => {
+    expect(service.getSearchedIngredient()).toBe('');
+  });
 
-    // On déclenche l'émission de l'image
-    service.emitDownloadImage(imagePath, objectName);
+  it('doit émettre Ingredient lorsque resultIngredientCreated est appelé', async () => {
+    const ingredient: Ingredient = {
+      _id: 'ing1',
+      name: 'Sel',
+      bio: false,
+      supplier: 'sup1',
+      type: 'simple',
+      allergens: [],
+      vegan: true,
+      vegeta: true,
+      origin: 'FR',
+    } as Ingredient;
 
-    // On récupère la valeur émise avec firstValueFrom
-    const receivedData = await firstValueFrom(service.downloadImage$);
+    const emitted = firstValueFrom(service.ingredientCreated$);
+    service.resultIngredientCreated(ingredient);
 
-    // On vérifie la valeur reçue
-    expect(receivedData).toEqual({ imagePath, objectName });
+    await expectAsync(emitted).toBeResolvedTo(ingredient);
+  });
+
+  it('doit notifier les abonnés lors d’une mise à jour d’ingrédient', async () => {
+    const notified = firstValueFrom(service.ingredientListUpdate$.pipe(take(1)));
+    service.notifyIngredientUpdate();
+    await expectAsync(notified).toBeResolved();
+  });
+
+  // ---------------------------------------------------------------
+  //  Produits (notificateur simple)
+  // ---------------------------------------------------------------
+  it('doit notifier les abonnés lors d’une mise à jour de produit', async () => {
+    const notified = firstValueFrom(service.productListUpdate$.pipe(take(1)));
+    service.notifyProductUpdate();
+    await expectAsync(notified).toBeResolved();
   });
 
 });

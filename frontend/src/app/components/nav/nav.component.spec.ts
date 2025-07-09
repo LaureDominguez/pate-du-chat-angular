@@ -1,36 +1,42 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavComponent } from './nav.component';
 import { ThemeService } from '../../services/theme.service';
-import { RouterTestingHarness } from '@angular/router/testing';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { of } from 'rxjs';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { Component } from '@angular/core';
-import { APP_ROUTES } from '../../app.routes';
-import { provideRouter } from '@angular/router';
-import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
-@Component({
-  selector: 'app-mock',
-  standalone: true,
-  template: `<p>Mock</p>`
-})
+// ------------------------------------------------------------------
+//  Spécifications – NavComponent (layout)
+// ------------------------------------------------------------------
+//  Vérifie : exposition du thème, toggle, titre de page via navigation
+// ------------------------------------------------------------------
+
+@Component({ selector: 'app-dummy', standalone: true, template: 'Dummy' })
 class DummyComponent {}
 
+const routes = [
+  { path: '', component: DummyComponent, data: { title: 'Accueil' } },
+  { path: 'contact', component: DummyComponent, data: { title: 'Contact' } },
+];
+
 describe('NavComponent', () => {
-  let component: NavComponent;
   let fixture: ComponentFixture<NavComponent>;
-  let themeServiceSpy: jasmine.SpyObj<ThemeService>;
+  let component: NavComponent;
+  let themeSpy: jasmine.SpyObj<ThemeService>;
   let router: Router;
 
   beforeEach(async () => {
-    themeServiceSpy = jasmine.createSpyObj('ThemeService', ['getActiveTheme', 'toggleTheme']);
-    themeServiceSpy.getActiveTheme.and.returnValue(of('light'));
+    themeSpy = jasmine.createSpyObj('ThemeService', ['getActiveTheme', 'toggleTheme']);
+    themeSpy.getActiveTheme.and.returnValue(of('light'));
 
     await TestBed.configureTestingModule({
-      imports: [NavComponent],
+      imports: [NavComponent, DummyComponent, NoopAnimationsModule],
       providers: [
-        { provide: ThemeService, useValue: themeServiceSpy },
-        provideRouter(APP_ROUTES)
+        provideRouter(routes),
+        { provide: ThemeService, useValue: themeSpy },
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
       ],
     }).compileComponents();
 
@@ -40,23 +46,35 @@ describe('NavComponent', () => {
     fixture.detectChanges();
   });
 
-  it('devrait être créé', () => {
+  // ---------------------------------------------------------------
+  //  Base
+  // ---------------------------------------------------------------
+  it('doit être créé', () => {
     expect(component).toBeTruthy();
   });
 
-  it('devrait exposer le thème actif', (done) => {
-    component.activeTheme$.subscribe(theme => {
-      expect(theme).toBe('light');
+  // ---------------------------------------------------------------
+  //  activeTheme$
+  // ---------------------------------------------------------------
+  it('doit exposer le thème actif', (done) => {
+    component.activeTheme$.subscribe((t) => {
+      expect(t).toBe('light');
       done();
     });
   });
 
-  it('devrait appeler toggleTheme() du service', () => {
+  // ---------------------------------------------------------------
+  //  Toggle thème
+  // ---------------------------------------------------------------
+  it('doit déléguer à ThemeService.toggleTheme()', () => {
     component.onToggleTheme();
-    expect(themeServiceSpy.toggleTheme).toHaveBeenCalled();
+    expect(themeSpy.toggleTheme).toHaveBeenCalled();
   });
 
-  it('devrait mettre à jour le titre de page lors de la navigation', async () => {
+  // ---------------------------------------------------------------
+  //  Titre de page
+  // ---------------------------------------------------------------
+  it('doit mettre à jour pageTitle après navigation', async () => {
     await router.navigateByUrl('/contact');
     fixture.detectChanges();
     expect(component.pageTitle).toBe('Contact');

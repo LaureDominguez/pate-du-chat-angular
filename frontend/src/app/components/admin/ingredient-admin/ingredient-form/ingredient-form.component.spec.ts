@@ -5,11 +5,12 @@ import { SharedDataService } from '../../../../services/shared-data.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, Subject } from 'rxjs';
-import { AdminModule } from '../../admin.module';
+// import { AdminModule } from '../../admin.module';
 import { ImageCarouselComponent } from '../../image-carousel/image-carousel.component';
 import { Supplier } from '../../../../models/supplier';
 import { InfoDialogComponent } from '../../../dialog/info-dialog/info-dialog.component';
 import { DialogService } from '../../../../services/dialog.service';
+import { ADMIN_SHARED_IMPORTS } from '../../admin-material';
 
 describe('IngredientFormComponent', () => {
   let component: IngredientFormComponent;
@@ -54,7 +55,7 @@ describe('IngredientFormComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         ReactiveFormsModule,
-        AdminModule,
+        ADMIN_SHARED_IMPORTS,
         NoopAnimationsModule,
         ImageCarouselComponent,
         IngredientFormComponent

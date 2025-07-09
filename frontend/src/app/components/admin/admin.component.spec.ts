@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminComponent } from './admin.component';
-import { AdminModule } from './admin.module';
+// import { AdminModule } from './admin.module';
 import { By } from '@angular/platform-browser';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ADMIN_SHARED_IMPORTS } from './admin-material';
 
 describe('AdminComponent', () => {
   let component: AdminComponent;
@@ -13,7 +14,7 @@ describe('AdminComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         AdminComponent, 
-        AdminModule
+        ADMIN_SHARED_IMPORTS
       ],
       providers: [
         provideHttpClient(),

@@ -34,40 +34,34 @@ export class NavComponent implements OnInit {
     private breakpointObserver: BreakpointObserver,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    public themeService: ThemeService // Injecter le service de thème
+    public themeService: ThemeService
   ) 
   {
-    // Observer pour détecter les changements de taille d'écran
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
       map((result) => result.matches),
       shareReplay()
     );
-
-    // Initialiser le thème actif
     this.activeTheme$ = this.themeService.getActiveTheme();
-    // console.log('activeTheme$ :', this.activeTheme$);
   }
 
   ngOnInit(): void {
-    // Gestion de la navigation et du titre de la page
     this.router.events
       .pipe(
-        filter((event) => event instanceof NavigationEnd), // Filtrer les événements de navigation
+        filter((event) => event instanceof NavigationEnd),
         map(() => {
           let route = this.activatedRoute;
           while (route.firstChild) {
-            route = route.firstChild; // Descendre jusqu'à la route enfant active
+            route = route.firstChild;
           }
-          return route.snapshot.data['title']; // Récupérer le titre
+          return route.snapshot.data['title'];
         })
       )
       .subscribe((title: string) => {
-        this.pageTitle = title || 'Les Pâtes du Chat'; // Mettre à jour le titre ou définir un titre par défaut
+        this.pageTitle = title || 'Les Pâtes du Chat';
       });
   }
 
   onToggleTheme() {
     this.themeService.toggleTheme();
-    // console.log('activeTheme :', this.activeTheme$);
   }
 }

@@ -47,7 +47,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
   constructor(
     private categoryService: CategoryService,
-    private productService: ProductService, // Utilisé pour les produits associés
+    private productService: ProductService, 
     private fb: FormBuilder,
     private sharedDataService: SharedDataService,
     private dialogService: DialogService
@@ -190,7 +190,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   ).subscribe();
     this.categories.sort!.active = 'name';
     this.categories.sort!.direction = 'asc';
-    this.categories.sort!.sortChange.emit(); // ⚡️ Re-déclenche le tri
+    this.categories.sort!.sortChange.emit();
   }
 
   // Création depuis product-Form

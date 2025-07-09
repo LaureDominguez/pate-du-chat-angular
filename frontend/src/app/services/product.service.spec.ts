@@ -1,206 +1,246 @@
 import { TestBed } from '@angular/core/testing';
-import { ProductService, Product, FinalProduct } from './product.service';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
+import {
+  provideHttpClientTesting,
+  HttpTestingController,
+} from '@angular/common/http/testing';
+import { ProductService } from './product.service';
 import { SharedDataService } from './shared-data.service';
+import { DialogService } from './dialog.service';
 import { of } from 'rxjs';
+import { Product } from '../models/product';
+import { DEFAULT_CATEGORY } from '../models/category';
+
+// ------------------------------------------------------------------
+//  Spécifications – ProductService (Angular 19 providers)
+// ------------------------------------------------------------------
+//  Couvre : chargement + mapping DEFAULT_CATEGORY, getById/Category/Ingredient,
+//  CRUD, flags, vérif nom, JSON (DLC), gestion erreurs & handleError
+// ------------------------------------------------------------------
 
 describe('ProductService', () => {
   let service: ProductService;
   let httpMock: HttpTestingController;
-  let sharedDataService: jasmine.SpyObj<SharedDataService>;
+  let sharedSpy: jasmine.SpyObj<SharedDataService>;
+  let dialogSpy: jasmine.SpyObj<DialogService>;
+
+  const apiUrl = 'http://localhost:5000/api/products';
 
   const mockProducts: Product[] = [
-    { 
-      _id: '1', 
-      name: 'Product 1', 
-      category: 'cat1', 
-      dlc: '05/12/2025', 
-      cookInstructions: '10 min dans l\'eau bouillante', 
-      stock: true, 
-      stockQuantity: 5, 
-      quantityType: 'piece', 
-      price: 1 
-    },
-    { _id: '2', 
-      name: 'Product 2', 
-      category: 'cat2', 
-      dlc: '3 jours', 
-      cookInstructions: '15 min au four', 
-      stock: true, 
-      stockQuantity: 10, 
-      quantityType: 'kg', 
-      price: 2 
-    },
-  ];
-
-  const mockFinalProducts: FinalProduct[] = [
-    { ...mockProducts[0], allergens: [], vegan: false, vegeta: true },
-    { ...mockProducts[1], allergens: [], vegan: true, vegeta: true },
+    {
+      _id: '1',
+      name: 'Ravioli',
+      category: undefined as any, // pour mapping DEFAULT_CATEGORY
+      dlc: '05/12/2025',
+      cookInstructions: '10 min',
+      stock: true,
+      stockQuantity: 5,
+      quantityType: 'piece',
+      price: 10,
+    } as Product,
+    {
+      _id: '2',
+      name: 'Sauce tomate',
+      category: 'cat2',
+      dlc: '3 jours',
+      cookInstructions: 'chauffer',
+      stock: true,
+      stockQuantity: 10,
+      quantityType: 'kg',
+      price: 5,
+    } as Product,
   ];
 
   beforeEach(() => {
-    const sharedDataServiceSpy = jasmine.createSpyObj('SharedDataService', [
-      'notifyProductUpdate'
-    ], {
-      productListUpdate$: of(),
-      categoryListUpdate$: of(),
-      ingredientListUpdate$: of()
-    });
+    sharedSpy = jasmine.createSpyObj(
+      'SharedDataService',
+      ['notifyProductUpdate'],
+      {
+        productListUpdate$: of(),
+        categoryListUpdate$: of(),
+        ingredientListUpdate$: of(),
+      }
+    );
+
+    dialogSpy = jasmine.createSpyObj('DialogService', ['error']);
 
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         ProductService,
-        { provide: SharedDataService, useValue: sharedDataServiceSpy }
-      ]
+        { provide: SharedDataService, useValue: sharedSpy },
+        { provide: DialogService, useValue: dialogSpy },
+      ],
     });
 
     service = TestBed.inject(ProductService);
     httpMock = TestBed.inject(HttpTestingController);
-    sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
 
-    httpMock.expectOne('http://localhost:5000/api/products').flush([]);
-    httpMock.expectOne('http://localhost:5000/api/products?view=full').flush([]);
+    // GET initial (constructor)
+    httpMock.expectOne(apiUrl).flush([]);
   });
 
   afterEach(() => {
     httpMock.verify();
   });
 
-  it('devrait être créé', () => {
+  // ---------------------------------------------------------------
+  //  Construction & chargement
+  // ---------------------------------------------------------------
+  it('doit être créé', () => {
     expect(service).toBeTruthy();
   });
 
-  it('devrait charger les produits admin', (done) => {
+  it('doit charger les produits (mapping DEFAULT_CATEGORY)', (done) => {
     service['loadProducts']();
-    httpMock.expectOne('http://localhost:5000/api/products').flush(mockProducts);
+    httpMock.expectOne(apiUrl).flush(mockProducts);
 
-    service.getProducts().subscribe(products => {
-      expect(products.length).toBe(2);
-      expect(products[0].name).toBe('Product 1');
+    service.getProducts().subscribe((prods) => {
+      expect(prods.length).toBe(2);
+      expect(prods[0].category).toEqual(DEFAULT_CATEGORY);
       done();
     });
   });
 
-  it('devrait charger les produits finaux (public)', (done) => {
-    service['loadFinalProducts']();
-    httpMock.expectOne('http://localhost:5000/api/products?view=full').flush(mockFinalProducts);
-
-    service.getFinalProducts().subscribe(products => {
-      expect(products.length).toBe(2);
-      expect(products[1].vegan).toBeTrue();
-      done();
-    });
-  });
-
-  it('devrait retourner un produit par ID', (done) => {
-    service.getProductById('1').subscribe(product => {
-      expect(product.name).toBe('Product 1');
+  // ---------------------------------------------------------------
+  //  getProductById / getProductsByCategory / Ingredient
+  // ---------------------------------------------------------------
+  it('doit retourner un produit par ID avec catégorie mappée', (done) => {
+    service.getProductById('1').subscribe((p) => {
+      expect(p._id).toBe('1');
+      expect(p.category).toEqual(DEFAULT_CATEGORY);
       done();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products/1').flush(mockProducts[0]);
+    httpMock.expectOne(`${apiUrl}/1`).flush(mockProducts[0]);
   });
 
-  it('devrait retourner un produit final par ID', (done) => {
-    service.getFinalProductById('1').subscribe(product => {
-      expect(product.name).toBe('Product 1');
+  it('doit retourner les produits par catégorie', (done) => {
+    const catId = 'cat2';
+    service.getProductsByCategory(catId).subscribe((prods) => {
+      expect(prods.length).toBe(2);
       done();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products/1?view=full').flush(mockFinalProducts[0]);
+    httpMock.expectOne(`${apiUrl}/by-category/${catId}`).flush(mockProducts);
   });
 
-  it('devrait retourner les produits contenant un ingrédient', (done) => {
-    service.getProductsByIngredient('abc123').subscribe(products => {
-      expect(products.length).toBe(2);
+  it('doit retourner les produits par ingrédient', (done) => {
+    const ingId = 'ing1';
+    service.getProductsByIngredient(ingId).subscribe((prods) => {
+      expect(prods.length).toBe(2);
       done();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products/by-ingredient/abc123').flush(mockProducts);
+    httpMock.expectOne(`${apiUrl}/by-ingredient/${ingId}`).flush(mockProducts);
   });
 
-  it('devrait charger les DLC', (done) => {
-    const mockDlcs = ['7 jours', '14 jours'];
-    service.getDlcs().subscribe(dlcs => {
-      expect(dlcs).toEqual(mockDlcs);
+  // ---------------------------------------------------------------
+  //  getDlcs
+  // ---------------------------------------------------------------
+  it('doit charger les DLCs', (done) => {
+    const dlcs = ['7 jours', '14 jours'];
+    service.getDlcs().subscribe((d) => {
+      expect(d).toEqual(dlcs);
       done();
     });
 
-    httpMock.expectOne('../assets/data/dlcs.json').flush(mockDlcs);
+    httpMock.expectOne('../assets/data/dlcs.json').flush(dlcs);
   });
 
-  it('devrait gérer les erreurs lors du chargement des DLC', (done) => {
+  it('doit gérer erreur 500 sur DLC et propager message', (done) => {
     service.getDlcs().subscribe({
       next: () => fail('Erreur attendue'),
-      error: (error) => {
-        expect(error.message).toContain('Impossible de charger les DLCs');
+      error: (err) => {
+        expect(err.message).toContain('Impossible de charger');
         done();
-      }
+      },
     });
 
-    httpMock.expectOne('../assets/data/dlcs.json').flush({}, { status: 500, statusText: 'Erreur serveur' });
+    httpMock.expectOne('../assets/data/dlcs.json').flush({}, { status: 500, statusText: 'Server Error' });
   });
 
-  it('devrait vérifier l’existence d’un nom de produit', (done) => {
-    service.checkExistingProducName('Produit A').subscribe((exists) => {
+  // ---------------------------------------------------------------
+  //  checkExistingProductName
+  // ---------------------------------------------------------------
+  it('doit retourner true si nom existe déjà', (done) => {
+    const name = 'Ravioli';
+    service.checkExistingProductName(name).subscribe((exists) => {
       expect(exists).toBeTrue();
       done();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products/check-name/Produit%20A').flush(true);
+    httpMock.expectOne(`${apiUrl}/check-name/${encodeURIComponent(name)}`).flush(true);
   });
 
-  it('devrait créer un produit et notifier la mise à jour', () => {
-    const payload = { name: 'New Product' };
-    service.createProduct(payload).subscribe((product) => {
-      expect(product.name).toBe('New Product');
-      expect(sharedDataService.notifyProductUpdate).toHaveBeenCalled();
+  it('doit gérer erreur serveur sur checkName (pas de dialogService)', (done) => {
+    const name = 'Erreur';
+    service.checkExistingProductName(name).subscribe({
+      next: () => fail('Erreur attendue'),
+      error: (err) => {
+        expect(err.message).toContain('Impossible de charger');
+        expect(dialogSpy.error).not.toHaveBeenCalled();
+        done();
+      },
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products').flush(payload);
-    httpMock.expectOne('http://localhost:5000/api/products?view=full').flush([]);
-
+    httpMock.expectOne(`${apiUrl}/check-name/${encodeURIComponent(name)}`).flush({}, { status: 500, statusText: 'Server Error' });
   });
 
-  it('devrait mettre à jour un produit et notifier la mise à jour', () => {
-    const payload = { name: 'Updated Product' };
-    service.updateProduct('1', payload).subscribe((product) => {
-      expect(product.name).toBe('Updated Product');
-      expect(sharedDataService.notifyProductUpdate).toHaveBeenCalled();
+  // ---------------------------------------------------------------
+  //  CRUD
+  // ---------------------------------------------------------------
+  it('doit créer un produit et notifier', () => {
+    const payload = { name: 'Nouveau' } as any;
+
+    service.createProduct(payload).subscribe((created) => {
+      expect(created.name).toBe('Nouveau');
+      expect(sharedSpy.notifyProductUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products/1').flush(payload);
-    httpMock.expectOne('http://localhost:5000/api/products?view=full').flush([]);
-
+    httpMock.expectOne(apiUrl).flush({ _id: '9', ...payload });
   });
 
-  it('devrait supprimer un produit et notifier la mise à jour', () => {
+  it('doit mettre à jour un produit et notifier la mise à jour', () => {
+    const payload = { name: 'Maj' } as Product;
+
+    service.updateProduct('1', payload).subscribe((upd) => {
+      expect(upd.name).toBe('Maj');
+      expect(sharedSpy.notifyProductUpdate).toHaveBeenCalled();
+    });
+
+    httpMock.expectOne(`${apiUrl}/1`).flush({ _id: '1', ...payload });
+  });
+
+  it('doit supprimer un produit et notifier', () => {
     service.deleteProduct('1').subscribe((res) => {
-      expect(res.message).toBe('Produit supprimé');
-      expect(sharedDataService.notifyProductUpdate).toHaveBeenCalled();
+      expect(res.message).toBe('deleted');
+      expect(sharedSpy.notifyProductUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products/1').flush({ message: 'Produit supprimé' });
-    httpMock.expectOne('http://localhost:5000/api/products?view=full').flush([]);
-
+    const req = httpMock.expectOne(`${apiUrl}/1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ message: 'deleted' });
   });
 
-  it('devrait gérer les erreurs Express Validator', (done) => {
-    const payload = { name: '' };
+  // ---------------------------------------------------------------
+  //  handleError – erreur 400 avec messages Express-validator
+  // ---------------------------------------------------------------
+  it('doit concaténer les messages Express-validator et appeler dialogService.error', (done) => {
+    const errors = [{ msg: 'Nom requis.' }, { msg: 'Prix invalide.' }];
+    const payload = { name: '' } as any;
+
     service.createProduct(payload).subscribe({
       next: () => fail('Erreur attendue'),
-      error: (error) => {
-        expect(error.message).toContain('Nom requis.');
-        expect(error.message).toContain('Prix invalide.');
+      error: (err) => {
+        expect(err.message).toContain('Nom requis.');
+        expect(err.message).toContain('Prix invalide.');
+        expect(dialogSpy.error).toHaveBeenCalled();
         done();
-      }
+      },
     });
 
-    httpMock.expectOne('http://localhost:5000/api/products').flush({
-      errors: [{ msg: 'Nom requis.' }, { msg: 'Prix invalide.' }]
-    }, { status: 400, statusText: 'Bad Request' });
+    httpMock.expectOne(apiUrl).flush({ errors }, { status: 400, statusText: 'Bad Request' });
   });
 });

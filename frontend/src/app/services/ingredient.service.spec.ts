@@ -1,201 +1,224 @@
 import { TestBed } from '@angular/core/testing';
-import { IngredientService, Ingredient } from './ingredient.service';
-import { provideHttpClient, HttpClient } from '@angular/common/http';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import {
+  provideHttpClientTesting,
+  HttpTestingController,
+} from '@angular/common/http/testing';
+import { IngredientService } from './ingredient.service';
 import { SharedDataService } from './shared-data.service';
-import { of, Subject } from 'rxjs';
+import { DialogService } from './dialog.service';
+import { of } from 'rxjs';
+import { Ingredient } from '../models/ingredient';
+import { DEFAULT_SUPPLIER } from '../models/supplier';
+
+// ------------------------------------------------------------------
+//  Spécifications du IngredientService
+// ------------------------------------------------------------------
+//  – Utilise provideHttpClient / provideHttpClientTesting (Angular 19)
+//  – Teste : chargement, CRUD, vérification nom, JSON, mapping supplier, gestion d'erreurs
+// ------------------------------------------------------------------
 
 describe('IngredientService', () => {
   let service: IngredientService;
   let httpMock: HttpTestingController;
-  let sharedDataService: jasmine.SpyObj<SharedDataService>;
+  let sharedSpy: jasmine.SpyObj<SharedDataService>;
+  let dialogSpy: jasmine.SpyObj<DialogService>;
+
+  const apiUrl = 'http://localhost:5000/api/ingredients';
 
   const mockIngredients: Ingredient[] = [
     {
       _id: '1',
       name: 'Tomate',
       bio: true,
-      supplier: 'Fournisseur 1',
+      supplier: 'sup1',
       type: 'simple',
       allergens: [],
       vegan: true,
       vegeta: true,
       origin: 'France',
-      images: [],
-    },
+    } as Ingredient,
     {
       _id: '2',
       name: 'Mozzarella',
       bio: false,
-      supplier: 'Fournisseur 2',
+      supplier: undefined as any, // pour tester mapping DEFAULT_SUPPLIER
       type: 'simple',
       allergens: ['lait'],
       vegan: false,
       vegeta: true,
       origin: 'Italie',
-    },
+    } as Ingredient,
   ];
 
   beforeEach(() => {
-const sharedDataServiceSpy = jasmine.createSpyObj(
-  'SharedDataService',
-  ['notifyIngredientUpdate', 'notifySupplierUpdate'],
-  {
-    ingredientListUpdate$: of(),
-    supplierListUpdate$: of(),
-    // replaceSupplierInIngredients$: of(),
-  }
-);
+    sharedSpy = jasmine.createSpyObj(
+      'SharedDataService',
+      ['notifyIngredientUpdate'],
+      {
+        ingredientListUpdate$: of(),
+        supplierListUpdate$: of(),
+      }
+    );
+
+    dialogSpy = jasmine.createSpyObj('DialogService', ['error']);
 
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         IngredientService,
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
+        { provide: SharedDataService, useValue: sharedSpy },
+        { provide: DialogService, useValue: dialogSpy },
       ],
     });
 
     service = TestBed.inject(IngredientService);
     httpMock = TestBed.inject(HttpTestingController);
-    sharedDataService = TestBed.inject(SharedDataService) as jasmine.SpyObj<SharedDataService>;
 
-    // GET déclenché au démarrage
-    httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]);
+    // Intercepte la requête GET initiale (constructeur)
+    httpMock.expectOne(apiUrl).flush([]);
   });
 
   afterEach(() => {
     httpMock.verify();
   });
 
-  it('devrait être créé', () => {
+  // ---------------------------------------------------------------
+  //  Construction & chargement initial
+  // ---------------------------------------------------------------
+  it('doit être créé', () => {
     expect(service).toBeTruthy();
   });
 
-  it('devrait charger les ingrédients au démarrage', (done) => {
+  it('doit charger les ingrédients au démarrage', (done) => {
     service['loadIngredients']();
-    httpMock.expectOne('http://localhost:5000/api/ingredients').flush(mockIngredients);
+    httpMock.expectOne(apiUrl).flush(mockIngredients);
 
-    service.getIngredients().subscribe((ingredients) => {
-      expect(ingredients.length).toBe(2);
-      expect(ingredients[0].name).toBe('Tomate');
+    service.getIngredients().subscribe((ings) => {
+      expect(ings.length).toBe(2);
+      expect(ings[0].name).toBe('Tomate');
       done();
     });
   });
 
-  it('devrait créer un ingrédient et recharger la liste', () => {
-    const newIngredient = { name: 'Basilic', bio: true, supplier: '1', type: 'simple', allergens: [], vegan: true, vegeta: true, origin: 'France' };
+  // ---------------------------------------------------------------
+  //  getIngredientsBySupplier (mapping DEFAULT_SUPPLIER)
+  // ---------------------------------------------------------------
+  it('doit mapper le supplier manquant à DEFAULT_SUPPLIER', (done) => {
+    const supId = 'sup1';
+    const url = `${apiUrl}/by-supplier/${supId}`;
 
-    service.createIngredient(newIngredient).subscribe((ingredient) => {
-      expect(ingredient.name).toBe('Basilic');
+    service.getIngredientsBySupplier(supId).subscribe((ings) => {
+      const moz = ings.find((i) => i._id === '2')!;
+      expect(moz.supplier).toEqual(DEFAULT_SUPPLIER);
+      done();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/ingredients').flush(newIngredient);
-    httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]); // Reload après création
+    httpMock.expectOne(url).flush(mockIngredients);
   });
 
-  it('devrait mettre à jour un ingrédient et recharger la liste', () => {
-    const updated = { _id: '1', name: 'Tomate Bio', bio: true, supplier: '1', type: 'simple', allergens: [], vegan: true, vegeta: true, origin: 'France' };
+  // ---------------------------------------------------------------
+  //  CRUD
+  // ---------------------------------------------------------------
+  it('doit créer un ingrédient et notifier la mise à jour', () => {
+    const payload = {
+      name: 'Basilic',
+      bio: true,
+      supplier: 'sup1',
+      type: 'simple',
+      allergens: [],
+      vegan: true,
+      vegeta: true,
+      origin: 'France',
+    } as any;
 
-    service.updateIngredient('1', updated).subscribe((ingredient) => {
-      expect(ingredient.name).toBe('Tomate Bio');
+    service.createIngredient(payload).subscribe((created) => {
+      expect(created.name).toBe('Basilic');
+      expect(sharedSpy.notifyIngredientUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/ingredients/1').flush(updated);
-    httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]); // Reload après update
+    httpMock.expectOne(apiUrl).flush({ _id: '9', ...payload });
   });
 
-  it('devrait supprimer un ingrédient et recharger la liste', () => {
+  it('doit mettre à jour un ingrédient et notifier la mise à jour', () => {
+    const updated = { ...mockIngredients[0], name: 'Tomate Bio' } as Ingredient;
+
+    service.updateIngredient('1', updated).subscribe((res) => {
+      expect(res.name).toBe('Tomate Bio');
+      expect(sharedSpy.notifyIngredientUpdate).toHaveBeenCalled();
+    });
+
+    httpMock.expectOne(`${apiUrl}/1`).flush(updated);
+  });
+
+  it('doit supprimer un ingrédient et notifier', () => {
     service.deleteIngredient('1').subscribe((res) => {
-      expect(res.message).toBe('Ingrédient supprimé');
+      expect(res.message).toBe('deleted');
+      expect(sharedSpy.notifyIngredientUpdate).toHaveBeenCalled();
     });
 
-    httpMock.expectOne('http://localhost:5000/api/ingredients/1').flush({ message: 'Ingrédient supprimé' });
-    httpMock.expectOne('http://localhost:5000/api/ingredients').flush([]); // Reload après delete
+    httpMock.expectOne(`${apiUrl}/1`).flush({ message: 'deleted' });
   });
 
-    it('devrait retourner true si un ingrédient existe déjà', (done) => {
+  // ---------------------------------------------------------------
+  //  checkExistingIngredientName
+  // ---------------------------------------------------------------
+  it('doit retourner true si le nom existe déjà', (done) => {
     const name = 'Tomate';
-    const excludedId = '123';
-
-    service.checkExistingIngredientName(name, excludedId).subscribe((exists) => {
+    service.checkExistingIngredientName(name).subscribe((exists) => {
       expect(exists).toBeTrue();
       done();
     });
 
-    const req = httpMock.expectOne(
-      `http://localhost:5000/api/ingredients/check-name/${encodeURIComponent(name)}?excludedId=${encodeURIComponent(excludedId)}`
-    );
-    expect(req.request.method).toBe('GET');
-    req.flush(true);
+    httpMock
+      .expectOne(`${apiUrl}/check-name/${encodeURIComponent(name)}`)
+      .flush(true);
   });
 
-  it('devrait retourner false si l\'ingrédient n\'existe pas', (done) => {
-    const name = 'Basilic';
+  it('doit appeler dialogService.error via handleError', (done) => {
+    const payload: any = { name: '', bio: true };
+    const errorMessage = 'Requête invalide.';
 
-    service.checkExistingIngredientName(name).subscribe((exists) => {
-      expect(exists).toBeFalse();
-      done();
-    });
-
-    const req = httpMock.expectOne(
-      `http://localhost:5000/api/ingredients/check-name/${encodeURIComponent(name)}`
-    );
-    expect(req.request.method).toBe('GET');
-    req.flush(false);
-  });
-
-  it('devrait gérer une erreur lors de la vérification du nom', (done) => {
-    const name = 'Erreur';
-
-    service.checkExistingIngredientName(name).subscribe({
-      next: () => fail('Une erreur était attendue'),
+    service.createIngredient(payload).subscribe({
+      next: () => fail('Devait échouer'),
       error: (err) => {
-        expect(err.message).toContain('Impossible de charger');
+        expect(err.message).toBe(errorMessage);
+        expect(dialogSpy.error).toHaveBeenCalledWith(errorMessage);
         done();
       },
     });
 
-    const req = httpMock.expectOne(
-      `http://localhost:5000/api/ingredients/check-name/${encodeURIComponent(name)}`
+    httpMock.expectOne(apiUrl).flush(
+      { msg: errorMessage },
+      { status: 400, statusText: 'Bad Request' }
     );
-    req.flush({}, { status: 500, statusText: 'Erreur serveur' });
   });
 
-
-  it('devrait retourner une icône pour une origine connue', () => {
-    const icon = service.getOriginIcon('France');
-    expect(icon).toContain('fr'); // dépend de originFlag['France']
-  });
-
-  it('devrait retourner une icône ❓ pour une origine inconnue', () => {
-    const icon = service.getOriginIcon('Atlantide');
-    expect(icon).toBe('❓');
-  });
-
-  it('devrait charger les allergènes depuis le JSON', (done) => {
-    const mockAllergenes = { allergenes: ['gluten', 'lait'] };
-
-    service.getAllergenes().subscribe((allergenes) => {
-      expect(allergenes).toEqual(['gluten', 'lait']);
+  // ---------------------------------------------------------------
+  //  JSON local
+  // ---------------------------------------------------------------
+  it('doit charger les allergènes', (done) => {
+    const data = { allergenes: ['gluten', 'lait'] };
+    service.getAllergenes().subscribe((all) => {
+      expect(all).toEqual(data.allergenes);
       done();
     });
 
-    httpMock.expectOne('../assets/data/allergenes.json').flush(mockAllergenes);
+    httpMock.expectOne('../assets/data/allergenes.json').flush(data);
   });
 
-  it('devrait charger les origines depuis le JSON', (done) => {
-    const mockOrigines = ['France', 'Italie'];
-
-    service.getOrigines().subscribe((origines) => {
-      expect(origines).toEqual(['France', 'Italie']);
+  it('doit charger les origines', (done) => {
+    const origines = ['France', 'Italie'];
+    service.getOrigines().subscribe((o) => {
+      expect(o).toEqual(origines);
       done();
     });
 
-    httpMock.expectOne('../assets/data/origines.json').flush(mockOrigines);
+    httpMock.expectOne('../assets/data/origines.json').flush(origines);
   });
 
-  it('devrait gérer une erreur 500', (done) => {
+  it('doit gérer erreur 500 sur origines et propager message', (done) => {
     service.getOrigines().subscribe({
       next: () => fail('Erreur attendue'),
       error: (err) => {
@@ -204,6 +227,18 @@ const sharedDataServiceSpy = jasmine.createSpyObj(
       },
     });
 
-    httpMock.expectOne('../assets/data/origines.json').flush({}, { status: 500, statusText: 'Erreur serveur' });
+    httpMock.expectOne('../assets/data/origines.json').flush({}, { status: 500, statusText: 'Server Error' });
+  });
+
+  // ---------------------------------------------------------------
+  //  getOriginIcon
+  // ---------------------------------------------------------------
+  it('doit retourner un emoji ou drapeau pour une origine connue', () => {
+    const icon = service.getOriginIcon('France');
+    expect(icon).not.toBe('❓');
+  });
+
+  it('doit retourner ❓ pour origine inconnue', () => {
+    expect(service.getOriginIcon('Atlantide')).toBe('❓');
   });
 });

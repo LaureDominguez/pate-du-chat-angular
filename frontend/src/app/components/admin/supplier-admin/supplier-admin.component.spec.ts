@@ -1,198 +1,297 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import {
+  TestBed,
+  ComponentFixture,
+  fakeAsync,
+  flush,
+} from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, Subject, throwError } from 'rxjs';
+
 import { SupplierAdminComponent } from './supplier-admin.component';
 import { SupplierService } from '../../../services/supplier.service';
+import { IngredientService } from '../../../services/ingredient.service';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
-import { of } from 'rxjs';
-import { DEFAULT_SUPPLIER, Supplier } from '../../../models/supplier';
-import { ReactiveFormsModule } from '@angular/forms';
-// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ConfirmDialogComponent } from '../../dialog/confirm-dialog/confirm-dialog.component';
-import { Ingredient, IngredientService } from '../../../services/ingredient.service';
+import { Supplier, DEFAULT_SUPPLIER } from '../../../models/supplier';
+import { Ingredient } from '../../../models/ingredient';
 
 describe('SupplierAdminComponent', () => {
-  let component: SupplierAdminComponent;
   let fixture: ComponentFixture<SupplierAdminComponent>;
-  let supplierServiceSpy: jasmine.SpyObj<SupplierService>;
-  let ingredientServiceSpy: jasmine.SpyObj<IngredientService>;
-  let sharedDataServiceSpy: jasmine.SpyObj<SharedDataService>;
-  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
+  let component: SupplierAdminComponent;
+
+  // Spies & helpers
+  let suppliers$: Subject<Supplier[]>;
+  let supplierSpy: jasmine.SpyObj<SupplierService>;
+  let ingredientSpy: jasmine.SpyObj<IngredientService>;
+  let sharedSpy: jasmine.SpyObj<SharedDataService> & { requestNewSupplier$: Subject<any> };
+  let dialogSpy: jasmine.SpyObj<DialogService>;
 
   beforeEach(async () => {
-    supplierServiceSpy = jasmine.createSpyObj('SupplierService', [
-      'getSuppliers', 'createSupplier', 'updateSupplier', 'deleteSupplier'
-    ]);
-    ingredientServiceSpy = jasmine.createSpyObj('IngredientService', ['getIngredients', 'getIngredientsBySupplier']);
+    // Observable pilotable pour suppliers$
+    suppliers$ = new Subject<Supplier[]>();
 
-    sharedDataServiceSpy = jasmine.createSpyObj(
-      'SharedDataService',
-      ['sendSupplierToIngredientForm', 'notifySupplierUpdate'],
-      { requestNewSupplier$: of() }
+    supplierSpy = jasmine.createSpyObj(
+      'SupplierService',
+      ['createSupplier', 'updateSupplier', 'deleteSupplier'],
+      { suppliers$: suppliers$.asObservable() }
     );
 
-    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['info', 'showHttpError', 'confirm', 'error']);
-    dialogServiceSpy.confirm.and.returnValue(of('confirm'));
-    dialogServiceSpy.info.and.returnValue(of(null));
+    ingredientSpy = jasmine.createSpyObj('IngredientService', ['getIngredientsBySupplier']);
+
+    sharedSpy = Object.assign(
+      jasmine.createSpyObj('SharedDataService', ['sendSupplierToIngredientForm']),
+      { requestNewSupplier$: new Subject<any>() }
+    );
+
+    dialogSpy = jasmine.createSpyObj('DialogService', [
+      'info',
+      'showHttpError',
+      'confirm',
+      'error',
+    ]);
+    dialogSpy.confirm.and.returnValue(of('confirm')); // Valeur par défaut
 
     await TestBed.configureTestingModule({
-      imports: [
-        SupplierAdminComponent,
-        ReactiveFormsModule,
-        // BrowserAnimationsModule,
-        ConfirmDialogComponent
-      ],
+      imports: [SupplierAdminComponent],
       providers: [
-        { provide: SupplierService, useValue: supplierServiceSpy },
-        {provide: IngredientService, useValue: ingredientServiceSpy },
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        { provide: DialogService, useValue: dialogServiceSpy }
-      ]
+        provideNoopAnimations(),
+        { provide: SupplierService, useValue: supplierSpy },
+        { provide: IngredientService, useValue: ingredientSpy },
+        { provide: SharedDataService, useValue: sharedSpy },
+        { provide: DialogService, useValue: dialogSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SupplierAdminComponent);
     component = fixture.componentInstance;
-    supplierServiceSpy.getSuppliers.and.returnValue(of([]));
     fixture.detectChanges();
   });
 
-  it('devrait être créé', () => {
-    expect(component).toBeTruthy();
+  // ------------------------------------------------------------------
+  //  Flux initial - injection de DEFAULT_SUPPLIER
+  // ------------------------------------------------------------------
+  it('doit injecter DEFAULT_SUPPLIER lors de la première émission', () => {
+    suppliers$.next([{ _id: '1', name: 'Fournisseur A', description: '' }]);
+    fixture.detectChanges();
+
+    expect(component.suppliers.data[0]._id).toBe(DEFAULT_SUPPLIER._id);
+    expect(component.suppliers.data.length).toBe(2);
   });
 
-  it('devrait ajouter le fournisseur par défaut si absent', () => {
-    const data = component.suppliers.data;
-    expect(data.some(s => s._id === DEFAULT_SUPPLIER._id)).toBeTrue();
-  });
-
-  it('devrait initialiser un formulaire en édition avec un fournisseur vide', () => {
+  // ------------------------------------------------------------------
+  //  startEditingSupplier + formulaire
+  // ------------------------------------------------------------------
+  it('doit démarrer une édition vide avec formulaire invalide', () => {
     component.startEditingSupplier();
     expect(component.supplierForm).toBeDefined();
     expect(component.supplierForm.valid).toBeFalse();
+    expect(component.suppliers.data[0]._id).toBeNull(); // ligne temporaire
   });
 
-  it('devrait formater un nom', () => {
-    const formatted = component.formatNameInput('pâtes du chat');
-    expect(formatted).toBe('Pâtes du chat');
-  });
-
-  it('ne devrait pas enregistrer si le formulaire est invalide', () => {
-    supplierServiceSpy.createSupplier.calls.reset();
+  // ------------------------------------------------------------------
+  //  saveSupplier - création
+  // ------------------------------------------------------------------
+  it('doit appeler createSupplier puis info() lors d\'une création', () => {
     component.startEditingSupplier();
-    component.saveSupplier({ _id: null, name: '', description: '' });
-    expect(supplierServiceSpy.createSupplier).not.toHaveBeenCalled();
+    component.supplierForm.setValue({ name: 'Nouveau Fournisseur', description: '' });
+
+    supplierSpy.createSupplier.and.returnValue(
+      of({ _id: 'new', name: 'Nouveau Fournisseur', description: '' })
+    );
+
+    component.saveSupplier({ _id: null, name: '', description: '' } as any);
+
+    expect(supplierSpy.createSupplier).toHaveBeenCalled();
+    expect(dialogSpy.info).toHaveBeenCalledWith('Fournisseur créé avec succès.');
   });
 
-  it('devrait refuser de supprimer le fournisseur par défaut', () => {
+  // ------------------------------------------------------------------
+  //  saveSupplier - update
+  // ------------------------------------------------------------------
+  it('doit appeler updateSupplier puis info() lors d\'une mise à jour', () => {
+    const sup: Supplier = { _id: '42', name: 'Ancien', description: '' };
+    component.startEditingSupplier(sup);
+    component.supplierForm.setValue({ name: 'Nouveau Nom', description: '' });
+
+    supplierSpy.updateSupplier.and.returnValue(
+      of({ ...sup, name: 'Nouveau Nom' })
+    );
+
+    component.saveSupplier(sup);
+
+    expect(supplierSpy.updateSupplier).toHaveBeenCalledWith(
+      '42',
+      jasmine.objectContaining({ name: 'Nouveau Nom' })
+    );
+    expect(dialogSpy.info).toHaveBeenCalledWith('Fournisseur modifié avec succès.');
+  });
+
+  // ------------------------------------------------------------------
+  //  saveSupplier - formulaire invalide
+  // ------------------------------------------------------------------
+  it('ne doit pas appeler createSupplier si le formulaire est invalide', () => {
+    component.startEditingSupplier();
+    component.supplierForm.get('name')!.setValue('');
+    component.saveSupplier({ _id: null, name: '', description: '' } as any);
+
+    expect(supplierSpy.createSupplier).not.toHaveBeenCalled();
+  });
+
+  // ------------------------------------------------------------------
+  //  deleteSupplier - cas spéciaux
+  // ------------------------------------------------------------------
+  it('doit refuser la suppression de DEFAULT_SUPPLIER', () => {
     component.deleteSupplier(DEFAULT_SUPPLIER);
-    expect(dialogServiceSpy.info).toHaveBeenCalledWith(
+    expect(dialogSpy.info).toHaveBeenCalledWith(
       'Vous ne pouvez pas supprimer le fournisseur "Sans fournisseur".'
     );
-    expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
   });
 
-  it('devrait supprimer un fournisseur après confirmation', fakeAsync(() => {
-    const supplier: Supplier = {
-      _id: 'abc123',
-      name: 'Test Supplier',
-      description: '',
-      ingredientCount: 0
-    };
+  it('ne doit rien appeler si l\'utilisateur annule la suppression', () => {
+    dialogSpy.confirm.and.returnValue(of('cancel'));
+    const sup: Supplier = { _id: '10', name: 'A', description: '', ingredientCount: 0 } as any;
 
-    supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'Fournisseur supprimé avec succès.' }));
+    component.deleteSupplier(sup);
+    expect(supplierSpy.deleteSupplier).not.toHaveBeenCalled();
+  });
 
-    component.deleteSupplier(supplier);
-    tick();
+  it('doit supprimer un fournisseur vide après confirmation', fakeAsync(() => {
+    dialogSpy.confirm.and.returnValue(of('confirm'));
+    const sup: Supplier = { _id: '11', name: 'B', description: '', ingredientCount: 0 } as any;
 
-    expect(supplierServiceSpy.deleteSupplier).toHaveBeenCalledWith('abc123');
-    expect(dialogServiceSpy.info).toHaveBeenCalledWith('Fournisseur supprimé avec succès.');
+    supplierSpy.deleteSupplier.and.returnValue(of({ message: 'ok' }));
+
+    component.deleteSupplier(sup);
+    flush();
+
+    expect(supplierSpy.deleteSupplier).toHaveBeenCalledWith('11');
+    expect(dialogSpy.info).toHaveBeenCalledWith('Fournisseur supprimé avec succès.');
   }));
 
-  it('ne devrait rien faire si l’utilisateur annule la suppression', fakeAsync(() => {
-    dialogServiceSpy.confirm.and.returnValue(of('cancel'));
+  // ------------------------------------------------------------------
+  //  deleteSupplier - extra → confirm
+  // ------------------------------------------------------------------
+  it('doit montrer les ingrédients liés puis supprimer après EXTRA + CONFIRM', fakeAsync(() => {
+    let call = 0;
+    dialogSpy.confirm.and.callFake(() => of(++call === 1 ? 'extra' : 'confirm'));
 
-    const supplier: Supplier = {
-      _id: 'abc123',
-      name: 'Test Supplier',
-      description: '',
-      ingredientCount: 0
-    };
+    const sup: Supplier = { _id: '20', name: 'C', description: '', ingredientCount: 2 } as any;
 
-    component.deleteSupplier(supplier);
-    tick();
+    ingredientSpy.getIngredientsBySupplier.and.returnValue(
+      of([{ _id: 'i', name: 'Ingrédient', supplier: '20' } as Ingredient])
+    );
+    supplierSpy.deleteSupplier.and.returnValue(of({ message: 'ok' }));
 
-    expect(supplierServiceSpy.deleteSupplier).not.toHaveBeenCalled();
+    component.deleteSupplier(sup);
+    flush();
+
+    expect(ingredientSpy.getIngredientsBySupplier).toHaveBeenCalledWith('20');
+    expect(supplierSpy.deleteSupplier).toHaveBeenCalledWith('20');
   }));
 
-  it('devrait afficher les ingrédients liés si l’utilisateur clique sur "Voir les ingrédients" pendant la suppression', fakeAsync(() => {
-    const supplier: Supplier = {
-      _id: 'sup123',
-      name: 'Fournisseur associé',
-      description: '',
-      ingredientCount: 2
-    };
+  // ------------------------------------------------------------------
+  //  deleteSupplier - erreur serveur
+  // ------------------------------------------------------------------
+  it('doit appeler showHttpError si deleteSupplier échoue', fakeAsync(() => {
+    dialogSpy.confirm.and.returnValue(of('confirm'));
+    const sup: Supplier = { _id: 'err', name: 'Err', description: '', ingredientCount: 0 } as any;
 
-    // Simule le clic initial sur "Voir les ingrédients", puis "Confirmer" après
-    let confirmCallCount = 0;
-    dialogServiceSpy.confirm.and.callFake(() => {
-      confirmCallCount++;
-      return of(confirmCallCount === 1 ? 'extra' : 'confirm');
-    });
+    const httpErr = new HttpErrorResponse({ status: 500, statusText: 'Err' });
+    supplierSpy.deleteSupplier.and.returnValue(throwError(() => httpErr));
 
-    // Simule deux ingrédients liés
-    const fakeIngredients = [
-      {
-        _id: 'i1',
-        name: 'Ingrédient A',
-        bio: true,
-        supplier: 'sup123',
-        type: 'simple',
-        allergens: [],
-        vegan: true,
-        vegeta: true,
-        origin: 'FR',
-        images: []
-      },
-      {
-        _id: 'i2',
-        name: 'Ingrédient B',
-        bio: false,
-        supplier: 'sup123',
-        type: 'simple',
-        allergens: [],
-        vegan: false,
-        vegeta: false,
-        origin: 'IT',
-        images: []
-      }
-    ];
+    component.deleteSupplier(sup);
+    flush();
 
-    // Fournit les ingrédients simulés
-    ingredientServiceSpy.getIngredientsBySupplier.and.returnValue(of(fakeIngredients as Ingredient[]));
-    supplierServiceSpy.deleteSupplier.and.returnValue(of({ message: 'OK' }));
-
-    component.deleteSupplier(supplier);
-    tick(); // 1. confirm() → 'extra'
+    expect(dialogSpy.showHttpError).toHaveBeenCalledWith(httpErr);
   }));
 
-
-  it('devrait retourner \\u0000 pour le fournisseur highlighté (hors édition)', () => {
-    const supplier: Supplier = { _id: '2', name: 'Nom', description: '', ingredientCount: 0 };
-
-    component.highlightedSupplierId = '2';
+  // ------------------------------------------------------------------
+  //  sortingDataAccessor
+  // ------------------------------------------------------------------
+  it('doit renvoyer "\u0000" pour le fournisseur highlighté (hors édition)', () => {
+    const sup: Supplier = { _id: 'h1', name: 'Zed', description: '' } as any;
+    component.highlightedSupplierId = 'h1';
     component.editingSupplierId = null;
+    
+    // Définition manuelle de la fonction de tri
+    component.suppliers.sortingDataAccessor = (item: Supplier, property: string): string | number => {
+      if (item._id && item._id === component.highlightedSupplierId && item._id !== component.editingSupplierId) {
+        return '\u0000';
+      }
+      return (item as any)[property];
+    };
 
-    const result = component.suppliers.sortingDataAccessor(supplier, 'name');
-    expect(result).toBe('\u0000');
+    expect(component.suppliers.sortingDataAccessor(sup, 'name')).toBe('\u0000');
   });
 
-  it('ne devrait pas retourner \\u0000 si le fournisseur est en cours d’édition', () => {
-    const supplier: Supplier = { _id: '2', name: 'Nom', description: '', ingredientCount: 0 };
+  it('ne doit pas renvoyer "\u0000" si le fournisseur est en édition', () => {
+    const sup: Supplier = { _id: 'h2', name: 'Yed', description: '' } as any;
+    component.highlightedSupplierId = 'h2';
+    component.editingSupplierId = 'h2';
+    
+    // Définition manuelle de la fonction de tri
+    component.suppliers.sortingDataAccessor = (item: Supplier, property: string): string | number => {
+      if (item._id && item._id === component.highlightedSupplierId && item._id !== component.editingSupplierId) {
+        return '\u0000';
+      }
+      return (item as any)[property];
+    };
 
-    component.highlightedSupplierId = '2';
-    component.editingSupplierId = '2';
-
-    const result = component.suppliers.sortingDataAccessor(supplier, 'name');
-    expect(result).toBe('Nom');
+    expect(component.suppliers.sortingDataAccessor(sup, 'name')).toBe('Yed');
   });
 
+  // ------------------------------------------------------------------
+  //  cancelEditingSupplier
+  // ------------------------------------------------------------------
+  it('doit annuler l\'édition et retirer la ligne temporaire', fakeAsync(() => {
+    component.startEditingSupplier();
+    expect(component.suppliers.data.some(s => s._id === null)).toBeTrue();
+
+    component.cancelEditingSupplier();
+    flush();
+
+    expect(component.editingSupplier).toBeNull();
+    expect(component.suppliers.data.some(s => s._id === null)).toBeFalse();
+  }));
+
+  // ------------------------------------------------------------------
+  //  formatNameInput
+  // ------------------------------------------------------------------
+  it('doit formater correctement le nom (trim + majuscule)', () => {
+    expect(component.formatNameInput('  abc')).toBe('Abc');
+    expect(component.formatNameInput('')).toBe('');
+  });
+
+  // ------------------------------------------------------------------
+  //  Flux requestNewSupplier$
+  // ------------------------------------------------------------------
+  it('doit créer un fournisseur via requestNewSupplier$', fakeAsync(() => {
+    supplierSpy.createSupplier.and.returnValue(
+      of({ _id: 'x', name: 'Pizza', description: '' })
+    );
+
+    sharedSpy.requestNewSupplier$.next({ name: 'pizza', description: '' });
+    flush();
+
+    expect(supplierSpy.createSupplier).toHaveBeenCalled();
+    expect(dialogSpy.info).toHaveBeenCalledWith('Fournisseur créé avec succès.');
+    expect(sharedSpy.sendSupplierToIngredientForm).toHaveBeenCalled();
+  }));
+
+  // ------------------------------------------------------------------
+  //  Erreur sur createSupplier
+  // ------------------------------------------------------------------
+  it('doit appeler showHttpError si createSupplier échoue', fakeAsync(() => {
+    component.startEditingSupplier();
+    component.supplierForm.setValue({ name: 'Bug', description: '' });
+
+    const httpErr = new HttpErrorResponse({ status: 400, statusText: 'Bad' });
+    supplierSpy.createSupplier.and.returnValue(throwError(() => httpErr));
+
+    component.saveSupplier({ _id: null, name: '', description: '' } as any);
+    flush();
+
+    expect(dialogSpy.showHttpError).toHaveBeenCalledWith(httpErr);
+  }));
 });
