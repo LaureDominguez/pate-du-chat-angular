@@ -207,12 +207,21 @@ describe('IngredientFormComponent', () => {
   });
 
   // Enregistrement
-  it('devrait appeler checkNameExists.emit avec le nom si valide', () => {
+  it('devrait appeler checkNameExists.emit avec le nom si le formulaire est valide', () => {
     spyOn(component.checkNameExists, 'emit');
-    component.ingredientForm.get('name')?.setValue('Tomate');
+
+    // Renseigne tous les champs requis
+    component.ingredientForm.patchValue({
+      name: 'Tomate',
+      supplier: { _id: '1', name: 'Fournisseur 1' },
+      origin: 'France'
+    });
+
     component.save();
+
     expect(component.checkNameExists.emit).toHaveBeenCalledWith('Tomate');
   });
+
 
   it('devrait émettre les données si le formulaire est valide', () => {
     spyOn(component.formValidated, 'emit');

@@ -1,5 +1,5 @@
-import { ApplicationRef, Component, EventEmitter, Inject, inject, NgZone, OnDestroy, OnInit, Output, PLATFORM_ID, ViewChild } from '@angular/core';
-import { debounceTime, filter, first, firstValueFrom, forkJoin, Subject, switchMap, take, takeUntil, timer } from 'rxjs';
+import { Component, EventEmitter, Inject, OnDestroy, OnInit, Output, PLATFORM_ID, ViewChild } from '@angular/core';
+import { firstValueFrom, forkJoin, Subject, take, takeUntil } from 'rxjs';
 
 import { Category, CategoryService } from '../../../services/category.service';
 import { Ingredient, IngredientService } from '../../../services/ingredient.service';
@@ -32,15 +32,12 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
   categories: Category[] = [];
   ingredients: Ingredient[] = [];
   dlcsList: string[] = [];
-
+  noCompositionID: string[] = [];
   highlightedProductId: string | null = null; 
   isMobile = false;
 
   private unsubscribe$ = new Subject<void>();
-
   private shownWarningOnce = false;
-  noCompositionID: string[] = [];
-
 
   displayedProductsColumns: string[] = [
     'name',
@@ -237,10 +234,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     ) {
       return;
     }
-
     this.openProductForm(product);
   }
-
 
   openProductForm(product: Product | null): void {
     const imageUrls =
@@ -328,7 +323,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       this.submitProductForm(productId, productData, onSuccess);
     }
   }
-  
 
   submitProductForm(
     productId?: string, 
@@ -407,7 +401,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ⏬ Nouvelle méthode explicite
   private removeProductAndImages(product: Product): void {
     product.images?.forEach((imageUrl) => {
       const filename = imageUrl.replace(/^\/?uploads\/?/, '');
@@ -415,7 +408,6 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     });
     this.confirmDeleteProduct(product);
   }
-
 
   // >> Télécharger les images avant suppression
   private downloadProductImagesBeforeDelete(product: Product): void {

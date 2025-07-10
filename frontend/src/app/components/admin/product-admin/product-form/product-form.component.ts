@@ -169,7 +169,6 @@ export class ProductFormComponent implements OnInit {
           ? data.product?.stockQuantity
           : null,
         [
-          // Validators.required,
           Validators.pattern(/\S+/),
           Validators.pattern(/^\d+(\.\d{1,2})?$/),
           Validators.min(0),
@@ -464,8 +463,6 @@ export class ProductFormComponent implements OnInit {
   }
 
 
-
-
   /////////////////////////////////////////////////////////////////////////////////
   ////////// Gestion des ingrédients
   private updateComposition(ingredient: Ingredient, add: boolean): void {
@@ -541,7 +538,6 @@ export class ProductFormComponent implements OnInit {
   clearIngredientSearch(): void {
     this.ingredientCtrl.setValue('');
   }
-
 
   getIngredientTooltip(ingredient: Ingredient): string {
     return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
@@ -649,6 +645,7 @@ export class ProductFormComponent implements OnInit {
     Object.values(this.productForm.controls).forEach(control => {
       control.markAsTouched();
     });
+    if (this.productForm.invalid) return;
 
     const name = this.productForm.value.name;
     if (name === '' || name === undefined) return;

@@ -23,7 +23,6 @@ export class IngredientFormComponent {
   ingredientForm: FormGroup;
 
   @Output() downloadImage = new EventEmitter<{ imagePath: string; objectName: string }>()
-
   @Output() checkNameExists = new EventEmitter<string>();
   @Output() formValidated = new EventEmitter<{
     ingredientData: any;
@@ -31,7 +30,6 @@ export class IngredientFormComponent {
     removedExistingImages: string[];
     imageOrder: string[];
   }>();
-
 
   // Fournisseurs
   suppliers: Supplier[] = [];
@@ -45,7 +43,6 @@ export class IngredientFormComponent {
   allIngredients: Ingredient[] = [];
   subIngredientCtrl = new FormControl();
   filteredSubIngredients!: Observable<Ingredient[]>;
-  // selectedSubIngredients: Ingredient[] = [];
   subIngredientNotFound: boolean = false;
   
   // Images
@@ -61,14 +58,12 @@ export class IngredientFormComponent {
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
-      // imageUrls: string[];
       ingredient: Ingredient | null;
       allergenesList: string[];
       suppliers: Supplier[];
       originesList: { label: string; options: string[] }[];
       searchedValue: string;
       ingredients: Ingredient[];
-      
       imageUrls: string[];
       imagePaths: string[];
     }
@@ -127,15 +122,6 @@ export class IngredientFormComponent {
       vegeta: [data.ingredient?.vegeta || false],
       images: [data.ingredient?.images || []],
     });
-
-
-    // const supplier = this.supplier?.value;
-
-    // if (supplier && typeof supplier === 'object') {
-    //   this.supplierCtrl.setValue(supplier.name);
-    // } else {
-    //   this.supplierCtrl.setValue('');
-    // }
     this.supplierCtrl.setValue(this.ingredientForm.value.supplier?.name || '');
   }
 
@@ -150,14 +136,14 @@ export class IngredientFormComponent {
   private subscribeToDataUpdates(): void {
     this.sharedDataService.supplierCreated$.subscribe((newSupplier: Supplier) => {
       if (!newSupplier || !newSupplier._id || !newSupplier.name) {
-        this.dialogService.error('❌ Données invalides reçues pour le nouveau fournisseur !');
+        this.dialogService.error('❌ Données invalides reçues pour le nouveau fournisseur');
         return;
       }
 
       this.suppliers.push(newSupplier);
       this.supplierNotFound = false;
 
-      const label = typeof newSupplier === 'string' ? newSupplier : newSupplier.name;
+      // const label = typeof newSupplier === 'string' ? newSupplier : newSupplier.name;
 
       this.ingredientForm.patchValue({ supplier: newSupplier });
       this.supplierCtrl.setValue(newSupplier.name);
@@ -448,9 +434,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
     }
   }
 
-
-
-
   /////////////////////////////////////////////////////////////////////////////////
   ///////////////////////// Gestion des images
     updateProcessedImages(): void {
@@ -494,7 +477,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
     if (errors.length > 0) {
       this.dialogService.error(errors.join('<br>'));
     }
-
     input.value = '';
   }
 
@@ -517,13 +499,13 @@ getIngredientTooltip(ingredient: Ingredient): string {
     this.downloadImage.emit({imagePath: imageUrl, objectName: ingredientName});
   }
 
-
   save(): void {
-
     Object.values(this.ingredientForm.controls).forEach((control) => {
       control.markAsTouched(); // Marque tous les champs comme touchés
     });
-
+    if (this.ingredientForm.invalid) {
+      return;
+    }
     const name = this.ingredientForm.value.name;
     if (name === '' || name === undefined) return;
     else this.checkNameExists.emit(name);
@@ -562,7 +544,7 @@ getIngredientTooltip(ingredient: Ingredient): string {
       ? { ...supplier, name: this.formatNameInput(supplier.name) }
       : null;
 
-          // traitement des images
+    // traitement des images
     const selectedFiles: File[] = this.processedImages
       .filter((img) => img.type === 'preview' && img.file)
       .map((img) => img.file!); // `!` car on a déjà filtré
@@ -582,7 +564,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
       name: this.formatNameInput(this.ingredientForm.value.name),
       supplier: formattedSupplier,
       allergens: allergenesSelectionnes,
-      // subIngredients: this.selectedSubIngredients.map((ing) => ing._id),
       existingImages: existingImages,
     };
 
@@ -592,7 +573,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
       removedExistingImages: this.removedExistingImages,
       imageOrder
     });
-
   }
 
   private fieldLabels: { [key: string]: string } = {
@@ -612,7 +592,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
     if (!control || control.valid || !control.errors) return null;
 
     const label = this.fieldLabels[controlName] || controlName;
-
     if (control.hasError('required'))
       return `Le champ "${label}" est obligatoire.`;
     if (control.hasError('minlength'))
@@ -623,7 +602,6 @@ getIngredientTooltip(ingredient: Ingredient): string {
       return `Le champ "${label}" contient des caractères non autorisés.`;
     if (control.hasError('min'))
       return `Le champ "${label}" doit être un nombre positif.`;
-
     return null;
   }
 

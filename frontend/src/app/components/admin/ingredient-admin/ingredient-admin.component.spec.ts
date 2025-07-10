@@ -1,290 +1,430 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  flush,
+  tick,
+} from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { HttpErrorResponse } from '@angular/common/http';
+import {
+  MatDialog,
+  MatDialogRef,
+  MatDialogConfig,
+} from '@angular/material/dialog';
+import { Subject, of, throwError } from 'rxjs';
+
 import { IngredientAdminComponent } from './ingredient-admin.component';
-import { IngredientService } from '../../../services/ingredient.service';
-import { SupplierService } from '../../../services/supplier.service';
-import { ProductService } from '../../../services/product.service';
+import {
+  IngredientService,
+  Ingredient,
+} from '../../../services/ingredient.service';
+import {
+  SupplierService,
+  Supplier,
+} from '../../../services/supplier.service';
+import {
+  ProductService,
+  Product,
+} from '../../../services/product.service';
 import { ImageService } from '../../../services/image.service';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { DialogService } from '../../../services/dialog.service';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { of } from 'rxjs';
-// import { AdminModule } from '../admin.module';
-import { ADMIN_SHARED_IMPORTS } from '../admin-material';
-
-// import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { Ingredient } from '../../../models/ingredient';
-import { Product } from '../../../models/product';
+import { DEFAULT_SUPPLIER } from '../../../models/supplier';
 import { IngredientFormComponent } from './ingredient-form/ingredient-form.component';
 
+// -----------------------------------------------------------------------------
+//  Types locaux (mocks)
+// -----------------------------------------------------------------------------
+interface UploadResponse {
+  message: string;
+  imagePath: string[];
+}
+
+// -----------------------------------------------------------------------------
+//  Helpers
+// -----------------------------------------------------------------------------
+function buildIngredient(partial: Partial<Ingredient> = {}): Ingredient {
+  return {
+    _id: 'id',
+    name: 'Nom',
+    bio: '',
+    type: '',
+    vegan: false,
+    vegeta: false,
+    origin: '',
+    supplier: null as any,
+    allergens: [],
+    images: [],
+    ...partial,
+  } as Ingredient;
+}
+
+// -----------------------------------------------------------------------------
+//  Suite de tests
+// -----------------------------------------------------------------------------
+
 describe('IngredientAdminComponent', () => {
-  let component: IngredientAdminComponent;
   let fixture: ComponentFixture<IngredientAdminComponent>;
-  let ingredientServiceSpy: jasmine.SpyObj<IngredientService>;
-  let supplierServiceSpy: jasmine.SpyObj<SupplierService>;
-  let productServiceSpy: jasmine.SpyObj<ProductService>;
-  let imageServiceSpy: jasmine.SpyObj<ImageService>;
-  let sharedDataServiceSpy: jasmine.SpyObj<SharedDataService>;
-  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
+  let component: IngredientAdminComponent;
+
+  // Subjects pilotables
+  let ingredients$: Subject<Ingredient[]>;
+  let suppliers$: Subject<Supplier[]>;
+
+  // Spies & stubs
+  let ingredientSpy: jasmine.SpyObj<IngredientService>;
+  let supplierSpy: jasmine.SpyObj<SupplierService>;
+  let productSpy: jasmine.SpyObj<ProductService>;
+  let imageSpy: jasmine.SpyObj<ImageService>;
+  let sharedSpy: jasmine.SpyObj<SharedDataService> & {
+    requestNewIngredient$: Subject<void>;
+  };
+  let dialogSvcSpy: jasmine.SpyObj<DialogService>;
   let matDialogSpy: jasmine.SpyObj<MatDialog>;
 
-  const matDialogRefSpy = {
-    afterClosed: () => of(null),
-    close: () => {},
-    componentInstance: {},
-    updateSize: () => matDialogRefSpy,
-    updatePosition: () => matDialogRefSpy,
-    addPanelClass: () => matDialogRefSpy,
-    removePanelClass: () => matDialogRefSpy,
-    backdropClick: () => of(null),
-    keydownEvents: () => of(null)
-  } as unknown as MatDialogRef<any>;
-
   beforeEach(async () => {
-    ingredientServiceSpy = jasmine.createSpyObj('IngredientService', [
-      'checkExistingIngredientName', 
-      'updateIngredient', 
-      'createIngredient', 
-      'deleteIngredient',
-      'getOriginIcon', 
-      'getAllergenes', 
-      'getOrigines'
+    // ------------------------------------------------
+    //  Subjects
+    // ------------------------------------------------
+    ingredients$ = new Subject<Ingredient[]>();
+    suppliers$ = new Subject<Supplier[]>();
+
+    // ------------------------------------------------
+    //  IngredientService spy
+    // ------------------------------------------------
+    ingredientSpy = jasmine.createSpyObj(
+      'IngredientService',
+      [
+        'getAllergenes',
+        'getOrigines',
+        'checkExistingIngredientName',
+        'createIngredient',
+        'updateIngredient',
+        'deleteIngredient',
+        'getOriginIcon',
+      ],
+      { ingredients$: ingredients$.asObservable() }
+    );
+    ingredientSpy.getAllergenes.and.returnValue(of(['gluten', 'lactose']));
+    ingredientSpy.getOrigines.and.returnValue(of(['France', 'Italie']));
+    ingredientSpy.getOriginIcon.and.returnValue('🍅');
+
+    // ------------------------------------------------
+    //  SupplierService spy
+    // ------------------------------------------------
+    supplierSpy = jasmine.createSpyObj('SupplierService', [], {
+      suppliers$: suppliers$.asObservable(),
+    });
+
+    // ------------------------------------------------
+    //  ProductService spy
+    // ------------------------------------------------
+    productSpy = jasmine.createSpyObj('ProductService', [
+      'getProductsByIngredient',
     ]);
 
-    ingredientServiceSpy.getAllergenes.and.returnValue(of([]));
-    ingredientServiceSpy.getOrigines.and.returnValue(of([]));
-    ingredientServiceSpy.ingredients$ = of([]);
-    supplierServiceSpy = jasmine.createSpyObj('SupplierService', [], { suppliers$: of([]) });
-    productServiceSpy = jasmine.createSpyObj('ProductService', ['getProductsByIngredient']);
-    imageServiceSpy = jasmine.createSpyObj('ImageService', ['uploadImages', 'deleteImage', 'downloadImage', 'getImageUrl']);
-    sharedDataServiceSpy = jasmine.createSpyObj('SharedDataService', [
-      'getSearchedIngredient', 'notifyIngredientCompositionUpdate', 'resultIngredientCreated'
-    ], {
-      requestNewIngredient$: of(),
-      downloadImage$: of()
+    // ------------------------------------------------
+    //  ImageService spy
+    // ------------------------------------------------
+    imageSpy = jasmine.createSpyObj<ImageService>('ImageService', [
+      'downloadImage',
+      'getImageUrl',
+      'uploadImages',
+      'deleteImage',
+    ]);
+    imageSpy.getImageUrl.and.callFake((p: string) => `url://${p}`);
+    imageSpy.uploadImages.and.returnValue(
+      of({ imagePath: ['/uploads/mock.jpg'], message: 'ok' } as UploadResponse)
+    );
+    imageSpy.deleteImage.and.returnValue(of({ message: 'ok' }));
+
+    // ------------------------------------------------
+    //  SharedDataService spy & Subject
+    // ------------------------------------------------
+    sharedSpy = Object.assign(
+      jasmine.createSpyObj('SharedDataService', [
+        'getSearchedIngredient',
+        'resultIngredientCreated',
+      ]),
+      { requestNewIngredient$: new Subject<void>() }
+    );
+
+    // ------------------------------------------------
+    //  DialogService spy
+    // ------------------------------------------------
+    dialogSvcSpy = jasmine.createSpyObj('DialogService', [
+      'info',
+      'success',
+      'error',
+      'confirm',
+    ]);
+    dialogSvcSpy.confirm.and.returnValue(of('confirm'));
+    dialogSvcSpy.info.and.returnValue(of(''));
+
+    // ------------------------------------------------
+    //  MatDialog stub
+    // ------------------------------------------------
+    matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
+    matDialogSpy.open.and.callFake((_: any, _config?: MatDialogConfig<any>) => {
+      return {
+        componentInstance: {
+          downloadImage: new Subject<any>(),
+          checkNameExists: new Subject<any>(),
+          formValidated: new Subject<any>(),
+          validateAndSubmit: jasmine.createSpy('validateAndSubmit'),
+        },
+        close: jasmine.createSpy('close'),
+      } as unknown as MatDialogRef<any>;
     });
-    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['error', 'success', 'info', 'confirm']);
 
-    const matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
-    const fakeDialogRef = {
-      componentInstance: {
-        checkNameExists: of('Tomate'),
-        validateAndSubmit: jasmine.createSpy('validateAndSubmit'),
-        formValidated: of()
-      },
-      close: jasmine.createSpy('close'),
-      afterClosed: () => of(null)
-    };
-
-    matDialogSpy.open.and.returnValue(fakeDialogRef);
-
-
+    // ------------------------------------------------
+    //  Configuration du module de test
+    // ------------------------------------------------
     await TestBed.configureTestingModule({
-      imports: [
-        ADMIN_SHARED_IMPORTS,
-        // BrowserAnimationsModule,
-        IngredientAdminComponent,
-        IngredientFormComponent
-      ],
+      imports: [IngredientAdminComponent],
       providers: [
-        { provide: IngredientService, useValue: ingredientServiceSpy },
-        { provide: SupplierService, useValue: supplierServiceSpy },
-        { provide: ProductService, useValue: productServiceSpy },
-        { provide: ImageService, useValue: imageServiceSpy },
-        { provide: SharedDataService, useValue: sharedDataServiceSpy },
-        { provide: DialogService, useValue: dialogServiceSpy },
-        { provide: MatDialog, useValue: matDialogSpy }
-      ]
-    }).compileComponents();
-
-    TestBed.overrideComponent(IngredientAdminComponent, {
-      set: {
-        providers: [
-          { provide: MatDialog, useValue: matDialogSpy }
-        ]
-      }
-    });
-
+        provideNoopAnimations(),
+        { provide: IngredientService, useValue: ingredientSpy },
+        { provide: SupplierService, useValue: supplierSpy },
+        { provide: ProductService, useValue: productSpy },
+        { provide: ImageService, useValue: imageSpy },
+        { provide: SharedDataService, useValue: sharedSpy },
+        { provide: DialogService, useValue: dialogSvcSpy },
+      ],
+    })
+      // 🔄 Override MatDialog (le composant standalone fournit déjà MatDialog)
+      .overrideProvider(MatDialog, { useValue: matDialogSpy })
+      .compileComponents();
 
     fixture = TestBed.createComponent(IngredientAdminComponent);
     component = fixture.componentInstance;
+
+    spyOn(component.countChanged, 'emit');
     fixture.detectChanges();
   });
 
-  it('devrait créer le composant', () => {
-    expect(component).toBeTruthy();
+  // ---------------------------------------------------------------------------
+  //  Flux initial
+  // ---------------------------------------------------------------------------
+  it('doit émettre countChanged avec la bonne valeur', () => {
+    ingredients$.next([buildIngredient({ _id: '1', name: 'Tomate' })]);
+    fixture.detectChanges();
+
+    expect(component.countChanged.emit).toHaveBeenCalledWith(1);
+    expect(component.ingredients.data[0].supplier).toEqual(DEFAULT_SUPPLIER);
   });
 
-  it('devrait charger les données d’ingrédients à l\'initialisation', () => {
-    expect(component.ingredients.data).toEqual([]);
+  // ---------------------------------------------------------------------------
+  //  onRowClick – ignore clic sur bouton
+  // ---------------------------------------------------------------------------
+  it('ne doit pas ouvrir le formulaire si clic sur un bouton dans la ligne', () => {
+    const ing = buildIngredient({ _id: 'btn', name: 'Bouton' });
+    const button = document.createElement('button');
+    const evt = new MouseEvent('click', { bubbles: true });
+    Object.defineProperty(evt, 'target', { value: button, writable: false });
+
+    component.onRowClick(evt, ing);
+    expect(matDialogSpy.open).not.toHaveBeenCalled();
   });
 
-  it('devrait appeler IngredientService.checkExistingIngredientName lors de checkNameExists', fakeAsync(() => {
-    ingredientServiceSpy.checkExistingIngredientName.and.returnValue(of(false));
+  // ---------------------------------------------------------------------------
+  //  onRowClick – ouvre formulaire sur clic hors bouton
+  // ---------------------------------------------------------------------------
+  it('doit ouvrir le formulaire si clic sur la ligne', () => {
+    const ing = buildIngredient({ _id: 'row', name: 'Row' });
+    const div = document.createElement('div');
+    const evt = new MouseEvent('click', { bubbles: true });
+    Object.defineProperty(evt, 'target', { value: div, writable: false });
 
-    component.openIngredientForm({ name: 'Tomate' } as Ingredient);
-    tick();
+    component.onRowClick(evt, ing);
+    expect(matDialogSpy.open).toHaveBeenCalled();
+  });
 
-    expect(ingredientServiceSpy.checkExistingIngredientName).toHaveBeenCalledWith('Tomate', undefined);
+  // ---------------------------------------------------------------------------
+  //  sortingDataAccessor – ligne highlightée
+  // ---------------------------------------------------------------------------
+  it('doit renvoyer "\u0000" pour la ligne highlightée', fakeAsync(() => {
+    component.ngAfterViewInit();
+    tick(); // laisse exécuter setTimeout()
+
+    const ing = buildIngredient({ _id: 'h1', name: 'Épice' });
+    component.highlightedIngredientId = 'h1';
+
+    const accessor = component.ingredients.sortingDataAccessor!;
+    const val = accessor(ing, 'name');
+    expect(val).toBe('\u0000');
   }));
 
-  it('devrait afficher un message d’erreur si le nom existe déjà', fakeAsync(() => {
-    ingredientServiceSpy.checkExistingIngredientName.and.returnValue(of(true));
-    component.openIngredientForm({ name: 'Tomate' } as Ingredient);
-    tick();
-    expect(dialogServiceSpy.error).toHaveBeenCalledWith('Le nom "Tomate" existe déjà.');
+  // ---------------------------------------------------------------------------
+  //  requestNewIngredient$
+  // ---------------------------------------------------------------------------
+  it('doit ouvrir le formulaire après requestNewIngredient$', fakeAsync(() => {
+    sharedSpy.getSearchedIngredient.and.returnValue('Oignon');
+    sharedSpy.requestNewIngredient$.next();
+    flush();
+    expect(matDialogSpy.open).toHaveBeenCalled();
   }));
 
-  it('devrait supprimer un ingrédient si non utilisé', fakeAsync(() => {
-    const ingr = { _id: 'id1', name: 'Sel' } as Ingredient;
+  // ---------------------------------------------------------------------------
+  //  openIngredientForm – données transmises
+  // ---------------------------------------------------------------------------
+  it('doit ouvrir MatDialog avec les bonnes données', () => {
+    const ingredient = buildIngredient({
+      _id: 'i1',
+      name: 'Poivron',
+      images: ['/uploads/a.jpg'],
+      origin: 'France',
+      supplier: { _id: 's1', name: 'Fourn.', description: '' } as Supplier,
+    });
 
-    productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
-    dialogServiceSpy.confirm.and.returnValue(of('confirm'));
-    imageServiceSpy.deleteImage.and.returnValue(of({ message: 'Image supprimée' }));
-    ingredientServiceSpy.deleteIngredient.and.returnValue(of({ message: 'Ingrédient supprimé' }));
+    component.openIngredientForm(ingredient);
 
-    component.deleteIngredient(ingr);
-    tick();
+    const [comp, config] = matDialogSpy.open.calls.mostRecent()
+      .args as [any, MatDialogConfig<any>];
 
-    expect(ingredientServiceSpy.deleteIngredient).toHaveBeenCalledWith('id1');
-    expect(dialogServiceSpy.success).toHaveBeenCalled();
-  }));
+    expect(comp).toBe(IngredientFormComponent);
 
-  it('devrait annuler la suppression si l’utilisateur clique sur Annuler', fakeAsync(() => {
-    const ingr = { _id: 'id1', name: 'Sel' } as Ingredient;
+    const data = config.data as any;
+    expect(data.ingredient).toEqual(ingredient);
+    expect(data.imageUrls).toEqual(['url:///uploads/a.jpg']);
+    expect(data.imagePaths).toEqual(['/uploads/a.jpg']);
+    expect(data.allergenesList).toEqual(component.allergenesList);
+  });
 
-    const mockProduct: Product = {
-      _id: 'p1',
-      name: 'Produit 1',
-      category: 'cat1',
-      description: 'Produit test',
-      composition: [],
-      dlc: '2025-12-31',
-      cookInstructions: '',
-      stock: true,
-      stockQuantity: 5,
-      quantityType: 'g',
-      price: 2.5,
-      images: []
-    };
-
-    productServiceSpy.getProductsByIngredient.and.returnValue(of([mockProduct]));
-    dialogServiceSpy.confirm.and.returnValue(of('cancel'));
-
-    component.deleteIngredient(ingr);
-    tick();
-
-    expect(ingredientServiceSpy.deleteIngredient).not.toHaveBeenCalled();
-  }));
-
-  it('devrait afficher la liste des produits liés si demandé', fakeAsync(() => {
-    const ingr = { _id: 'id1', name: 'Sel' } as Ingredient;
-
-    const mockProduct: Product = {
-      _id: 'p1',
-      name: 'Produit 1',
-      category: 'cat1',
-      description: '',
-      composition: [],
-      dlc: '2025-12-31',
-      cookInstructions: '',
-      stock: true,
-      stockQuantity: 5,
-      quantityType: 'g',
-      price: 2.5,
-      images: []
-    };
-
-    productServiceSpy.getProductsByIngredient.and.returnValue(of([mockProduct]));
-    dialogServiceSpy.confirm.and.returnValue(of('extra'));
-    dialogServiceSpy.info.and.returnValue(of(null));
-
-    component.deleteIngredient(ingr);
-    tick();
-
-    expect(dialogServiceSpy.info).toHaveBeenCalled();
-  }));
-
-it('devrait télécharger les images et poursuivre la suppression si l’utilisateur clique sur "Télécharger"', fakeAsync(() => {
-  const ingr = {
-    _id: 'id1',
-    name: 'Tomate',
-    images: ['uploads/image1.jpg', 'uploads/image2.jpg']
-  } as Ingredient;
-
-  // Aucun produit lié
-  productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
-
-  dialogServiceSpy.confirm.and.returnValues(
-    of('confirm'), // étape 1 : confirmation de suppression
-    of('extra'),   // étape 2 : télécharger les images
-    of('confirm')  // étape 3 : confirmer suppression après téléchargement
-  );
-
-  // Images : download et delete
-  imageServiceSpy.downloadImage.and.returnValue(Promise.resolve());
-  imageServiceSpy.deleteImage.and.returnValue(of({ message: 'Image supprimée' }));
-
-  // Suppression finale
-  ingredientServiceSpy.deleteIngredient.and.returnValue(of({ message: 'Ingrédient supprimé' }));
-
-  component.deleteIngredient(ingr);
-  tick();
-
-  // Téléchargement des images
-  expect(imageServiceSpy.downloadImage).toHaveBeenCalledWith('uploads/image1.jpg', 'Tomate');
-  expect(imageServiceSpy.downloadImage).toHaveBeenCalledWith('uploads/image2.jpg', 'Tomate');
-
-  // Suppression des images
-  expect(imageServiceSpy.deleteImage).toHaveBeenCalledWith('image1.jpg');
-  expect(imageServiceSpy.deleteImage).toHaveBeenCalledWith('image2.jpg');
-
-  // Suppression finale
-  expect(ingredientServiceSpy.deleteIngredient).toHaveBeenCalledWith('id1');
-  expect(dialogServiceSpy.success).toHaveBeenCalled();
-}));
-
-
-  it('devrait ignorer le téléchargement et supprimer si l’utilisateur clique sur "Ignorer"', fakeAsync(() => {
-    const ingr = {
-      _id: 'id1',
-      name: 'Tomate',
-      images: ['uploads/image1.jpg']
-    } as Ingredient;
-
-    productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
-    dialogServiceSpy.confirm.and.returnValues(
-      of('confirm'), // première confirmation pour suppression
-      of('confirm')  // confirmation d’ignorer le téléchargement
-    );
-    imageServiceSpy.deleteImage.and.returnValue(of({ message: 'Image supprimée' }));
-    ingredientServiceSpy.deleteIngredient.and.returnValue(of({ message: 'Ingrédient supprimé' }));
-
-    component.deleteIngredient(ingr);
-    tick();
-
-    expect(imageServiceSpy.deleteImage).toHaveBeenCalledWith('image1.jpg');
-    expect(ingredientServiceSpy.deleteIngredient).toHaveBeenCalledWith('id1');
-    expect(dialogServiceSpy.success).toHaveBeenCalled();
-  }));
-
-  it('ne devrait rien faire si l’utilisateur annule la suppression des images', fakeAsync(() => {
-    const ingr = {
-      _id: 'id1',
-      name: 'Tomate',
-      images: ['uploads/image1.jpg']
-    } as Ingredient;
-
-    productServiceSpy.getProductsByIngredient.and.returnValue(of([]));
-    dialogServiceSpy.confirm.and.returnValues(
-      of('confirm'), // première confirmation de suppression
-      of('cancel')   // annulation sur la boîte des images
+  // ---------------------------------------------------------------------------
+  //  submitIngredientForm – création
+  // ---------------------------------------------------------------------------
+  it('doit créer un ingrédient puis success()', () => {
+    ingredientSpy.createIngredient.and.returnValue(
+      of(buildIngredient({ _id: 'new', name: 'Radis' }))
     );
 
-    component.deleteIngredient(ingr);
-    tick();
+    component.submitIngredientForm(undefined, { name: 'Radis' });
 
-    expect(imageServiceSpy.deleteImage).not.toHaveBeenCalled();
-    expect(ingredientServiceSpy.deleteIngredient).not.toHaveBeenCalled();
+    expect(ingredientSpy.createIngredient).toHaveBeenCalled();
+    expect(dialogSvcSpy.success).toHaveBeenCalled();
+  });
+
+  // ---------------------------------------------------------------------------
+  //  submitIngredientForm – update
+  // ---------------------------------------------------------------------------
+  it('doit mettre à jour un ingrédient puis success()', () => {
+    ingredientSpy.updateIngredient.and.returnValue(of(buildIngredient()));
+
+    component.submitIngredientForm('42', {
+      _id: '42',
+      name: 'Updated',
+    } as any);
+
+    expect(ingredientSpy.updateIngredient).toHaveBeenCalledWith(
+      '42',
+      jasmine.objectContaining({ name: 'Updated' })
+    );
+    expect(dialogSvcSpy.success).toHaveBeenCalled();
+  });
+
+  // ---------------------------------------------------------------------------
+  //  deleteIngredient – non utilisé
+  // ---------------------------------------------------------------------------
+  it('doit supprimer un ingrédient non utilisé', fakeAsync(() => {
+    productSpy.getProductsByIngredient.and.returnValue(of([]));
+    ingredientSpy.deleteIngredient.and.returnValue(of({ message: 'ok' }));
+
+    const ing = buildIngredient({ _id: 'd1', name: 'Durian' });
+
+    component.deleteIngredient(ing);
+    flush();
+
+    expect(ingredientSpy.deleteIngredient).toHaveBeenCalledWith('d1');
+    expect(dialogSvcSpy.success).toHaveBeenCalled();
   }));
 
+  // ---------------------------------------------------------------------------
+  //  deleteIngredient – utilisé → extra → confirm
+  // ---------------------------------------------------------------------------
+  it('doit afficher les produits liés puis supprimer après EXTRA + CONFIRM', fakeAsync(() => {
+    productSpy.getProductsByIngredient.and.returnValue(
+      of([{ _id: 'p1', name: 'Prod' } as Product])
+    );
+
+    let call = 0;
+    dialogSvcSpy.confirm.and.callFake(() =>
+      of(++call === 1 ? 'extra' : 'confirm')
+    );
+    ingredientSpy.deleteIngredient.and.returnValue(of({ message: 'ok' }));
+
+    const ing = buildIngredient({ _id: 'x1', name: 'Piment' });
+    component.deleteIngredient(ing);
+    flush();
+
+    expect(productSpy.getProductsByIngredient).toHaveBeenCalledWith('x1');
+    expect(ingredientSpy.deleteIngredient).toHaveBeenCalledWith('x1');
+  }));
+
+  // ---------------------------------------------------------------------------
+  //  deleteIngredient – cancel
+  // ---------------------------------------------------------------------------
+  it("ne doit pas supprimer si l'utilisateur annule", fakeAsync(() => {
+    productSpy.getProductsByIngredient.and.returnValue(of([]));
+    dialogSvcSpy.confirm.and.returnValue(of('cancel'));
+
+    const ing = buildIngredient({ _id: 'c1', name: 'Cresson' });
+    component.deleteIngredient(ing);
+    flush();
+
+    expect(ingredientSpy.deleteIngredient).not.toHaveBeenCalled();
+  }));
+
+  // ---------------------------------------------------------------------------
+  //  checkIngredientImages – images + EXTRA + CONFIRM
+  // ---------------------------------------------------------------------------
+  it('doit télécharger et supprimer les images avant la suppression', fakeAsync(() => {
+    // Pas utilisé dans produits
+    productSpy.getProductsByIngredient.and.returnValue(of([]));
+
+    // Ingredient avec images
+    const ing = buildIngredient({
+      _id: 'img',
+      name: 'Aubergine',
+      images: ['/uploads/i1.jpg', '/uploads/i2.jpg'],
+    });
+
+    // Sequence des confirmations :
+    // 1) produits -> 'confirm'
+    // 2) images -> 'extra'
+    // 3) post-download -> 'confirm'
+    let step = 0;
+    dialogSvcSpy.confirm.and.callFake(() => {
+      step++;
+      if (step === 1) return of('confirm');
+      if (step === 2) return of('extra');
+      return of('confirm');
+    });
+    ingredientSpy.deleteIngredient.and.returnValue(of({ message: 'ok' }));
+
+    component.deleteIngredient(ing);
+    flush();
+
+    expect(imageSpy.downloadImage).toHaveBeenCalledTimes(2);
+    expect(imageSpy.deleteImage).toHaveBeenCalledTimes(2);
+    expect(ingredientSpy.deleteIngredient).toHaveBeenCalledWith('img');
+  }));
+
+  // ---------------------------------------------------------------------------
+  //  deleteIngredient – erreur serveur
+  // ---------------------------------------------------------------------------
+  it('doit appeler dialogService.error si deleteIngredient échoue', fakeAsync(() => {
+    productSpy.getProductsByIngredient.and.returnValue(of([]));
+
+    const err = new HttpErrorResponse({ status: 500, statusText: 'KO' });
+    ingredientSpy.deleteIngredient.and.returnValue(throwError(() => err));
+
+    const ing = buildIngredient({ _id: 'e1', name: 'Bug' });
+
+    component.deleteIngredient(ing);
+    flush();
+
+    expect(dialogSvcSpy.error).toHaveBeenCalled();
+  }));
 });

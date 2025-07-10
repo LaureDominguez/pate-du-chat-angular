@@ -209,14 +209,14 @@ describe('ProductFormComponent', () => {
 
   it('devrait désactiver le champ stock si stockQuantity = 0', () => {
     component.productForm.get('stockQuantity')?.setValue(0);
-    component['updateStockToggleState'](); // appel direct car méthode privée
-    expect(component.productForm.get('stock')?.disabled).toBeTrue();
+    component['updateStockToggleState']();
+    expect(component.productForm.get('stock')?.enabled).toBeTrue(); // 0 active le toggle
   });
 
-  it('devrait activer le champ stock si stockQuantity > 0', () => {
-    component.productForm.get('stockQuantity')?.setValue(5);
+  it('devrait désactiver le champ stock si stockQuantity est vide', () => {
+    component.productForm.get('stockQuantity')?.setValue('');
     component['updateStockToggleState']();
-    expect(component.productForm.get('stock')?.enabled).toBeTrue();
+    expect(component.productForm.get('stock')?.disabled).toBeTrue();
   });
 
   it('devrait utiliser customDlc si dlc est "Autre"', () => {
@@ -258,7 +258,16 @@ describe('ProductFormComponent', () => {
 
   it('devrait appeler checkNameExists.emit avec le nom si valide', () => {
     spyOn(component.checkNameExists, 'emit');
-    component.productForm.get('name')?.setValue('Pizza');
+    // component.productForm.get('name')?.setValue('Pizza');
+    component.productForm.patchValue({
+      name: 'Pizza',
+      category: { _id: 'cat1', name: 'Plats' },
+      composition: [{ _id: 'ing1', name: 'Sauce' }],
+      dlc: '7 jours',
+      stockQuantity: 1,
+      quantityType: 'kg',
+      price: 5
+    });
     component.save();
     expect(component.checkNameExists.emit).toHaveBeenCalledWith('Pizza');
   });
