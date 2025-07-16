@@ -1,0 +1,51 @@
+@use '@angular/material' as mat;
+
+.vitrine-container {
+    padding: 20px;
+}
+
+.product-tile {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    overflow: hidden;
+    
+    .tile-content {
+        text-align: center;
+        padding: 0.7rem;
+        margin: auto;
+
+        @include mat.card-overrides((
+            subtitle-text-color: var(--on-tertiary-container),
+            elevated-container-color: var(--tertiary-container),
+            elevated-container-shape: 18px,
+            title-text-size: 1.2rem,
+            title-text-tracking: 0.1rem,
+            subtitle-text-size: 0.9rem,
+        ));
+
+        img {
+            width: 200px;
+            height: 150px;
+            border-radius: 8px;
+        }
+        .product-image {
+            object-fit: cover;
+        }
+        
+        .default-image {
+            object-fit: scale-down;
+        }
+
+        mat-card-content {
+            padding: 0.2rem;
+        }
+
+        mat-card-title {
+            margin: 0.2rem;
+        }
+    }
+    
+    &:hover {
+        transform: scale(1.05);
+    }
+}

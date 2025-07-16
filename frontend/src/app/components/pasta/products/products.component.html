@@ -1,0 +1,37 @@
+<main class="grid-container" *ngIf="products$ | async as products">
+    <!-- grid1 -->
+    <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px" class="grid1" *ngIf="grid1.length > 0">
+        <mat-grid-tile *ngFor="let product of grid1; let i = index; let last = last">
+            <app-product-card 
+                [product]="product" 
+                [isSelected]="product === selectedProduct"
+                (click)="selectProduct(product)">
+            </app-product-card>
+        </mat-grid-tile>
+    </mat-grid-list>
+
+    <!-- selected product -->
+    <app-product-card 
+        [product]="selectedProduct" 
+        [isSelected]="isSelected"
+        *ngIf="selectedProduct" 
+        (closeClick)="onCloseClick()">
+    </app-product-card>
+
+    <!-- grid2 -->
+    <mat-grid-list [cols]="cols" rowHeight="250px" gutterSize="10px" class="grid2" *ngIf="grid2.length > 0">
+        <mat-grid-tile *ngFor="let product of grid2; let i = index; let last = last">
+            <app-product-card 
+                [product]="product"
+                [isSelected]="product === selectedProduct"
+                (click)="selectProduct(product)">
+            </app-product-card>
+        </mat-grid-tile>
+    </mat-grid-list>
+</main>
+
+
+<!-- no product found -->
+<div class="container" *ngIf="!products.length">
+    <p>Pas de produits disponibles</p>
+</div> 

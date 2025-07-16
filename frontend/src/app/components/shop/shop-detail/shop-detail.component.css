@@ -1,0 +1,100 @@
+.product-card {
+  position: relative;
+  background: var(--tertiary-container);
+  margin: 1rem 0.4rem;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+}
+.product-card img {
+  width: 40%;
+  height: auto;
+  max-height: 500px;
+  border-radius: 8px;
+}
+.product-card .product-image {
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.product-card .default-image {
+  -o-object-fit: scale-down;
+     object-fit: scale-down;
+}
+.product-card .details {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  margin: 1.5rem;
+  padding: 2rem;
+  border-radius: 8px;
+  color: var(--on-tertiary-fixed);
+  background-color: var(--tertiary-fixed);
+}
+.product-card .details h2 {
+  margin-top: 10px;
+  font-size: 1.5rem;
+}
+.product-card .details h3 {
+  font-size: 1.2rem;
+  color: var(--on-tertiary-fixed-variant);
+  -webkit-text-decoration: solid underline;
+          text-decoration: solid underline;
+}
+.product-card .details .description {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--on-tertiary-fixed-variant);
+}
+.product-card .details .price {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--on-primary);
+  background-color: var(--primary-container);
+  margin: 0 auto;
+  width: 100px;
+  height: 50px;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+}
+.product-card .details .ingredients,
+.product-card .details .allergens {
+  width: 400px;
+  display: flex;
+  flex-direction: row;
+  margin: auto;
+}
+.product-card .details .ingredients h3,
+.product-card .details .allergens h3 {
+  margin: 0 0.5rem;
+  font-size: 1.2rem;
+  white-space: nowrap;
+}
+.product-card .details .ingredients div,
+.product-card .details .allergens div {
+  margin: 0.1rem;
+  text-align: justify;
+}
+.product-card .details .ingredients-list {
+  display: inline;
+  white-space: normal;
+}
+.product-card .details .labels {
+  display: flex;
+  justify-content: space-evenly;
+}
+.product-card .details .labels img {
+  height: 50px;
+  shape-rendering: crispEdges;
+}
+.product-card .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}/*# sourceMappingURL=shop-detail.component.css.map */

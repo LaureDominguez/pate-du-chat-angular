@@ -1,0 +1,63 @@
+<mat-sidenav-container class="sidenav-container">
+<!-- Barre latérale -->
+  <mat-sidenav 
+    #drawer 
+    class="sidenav" 
+    fixedInViewport
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="(isHandset$ | async) === false"
+  >
+    <mat-toolbar class="page-title">Les Pâtes du Chat</mat-toolbar>
+
+    <mat-divider></mat-divider>
+
+    <mat-nav-list>
+      <!-- Liens de navigation -->
+      <a mat-list-item *ngFor="let item of navItems" [routerLink]="item.link" routerLinkActive="active">
+        {{ item.title }}
+      </a>
+    </mat-nav-list>
+
+  </mat-sidenav>
+
+  <!-- Contenu principal -->
+  <mat-sidenav-content>
+    <mat-toolbar>
+        <button 
+          *ngIf= "isHandset$ | async"
+          type="button"
+          aria-label="Toggle sidenav"
+          mat-icon-button
+          (click)="drawer.toggle()"
+        >
+          <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+        </button>
+      
+      <span class="page-title">{{ pageTitle }}</span>
+
+      <span class="spacer"></span>
+
+      <!-- 🌙 Toggle thème -->
+      <label class="theme-toggle">
+        <input
+          type="checkbox"
+          [checked]="(activeTheme$ | async) === 'dark'" 
+          (change)="onToggleTheme()"
+        />
+        <span class="toggle-track"></span>
+        <span class="toggle-thumb">
+          <mat-icon class="icon">
+            {{ (activeTheme$ | async) === 'light' ? 'light_mode' : 'dark_mode' }}
+          </mat-icon>
+        </span>
+      </label>
+
+    </mat-toolbar>
+
+    <!-- Contenu de l'application -->
+    <router-outlet></router-outlet>
+
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

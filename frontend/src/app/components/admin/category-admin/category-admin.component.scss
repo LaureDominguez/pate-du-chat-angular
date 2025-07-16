@@ -1,0 +1,7 @@
+table {
+    th:nth-child(3), th:last-child, td:nth-child(3), td:last-child {
+        width: 20%;
+        justify-content: center;
+        text-align: center;
+    }
+}

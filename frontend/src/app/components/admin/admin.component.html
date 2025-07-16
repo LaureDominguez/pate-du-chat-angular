@@ -1,0 +1,44 @@
+<div #bentoContainer class="bento-container">
+    <div 
+        class="bento-item anim-expand" 
+        *ngFor="let panel of panels" 
+        [class.expanded]="isActivePanel(panel.key)"
+        [class.compressed]="isSolo(panel.key)"
+        (click)="togglePanel(panel.key)"
+    >
+        <h3 *ngIf="activePanel !== panel.key">{{ panel.label }}</h3>
+        <p *ngIf="activePanel !== panel.key" class="count">
+            {{ panel.count }} {{ panel.label }}
+        </p>
+
+        <div class="panel-content">
+            <button *ngIf="activePanel === panel.key" class="close-button" (click)="closePanel($event)">
+                ✖
+            </button>
+
+            <app-product-admin 
+                *ngIf="panel.key === 'products'" 
+                (countChanged)="updatePanelCount('products', $event)"
+                [class.visible]="activePanel === 'products'"
+                (click)="$event.stopPropagation()"></app-product-admin>
+
+            <app-ingredient-admin 
+                *ngIf="panel.key === 'ingredients'"
+                (countChanged)="updatePanelCount('ingredients', $event)"
+                [class.visible]="activePanel === 'ingredients'"
+                (click)="$event.stopPropagation()"></app-ingredient-admin>
+
+            <app-category-admin 
+                *ngIf="panel.key === 'categories'" 
+                (countChanged)="updatePanelCount('categories', $event)"
+                [class.visible]="activePanel === 'categories'"
+                (click)="$event.stopPropagation()"></app-category-admin>
+
+            <app-supplier-admin 
+                *ngIf="panel.key === 'suppliers'" 
+                (countChanged)="updatePanelCount('suppliers', $event)"
+                [class.visible]="activePanel === 'suppliers'"
+                (click)="$event.stopPropagation()"></app-supplier-admin>
+        </div>
+    </div>
+</div>

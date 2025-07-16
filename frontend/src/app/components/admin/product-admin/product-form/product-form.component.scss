@@ -1,0 +1,295 @@
+@use '@angular/material' as mat;
+
+::ng-deep .mat-mdc-dialog-surface {
+    background-color: var(--surface-bright);
+}
+
+form {
+    max-height: 90vh;
+    overflow: hidden;
+    padding: 0.5rem;
+
+    .light {
+        @include mat.divider-overrides((color: var(--surface-dim)));
+    }
+}
+
+.form_content {
+    max-height: 70vh;
+    overflow: auto;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.shadow {
+    position: sticky;
+    height: 12px;
+    width: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.top-shadow {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.bottom-shadow {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.08), transparent);
+}
+
+mat-form-field {
+    border-radius: 10px;
+    color: var(--on-surface);
+    background-color: var(--surface-bright);
+    transition: all 0.2s ease;
+    margin: 0.3rem 0;
+
+    &:hover {
+        color: var(--on-surface);
+        background-color: var(--surface-container-low);
+    }
+
+    &:focus-within {
+        color: var(--on-surface);
+        background-color: var(--surface-container-low);
+    }
+
+    &.ng-invalid.ng-touched {
+        color: var(--error);
+        background-color: var(--error-container);
+    }
+}
+
+mat-label {
+    font-weight: bold;
+}
+
+::ng-deep .mat-mdc-autocomplete-panel {
+    background-color: var(--surface-bright) !important;
+    color: var(--on-surface) !important;
+    border-radius: 8px;
+}
+
+::ng-deep .mat-mdc-select-panel {
+    background-color: var(--surface-bright) !important;
+    color: var(--on-surface) !important;
+    border-radius: 8px;
+}
+
+::ng-deep mat-option {
+    color: var(--on-surface) !important;
+    background-color: var(--surface-bright) !important;
+
+    &:hover {
+        color: var(--on-primary-fixed) !important;
+        background-color: var(--primary-fixed) !important;
+    }
+}
+
+.selected-ingredient {
+    font-weight: bold;
+    background: var(--secondary-container) !important;
+    color: var(--on-secondary-container) !important;
+    &:hover {
+        filter: brightness(1.05);
+        opacity: 0.95;
+    }
+}
+
+mat-error, mat-hint, mat-label {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+mat-hint {
+    font-size: 0.8rem;
+    color: var(--outline);
+    font-style: italic;
+    letter-spacing: 0.05em;
+    padding: 0 0.5rem;
+    // transition: opacity 0.3s ease;
+}
+
+///////////////////////////////
+.dynamic_columns {
+    display: flex;
+    gap: 2rem;
+
+    .form-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+}
+
+///////////////////////////////
+.detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+}
+
+.name_category {
+    display: flex;
+    gap: 1rem;
+
+    > :nth-child(1) {
+        flex: 1;
+    }
+
+    > :nth-child(2) {
+        flex: 1;
+    }
+}
+
+.prix_unite,
+.stock_quantity {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    span {
+        margin-left: 0.5rem;
+    }
+    .stock, .quantity {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .stock {
+        width: 60%;
+        display: flex;
+        align-content: stretch;
+        flex-direction: column;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    .quantity {
+        width: 40%;
+    }
+}
+
+.stock {
+    mat-label {
+        padding: 1rem;
+    }
+
+    @include mat.slide-toggle-overrides((
+        // forme
+        handle-shape: 50%,
+        track-shape: 50px,
+
+        // couleurs
+        handle-surface-color: var(--surface-container-low),
+        // bord externe
+        track-outline-color: var(--outline-variant),
+        selected-track-outline-color: var(--outline-variant),
+
+        // icone
+        unselected-icon-color: var(--on-secondary-container),
+        selected-icon-color: var(--on-tertiary-fixed-variant),
+
+        // track
+        selected-handle-color: var(--tertiary-fixed-dim),
+        selected-focus-handle-color: var(--tertiary-fixed-dim),
+        selected-hover-handle-color: var(--tertiary-fixed-dim),
+
+        unselected-handle-color: var(--secondary-container),
+        unselected-focus-handle-color: var(--secondary-container),
+        unselected-hover-handle-color: var(--secondary-container),
+
+        disabled-unselected-handle-color: var(--surface-dim),
+        // disabled-unselected-icon-color: var(--surface-bright),
+        label-text-weight: 600
+    ));
+}
+
+.slow-reveal {
+    opacity: 0;
+    animation: fadeInText 1s ease forwards;
+}
+
+@keyframes fadeInText {
+    0% {
+        opacity: 0;
+        clip-path: inset(0 100% 0 0);
+    }
+
+    100% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+.cooking {
+    display: flex;
+    flex-direction: column;
+}
+
+.composition {
+    flex-direction: row-reverse;
+}
+
+.empty-message {
+    color: var(--outline);
+    font-style: italic;
+    text-align: center;
+    margin-top: 8px;
+}
+
+::ng-deep .custom-tooltip {
+    white-space: pre-line;
+    ::after {
+        font-weight: bold;
+    }
+
+    @include mat.tooltip-overrides((
+        container-color: var(--surface-container),
+        supporting-text-color: var(--on-surface)
+    ));
+}
+
+.dlc {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+
+    mat-form-field {
+        transition: width 0.5s ease;
+    }
+
+    .dlc-main {
+        width: 100%;
+
+        &.with-custom {
+            width: 30%;
+        }
+    }
+
+    .dlc-custom {
+        width: 70%;
+    }
+}
+
+.bloc_images {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+
+    button {
+        width: 200px;
+        align-self: end;
+    }
+}
+
+app-image-carousel {
+    flex: 1;
+    padding: 0.5rem 0;
+}

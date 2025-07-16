@@ -1,0 +1,110 @@
+.product-card {
+    position: relative;
+    background: var(--tertiary-container);
+    margin: 1rem 0.4rem;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+
+    img {
+        width: 40%;
+        height: auto;
+        max-height: 500px;
+        border-radius: 8px;
+    }
+
+    .product-image {
+        object-fit: cover;
+    }
+    
+    .default-image {
+        object-fit: scale-down;
+    }
+
+    .details {
+        width: 60%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        margin: 1.5rem;
+        padding: 2rem;
+        border-radius: 8px;
+        color: var(--on-tertiary-fixed);
+        background-color: var(--tertiary-fixed);
+        
+        h2 {
+            margin-top: 10px;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--on-tertiary-fixed-variant);
+            text-decoration: solid underline;
+        }
+
+        .description {
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--on-tertiary-fixed-variant);
+        }
+
+        .price {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--on-primary);
+            background-color: var(--primary-container);
+            margin: 0 auto;
+            width: 100px;
+            height: 50px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .ingredients,
+        .allergens {
+            width: 400px;
+            display: flex;
+            flex-direction: row;
+            margin: auto;
+
+            h3 {
+                margin: 0 0.5rem;
+                font-size: 1.2rem;
+                white-space: nowrap;
+            }
+
+            div {
+                margin: 0.1rem;
+                text-align: justify;
+            }
+        }
+
+        .ingredients-list {
+            display: inline;
+            white-space: normal;
+        }
+
+        .labels {
+            display: flex;
+            justify-content: space-evenly;
+
+            img {
+                height: 50px;
+                shape-rendering: crispEdges;
+            }
+        }
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+}

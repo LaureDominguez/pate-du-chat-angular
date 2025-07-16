@@ -1,0 +1,16 @@
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 300px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+::ng-deep.mat-mdc-dialog-surface {
+  overflow: hidden;
+}/*# sourceMappingURL=quick-create-dialog.component.css.map */

@@ -1,0 +1,32 @@
+@use "@angular/material" as mat;
+@use 'assets/themes/m3-theme.scss' as *;
+@import url("https://fonts.googleapis.com/css2?family=Pacifico&display=swap");
+
+// $theme: m3.$light-theme;
+// vert: #004f12;
+// orange: #FF8357;
+// Pacifico: "Pacifico", cursive;
+
+html, body {
+    height: 100%; 
+    & {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0; 
+        background-color: var(--background);
+        color: var(--on-background);
+        cursor: default;
+    }
+}
+
+body {
+    @include mat.all-component-typographies($light-theme);
+
+}
+
+.hidden{
+    display: none !important;
+}
+
+.bold {
+    font-weight: bold;
+}

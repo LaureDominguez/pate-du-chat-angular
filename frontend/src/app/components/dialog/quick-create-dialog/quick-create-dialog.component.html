@@ -1,0 +1,17 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+
+<form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="fill" *ngFor="let field of data.fields">
+        <mat-label>{{ field.label }}</mat-label>
+        <input matInput [formControlName]="field.name" />
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">Champ requis</mat-error>
+        <mat-error *ngIf="form.get(field.name)?.hasError('maxlength')">Trop long</mat-error>
+        <mat-error *ngIf="form.get(field.name)?.hasError('pattern')">Caractères invalides</mat-error>
+    </mat-form-field>
+
+    <div class="dialog-actions">
+        <button mat-button (click)="cancel()">Annuler</button>
+        <button mat-flat-button color="primary" (click)="save()">Créer</button>
+    </div>
+</form>
+

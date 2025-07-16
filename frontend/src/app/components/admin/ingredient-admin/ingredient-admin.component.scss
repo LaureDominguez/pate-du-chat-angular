@@ -1,0 +1,31 @@
+@use '@angular/material' as mat;
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    th, td {
+        padding: 8px 5px;
+    }
+    th:not(:first-child, :nth-child(2)), td:not(:first-child, :nth-child(2)) {
+        text-align: center;
+        ::ng-deep .mat-sort-header-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}
+
+.bio{
+    color: var(--tertiary-fixedDim);
+}
+
+@include mat.dialog-overrides((container-min-width: 1000px));
+
+::ng-deep .cdk-overlay-pane.custom-dialog {
+    max-width: none !important;
+    width: 90vw;
+    min-width: 800px;
+}

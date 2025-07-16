@@ -1,4 +1,9 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# Téléchargements
+/uploads
+
+# Docs perso
+plan_de_realisation_site.xlsx
+tracking avancement.xlsx
 
 # Compiled output
 /dist
@@ -7,6 +12,7 @@
 /bazel-out
 
 # Node
+**/node_modules/
 /node_modules
 npm-debug.log
 yarn-error.log

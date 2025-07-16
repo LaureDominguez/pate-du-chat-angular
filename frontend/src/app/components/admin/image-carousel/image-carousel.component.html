@@ -1,0 +1,74 @@
+<div 
+    #carouselRef
+    class="carousel" 
+    cdkDropList 
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="onDrop($event)">
+    <div 
+        class="carousel-image" 
+        [class.expanded]="activeControlIndex === i && !isDragging"
+        [ngClass]="{ 'active': activeControlIndex === i && !isDragging }"
+        (mouseenter)="onMouseEnter(i)"
+        (mouseleave)="onMouseLeave()"
+        *ngFor="let img of images; let i = index"
+        
+    >
+        <div 
+            class="move-controls btn-left"
+            [ngClass]="{ 'active': activeControlIndex === i && !isDragging }"
+        >
+            <button type="button" (click)="moveImageLeft(i)">
+                <mat-icon>arrow_back</mat-icon>
+            </button>
+        </div>
+        <div 
+            cdkDrag 
+            (cdkDragStarted)="isDragging = true"
+            (cdkDragEnded)="isDragging = false"
+            class="image-wrapper"
+            >
+            <img [src]="img.data" (click)="zoom(img.data)" />
+            <!-- new badge -->
+            <div class="new-badge" *ngIf="isPreview(img)">Nouveau</div>
+            <!-- controls -->
+            <button 
+                type="button" class="index-badge" (click)="toggleControls(i)">
+                {{ i + 1 }}
+            </button>
+            <!-- actions -->
+            <div class="actions">
+                <button 
+                    (click)="removeImage(img)" 
+                    type="button"
+                    title="Supprimer" 
+                    class="delete-button"
+                >
+                    <mat-icon>delete</mat-icon>
+                </button>
+                <button 
+                    *ngIf="img.type === 'existing'"
+                    (click)="download.emit(img.data)" 
+                    type="button"
+                    title="Télécharger" 
+                    class="download-button"
+                >
+                    <mat-icon>download</mat-icon>
+                </button>
+            </div>
+        </div>
+        <div 
+            class="move-controls btn-right"
+            [ngClass]="{ 'active': activeControlIndex === i && !isDragging }"
+
+            >
+            <button type="button" (click)="moveImageRight(i)">
+                <mat-icon>arrow_forward</mat-icon>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="zoom-overlay" *ngIf="selectedImage" (click)="closeZoom()">
+    <img [src]="selectedImage" class="zoomed" />
+</div>
