@@ -1,12 +1,14 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { MATERIAL_IMPORTS } from '../../app-material';
 
 @Component({
     selector: 'app-home',
-    imports: [CommonModule],
+    imports: [
+        MATERIAL_IMPORTS
+      ],
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
-  title = 'Accueil';
+  
 }
