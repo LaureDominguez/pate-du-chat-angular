@@ -13,13 +13,13 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 export const MATERIAL_IMPORTS = [
     CommonModule,
     DragDropModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatListModule,
-    MatIconModule,
     MatButtonModule,
-    MatGridListModule,
     MatCardModule,
+    MatGridListModule,
+    MatIconModule,
+    MatListModule,
+    MatPaginatorModule,
+    MatSidenavModule,
     MatSlideToggleModule,
-    MatPaginatorModule
+    MatToolbarModule,
 ];

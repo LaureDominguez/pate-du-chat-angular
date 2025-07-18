@@ -1,7 +1,9 @@
+// Sidenav styles
 .mat-sidenav {
   width: 200px;
   background-color: var(--secondary-container);
   color: var(--on-secondary-container);
+  box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.15);
   .mat-divider {
     width: 80%;
     margin: auto;
@@ -9,52 +11,127 @@
   .mat-toolbar{
     justify-content: center;
   }
+
+  .logo {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+
+  a.mat-mdc-list-item {
+    transition: all 0.2s ease-in-out;
+    color: var(--on-secondary-container);
+    &.active {
+      background-color: var(--primary-fixed);
+      color: var(--on-primary-fixed);
+      font-weight: 700;
+    }
+    &:not(.active):hover {
+      background: var(--primary-fixed-dim);
+      color: var(--on-primary-fixed);
+    }
+
+  // Animation List Item Hover
+    /* base */
+    ::ng-deep .mdc-list-item__primary-text {
+      position: relative;                /* pour le ::after */
+      display: inline-block;             /* autorise transform */
+      padding-right: 1.5rem;             /* place pour la flèche */
+      transition: transform .2s ease, color .2s ease;
+      &::after {
+        content: '➜';                      /* ou '\2192', ou une icône FontAwesome */
+        position: absolute;
+        right: 0;
+        top: 50%;
+        translate: 0 -50%;                /* centre verticalement */
+        opacity: 0;
+        transform: translateX(-4px);      /* légère entrée depuis la gauche */
+        transition: opacity .2s ease, transform .2s ease;
+        font-weight: 700;                 /* même graisse que le hover */
+      }
+    }
+    &:not(.active):hover ::ng-deep .mdc-list-item__primary-text {
+      font-weight: 700;
+      transform: scale(1.04) translateX(3px);
+      letter-spacing: -0.2px;
+      color: var(--on-primary-fixed);
+      &::after {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Ajuste le poids du label quand actif (sans hover) */
+    &.active ::ng-deep .mdc-list-item__primary-text { font-weight: 600; }
+  }
 }
 
+
+// Page content styles
 .mat-sidenav-content {
   min-height: 100vh;
   position: relative;
-  // h1 {
-  //   position: absolute;
-  //   left: calc(50% - 200px);
-  // }
 }
 
+
+// Header styles
 .page-title {
-  font-size: 1.5rem;
+  // font-size: 1.5rem;
+  text-align: center;
   white-space: nowrap;
+  font-family: var(--mat-toolbar-title-text-font, var(--mat-sys-title-large-font));
+  font-size: var(--mat-toolbar-title-text-size, var(--mat-sys-title-large-size));
+  line-height: var(--mat-toolbar-title-text-line-height, var(--mat-sys-title-large-line-height));
+  font-weight: var(--mat-toolbar-title-text-weight, var(--mat-sys-title-large-weight));
+  letter-spacing: var(--mat-toolbar-title-text-tracking, var(--mat-sys-title-large-tracking));
+
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
   }
 }
 
+
 .spacer {
   flex: 1 1 auto;
 }
-.theme-toggle-toolbar {
+
+.nav-toggle-toolbar {
+  width: auto;
   position: fixed;
   top: 1rem;
   right: 1rem;
+  left: 1rem;
   z-index: 1000;
   cursor: pointer;
 }
 
+.menu-button {
+  margin-right: 1rem;
+  background-color: var(--surface-bright);
+}
+
+// Theme toggle styles
 .theme-toggle {
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 50px;
-  height: 24px;
+  width: 58px;
+  height: 32px;
   cursor: pointer;
 
   input {
       display: none;
   }
+  input:checked ~ .toggle-thumb {
+      transform: translateX(24px);
+  }
 
   .toggle-track {
       background-color: var(--surface-container);
-      border-radius: 24px;
+      border-radius: 50px;
       width: 100%;
       height: 100%;
       position: absolute;
@@ -67,10 +144,10 @@
 
   .toggle-thumb {
       position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 18px;
-      height: 18px;
+      top: 4px;
+      left: 5px;
+      width: 24px;
+      height: 24px;
       background-color: var(--surface-bright);
       border-radius: 50%;
       transition: transform 0.3s ease;
@@ -81,16 +158,12 @@
       justify-content: center;
   
       .icon {
-          font-size: 14px;
+          font-size: 18px;
           align-content: center;
           text-align: center;
           color: var(--on-surface);
           pointer-events: none;
           user-select: none;
       }
-  }
-
-  input:checked ~ .toggle-thumb {
-      transform: translateX(20px);
   }
 }
