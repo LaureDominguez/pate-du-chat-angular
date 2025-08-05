@@ -12,6 +12,7 @@ const ensureDefaultCategory = async () => {
         if (!defaultCategory) {
             await Category.create({
                 _id: new mongoose.Types.ObjectId(DEFAULT_CATEGORY_ID),
+                slug: "sans-categorie",
                 name: "Sans catégorie",
             });
             console.log("✅ Catégorie 'Sans catégorie' créée avec ID fixe.");
@@ -32,6 +33,7 @@ const ensureDefaultSupplier = async () => {
         if (!defaultSupplier) {
             await Supplier.create({
                 _id: new mongoose.Types.ObjectId(DEFAULT_SUPPLIER_ID),
+                slug: "sans-fournisseur",
                 name: "Sans fournisseur",
             });
             console.log("✅ Fournisseur 'Sans fournisseur' créé avec ID fixe.");

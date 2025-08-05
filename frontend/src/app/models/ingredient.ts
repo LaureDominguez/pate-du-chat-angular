@@ -2,6 +2,7 @@ import { Supplier } from "./supplier";
 
 export interface Ingredient {
     _id?: string;
+    slug: string;
     name: string;
     bio: boolean;
     supplier: string | Supplier;
@@ -12,5 +13,7 @@ export interface Ingredient {
     vegeta: boolean;
     origin: string;
     images?: string[];
+    createdAt?: string;
+    updatedAt?: string;
 }
 

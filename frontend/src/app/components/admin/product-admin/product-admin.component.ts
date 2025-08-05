@@ -48,7 +48,7 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     'price',
     'stockQuantity',
     'unite',
-    'stock',
+    'forSale',
     'actions',
   ];
 
@@ -92,25 +92,17 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
     this.products.sort = this.productsSort;
 
     setTimeout(() => {
-      this.products.sort!.active = 'name';
-      this.products.sort!.direction = 'asc';
+      this.products.sort!.active = 'createdAt';
+      this.products.sort!.direction = 'desc';
       this.products.sort!.sortChange.emit({
-        active: 'name',
-        direction: 'asc',
+        active: 'createdAt',
+        direction: 'desc',
       });
       
       this.products.sortingDataAccessor = (item: Product, property: string) => {
-        if (item._id === this.highlightedProductId) {
-          switch (property) {
-            case 'price':
-            case 'stockQuantity':
-            case 'stock':
-              return -Infinity; // pour les valeurs numériques
-            default:
-              return '\u0000';   // pour les strings
-          }
-        }
         switch (property) {
+          case 'createdAt':
+            return +new Date(item.createdAt ?? 0);
           case 'name':
             return item.name.toLowerCase();
           case 'category':
@@ -125,8 +117,8 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
             return item.price ? parseFloat(item.price.toString()) : 0;
           case 'stockQuantity':
             return item.stockQuantity ? parseFloat(item.stockQuantity.toString()) : 0;
-          case 'stock':
-            return item.stock ? 'Oui' : 'Non';
+          case 'forSale':
+            return item.forSale ? 'Oui' : 'Non';
           default:
             return (item as any)[property];
         }
@@ -147,17 +139,17 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       const currentNoComp = products.filter(product => !product.composition?.length);
       this.noCompositionID = currentNoComp.map(product => product._id!);
 
-      const inStock = currentNoComp.filter(product => product.stock);
-      const outOfStock = currentNoComp.filter(product => !product.stock);
+      const inSale = currentNoComp.filter(product => product.forSale);
+      const outOfSale = currentNoComp.filter(product => !product.forSale);
 
-      if (inStock.length) {
+      if (inSale.length) {
         this.shownWarningOnce = true;
-        this.processInStockProducts(inStock);
+        this.processinSaleProducts(inSale);
       }
 
-      if (outOfStock.length && !this.shownWarningOnce) {
+      if (outOfSale.length && !this.shownWarningOnce) {
         this.shownWarningOnce = true;
-        this.showNoCompositionWarning(outOfStock);
+        this.showNoCompositionWarning(outOfSale);
       }
 
       this.countChanged.emit(this.products.data.length);
@@ -176,9 +168,9 @@ export class ProductAdminComponent implements OnInit, OnDestroy {
       });
   }
 
-  private processInStockProducts(products: Product[]): void {
+  private processinSaleProducts(products: Product[]): void {
     const updates = products.map(product => 
-      this.productService.updateProduct(product._id!, { ...product, stock: false })
+      this.productService.updateProduct(product._id!, { ...product, forSale: false })
     );
     forkJoin(updates).subscribe(() => {
           const names = products.map(p => p.name);

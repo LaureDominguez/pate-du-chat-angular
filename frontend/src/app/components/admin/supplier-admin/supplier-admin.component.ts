@@ -78,32 +78,29 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   ngAfterViewInit(): void {
     this.suppliers.paginator = this.suppliersPaginator;
     this.suppliers.sort = this.suppliersSort;
-    this.suppliers.sortingDataAccessor = (item: Supplier, property: string): string | number => {
-      if (item._id && item._id === this.highlightedSupplierId && item._id !== this.editingSupplierId) {
-        return '\u0000'; // tri priorité haute
-      }
-      return (item as any)[property];
-    };
+    this.suppliers.sort.active = 'createdAt';
+    this.suppliers.sort.direction = 'desc';
+    this.suppliers.sort.sortChange.emit({ active: 'createdAt', direction: 'desc' });
+    this.suppliers.sortingDataAccessor = (item: Supplier, property: string) => 
+      property === 'createdAt' ? +new Date(item.createdAt ?? 0) : (item as any)[property];
   }
 
-  startEditingSupplier(supplier: Supplier | null = null, focusField?: 'name' | 'description'): void {
-    if (this.editingSupplier && this.editingSupplier._id === null) {
-      return;
-    }
-    if (this.editingSupplier && this.editingSupplier._id !== supplier?._id) {
-      return;
-    }
-    if (supplier && this.isDefaultSupplier(supplier)) {
+  startEditingSupplier(supplier: Supplier | null = null, focus : 'name' | 'description' = 'name'): void {
+    if ((this.editingSupplierId && this.editingSupplierId !== supplier?._id) 
+    || (supplier && this.isDefaultSupplier(supplier))) {
       return;
     }
 
-    const autoFocusField: 'name' | 'description' | undefined = !supplier && !focusField ? 'name' : focusField;
+    const draft: Supplier = supplier 
+      ? { ...supplier } 
+      : { _id: null, name: '', description: '' };
 
-    this.editingSupplier = supplier ? { ...supplier } : { _id: null, name: '', description: '' };
+    this.editingSupplier = { _id: draft._id ?? null, name: draft.name, description: draft.description };
+    this.editingSupplierId = draft._id ?? null;
 
     this.supplierForm = this.fb.group({
       name: [
-        this.editingSupplier.name,
+        draft.name,
         [
           Validators.required,
           Validators.minLength(2),
@@ -113,7 +110,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         ]
       ],
       description: [
-        this.editingSupplier.description,
+        draft.description,
         [
           Validators.maxLength(100),
           Validators.pattern(/\S+/),
@@ -122,18 +119,18 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
       ]
     });
 
-    if (!this.editingSupplier._id) {
-      this.suppliers.data = [this.editingSupplier, ...this.suppliers.data];
+    if (!draft._id) {
+      this.suppliers.data = [draft, ...this.suppliers.data];
     }
-    this.focusSupplierInput(autoFocusField);
+    this.focusSupplierInput(focus);
   }
 
 
-  focusSupplierInput(focusField?: 'name' | 'description'): void {
+  focusSupplierInput(focus?: 'name' | 'description'): void {
     setTimeout(() => {
-      if (focusField === 'name' && this.supplierNameInput) {
+      if (focus === 'name' && this.supplierNameInput) {
         this.supplierNameInput.nativeElement.focus();
-      } else if (focusField === 'description' && this.supplierDescriptionInput) {
+      } else if (focus === 'description' && this.supplierDescriptionInput) {
         this.supplierDescriptionInput.nativeElement.focus();
       }
     });
@@ -148,6 +145,7 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
 
     setTimeout(() => {
       this.editingSupplier = null;
+      this.editingSupplierId = null;
       this.suppliers.data = this.suppliers.data.filter(sup => sup._id !== null);
     }, 0);
   }
@@ -184,10 +182,6 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         this.highlightedSupplierId = isUpdate ? null : savedSupplier._id || null;
         this.editingSupplier = null;
         this.editingSupplierId = null;
-
-        this.suppliers.sort!.active = 'name';
-        this.suppliers.sort!.direction = 'asc';
-        this.suppliers.sort!.sortChange.emit();
       }),
       catchError((error) => {
         this.cancelEditingSupplier();
@@ -195,6 +189,9 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
         return of(null);
       })
     ).subscribe();
+      this.suppliers.sort!.active = 'createdAt';
+      this.suppliers.sort!.direction = 'desc';
+      this.suppliers.sort!.sortChange.emit();
   }
 
   // create new supplier depuis ingredient-form
@@ -212,10 +209,6 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
           this.dialogService.info('Fournisseur créé avec succès.');
           this.sharedDataService.sendSupplierToIngredientForm(createdSupplier);
         this.highlightedSupplierId = createdSupplier._id || null;
-
-        this.suppliers.sort!.active = 'name';
-        this.suppliers.sort!.direction = 'asc';
-        this.suppliers.sort!.sortChange.emit();
         },
         error: (err) => {
           this.dialogService.showHttpError(err);

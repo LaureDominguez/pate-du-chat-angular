@@ -49,6 +49,16 @@ export class IngredientService {
     return this.ingredients$;
   }
 
+  getIngredientBySlug(slug: string): Observable<Ingredient> {
+    const url = `${this.apiUrl}/${slug}`;
+    return this.http.get<Ingredient>(url).pipe(
+      map((ingredient) => ({
+        ...ingredient,
+        supplier: ingredient.supplier || DEFAULT_SUPPLIER,
+      }))
+    );
+  }
+
   getIngredientById(id: string): Observable<Ingredient> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.get<Ingredient>(url);

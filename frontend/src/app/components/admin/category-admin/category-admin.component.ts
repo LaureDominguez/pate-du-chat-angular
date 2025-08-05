@@ -1,11 +1,11 @@
 import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { Category, CategoryService } from '../../../services/category.service';
+import { CategoryService } from '../../../services/category.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { SharedDataService } from '../../../services/shared-data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DEFAULT_CATEGORY } from '../../../models/category';
+import { Category, DEFAULT_CATEGORY } from '../../../models/category';
 import { catchError, firstValueFrom, of, Subject, takeUntil, tap } from 'rxjs';
 import { DialogService } from '../../../services/dialog.service';
 import { ProductService } from '../../../services/product.service';
@@ -79,32 +79,32 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
   ngAfterViewInit(): void {
     this.categories.paginator = this.categoriesPaginator;
     this.categories.sort = this.categoriesSort;
-    this.categories.sortingDataAccessor = (item: Category, property: string): string | number => {
-      if (item._id && item._id === this.highlightedCategoryId && item._id !== this.editingCategoryId) {
-        return '\u0000';
-      }
-      return (item as any)[property];
-    };
+    this.categories.sort.active = 'createdAt';
+    this.categories.sort.direction = 'desc';
+    this.categories.sort.sortChange.emit({ 
+      active: 'createdAt', direction: 'desc' 
+    });
+    this.categories.sortingDataAccessor = (item, prop) =>
+      prop === 'createdAt' ? +new Date(item.createdAt ?? 0) : (item as any)[prop];
   }
 
-  startEditingCategory(category: Category | null = null, focusField?: 'name' | 'description'): void {
-    if (this.editingCategory && this.editingCategory._id === null) {
-      return;
-    }
-    if (this.editingCategory && this.editingCategory._id !== category?._id) {
-      return;
-    }
-    if (category && this.isDefaultCategory(category)) {
+  startEditingCategory(category: Category | null = null, focus : 'name' | 'description' = 'name'): void {
+
+    if ((this.editingCategoryId && this.editingCategoryId !== category?._id) 
+    || (category && this.isDefaultCategory(category))) { 
       return; 
     }
 
-    const autoFocusField: 'name' | 'description' | undefined = !category && !focusField ? 'name' : focusField;
-    this.editingCategory = category ? { ...category } : { _id: null, name: '', description: '' };
-    this.editingCategoryId = this.editingCategory?._id || null;
+    const draft: Category = category
+      ? { ...category }
+      : { _id: null, name: '', description: '' };
+
+    this.editingCategory = { _id: draft._id ?? null, name: draft.name, description: draft.description };
+    this.editingCategoryId = draft._id ?? null;
 
     this.categoryForm = this.fb.group({
       name: [
-        this.editingCategory.name,
+        draft.name,
         [
           Validators.required,
           Validators.minLength(2),
@@ -114,7 +114,7 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
         ],
       ],
       description: [
-        this.editingCategory.description,
+        draft.description,
         [
           Validators.maxLength(100),
           Validators.pattern(/\S+/),
@@ -122,17 +122,19 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
         ]
       ]
     });
-    if (!this.editingCategory._id) {
-      this.categories.data = [this.editingCategory, ...this.categories.data];
+
+    if (!draft._id) {
+      this.categories.data = [draft, ...this.categories.data];
     }
-    this.focusCategoryInput(autoFocusField);
+
+    this.focusCategoryInput(focus);
   }
   
-  focusCategoryInput(focusField?: 'name' | 'description'): void {
+  focusCategoryInput(focus?: 'name' | 'description'): void {
     setTimeout(() => {
-      if (focusField === 'name' && this.categoryNameInput) {
+      if (focus === 'name' && this.categoryNameInput) {
         this.categoryNameInput.nativeElement.focus();
-      } else if (focusField === 'description' && this.categoryDescriptionInput) {
+      } else if (focus === 'description' && this.categoryDescriptionInput) {
         this.categoryDescriptionInput.nativeElement.focus();
       }
     });
@@ -188,8 +190,8 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
       return of(null);
     })
   ).subscribe();
-    this.categories.sort!.active = 'name';
-    this.categories.sort!.direction = 'asc';
+    this.categories.sort!.active = 'createdAt';
+    this.categories.sort!.direction = 'desc';
     this.categories.sort!.sortChange.emit();
   }
 

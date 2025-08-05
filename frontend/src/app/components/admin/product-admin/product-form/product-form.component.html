@@ -128,14 +128,14 @@
                             <div>
                                 <mat-label>Visible dans la boutique</mat-label>
                                 <mat-slide-toggle 
-                                    formControlName="stock"
+                                    formControlName="forSale"
                                 >
                                 </mat-slide-toggle>
                             </div>
-                            <mat-hint *ngIf="stock?.disabled" class="hint slow-reveal">
+                            <mat-hint *ngIf="forSale?.disabled" class="hint slow-reveal">
                                 Ajoutez du stock pour rendre visible
                             </mat-hint>
-                            <mat-hint *ngIf="stockQuantity?.value === 0 && stock?.value === true" class="hint slow-reveal">
+                            <mat-hint *ngIf="stockQuantity?.value === 0 && forSale?.value === true" class="hint slow-reveal">
                                 Sera affiché en rupture de stock
                             </mat-hint>
                         </section>

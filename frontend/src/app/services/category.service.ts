@@ -30,38 +30,37 @@ export class CategoryService {
   }
 
   private loadCategories(): void {
-    this.http
-      .get<Category[]>(this.apiUrl)
-      .pipe(
-        tap((categories) => {
-          if (!categories || categories.length === 0) {
-            console.warn(
-              "⚠️ Aucune catégorie trouvée, ajout de 'Sans catégorie'"
-            );
-            categories = [DEFAULT_CATEGORY];
-          } else {
-            categories = categories.sort((a, b) =>
-              a._id === DEFAULT_CATEGORY._id
-                ? -1
-                : b._id === DEFAULT_CATEGORY._id
-                ? 1
-                : 0
-            );
-          }
-          this.categoriesSubject.next(categories);
-        }),
-        catchError((error) => {
-          console.error(
-            '❌ Erreur lors de la récupération des catégories :',
-            error
+    this.http.get<Category[]>(this.apiUrl)
+    .pipe(
+      tap((categories) => {
+        if (!categories || categories.length === 0) {
+          console.warn(
+            "⚠️ Aucune catégorie trouvée, ajout de 'Sans catégorie'"
           );
-          this.categoriesSubject.next([DEFAULT_CATEGORY]);
-          return throwError(
-            () => new Error('Erreur lors du chargement des catégories')
+          categories = [DEFAULT_CATEGORY];
+        } else {
+          categories = categories.sort((a, b) =>
+            a._id === DEFAULT_CATEGORY._id
+              ? -1
+              : b._id === DEFAULT_CATEGORY._id
+              ? 1
+              : 0
           );
-        })
-      )
-      .subscribe();
+        }
+        this.categoriesSubject.next(categories);
+      }),
+      catchError((error) => {
+        console.error(
+          '❌ Erreur lors de la récupération des catégories :',
+          error
+        );
+        this.categoriesSubject.next([DEFAULT_CATEGORY]);
+        return throwError(
+          () => new Error('Erreur lors du chargement des catégories')
+        );
+      })
+    )
+    .subscribe();
   }
 
   getCategories(): Observable<Category[]> {
@@ -70,6 +69,11 @@ export class CategoryService {
 
   getCategoryById(id: string): Observable<Category> {
     const url = `${this.apiUrl}/${id}`;
+    return this.http.get<Category>(url);
+  }
+
+  getCategoryBySlug(slug: string): Observable<Category> {
+    const url = `${this.apiUrl}/slug/${slug}`;
     return this.http.get<Category>(url);
   }
 

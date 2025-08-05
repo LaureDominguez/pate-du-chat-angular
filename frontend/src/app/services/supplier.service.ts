@@ -68,6 +68,11 @@ export class SupplierService {
   getSuppliers(): Observable<Supplier[]> {
     return this.suppliers$;
   }
+  
+  getSupplierBySlug(slug: string): Observable<Supplier> {
+    const url = `${this.apiUrl}/${slug}`;
+    return this.http.get<Supplier>(url);
+  }
 
   getSupplierById(id: string): Observable<Supplier> {
     const url = `${this.apiUrl}/${id}`;

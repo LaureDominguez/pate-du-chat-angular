@@ -5,6 +5,8 @@ const Ingredient = require('../models/ingredient');
 const upload = require('../../middleware/fileUpload');
 const sanitize = require('mongo-sanitize');
 const { default: mongoose } = require('mongoose');
+const generateUniqueSlug = require('../utils/slug');
+
 
 const validateRequest = (req, res, next) => {
 	const errors = validationResult(req);
@@ -51,6 +53,19 @@ router.get('/by-supplier/:id', async (req, res) => {
 		console.error(error.message);
 		res.status(500).send('Erreur serveur');
 	}
+});
+
+// Récupérer un ingredient par son slug
+router.get('/:slug', async (req, res) => {
+	const slug = req.params.slug;
+	let ingredient = await Ingredient.findOne({ slug: slug });
+	if (ingredient) return res.json(ingredient);
+
+	ingredient = await Ingredient.findOne({ previousSlugs: slug });
+	if (ingredient) {
+		return res.redirect(301, `/ingredients/${ingredient.slug}`);
+	}
+	res.status(404).json({ msg: 'Ingrédient non trouvé' });
 });
 
 // Obtenir un seul ingredient par son id
@@ -201,8 +216,11 @@ router.post(
 				vegeta = subIngredientsData.every(ing => ing.vegeta);
 			}
 
+			const slug = await generateUniqueSlug(name);
+
 			const newIngredient = new Ingredient({
 				name,
+				slug,
 				bio,
 				supplier,
 				type,

@@ -4,6 +4,8 @@ const router = express.Router();
 const Category = require('../models/category');
 const Product = require('../models/product');
 const sanitize = require('mongo-sanitize');
+const generateUniqueSlug = require('../utils/slug');
+
 
 const validateRequest = (req, res, next) => {
 	const errors = validationResult(req);
@@ -31,6 +33,19 @@ router.get('/', async (req, res) => {
 			.status(500)
 			.json({ error: 'Erreur lors de la récupération des catégories.' });
 	}
+});
+
+// Récupérer une catégorie par son slug
+router.get('/:slug', async (req, res) => {
+	const slug = req.params.slug;
+	let category = await Category.findOne({ slug });
+	if (category) return res.json(category);
+
+	category = await Category.findOne({ previousSlugs: slug });
+	if (category) {
+		return res.redirect(301, `/categories/${category.slug}`);
+	}
+	res.status(404).json({ message: 'Catégorie non trouvée' });
 });
 
 // Récupérer une catégorie par son ID
@@ -91,7 +106,9 @@ router.post(
 			return res.status(400).json({ msg: 'Cette catégorie existe déjà.' });
 		}
 
-		const newCategory = new Category({ name, description });
+		const slug = await generateUniqueSlug(name, Category);
+
+		const newCategory = new Category({ name, slug, description });
 		// const category = await newCategory.save();
 		await newCategory.save();
 
@@ -150,6 +167,7 @@ router.put(
 			if (existingCategory && existingCategory._id.toString() !== req.params.id) {
 				return res.status(400).json({ msg: 'Une autre catégorie porte déjà ce nom.' });
 			}
+
 
 			// Nettoyage des entrées utilisateur
 			category.name = sanitize(name) || category.name;

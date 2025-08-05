@@ -162,7 +162,7 @@ export class ProductFormComponent implements OnInit {
           ),
         ],
       ],
-      stock: [data.product?.stock || false],
+      forSale: [data.product?.forSale || false],
       stockQuantity: [
         data.product?.stockQuantity !== null &&
           data.product?.stockQuantity !== undefined
@@ -253,8 +253,8 @@ export class ProductFormComponent implements OnInit {
     return this.productForm.get('cookInstructions');
   }
 
-  get stock() {
-    return this.productForm.get('stock');
+  get forSale() {
+    return this.productForm.get('forSale');
   }
 
   get stockQuantity() {
@@ -352,7 +352,7 @@ export class ProductFormComponent implements OnInit {
 
   // toggle du bouton stock
   private updateStockToggleState(): void {
-    const stockCtrl = this.stock;
+    const stockCtrl = this.forSale;
     const value = this.stockQuantity?.value;
     const numericValue = parseFloat(value);
 
@@ -689,7 +689,7 @@ export class ProductFormComponent implements OnInit {
       dlc:
         this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
       existingImages: existingImages,
-      stock: this.stock?.value,
+      forSale: this.forSale?.value,
     };
 
     this.formValidated.emit({
@@ -715,7 +715,7 @@ export class ProductFormComponent implements OnInit {
     composition: 'Composition',
     dlc: 'DLC',
     cookInstructions: 'Instructions de cuisson',
-    stock: 'Stock',
+    forSale: 'En vente',
     stockQuantity: 'Quantité en stock',
     quantityType: 'Type de quantité',
     price: 'Prix',

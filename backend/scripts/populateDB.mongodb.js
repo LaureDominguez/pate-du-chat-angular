@@ -1,42 +1,147 @@
-use('les_pates_du_chat'); // Sélectionne la base de données
+use('les_pates_du_chat');   // ⇦ sélectionne la DB
 
-// 🔹 Suppression des collections existantes (optionnel)
+/************ 1) Nettoyage ************/
+db.products.deleteMany({});
+db.ingredients.deleteMany({});
 db.categories.deleteMany({});
 db.suppliers.deleteMany({});
-db.ingredients.deleteMany({});
-db.products.deleteMany({});
 
-// 🔹 Insertion des catégories
+/************ 2) Catégories ************/
 db.categories.insertMany([
-  { _id: ObjectId('65a123456789abcd12345601'), name: 'Pâtes fraîches', description: 'Pâtes artisanales maison.' },
-  { _id: ObjectId('65a123456789abcd12345602'), name: 'Sauces', description: 'Sauces naturelles et bio.' },
-  { _id: ObjectId('65a123456789abcd12345603'), name: 'Plats préparés', description: 'Plats prêts à consommer.' },
-  { _id: ObjectId('65a123456789abcd12345604'), name: 'Épicerie', description: 'Produits d’épicerie fine.' },
-  { _id: ObjectId('65a123456789abcd12345605'), name: 'Sans gluten', description: 'Produits adaptés aux régimes sans gluten.' }
+  {
+    _id: ObjectId('66a000000000000000000001'),
+    name: 'Pâtes fraîches',
+    slug: 'pates-fraiches',
+    previousSlugs: [],
+    description: 'Pâtes artisanales maison.',
+    createdAt: new Date(), updatedAt: new Date()
+  },
+  {
+    _id: ObjectId('66a000000000000000000002'),
+    name: 'Sauces',
+    slug: 'sauces',
+    previousSlugs: [],
+    description: 'Sauces naturelles et bio.',
+    createdAt: new Date(), updatedAt: new Date()
+  },
+  {
+    _id: ObjectId('66a000000000000000000003'),
+    name: 'Plats préparés',
+    slug: 'plats-prepares',
+    previousSlugs: [],
+    description: 'Prêts à consommer.',
+    createdAt: new Date(), updatedAt: new Date()
+  }
 ]);
 
-// 🔹 Insertion des fournisseurs
+/************ 3) Fournisseurs ************/
 db.suppliers.insertMany([
-  { _id: ObjectId('65b111111111abcd12345601'), name: 'Moulin Bio', description: 'Producteur de farines bio.' },
-  { _id: ObjectId('65b111111111abcd12345602'), name: 'Ferme du Coin', description: 'Producteur d’œufs fermiers.' },
-  { _id: ObjectId('65b111111111abcd12345603'), name: 'Maison des Tomates', description: 'Production locale de tomates.' },
-  { _id: ObjectId('65b111111111abcd12345604'), name: 'Épices du Monde', description: 'Importateur d’épices naturelles.' },
-  { _id: ObjectId('65b111111111abcd12345605'), name: 'Huiles & Co', description: 'Producteur d’huiles d’olive artisanales.' }
+  {
+    _id: ObjectId('66b000000000000000000001'),
+    name: 'Moulin Bio',
+    slug: 'moulin-bio',
+    previousSlugs: [],
+    description: 'Producteur de farines bio.',
+    createdAt: new Date(), updatedAt: new Date()
+  },
+  {
+    _id: ObjectId('66b000000000000000000002'),
+    name: 'Ferme du Coin',
+    slug: 'ferme-du-coin',
+    previousSlugs: [],
+    description: 'Œufs fermiers plein-air.',
+    createdAt: new Date(), updatedAt: new Date()
+  }
 ]);
 
-// 🔹 Insertion des ingrédients
+/************ 4) Ingrédients ************/
 db.ingredients.insertMany([
-  { _id: ObjectId('65c222222222abcd12345601'), name: 'Farine de blé', bio: true, supplier: ObjectId('65b111111111abcd12345601'), type: 'simple', subIngredients: [], allergens: ['gluten'], vegan: true, vegeta: true, origin: 'France', images: [] },
-  { _id: ObjectId('65c222222222abcd12345602'), name: 'Œufs', bio: false, supplier: ObjectId('65b111111111abcd12345602'), type: 'simple', subIngredients: [], allergens: ['œufs'], vegan: false, vegeta: true, origin: 'France', images: [] },
-  { _id: ObjectId('65c222222222abcd12345603'), name: 'Tomates', bio: true, supplier: ObjectId('65b111111111abcd12345603'), type: 'simple', subIngredients: [], allergens: [], vegan: true, vegeta: true, origin: 'Espagne', images: [] },
-  { _id: ObjectId('65c222222222abcd12345604'), name: 'Basilic', bio: true, supplier: ObjectId('65b111111111abcd12345604'), type: 'simple', subIngredients: [], allergens: [], vegan: true, vegeta: true, origin: 'Italie', images: [] },
-  { _id: ObjectId('65c222222222abcd12345605'), name: 'Huile d’olive', bio: true, supplier: ObjectId('65b111111111abcd12345605'), type: 'simple', subIngredients: [], allergens: [], vegan: true, vegeta: true, origin: 'Grèce', images: [] },
-  { _id: ObjectId('65c222222222abcd12345606'), name: 'Pâtes aux œufs', bio: false, supplier: ObjectId('65b111111111abcd12345601'), type: 'compose', subIngredients: [ObjectId('65c222222222abcd12345601'), ObjectId('65c222222222abcd12345602')], allergens: ['gluten', 'œufs'], vegan: false, vegeta: true, origin: 'France', images: [] }
+  {
+    _id: ObjectId('66c000000000000000000001'),
+    name: 'Farine de blé',
+    slug: 'farine-de-ble',
+    previousSlugs: [],
+    bio: true,
+    supplier: ObjectId('66b000000000000000000001'),
+    type: 'simple',
+    subIngredients: [],
+    allergens: ['gluten'],
+    vegan: true,  vegeta: true,
+    origin: 'France',
+    images: [],
+    createdAt: new Date(), updatedAt: new Date()
+  },
+  {
+    _id: ObjectId('66c000000000000000000002'),
+    name: 'Œufs frais',
+    slug: 'oeufs-frais',
+    previousSlugs: [],
+    bio: false,
+    supplier: ObjectId('66b000000000000000000002'),
+    type: 'simple',
+    subIngredients: [],
+    allergens: ['oeufs'],
+    vegan: false, vegeta: true,
+    origin: 'France',
+    images: [],
+    createdAt: new Date(), updatedAt: new Date()
+  },
+  {
+    _id: ObjectId('66c000000000000000000003'),
+    name: 'Pâtes aux œufs',
+    slug: 'pates-aux-oeufs',
+    previousSlugs: [],
+    bio: false,
+    supplier: ObjectId('66b000000000000000000001'),
+    type: 'compose',
+    subIngredients: [
+      ObjectId('66c000000000000000000001'),
+      ObjectId('66c000000000000000000002')
+    ],
+    allergens: ['gluten', 'oeufs'],
+    vegan: false, vegeta: true,
+    origin: 'France',
+    images: [],
+    createdAt: new Date(), updatedAt: new Date()
+  }
 ]);
 
-// 🔹 Insertion des produits
+/************ 5) Produits ************/
 db.products.insertMany([
-  { _id: ObjectId('65d333333333abcd12345601'), name: 'Tagliatelles fraîches', category: ObjectId('65a123456789abcd12345601'), description: "Tagliatelles artisanales aux œufs.", composition: [ObjectId('65c222222222abcd12345606')], dlc: '2025-05-01', cookInstructions: 'Faire cuire 3 minutes à l’eau bouillante.', stock: true, stockQuantity: 20, quantityType: 'kg', price: 5.5, images: [] },
-  { _id: ObjectId('65d333333333abcd12345602'), name: 'Sauce tomate maison', category: ObjectId('65a123456789abcd12345602'), description: 'Sauce tomate 100% naturelle.', composition: [ObjectId('65c222222222abcd12345603'), ObjectId('65c222222222abcd12345604'), ObjectId('65c222222222abcd12345605')], dlc: '2025-06-15', cookInstructions: 'Réchauffer doucement.', stock: true, stockQuantity: 15, quantityType: 'piece', price: 3.2, images: [] },
-  { _id: ObjectId('65d333333333abcd12345603'), name: 'Lasagnes fraîches', category: ObjectId('65a123456789abcd12345603'), description: 'Lasagnes préparées avec sauce maison.', composition: [ObjectId('65c222222222abcd12345606'), ObjectId('65c222222222abcd12345603')], dlc: '2025-04-20', cookInstructions: 'Cuire 20 minutes au four.', stock: true, stockQuantity: 10, quantityType: 'piece', price: 7.8, images: [] }
+  {
+    _id: ObjectId('66d000000000000000000001'),
+    name: 'Tagliatelles fraîches',
+    slug: 'tagliatelles-fraiches',
+    previousSlugs: [],
+    category: ObjectId('66a000000000000000000001'),
+    description: 'Tagliatelles artisanales aux œufs.',
+    composition: [ObjectId('66c000000000000000000003')],
+    dlc: '2025-05-01',
+    cookInstructions: 'Cuire 3 min à l’eau bouillante.',
+    forSale: true,
+    stockQuantity: 20,
+    quantityType: 'kg',
+    price: 5.50,
+    images: [],
+    createdAt: new Date(), updatedAt: new Date()
+  },
+  {
+    _id: ObjectId('66d000000000000000000002'),
+    name: 'Sauce tomate maison',
+    slug: 'sauce-tomate-maison',
+    previousSlugs: [],
+    category: ObjectId('66a000000000000000000002'),
+    description: 'Tomates 100 % naturelles.',
+    composition: [],
+    dlc: '2025-06-15',
+    cookInstructions: 'Réchauffer doucement.',
+    forSale: true,
+    stockQuantity: 15,
+    quantityType: 'piece',
+    price: 3.20,
+    images: [],
+    createdAt: new Date(), updatedAt: new Date()
+  }
 ]);
+
+print('✅  Jeu de données réinitialisé');

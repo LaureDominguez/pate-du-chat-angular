@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { auditTime, BehaviorSubject, catchError, finalize, map, merge, Observable, tap, throwError } from 'rxjs';
+import { auditTime, BehaviorSubject, catchError, map, merge, Observable, tap, throwError } from 'rxjs';
 
 import { Product } from '../models/product';
 import { DEFAULT_CATEGORY } from '../models/category';
@@ -40,14 +40,20 @@ export class ProductService {
   }
 
   private loadProducts(): void {
-    this.http.get<Product[]>(this.apiUrl).pipe(
-      map((products) =>
-        products.map((product) => ({
-          ...product,
-          category: product.category ? product.category : DEFAULT_CATEGORY,
-        }))
+    this.http.get<Product[]>(this.apiUrl)
+    .pipe(
+      map(products =>
+        products
+          .sort(
+            (a, b) =>
+              +new Date(b.createdAt || 0) - +new Date(a.createdAt || 0) 
+          )
+          .map(p => ({
+            ...p,
+            category: p.category || DEFAULT_CATEGORY,
+          }))
       )
-    ).subscribe((products) => {
+    ).subscribe(products => {
       this.productSubject.next(products); 
     });
   }
@@ -59,7 +65,17 @@ export class ProductService {
   getProductById(id: string): Observable<Product> {
     const url = `${this.apiUrl}/${id}`;
     return this.http.get<Product>(url).pipe(
-      map((product) => ({
+      map(product => ({
+        ...product,
+        category: product.category || DEFAULT_CATEGORY,
+      }))
+    );
+  }
+
+  getProductBySlug(slug: string): Observable<Product> {
+    const url = `${this.apiUrl}/${slug}`;
+    return this.http.get<Product>(url).pipe(
+      map(product => ({
         ...product,
         category: product.category || DEFAULT_CATEGORY,
       }))
@@ -69,7 +85,7 @@ export class ProductService {
   getProductsByCategory(categoryId: string): Observable<Product[]> {
     const url = `${this.apiUrl}/by-category/${categoryId}`;
     return this.http.get<Product[]>(url).pipe(
-      map((products) =>
+      map(products =>
         products.map((product) => ({
           ...product,
           category: product.category || DEFAULT_CATEGORY,
@@ -81,8 +97,8 @@ export class ProductService {
   getProductsByIngredient(ingredientId: string): Observable<Product[]> {
     const url = `${this.apiUrl}/by-ingredient/${ingredientId}`;
     return this.http.get<Product[]>(url).pipe(
-      map((products) =>
-        products.map((product) => ({
+      map(products =>
+        products.map(product => ({
           ...product,
           category: product.category || DEFAULT_CATEGORY,
         }))

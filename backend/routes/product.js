@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Product = require('../models/product');
 const { DEFAULT_CATEGORY } = require('../models/category');
 const sanitize = require('mongo-sanitize');
+const generateUniqueSlug = require('../utils/slug');
 
 const validateRequest = (req, res, next) => {
 	const errors = validationResult(req);
@@ -28,46 +29,44 @@ router.get('/', async (req, res) => {
 				populate: { path: 'subIngredients' }
 			});
 
-		// if (req.query.view === 'full') {
-			try {
-				products = products.map((product) => {
-					const allergensSet = new Set();
-					let isVegan = true;
-					let isVegeta = true;
+		try {
+			products = products.map((product) => {
+				const allergensSet = new Set();
+				let isVegan = true;
+				let isVegeta = true;
 
-					if (product.composition) {
-						product.composition.forEach((ingredient) => {
-							if (ingredient.allergens) {
-								ingredient.allergens.forEach((allergen) => {
-									allergensSet.add(allergen);
-								});
-							}
-							if (!ingredient.vegan) {
-								isVegan = false;
-							}
-							if (!ingredient.vegeta) {
-								isVegeta = false;
-							}
-						});
-					} else {
-						isVegan = false;
-						isVegeta = false;
-					}
+				if (product.composition) {
+					product.composition.forEach((ingredient) => {
+						if (ingredient.allergens) {
+							ingredient.allergens.forEach((allergen) => {
+								allergensSet.add(allergen);
+							});
+						}
+						if (!ingredient.vegan) {
+							isVegan = false;
+						}
+						if (!ingredient.vegeta) {
+							isVegeta = false;
+						}
+					});
+				} else {
+					isVegan = false;
+					isVegeta = false;
+				}
 
-					return {
-						...product.toObject(),
-						allergens: Array.from(allergensSet),
-						vegan: isVegan,
-						vegeta: isVegeta,
-					};
-				});
-			} catch (error) {
-				console.error('Erreur lors du mapping des produits:', error);
-				return res
-					.status(500)
-					.json({ message: 'Erreur lors du traitement des produits.' });
-			}
-		// }
+				return {
+					...product.toObject(),
+					allergens: Array.from(allergensSet),
+					vegan: isVegan,
+					vegeta: isVegeta,
+				};
+			});
+		} catch (error) {
+			console.error('Erreur lors du mapping des produits:', error);
+			return res
+				.status(500)
+				.json({ message: 'Erreur lors du traitement des produits.' });
+		}
 		res.status(200).json(products);
 	} catch (error) {
 		console.error('Erreur serveur:', error);
@@ -78,6 +77,21 @@ router.get('/', async (req, res) => {
 			});
 	}
 });
+
+// GET /products/slug/:slug
+router.get('/:slug', async (req, res) => {
+	const slug = req.params.slug;
+
+	let product = await Product.findOne({ slug: slug });
+	if (product) return res.json(product);
+
+	product = await Product.findOne({ previousSlugs: slug });
+	if (product) {
+		return res.redirect(301, `/products/${product.slug}`);
+	}
+	res.status(404).json({ message: 'Produit non trouvé' });
+});
+
 
 // Obtenir les produits par ingrédient
 router.get('/by-ingredient/:id', async (req, res) => {
@@ -133,25 +147,22 @@ router.get('/:id', async (req, res) => {
 			return res.status(404).json({ message: 'Produit non trouvé' });
 		}
 
-		// Si "view=full", calculer les allergènes et régimes alimentaires
-		// if (req.query.view === 'full') {
-			const allergensSet = new Set();
-			let isVegan = true;
-			let isVegeta = true;
+		const allergensSet = new Set();
+		let isVegan = true;
+		let isVegeta = true;
 
-			product.composition.forEach((ingredient) => {
-				ingredient.allergens?.forEach((allergen) => allergensSet.add(allergen));
-				if (!ingredient.vegan) isVegan = false;
-				if (!ingredient.vegeta) isVegeta = false;
-			});
+		product.composition.forEach((ingredient) => {
+			ingredient.allergens?.forEach((allergen) => allergensSet.add(allergen));
+			if (!ingredient.vegan) isVegan = false;
+			if (!ingredient.vegeta) isVegeta = false;
+		});
 
-			product = {
-				...product,
-				allergens: Array.from(allergensSet),
-				vegan: isVegan,
-				vegeta: isVegeta,
-			};
-		// }
+		product = {
+			...product,
+			allergens: Array.from(allergensSet),
+			vegan: isVegan,
+			vegeta: isVegeta,
+		};
 
 		res.json(product);
 	} catch (error) {
@@ -222,10 +233,6 @@ router.post(
 			.optional()
 			.isArray()
 			.withMessage('Le champ "composition" doit être un tableau.'),
-			// .isArray({ min: 1 })
-			// .withMessage(
-			// 	'Le champ "composition" doit contenir au moins un ingrédient.'
-			// ),
 		check('dlc')
 			.trim()
 			.notEmpty()
@@ -241,8 +248,6 @@ router.post(
 		check('cookInstructions')
 			.optional()
 			.trim()
-			// .notEmpty()
-			// .withMessage('Le champ "instructions de cuisson" est obligatoire.')
 			.isLength({ max: 250 })
 			.withMessage(
 				'Le champ "instructions de cuisson" doit avoir une longueur maximale de 250 caractères.'
@@ -251,24 +256,24 @@ router.post(
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),
-		check('stock')
+		check('forSale')
 			.isBoolean()
-			.withMessage('Le champ "stock" doit être un booléen.'),
+			.withMessage('Le champ "en vente" doit être un booléen.'),
 		check('stockQuantity')
 			.custom((value, { req }) => {
 				const type = req.body.quantityType;
 
 				if (value === undefined || value === null || value === '') {
-					// throw new Error('La quantité en stock est requise.');
+					// throw new Error('La quantité en vente est requise.');
 					return true;
 				}
 				if (typeof value !== 'string' && typeof value !== 'number') {
-					throw new Error('La quantité en stock doit être une valeur numérique.');
+					throw new Error('La quantité en vente doit être une valeur numérique.');
 				}
 
 				const num = parseFloat(value);
 				if (isNaN(num) || num < 0) {
-					throw new Error('La quantité en stock doit être un nombre positif.');
+					throw new Error('La quantité en vente doit être un nombre positif.');
 				}
 
 				if (type === 'piece' && !Number.isInteger(num)) {
@@ -291,28 +296,27 @@ router.post(
 	validateRequest,
 	async (req, res, next) => {
 		try {
-			let { name, category, description, composition, dlc, cookInstructions, stock, stockQuantity, quantityType, price, images } =
+			let { name, category, description, composition, dlc, cookInstructions, forSale, stockQuantity, quantityType, price, images } =
 				req.body;
 
 			// Nettoyage des champs
-			stock = sanitize(stock);
+			forSale = sanitize(forSale);
 			stockQuantity = sanitize(stockQuantity);
 
 			// Logique par défaut
 			const numericQuantity = parseFloat(stockQuantity);
 			const resolvedStock =
-			typeof stock === 'boolean'
-				? stock
+			typeof forSale === 'boolean'
+				? forSale
 				: !isNaN(numericQuantity) && numericQuantity >= 0;
 
 			// Nettoyage des entrées utilisateur
 			name = sanitize(name);
-			// category = sanitize(category);
 			description = sanitize(description);
 			composition = sanitize(composition);
 			dlc = sanitize(dlc);
 			cookInstructions = sanitize(cookInstructions);
-			stock = resolvedStock;
+			forSale = resolvedStock;
 			stockQuantity = isNaN(numericQuantity) ? null : numericQuantity;
 			quantityType = sanitize(quantityType);
 			images = sanitize(images);
@@ -329,14 +333,17 @@ router.post(
 					.json({ msg: 'Un autre produit porte déjà ce nom.' });
 			}
 
+			const slug = await generateUniqueSlug(name);
+
 			const newProduct = new Product({
 				name,
+				slug,
 				category,
 				description,
 				composition,
 				dlc,
 				cookInstructions,
-				stock,
+				forSale,
 				stockQuantity,
 				quantityType,
 				price,
@@ -405,10 +412,6 @@ router.put(
 			.withMessage(
 				'Le champ "composition" doit être un tableau.'
 			),
-			// .isArray({ min: 1 })
-			// .withMessage(
-			// 	'Le champ "composition" doit contenir au moins un ingrédient.'
-			// ),
 		check('dlc')
 			.optional()
 			.trim()
@@ -431,10 +434,10 @@ router.put(
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),
-		check('stock')
+		check('forSale')
 			.optional()
 			.isBoolean()
-			.withMessage('Le champ "stock" doit être un booléen.'),
+			.withMessage('Le champ "en vente" doit être un booléen.'),
 		check('stockQuantity')
 			.optional()
 			.custom((value, { req }) => {
@@ -443,11 +446,11 @@ router.put(
 					return true;
 				}
 				if (typeof value !== 'string' && typeof value !== 'number') {
-					throw new Error('La quantité en stock doit être une valeur numérique.');
+					throw new Error('La quantité en vente doit être une valeur numérique.');
 				}
 				const num = parseFloat(value);
 				if (isNaN(num) || num < 0) {
-					throw new Error('La quantité en stock doit être un nombre positif.');
+					throw new Error('La quantité en vente doit être un nombre positif.');
 				}
 				if (type === 'piece' && !Number.isInteger(num)) {
 					throw new Error('La quantité doit être un entier si l\'unité est "pièce".');
@@ -471,7 +474,7 @@ router.put(
 	validateRequest,
 	async (req, res) => {
 		try {
-			let { name, category, description, composition, dlc, cookInstructions, stock, stockQuantity, quantityType, price, images } =
+			let { name, category, description, composition, dlc, cookInstructions, forSale, stockQuantity, quantityType, price, images } =
 				req.body;
 
 			const product = await Product.findById(req.params.id);
@@ -492,7 +495,6 @@ router.put(
 			const numericQuantity = parseFloat(stockQuantity);
 
 			product.name = sanitize(name) || product.name;
-			// product.category = sanitize(category) || product.category;
 			product.category =
 			category && mongoose.Types.ObjectId.isValid(category._id)
 				? sanitize(category._id)
@@ -501,19 +503,17 @@ router.put(
 			product.composition = sanitize(composition) || product.composition;
 			product.dlc = sanitize(dlc) || product.dlc;
 			product.cookInstructions = sanitize(cookInstructions) || product.cookInstructions;
-			if ('stock' in req.body) {
-				product.stock = sanitize(stock);
+			if ('forSale' in req.body) {
+				product.forSale = sanitize(forSale);
 				} else if (!isNaN(numericQuantity)) {
-				product.stock = numericQuantity >= 0;
+				product.forSale = numericQuantity >= 0;
 				} else {
-				product.stock = false;
+				product.forSale = false;
 			}
 			product.stockQuantity = !isNaN(numericQuantity) ? numericQuantity : null;
 			product.quantityType = sanitize(quantityType) || product.quantityType;
 			product.price = sanitize(price) || product.price;
 			product.images = sanitize(images) || product.images;
-
-
 
 			const updatedProduct = await product.save();
 			res.json(updatedProduct);

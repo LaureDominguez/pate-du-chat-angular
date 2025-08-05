@@ -4,6 +4,8 @@ const router = express.Router();
 const Ingredient = require('../models/ingredient');
 const Supplier = require('../models/supplier');
 const sanitize = require('mongo-sanitize');
+const generateUniqueSlug = require('../utils/slug');
+
 
 const validateRequest = (req, res, next) => {
     const errors = validationResult(req);
@@ -36,6 +38,21 @@ router.get('/', async (req, res) => {
             .json({ message: 'Erreur lors de la récupération des fournisseurs.' });
     }
 });
+
+// 🔹 Récupérer un fournisseur par son slug
+router.get('/:slug', async (req, res) => {
+    const slug = req.params.slug;
+
+    let supplier = await Supplier.findOne({ slug: slug });
+    if (supplier) return res.json(supplier);
+
+    supplier = await Supplier.findOne({ previousSlugs: slug });
+    if (supplier) {
+        return res.redirect(301, `/suppliers/${supplier.slug}`);
+    }
+    res.status(404).json({ message: 'Fournisseur non trouvé' });
+});
+
 
 // 🔹 Récupérer un fournisseur par son I
 router.get('/:id', async (req, res) => {
@@ -103,7 +120,9 @@ router.post(
             return res.status(400).json({ msg: 'Ce fournisseur existe déjà.' });
         }
 
-        const newSupplier = new Supplier({ name, description });
+        const slug = await generateUniqueSlug(name);
+
+        const newSupplier = new Supplier({ name, slug, description });
         
         await newSupplier.save();
         res.status(201).json(newSupplier);
