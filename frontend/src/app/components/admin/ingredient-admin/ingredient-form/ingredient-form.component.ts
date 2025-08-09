@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Inject, Output } from '@angular/core';
-import { map, Observable, startWith } from 'rxjs';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Inject, OnDestroy, Output, ViewChild } from '@angular/core';
+import { debounceTime, distinctUntilChanged, map, Observable, startWith, Subject, takeUntil } from 'rxjs';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 
@@ -12,6 +12,7 @@ import { DialogService } from '../../../../services/dialog.service';
 import { SharedDataService } from '../../../../services/shared-data.service';
 import { ADMIN_SHARED_IMPORTS } from '../../admin-material';
 import { MATERIAL_IMPORTS } from '../../../../app-material';
+import { MatAutocomplete } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-ingredient-form',
@@ -19,8 +20,12 @@ import { MATERIAL_IMPORTS } from '../../../../app-material';
   templateUrl: './ingredient-form.component.html',
   styleUrls: ['./ingredient-form.component.scss'],
 })
-export class IngredientFormComponent {
+export class IngredientFormComponent implements OnDestroy, AfterViewInit {
   ingredientForm: FormGroup;
+
+  private destroy$ = new Subject<void>();
+
+  @ViewChild('supplierAuto') supplierAuto!: MatAutocomplete;
 
   @Output() downloadImage = new EventEmitter<{ imagePath: string; objectName: string }>()
   @Output() checkNameExists = new EventEmitter<string>();
@@ -39,6 +44,10 @@ export class IngredientFormComponent {
   searchedSupplier: string = '';
   supplierNotFound: boolean = false;
 
+  displaySupplier = (value: Supplier | string | null): string =>
+  typeof value === 'string' ? value ?? '' : (value?.name ?? '');
+
+
   // Sous-ingrédients
   allIngredients: Ingredient[] = [];
   subIngredientCtrl = new FormControl();
@@ -55,6 +64,7 @@ export class IngredientFormComponent {
     private sharedDataService: SharedDataService,
     private dialogService: DialogService,
     private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
     public dialogRef: MatDialogRef<IngredientFormComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -122,7 +132,8 @@ export class IngredientFormComponent {
       vegeta: [data.ingredient?.vegeta || false],
       images: [data.ingredient?.images || []],
     });
-    this.supplierCtrl.setValue(this.ingredientForm.value.supplier?.name || '');
+    this.supplierCtrl.setValue(this.ingredientForm.value.supplier?.name || '',
+    { emitEvent: false }) ;
   }
 
   ngOnInit(): void {
@@ -131,10 +142,42 @@ export class IngredientFormComponent {
     this.setupBioToggle();
     this.setupSubIngredientsValidator();
     this.updateProcessedImages();
+    this.setupSupplierSync(); 
   }
 
+  ngAfterViewInit(): void {
+    // Diffère l’application de l’état initial à une micro-tâche
+    queueMicrotask(() => {
+      const isCompose = this.type?.value === 'compose';
+
+      if (isCompose) {
+        this.bio?.disable({ emitEvent: false });
+        this.updateBioFromSubIngredients();
+      } else {
+        this.bio?.enable({ emitEvent: false });
+      }
+
+      // Si tu valides subIngredients quand 'compose', applique les validators initiaux aussi :
+      const subIngControl = this.ingredientForm.get('subIngredients');
+      if (isCompose && subIngControl) {
+        subIngControl.setValidators([Validators.required, Validators.minLength(1)]);
+        subIngControl.updateValueAndValidity({ emitEvent: false });
+      }
+
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+
   private subscribeToDataUpdates(): void {
-    this.sharedDataService.supplierCreated$.subscribe((newSupplier: Supplier) => {
+    this.sharedDataService.supplierCreated$
+    .pipe(takeUntil(this.destroy$))
+    .subscribe((newSupplier: Supplier) => {
       if (!newSupplier || !newSupplier._id || !newSupplier.name) {
         this.dialogService.error('❌ Données invalides reçues pour le nouveau fournisseur');
         return;
@@ -151,52 +194,75 @@ export class IngredientFormComponent {
   }
 
   private setupBioToggle(): void {
-    // Appliquer la règle initialement
-    if (this.type?.value === 'compose') {
-      this.bio?.disable();
-      this.updateBioFromSubIngredients();
-    }
-
-    // Réagir aux changements
-    this.type?.valueChanges.subscribe((newType: string) => {
+      this.type?.valueChanges
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+    .subscribe((newType: 'simple' | 'compose') => {
       if (newType === 'compose') {
-        this.bio?.disable();
+        this.bio?.disable({ emitEvent: false });
         this.updateBioFromSubIngredients();
       } else {
-        this.bio?.enable();
+        this.bio?.enable({ emitEvent: false });
       }
+      this.cdr.markForCheck();
     });
+    // // Appliquer la règle initialement
+    // if (this.type?.value === 'compose') {
+    //   this.bio?.disable();
+    //   this.updateBioFromSubIngredients();
+    // }
+
+    // // Réagir aux changements
+    // this.type?.valueChanges.subscribe((newType: string) => {
+    //   if (newType === 'compose') {
+    //     this.bio?.disable();
+    //     this.updateBioFromSubIngredients();
+    //   } else {
+    //     this.bio?.enable();
+    //   }
+    // });
   }
 
   private updateBioFromSubIngredients(): void {
-  const subIngredients: Ingredient[] = this.ingredientForm.get('subIngredients')?.value || [];
+    const subIngredients: Ingredient[] = this.ingredientForm.get('subIngredients')?.value || [];
 
-  if (subIngredients.length === 0) {
-    this.bio?.setValue(false);
-    return;
+    if (subIngredients.length === 0) {
+      this.bio?.setValue(false);
+      return;
+    }
+
+    const allBio = subIngredients.every((ing) => ing.bio === true);
+    this.bio?.setValue(allBio);
   }
-
-  const allBio = subIngredients.every((ing) => ing.bio === true);
-  this.bio?.setValue(allBio);
-}
 
 
   private setupSubIngredientsValidator(): void {
-    this.type?.valueChanges.subscribe((typeValue: string) => {
-      const subIngControl = this.ingredientForm.get('subIngredients');
-      if (!subIngControl) return;
+    this.type?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((typeValue: string) => {
+        const subCtrl = this.ingredientForm.get('subIngredients');
+        if (!subCtrl) return;
 
-      if (typeValue === 'compose') {
-        subIngControl.setValidators([
-          Validators.required,
-          Validators.minLength(1)
-        ]);
-      } else {
-        subIngControl.clearValidators();
-      }
-      subIngControl.updateValueAndValidity();
-    });
+        if (typeValue === 'compose') {
+          subCtrl.setValidators([Validators.required, Validators.minLength(1)]);
+          // Applique l’état d’erreur si vide
+          const empty = !this.subIngredients || this.subIngredients.length === 0;
+          if (empty) {
+            subCtrl.setErrors({ required: true });
+            this.subIngredientCtrl.setErrors({ required: true });
+          } else {
+            subCtrl.setErrors(null);
+            this.subIngredientCtrl.setErrors(null);
+          }
+          subCtrl.updateValueAndValidity({ emitEvent: false });
+        } else {
+          subCtrl.clearValidators();
+          subCtrl.setErrors(null);
+          this.subIngredientCtrl.setErrors(null);
+          subCtrl.updateValueAndValidity({ emitEvent: false });
+        }
+      });
   }
+
   
   get name() {
     return this.ingredientForm.get('name');
@@ -255,6 +321,49 @@ private setupAutoComplete(): void {
     })
   );
 }
+
+private setupSupplierSync(): void {
+  // Quand l’utilisateur tape / choisit
+  this.supplierCtrl.valueChanges
+    .pipe(startWith(this.supplierCtrl.value),
+      debounceTime(0),                // laisse l’UI respirer, évite des doubles émissions
+      takeUntil(this.destroy$)
+    )
+    .subscribe((val: string | Supplier | null) => {
+      // Cas 1: sélection d'une option => objet Supplier
+      if (val && typeof val === 'object' && (val as Supplier)._id) {
+        this.supplier?.setValue(val, { emitEvent: false });
+        this.supplier?.setErrors(null);
+        this.supplierCtrl.setErrors(null);
+        return;
+      }
+
+      // Cas 2: saisie texte => on tente une correspondance exacte sur le nom
+      const text = (typeof val === 'string' ? val : '')?.trim();
+
+      if (!text) {
+        this.supplier?.setValue(null, { emitEvent: false });
+        this.supplier?.setErrors({ required: true });
+        this.supplierCtrl.setErrors({ required: true });
+        return;
+      }
+
+      const match = this.suppliers.find(
+        s => this.normalizeString(s.name) === this.normalizeString(text)
+      );
+
+      if (match) {
+        this.supplier?.setValue(match, { emitEvent: false });
+        this.supplier?.setErrors(null);
+        this.supplierCtrl.setErrors(null); 
+      } else {
+        this.supplier?.setValue(null, { emitEvent: false });
+        this.supplier?.setErrors({ invalidSelection: true });
+        this.supplierCtrl.setErrors({ invalidSelection: true }); 
+      }
+    });
+}
+
 
   //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
@@ -347,6 +456,15 @@ private setupAutoComplete(): void {
     this.subIngredientCtrl.setValue('');
     if (this.type?.value === 'compose') {
       this.updateBioFromSubIngredients();
+      const subCtrl = this.ingredientForm.get('subIngredients');
+      const empty = !this.subIngredients || this.subIngredients.length === 0;
+      if (empty) {
+        subCtrl?.setErrors({ required: true });
+        this.subIngredientCtrl.setErrors({ required: true });
+      } else {
+        subCtrl?.setErrors(null);
+        this.subIngredientCtrl.setErrors(null);
+      }
     }
   }
 
@@ -384,37 +502,42 @@ getIngredientTooltip(ingredient: Ingredient): string {
 
   /////////////////////////////////////////////////////////////////////////////////
   ///////////// Gestion des erreurs
-  onBlurChecks(): void {
-    const typeValue = this.type?.value;
-    const supplierValue = this.supplier?.value;
-    const supplierInput = this.supplierCtrl.value;
-    const originControl = this.origins;
+  onSupplierBlur(): void {
+    // force l’évaluation finale et l’affichage des erreurs au blur
+    const val = this.supplierCtrl.value;
+    const text = (typeof val === 'string' ? val : '')?.trim();
 
-    if (!supplierValue) {
-      this.supplier?.markAsTouched();
-
-      if (supplierInput && typeof supplierInput === 'string') {
-        this.supplier?.setErrors({ invalidSelection: true });
-      } else {
-        this.supplier?.setErrors({ required: true });
-      }
+    if (!text && !this.supplier?.value) {
+      this.supplier?.setValue(null, { emitEvent: false });
+      this.supplier?.setErrors({ required: true });
+      this.supplierCtrl.setErrors({ required: true }); // miroir
     }
 
-    // Vérifie le champ origine
-    if (!originControl?.value) {
-      originControl?.setErrors({ required: true });
-      originControl?.markAsTouched();
-    }
-
-    if (typeValue === 'compose') {
-      // Vérifie la sélection de sous-ingrédients
-      if (this.subIngredients.length === 0) {
-        this.ingredientForm.get('subIngredients')?.setErrors({ required: true });
-      } else {
-        this.ingredientForm.get('subIngredients')?.setErrors(null);
-      }
-    }
+    this.supplier?.markAsTouched();
+    this.supplierCtrl.markAsTouched();
   }
+
+  onSubIngredientBlur(): void {
+  const subCtrl = this.ingredientForm.get('subIngredients');
+  // Valide seulement si type = compose
+  if (this.type?.value === 'compose') {
+    const empty = !this.subIngredients || this.subIngredients.length === 0;
+    if (empty) {
+      subCtrl?.setErrors({ required: true });
+      this.subIngredientCtrl.setErrors({ required: true }); // miroir pour le mat-form-field
+    } else {
+      subCtrl?.setErrors(null);
+      this.subIngredientCtrl.setErrors(null);
+    }
+    subCtrl?.markAsTouched();
+    this.subIngredientCtrl.markAsTouched();
+  } else {
+    // En "simple", on ne requiert rien
+    subCtrl?.setErrors(null);
+    this.subIngredientCtrl.setErrors(null);
+  }
+}
+
 
   clearField(field: 'origin' | 'supplier' | 'subIngredients'): void {
     switch (field) {
@@ -424,13 +547,17 @@ getIngredientTooltip(ingredient: Ingredient): string {
 
       case 'supplier':
         this.supplierCtrl.setValue('');
+        this.supplierCtrl.setErrors(null);
         this.ingredientForm.get('supplier')?.reset();
+        this.ingredientForm.get('supplier')?.setErrors(null);
+
+        queueMicrotask(() => this.supplierAuto?.options.forEach(o => o.deselect()));
         break;
 
-      case 'subIngredients':
+      case 'subIngredients': {
         this.subIngredientCtrl.setValue('');
-        this.ingredientForm.get('subIngredients')?.reset();
         break;
+      }
     }
   }
 

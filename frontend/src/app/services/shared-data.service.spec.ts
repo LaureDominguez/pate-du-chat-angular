@@ -92,6 +92,7 @@ describe('SharedDataService', () => {
   it('doit émettre Ingredient lorsque resultIngredientCreated est appelé', async () => {
     const ingredient: Ingredient = {
       _id: 'ing1',
+      slug: 'sel',
       name: 'Sel',
       bio: false,
       supplier: 'sup1',

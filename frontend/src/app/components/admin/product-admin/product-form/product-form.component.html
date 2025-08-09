@@ -16,7 +16,7 @@
                         <!-- Nom -->
                         <mat-form-field appearance="fill" class="full-width">
                             <mat-label>Nom</mat-label>
-                            <input matInput formControlName="name" />
+                            <input matInput formControlName="name" cdkFocusInitial />
                             <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
                             <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
                             <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
@@ -27,23 +27,23 @@
                         <mat-form-field appearance="fill">
                             <mat-label>Catégorie</mat-label>
                             <input 
-                                #categoryInput
                                 type="text" 
                                 matInput 
                                 [formControl]="categoryCtrl" 
                                 [matAutocomplete]="categoryAuto"
-                                formControlName="category" 
                                 placeholder="Rechercher une catégorie" 
                                 (blur)="onCategoryBlur()"
+                                (keydown.enter)="$event.preventDefault()"
                             />
                             <!-- effacer -->
                             <button
                                 *ngIf="categoryCtrl.value"
                                 matSuffix
                                 mat-icon-button
-                                aria-label="Effacer la catégorie"
+                                aria-label="Effacer"
                                 (click)="clearCategory()"
                                 tabindex="-1"
+                                type="button"
                             >
                                 <mat-icon>close</mat-icon>
                             </button>
@@ -57,14 +57,17 @@
                             </mat-error>
 
                             <!-- autocomplete -->
-                            <mat-autocomplete #categoryAuto="matAutocomplete"
-                                (optionSelected)="addCategory($event.option.value)">
+                            <mat-autocomplete 
+                                #categoryAuto="matAutocomplete"
+                                (optionSelected)="addCategory($event.option.value)"
+                                [displayWith]="displayCategory">
                                 <!-- Affichage des résultats filtrés -->
-                                <mat-option *ngFor="let category of filteredCategories | async" [value]="category">
+                                <mat-option 
+                                    *ngFor="let category of filteredCategories | async" 
+                                    [value]="category">
                                     {{ category.name }}
                                 </mat-option>
 
-                                <!-- Message pour proposer l'ajout d'un ingrédient  (click)="createIngredient()"-->
                                 <mat-option *ngIf="categoryNotFound" [value]="'categoryNotFound'">
                                     Aucun résultat. Cliquez ici pour ajouter une nouvelle catégorie.
                                 </mat-option>
@@ -104,8 +107,6 @@
                             <mat-error *ngIf="price?.hasError('required')">Le prix est obligatoire.</mat-error>
                             <mat-error *ngIf="price?.hasError('min')">Le prix doit être un nombre positif ou égale à
                                 0.</mat-error>
-                            <mat-error *ngIf="price?.hasError('pattern')">Le format du prix est incorrect (ex:
-                                10,99).</mat-error>
                         </mat-form-field>
 
                         <div class="divider">
@@ -146,7 +147,7 @@
                             <input 
                                 matInput 
                                 type="number" 
-                                [step]="quantityType === 'kg' ? '0.01' : '1'"
+                                [step]="quantityType === 'kg' ? 0.1 : 1"
                                 min="0" 
                                 formControlName="stockQuantity" 
                                 [placeholder]="quantityType === 'kg' ? '0,00' : '0'"
@@ -183,18 +184,19 @@
                             matInput 
                             [formControl]="ingredientCtrl" 
                             [matAutocomplete]="ingredientAuto"
-                            formControlName="composition" 
                             placeholder="Rechercher un ingrédient" 
                             (blur)="onIngredientBlur()"
+                            (keydown.enter)="$event.preventDefault()"
                         />
                         <!-- effacer -->
                         <button
                             *ngIf="ingredientCtrl.value"
                             matSuffix
                             mat-icon-button
-                            aria-label="Effacer la recherche"
+                            aria-label="Effacer"
                             (click)="clearIngredientSearch()"
                             tabindex="-1"
+                            type="button"
                         >
                             <mat-icon>close</mat-icon>
                         </button>
@@ -203,13 +205,12 @@
                         <mat-error *ngIf="productForm.get('composition')?.hasError('required')">
                             Ajoutez au moins un ingrédient.
                         </mat-error>
-                          <mat-error *ngIf="productForm.get('composition')?.hasError('invalidSelection')">
-                            Veuillez choisir un ingrédient dans la liste.
-                        </mat-error>
 
                         <!-- autocomplete -->
                         <mat-autocomplete #ingredientAuto="matAutocomplete"
-                            (optionSelected)="addIngredient($event.option.value)" hideSingleSelectionIndicator>
+                            (optionSelected)="addIngredient($event.option.value)"
+                            [displayWith]="displayIngredient"
+                            hideSingleSelectionIndicator>
                             <!-- Affichage des résultats filtrés -->
                             <mat-option 
                                 *ngFor="let ingredient of filteredIngredients | async" 
@@ -241,7 +242,7 @@
                             matTooltipClass="custom-tooltip"
                         >
                             {{ ingredient.name }}
-                            <button mat-icon-button matChipRemove>
+                            <button mat-icon-button matChipRemove type="button">
                                 <mat-icon>cancel</mat-icon>
                             </button>
                         </mat-chip>

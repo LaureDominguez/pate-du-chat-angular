@@ -12,7 +12,7 @@
                         <!-- Nom -->
                         <mat-form-field appearance="fill" class="full-width">
                             <mat-label>Nom</mat-label>
-                            <input matInput formControlName="name" />
+                            <input matInput formControlName="name" cdkFocusInitial/>
                             <mat-error *ngIf="name?.hasError('required')">Le nom est obligatoire.</mat-error>
                             <mat-error *ngIf="name?.hasError('minlength')">Minimum 2 caractères.</mat-error>
                             <mat-error *ngIf="name?.hasError('maxlength')">Maximum 50 caractères.</mat-error>
@@ -20,14 +20,13 @@
                         </mat-form-field>
                     
                         <!-- BIO -->
-                        <mat-slide-toggle 
-                            formControlName="bio" 
-                            labelPosition="before"
-                            [matTooltip]="bioToggle.disabled ? 'Réservé aux ingrédients simples (automatique pour les composés)' : ''"
-                            [matTooltipDisabled]="!bioToggle.disabled"
-                            #bioToggle>
-                            Label BIO
+                        <mat-slide-toggle
+                        formControlName="bio"
+                        labelPosition="before"
+                        [matTooltip]="type?.value === 'compose' ? 'Réservé aux ingrédients simples (automatique pour les composés)' : ''">
+                        Label BIO
                         </mat-slide-toggle>
+
                     </section>
                     
                     <!-- Fournisseur -->
@@ -39,18 +38,20 @@
                                 matInput
                                 [formControl]="supplierCtrl"
                                 [matAutocomplete]="supplierAuto"
-                                formControlName="supplier"
                                 placeholder="Rechercher un fournisseur"
-                                (blur)="onBlurChecks()"
+                                (blur)="onSupplierBlur()"
+                                (keydown.enter)="$event.preventDefault()"
+
                             />
                             <!-- effacer -->
                             <button
                                 *ngIf="supplierCtrl.value"
                                 matSuffix
                                 mat-icon-button
-                                aria-label="Effacer la catégorie"
+                                aria-label="Effacer"
                                 (click)="clearField('supplier')"
                                 tabindex="-1"
+                                type="button"
                             >
                                 <mat-icon>close</mat-icon>
                             </button>
@@ -61,8 +62,10 @@
 
 
                             <!-- autocomplete -->
-                            <mat-autocomplete #supplierAuto="matAutocomplete" 
-                            (optionSelected)="addSupplier($event.option.value)"> 
+                            <mat-autocomplete 
+                                #supplierAuto="matAutocomplete" 
+                                (optionSelected)="addSupplier($event.option.value)"
+                                [displayWith]="displaySupplier"> 
                                 <mat-option *ngFor="let supplier of filteredSuppliers | async" [value]="supplier">
                                     {{supplier.name}}
                                 </mat-option>
@@ -73,7 +76,7 @@
                             </mat-autocomplete>
                         </mat-form-field>
                     </section>
-                                            <mat-form-field>
+                        <mat-form-field>
                             <mat-label>Origine</mat-label>
                             <mat-select formControlName="origin">
                                 <ng-container *ngFor="let group of data.originesList">
@@ -116,10 +119,8 @@
                     <!-- Si ingrédient simple : -->
                     <section 
                         class="simple" 
-                        *ngIf="ingredientForm.get('type')?.value === 'simple' 
-                            || !ingredientForm.get('type')?.value"
-                        [ngClass]="{'animation': ingredientForm.get('type')?.value === 'simple' 
-                            || !ingredientForm.get('type')?.value}"
+                        *ngIf="ingredientForm.get('type')?.value === 'simple'"
+                        [ngClass]="{'animation': ingredientForm.get('type')?.value === 'simple'}"
                     >
                         <!-- Allergènes -->
                         <div class="allergen-form-field">
@@ -145,8 +146,7 @@
                     <!-- Sélection des sous-ingrédients -->
                     <section 
                         class="compose" 
-                        *ngIf="ingredientForm.get('type')?.value === 'compose' 
-                            || !ingredientForm.get('type')?.value"
+                        *ngIf="ingredientForm.get('type')?.value === 'compose'"
                         [ngClass]="{'animation': ingredientForm.get('type')?.value === 'compose'}"
                     >
                         <mat-form-field appearance="fill">
@@ -156,10 +156,28 @@
                                 matInput 
                                 [formControl]="subIngredientCtrl" 
                                 [matAutocomplete]="subIngredientAuto"
-                                formControlName="subIngredients" 
                                 placeholder="Rechercher un ingrédient" 
+                                (blur)="onSubIngredientBlur()"
+                                (keydown.enter)="$event.preventDefault()"
+
                             />
-                            <mat-error *ngIf="subIngredients.length === 0">Ajoutez au moins un ingrédient.</mat-error>
+
+                            <!-- Effacer -->
+                            <button 
+                                *ngIf="subIngredientCtrl.value" 
+                                matSuffix 
+                                mat-icon-button 
+                                aria-label="Effacer"
+                                (click)="clearField('subIngredients')" 
+                                tabindex="-1" 
+                                type="button">
+                                <mat-icon>close</mat-icon>
+                            </button>
+
+                            <mat-error *ngIf="ingredientForm.get('subIngredients')?.hasError('required') &&
+                            (ingredientForm.get('subIngredients')?.touched || subIngredientCtrl.touched)">
+                                Ajoutez au moins un ingrédient.
+                            </mat-error>
                     
                             <mat-autocomplete #subIngredientAuto="matAutocomplete" (optionSelected)="addSubIngredient($event.option.value)"
                                 hideSingleSelectionIndicator>
@@ -190,7 +208,7 @@
                             >
                                 <span>{{ ingredient.name }}</span>
                                 <span *ngIf="ingredient.bio" class="bio-label"> (Bio)</span>
-                                <button mat-icon-button matChipRemove>
+                                <button mat-icon-button matChipRemove type="button">
                                     <mat-icon>cancel</mat-icon>
                                 </button>
                             </mat-chip>

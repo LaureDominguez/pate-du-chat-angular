@@ -1,6 +1,29 @@
-import { Component, ElementRef, EventEmitter, Inject, OnInit, Output, ViewChild }from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { map, Observable, startWith, take } from 'rxjs';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  OnInit,
+  OnDestroy,
+  Output,
+  ViewChild,
+  AfterViewInit,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import {
+  Observable,
+  Subject,
+  startWith,
+  map,
+  takeUntil,
+  debounceTime,
+  take,
+} from 'rxjs';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 
 import { DialogService } from '../../../../services/dialog.service';
@@ -15,6 +38,7 @@ import { ProcessedImage } from '../../../../models/image';
 import autoAnimate from '@formkit/auto-animate';
 import { ADMIN_SHARED_IMPORTS } from '../../admin-material';
 import { MATERIAL_IMPORTS } from '../../../../app-material';
+import { MatAutocomplete } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-product-form',
@@ -22,14 +46,17 @@ import { MATERIAL_IMPORTS } from '../../../../app-material';
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss'],
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent implements OnInit, OnDestroy, AfterViewInit {
   productForm: FormGroup;
+
+  private destroy$ = new Subject<void>();
 
   @ViewChild('stockSection') stockSection!: ElementRef;
   @ViewChild('dlcContainer') dlcContainer!: ElementRef;
+  @ViewChild('customDlcInput') customDlcInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('categoryAuto') categoryAuto!: MatAutocomplete;
 
   @Output() downloadImage = new EventEmitter<{ imagePath: string; objectName: string }>();
-
   @Output() checkNameExists = new EventEmitter<string>();
   @Output() formValidated = new EventEmitter<{
     productData: any;
@@ -38,27 +65,32 @@ export class ProductFormComponent implements OnInit {
     imageOrder: string[];
   }>();
 
-
-  //Categories
+  // Catégories (UI + data)
   categories: Category[] = [];
-  categoryCtrl = new FormControl();
+  categoryCtrl = new FormControl<string | Category>('');
   filteredCategories!: Observable<Category[]>;
-  creatingCategory: boolean = false;
-  searchedCategory: string = '';
-  categoryNotFound: boolean = false;
+  creatingCategory = false;
+  searchedCategory = '';
+  categoryNotFound = false;
 
-  //Ingredients
+  displayCategory = (v: Category | string | null) =>
+    typeof v === 'string' ? (v ?? '') : (v?.name ?? '');
+
+
+  // Ingrédients (UI + data)
   ingredients: Ingredient[] = [];
-  ingredientCtrl = new FormControl();
+  ingredientCtrl = new FormControl<string | Ingredient>('');
   filteredIngredients!: Observable<Ingredient[]>;
-  searchedIngredient: string = '';
-  ingredientNotFound: boolean = false;
+  searchedIngredient = '';
+  ingredientNotFound = false;
 
-  //DLCs
+  displayIngredient = (v: Ingredient | string | null) =>
+    typeof v === 'string' ? (v ?? '') : (v?.name ?? '');
+
+  // DLC
   dlcsList: string[] = [];
-  @ViewChild('customDlcInput') customDlcInput!: ElementRef<HTMLInputElement>;
 
-  //Images
+  // Images
   selectedFiles: File[] = [];
   removedExistingImages: string[] = [];
   processedImages: ProcessedImage[] = [];
@@ -83,9 +115,8 @@ export class ProductFormComponent implements OnInit {
     this.ingredients = data.ingredients || [];
     this.dlcsList = data.dlcs || [];
 
-
     const existingDlc = data.product?.dlc || '';
-    const isCustom = existingDlc && !this.dlcsList.includes(existingDlc);
+    const isCustom = !!existingDlc && !this.dlcsList.includes(existingDlc);
 
     if (
       data.imageUrls &&
@@ -112,18 +143,13 @@ export class ProductFormComponent implements OnInit {
           Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
         ],
       ],
-      category: [
-        data.product?.category || '', 
-        [Validators.required]
-      ],
+      category: [data.product?.category || '', [Validators.required]],
       description: [
         data.product?.description || '',
         [
           Validators.maxLength(500),
           Validators.pattern(/\S+/),
-          Validators.pattern(
-            /^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
-          ),
+          Validators.pattern(/^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
         ],
       ],
       composition: [
@@ -132,225 +158,147 @@ export class ProductFormComponent implements OnInit {
       ],
       dlc: [
         isCustom ? 'Autre' : existingDlc || '',
-        [
-          Validators.required,
-          Validators.maxLength(50),
-          Validators.pattern(/\S+/),
-          Validators.pattern(
-            /^(?=.*\S)[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
-          ),
-        ],
+        [Validators.required, Validators.maxLength(50), Validators.pattern(/\S+/)],
       ],
       customDlc: [
         isCustom ? existingDlc : '',
-        [
-          Validators.maxLength(50),
-          Validators.pattern(/\S+/),
-          Validators.pattern(
-            /^(?=.*\S)[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/
-          ),
-        ],
+        [Validators.maxLength(50), Validators.pattern(/\S+/)],
       ],
       cookInstructions: [
         data.product?.cookInstructions || '',
         [
-          // Validators.required,
           Validators.maxLength(250),
           Validators.pattern(/\S+/),
-          Validators.pattern(
-            /^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/
-          ),
+          Validators.pattern(/^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
         ],
       ],
       forSale: [data.product?.forSale || false],
       stockQuantity: [
-        data.product?.stockQuantity !== null &&
-          data.product?.stockQuantity !== undefined
-          ? data.product?.stockQuantity
-          : null,
-        [
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^\d+(\.\d{1,2})?$/),
-          Validators.min(0),
-        ],
+        data.product?.stockQuantity ?? null,
+        [Validators.min(0)], // pattern appliqué selon quantityType ci-dessous
       ],
       quantityType: [
         data.product?.quantityType || 'kg',
         [Validators.required, Validators.pattern(/^(piece|kg)$/)],
       ],
       price: [
-        data.product?.price !== null && data.product?.price !== undefined
-          ? data.product?.price
-          : null,
-        [
-          Validators.required,
-          Validators.min(0),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^\d+(\.\d{1,2})?$/),
-        ],
+        data.product?.price ?? null,
+        [Validators.required, Validators.min(0)],
       ],
       images: [data.product?.images || []],
     });
 
-    this.applyStockQuantityValidators(this.productForm.get('quantityType')?.value);
-    this.categoryCtrl.setValue(this.productForm.value.category?.name || '');
+    // Validators dynamiques pour stockQuantity
+    this.applyStockQuantityValidators(this.productForm.get('quantityType')?.value as string);
 
+    // Initialiser les inputs d’autocomplete sans déclencher les valueChanges
+    this.categoryCtrl.setValue(this.productForm.value.category || '', { emitEvent: false });
+    this.ingredientCtrl.setValue('', { emitEvent: false });
   }
+
+  // ---------------- Lifecycle ----------------
 
   ngOnInit(): void {
     this.setupAutoComplete();
+    this.setupCategorySync();
+    this.setupDlcValidators();
     this.subscribeToDataUpdates();
     this.updateProcessedImages();
     this.updateStockToggleState();
 
-    this.stockQuantity?.valueChanges.subscribe(() => {
-      this.updateStockToggleState(); // Réévalue à chaque changement
-    });
+    this.productForm.get('stockQuantity')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.updateStockToggleState());
 
-    this.dlc?.valueChanges.subscribe((value) => {
-      if (value === 'Autre') {
-        setTimeout(() => {
-          this.customDlcInput?.nativeElement.focus();
-        }, 0);
-      }
-    });
-
-    this.productForm.get('quantityType')?.valueChanges.subscribe((value) => {
-      this.applyStockQuantityValidators(value);
-    });
+    this.productForm.get('quantityType')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((value) => this.applyStockQuantityValidators(value as string));
   }
 
   ngAfterViewInit(): void {
     if (this.stockSection) autoAnimate(this.stockSection.nativeElement);
     if (this.dlcContainer) autoAnimate(this.dlcContainer.nativeElement);
+    // Application initiale après premier rendu
+    queueMicrotask(() => this.updateStockToggleState());
   }
 
-  get name() {
-    return this.productForm.get('name');
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  get category() {
-    return this.productForm.get('category');
-  }
+  // ---------------- Getters (tests s’en servent) ----------------
 
-  get description() {
-    return this.productForm.get('description');
-  }
+  get name() { return this.productForm.get('name'); }
+  get category() { return this.productForm.get('category'); }
+  get description() { return this.productForm.get('description'); }
+  get dlc() { return this.productForm.get('dlc'); }
+  get customDlc() { return this.productForm.get('customDlc'); }
+  get cookInstructions() { return this.productForm.get('cookInstructions'); }
+  get forSale() { return this.productForm.get('forSale'); }
+  get stockQuantity() { return this.productForm.get('stockQuantity'); }
+  get price() { return this.productForm.get('price'); }
+  get quantityType() { return this.productForm.get('quantityType')?.value === 'piece' ? 'pièce(s)' : 'kg'; }
+  get composition(): Ingredient[] { return this.productForm.get('composition')?.value || []; }
 
-  get composition(): Ingredient[] {
-    return this.productForm.get('composition')?.value || [];
-  }
+  // ---------------- Autocomplete (UI lists) ----------------
 
-  get dlc() {
-    return this.productForm.get('dlc');
-  }
-
-  get customDlc() {
-    return this.productForm.get('customDlc');
-  }
-
-  get cookInstructions() {
-    return this.productForm.get('cookInstructions');
-  }
-
-  get forSale() {
-    return this.productForm.get('forSale');
-  }
-
-  get stockQuantity() {
-    return this.productForm.get('stockQuantity');
-  }
-
-  get quantityType() {
-    return this.productForm.get('quantityType')?.value === 'piece'
-      ? 'pièce(s)'
-      : 'kg';
-  }
-
-  get price() {
-    return this.productForm.get('price');
-  }
-
-  /////////////////////////////////////////////////////////////////////////////////
-  ////////////////// Innit du formulaire
-
-  ///////// AutoComplete ///////////
   private setupAutoComplete(): void {
-    // Categories
+    // Catégories
     this.filteredCategories = this.categoryCtrl.valueChanges.pipe(
-      startWith(''),
+      startWith(this.categoryCtrl.value || ''),
       map((value) => {
         if (typeof value === 'string' && value !== 'categoryNotFound') {
           this.searchedCategory = value.trim();
-          this.categoryNotFound =
-            this.filterItems(value, this.categories).length === 0;
+          this.categoryNotFound = this.filterItems(value, this.categories).length === 0;
         }
-        return this.filterItems(value, this.categories);
+        return this.filterItems(value as string, this.categories);
       })
     );
 
-    // Ingredients
+    // Ingrédients
     this.filteredIngredients = this.ingredientCtrl.valueChanges.pipe(
-      startWith(''),
+      startWith(this.ingredientCtrl.value || ''),
       map((value) => {
         if (typeof value === 'string' && value !== 'ingredientNotFound') {
           this.searchedIngredient = value.trim();
-          this.ingredientNotFound =
-            this.filterItems(value, this.ingredients).length === 0;
+          this.ingredientNotFound = this.filterItems(value as string, this.ingredients).length === 0;
         }
-        return this.filterItems(value, this.ingredients);
+        return this.filterItems(value as string, this.ingredients);
       })
     );
   }
 
-  //// Tri et filtrage avec tolérance aux accents
   private filterItems(value: string, list: any[]): any[] {
     if (!value) return list;
-
-    // Normaliser la valeur recherchée
     const normalizedValue = this.normalizeString(value);
-
     return list
-      .filter((item) =>
-        this.normalizeString(item.name).includes(normalizedValue)
-      )
+      .filter((item) => this.normalizeString(item.name).includes(normalizedValue))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  //// Fonction de normalisation des accents et ligatures
   private normalizeString(str: string): string {
-    if (typeof str !== 'string') return ''; // Vérifie que c'est bien une string, sinon retourne une chaîne vide
-
-    return str
-      .normalize('NFD') // Décompose les caractères accentués (ex: Œ → O + E, É → E + ´)
-      .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
-      .toLowerCase() // Convertit en minuscules
-      .trim(); // Supprime les espaces inutiles
+    if (typeof str !== 'string') return '';
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  //////////////////////////////////////
-  //// Stock & Quantity
-  
+  // ---------------- Stock & Quantity ----------------
+
   private applyStockQuantityValidators(quantityType: string): void {
     const stockCtrl = this.productForm.get('stockQuantity');
     if (!stockCtrl) return;
 
-    const validators = [];
-
-    // Champ facultatif (valeur `null` acceptée)
-    validators.push(Validators.min(0));
-
+    const validators = [Validators.min(0)];
     if (quantityType === 'piece') {
-      validators.push(Validators.pattern(/^\d+$/)); // entier positif
-    } else if (quantityType === 'kg') {
-      validators.push(Validators.pattern(/^\d+(\.\d{1,2})?$/)); // décimal avec 2 chiffres max
+      validators.push(Validators.pattern(/^\d+$/));              // entier
+    } else {
+      validators.push(Validators.pattern(/^\d+(\.\d{1,2})?$/));  // décimal 2 chiffres
     }
-
     stockCtrl.setValidators(validators);
-    stockCtrl.updateValueAndValidity();
+    stockCtrl.updateValueAndValidity({ emitEvent: false });
   }
 
-  // toggle du bouton stock
+  // appelé aussi dans les tests via ['updateStockToggleState']
   private updateStockToggleState(): void {
     const stockCtrl = this.forSale;
     const value = this.stockQuantity?.value;
@@ -364,49 +312,80 @@ export class ProductFormComponent implements OnInit {
       numericValue >= 0;
 
     if (shouldEnable) {
-      stockCtrl?.enable({ emitEvent: false });
+      stockCtrl?.enable({ emitEvent: false }); // 0 ou >0 : toggle actif
     } else {
       stockCtrl?.setValue(false, { emitEvent: false });
       stockCtrl?.disable({ emitEvent: false });
     }
   }
 
-  //////////////////////////////////////
-  //// Ecoute de shared-data
+  // ---------------- SharedData sync ----------------
+
   private subscribeToDataUpdates(): void {
-    this.sharedDataService.categoryCreated$.subscribe((newCategory) =>
-      this.updateList(newCategory, this.categories, 'category')
-    );
-    this.sharedDataService.ingredientCreated$.subscribe((newIngredient) =>
-      this.updateList(newIngredient, this.ingredients, 'ingredient')
-    );
+    this.sharedDataService.categoryCreated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((newCategory) => this.updateList(newCategory, this.categories, 'category'));
+
+    this.sharedDataService.ingredientCreated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((newIngredient) => this.updateList(newIngredient, this.ingredients, 'ingredient'));
   }
 
-  private updateList(
-    newItem: any,
-    list: any[],
-    type: 'category' | 'ingredient'
-  ): void {
+  private updateList(newItem: any, list: any[], type: 'category' | 'ingredient'): void {
     if (!list.some((item) => item._id === newItem._id)) {
       list.push(newItem);
       list.sort((a, b) => a.name.localeCompare(b.name));
     }
-    this.productForm.patchValue({ [type]: newItem });
+    this.productForm.patchValue({ [type]: newItem }, { emitEvent: false });
     if (type === 'category') {
-      this.categoryCtrl.setValue(newItem.name);
+      this.categoryCtrl.setValue(newItem); // laisse setupCategorySync propager proprement
+      return;
     }
   }
 
-  /////////////////////////////////////////////////////////////////////////////////
-  ///////////Gestion des categories
+  // ---------------- Catégorie (UI ↔ métier) ----------------
+
+  private setupCategorySync(): void {
+    this.categoryCtrl.valueChanges
+      .pipe(startWith(this.categoryCtrl.value), debounceTime(0), takeUntil(this.destroy$))
+      .subscribe((val: string | Category | null) => {
+        if (val && typeof val === 'object' && (val as Category)._id) {
+          this.category?.setValue(val, { emitEvent: false });
+          this.category?.setErrors(null);
+          this.categoryCtrl.setErrors(null);
+          return;
+        }
+
+        const text = (typeof val === 'string' ? val : '')?.trim();
+        if (!text) {
+          this.category?.setValue(null, { emitEvent: false });
+          this.category?.setErrors({ required: true });
+          this.categoryCtrl.setErrors({ required: true });
+          return;
+        }
+
+        const match = this.categories.find(
+          (c) => this.normalizeString(c.name) === this.normalizeString(text)
+        );
+        if (match) {
+          this.category?.setValue(match, { emitEvent: false });
+          this.category?.setErrors(null);
+          this.categoryCtrl.setErrors(null);
+        } else {
+          this.category?.setValue(null, { emitEvent: false });
+          this.category?.setErrors({ invalidSelection: true });
+          this.categoryCtrl.setErrors({ invalidSelection: true });
+        }
+      });
+  }
+
   addCategory(category: Category | 'categoryNotFound' | null): void {
     if (category === 'categoryNotFound') {
       this.createCategory(this.searchedCategory);
       this.categoryCtrl.setValue('');
-    } else {
-      this.productForm.patchValue({ category: category });
-      this.categoryCtrl.setValue(category ? category.name : '');
-    }
+      return;
+    } 
+    this.categoryCtrl.setValue(category ?? '');
   }
 
   private createCategory(searchedValue: string): void {
@@ -433,90 +412,85 @@ export class ProductFormComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.sharedDataService.requestCategoryCreation(result);
-      }
+      if (result) this.sharedDataService.requestCategoryCreation(result);
     });
   }
-  
+
   onCategoryBlur(): void {
-    const inputValue = this.categoryCtrl.value;
-    const selectedCategory = this.productForm.get('category')?.value;
-
-    if (!selectedCategory) {
+    if (!this.category?.value) {
       this.category?.markAsTouched();
-
-      // Cas 1 : texte saisi mais aucun choix sélectionné
-      if (inputValue && typeof inputValue === 'string') {
-        this.category?.setErrors({ invalidSelection: true });
-      }
-      // Cas 2 : champ vide
-      else {
-        this.category?.setErrors({ required: true });
-      }
+      this.categoryCtrl.markAsTouched();
     }
   }
 
-  clearCategory(): void {
-    this.categoryCtrl.setValue('');
-    this.productForm.get('category')?.reset();
+clearCategory(): void {
+  // reset visibles + form
+  this.categoryCtrl.setValue('', { emitEvent: true });
+  this.categoryCtrl.setErrors(null);
+  this.category?.reset(null, { emitEvent: false });
+  this.category?.setErrors(null);
+
+  // 👇 force la désélection visuelle dans le panel
+  queueMicrotask(() => this.categoryAuto?.options.forEach(o => o.deselect()));
+}
+
+  // ---------------- Ingrédients / Composition ----------------
+
+  private touchCompositionRequiredState(): void {
+    const ctrl = this.productForm.get('composition');
+    const hasAny = (this.composition?.length ?? 0) > 0;
+    if (!hasAny) {
+      ctrl?.setErrors({ required: true });
+      this.ingredientCtrl.setErrors({ required: true });
+    } else {
+      ctrl?.setErrors(null);
+      this.ingredientCtrl.setErrors(null);
+    }
+    ctrl?.markAsTouched();
   }
 
-
-  /////////////////////////////////////////////////////////////////////////////////
-  ////////// Gestion des ingrédients
   private updateComposition(ingredient: Ingredient, add: boolean): void {
     const currentComposition = this.composition;
-    this.setComposition(
-      add
-        ? [...currentComposition, ingredient]
-        : currentComposition.filter((comp) => comp._id !== ingredient._id)
-    );
+    const next = add
+      ? [...currentComposition, ingredient]
+      : currentComposition.filter((comp) => comp._id !== ingredient._id);
 
-    this.ingredientCtrl.setValue('');
+    this.productForm.get('composition')?.setValue(next, { emitEvent: false });
+    this.ingredientCtrl.setValue('', { emitEvent: false });
+    this.touchCompositionRequiredState();
   }
 
-  private setComposition(composition: Ingredient[]): void {
-    this.productForm.get('composition')?.setValue(composition);
-  }
-
-  // Vérifie si un ingrédient fait partie de la composition
   isIngredientSelected(ingredient: Ingredient): boolean {
     return this.composition.some((comp) => comp._id === ingredient._id);
   }
 
-  // Ajout d'un ingrédient à la composition + gestion des coches
   addIngredient(ingredient: Ingredient | 'ingredientNotFound'): void {
     if (ingredient === 'ingredientNotFound') {
       this.createIngredient(this.searchedIngredient);
-      this.ingredientCtrl.setValue('');
+      this.ingredientCtrl.setValue('', { emitEvent: false });
       return;
     }
 
-    const alreadyExists = this.composition.some(
-      (comp) => comp._id === ingredient._id
-    );
-
-    if (alreadyExists) {
-      this.removeIngredient(ingredient);
-      return;
-    } else {
-      this.updateComposition(ingredient, true);
-    }
-    this.ingredientCtrl.setValue('');
+    const alreadyExists = this.isIngredientSelected(ingredient);
+    this.updateComposition(ingredient, !alreadyExists);
   }
 
-  // Création d'un nouvel ingrédient
+  removeIngredient(ingredient: Ingredient): void {
+    this.updateComposition(ingredient, false);
+  }
+
   private createIngredient(searchedValue: string): void {
     const filteredValue = this.formatNameInput(searchedValue);
     this.openIngredientForm(filteredValue)
       .then((newIngredient) => {
-        if (!this.composition.some((comp) => comp._id === newIngredient._id)) {
+        if (!this.isIngredientSelected(newIngredient)) {
           this.updateComposition(newIngredient, true);
         }
       })
       .catch((error) => {
-        this.dialogService.error(`Une erreur est survenue lors de la création de l’ingrédient :<br><b>"${error}"</b>.`);
+        this.dialogService.error(
+          `Une erreur est survenue lors de la création de l’ingrédient :<br><b>"${error}"</b>.`
+        );
       });
   }
 
@@ -530,43 +504,47 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
-  // Suppression d'un ingrédient de la composition
-  removeIngredient(ingredient: Ingredient): void {
-    this.updateComposition(ingredient, false);
-  }
-
   clearIngredientSearch(): void {
-    this.ingredientCtrl.setValue('');
+    this.ingredientCtrl.setValue('', { emitEvent: false });
+    this.ingredientCtrl.setErrors(null);
   }
 
   getIngredientTooltip(ingredient: Ingredient): string {
-    return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n
-    Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n
-    Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}\n
-    Origine : ${ingredient.origin}\n
-    Label BIO : ${ingredient.bio ? 'Oui' : 'Non'}`;
+    return `Allergènes : ${ingredient.allergens?.join(', ') || 'Aucun'}\n` +
+      `Végétarien : ${ingredient.vegeta ? 'Oui' : 'Non'}\n` +
+      `Vegan : ${ingredient.vegan ? 'Oui' : 'Non'}\n` +
+      `Origine : ${ingredient.origin}\n` +
+      `Label BIO : ${ingredient.bio ? 'Oui' : 'Non'}`;
   }
 
   onIngredientBlur(): void {
-    const typedValue = this.ingredientCtrl.value;
-    const currentComposition = this.composition;
-
-    if (currentComposition.length === 0) {
-      // Cas 1 : l'utilisateur a écrit mais n'a rien sélectionné
-      if (typedValue && typeof typedValue === 'string') {
-        this.productForm.get('composition')?.setErrors({ invalidSelection: true });
-      } else {
-        // Cas 2 : il n'a rien fait du tout
-        this.productForm.get('composition')?.setErrors({ required: true });
-      }
-
-      this.productForm.get('composition')?.markAsTouched();
-    }
+    this.touchCompositionRequiredState();
   }
 
+  // ---------------- DLC conditionnelle ----------------
 
-  /////////////////////////////////////////////////////////////////////////////////
-  // ///////////////////////// Gestion des images
+  private setupDlcValidators(): void {
+    this.dlc?.valueChanges
+      .pipe(startWith(this.dlc?.value), takeUntil(this.destroy$))
+      .subscribe((value) => {
+        const custom = this.customDlc;
+        if (!custom) return;
+
+        if (value === 'Autre') {
+          custom.setValidators([Validators.maxLength(50), Validators.pattern(/\S+/)]);
+          custom.updateValueAndValidity({ emitEvent: false });
+          // focus input custom
+          setTimeout(() => this.customDlcInput?.nativeElement?.focus(), 0);
+        } else {
+          custom.clearValidators();
+          custom.setValue('', { emitEvent: false });
+          custom.updateValueAndValidity({ emitEvent: false });
+        }
+      });
+  }
+
+  // ---------------- Images ----------------
+
   updateProcessedImages(): void {
     this.processedImages = this.processedImages.map((img, index) => ({
       ...img,
@@ -579,7 +557,6 @@ export class ProductFormComponent implements OnInit {
     const files = input.files;
     const maxSize = 10 * 1024 * 1024;
     const errors: string[] = [];
-
     if (!files) return;
 
     Array.from(files).forEach((file) => {
@@ -587,28 +564,23 @@ export class ProductFormComponent implements OnInit {
         errors.push(`${file.name} n'est pas une image.`);
         return;
       }
-
       if (file.size > maxSize) {
         errors.push(`${file.name} dépasse 10 Mo.`);
         return;
       }
-
       const reader = new FileReader();
       reader.onload = () => {
         this.processedImages.push({
           type: 'preview',
           data: reader.result as string,
-          file: file,
+          file,
           originalIndex: this.processedImages.length,
         });
       };
       reader.readAsDataURL(file);
     });
 
-    if (errors.length > 0) {
-      this.dialogService.error(errors.join('<br>'));
-    }
-
+    if (errors.length > 0) this.dialogService.error(errors.join('<br>'));
     input.value = '';
   }
 
@@ -618,9 +590,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   onImageRemoved(image: ProcessedImage): void {
-    const index = this.processedImages.findIndex(
-      (img) => img.data === image.data
-    );
+    const index = this.processedImages.findIndex((img) => img.data === image.data);
     if (index === -1) return;
 
     this.processedImages.splice(index, 1);
@@ -628,7 +598,6 @@ export class ProductFormComponent implements OnInit {
     if (image.type === 'existing' && image.path) {
       this.removedExistingImages.push(image.path);
     }
-
     if (image.type === 'preview' && image.file) {
       const fileIndex = this.selectedFiles.findIndex((f) => f === image.file);
       if (fileIndex !== -1) this.selectedFiles.splice(fileIndex, 1);
@@ -639,41 +608,36 @@ export class ProductFormComponent implements OnInit {
     this.processedImages = [...images];
   }
 
-  /////////////////////////////////////////////////////////////////////////////////
-  ////////////////// Validation du formulaire
+  // ---------------- Validation & Submit ----------------
+
   save(): void {
-    Object.values(this.productForm.controls).forEach(control => {
-      control.markAsTouched();
-    });
+    Object.values(this.productForm.controls).forEach((control) => control.markAsTouched());
     if (this.productForm.invalid) return;
 
     const name = this.productForm.value.name;
-    if (name === '' || name === undefined) return;
-    else this.checkNameExists.emit(name);
+    if (!name) return;
+    this.checkNameExists.emit(name);
   }
 
   validateAndSubmit(): void {
     const quantity = this.stockQuantity?.value;
     if (quantity === null || quantity === undefined || quantity === '') {
-      this.stockQuantity?.setValue(null);
+      this.stockQuantity?.setValue(null, { emitEvent: false });
     }
 
-    let errors: string[] = [];
-
+    const errors: string[] = [];
     Object.keys(this.productForm.controls).forEach((field) => {
       const errorMsg = this.getErrorMessage(field);
       if (errorMsg) errors.push(errorMsg);
     });
-
     if (errors.length > 0) {
       this.dialogService.error(errors.join('<br>'));
       return;
     }
 
-    // traitement des images
     const selectedFiles: File[] = this.processedImages
       .filter((img) => img.type === 'preview' && img.file)
-      .map((img) => img.file!); // `!` car on a déjà filtré
+      .map((img) => img.file!);
 
     const existingImages: string[] = this.processedImages
       .filter((img) => img.type === 'existing' && img.path)
@@ -686,9 +650,8 @@ export class ProductFormComponent implements OnInit {
     const productData = {
       ...this.productForm.value,
       name: this.formatNameInput(this.productForm.value.name),
-      dlc:
-        this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
-      existingImages: existingImages,
+      dlc: this.dlc?.value === 'Autre' ? this.customDlc?.value : this.dlc?.value,
+      existingImages,
       forSale: this.forSale?.value,
     };
 
@@ -702,10 +665,8 @@ export class ProductFormComponent implements OnInit {
 
   formatNameInput(name: string): string {
     if (!name) return '';
-    let trimmedName = name.replace(/\s+/g, ' ').trim();
-    return (
-      trimmedName.trim().charAt(0).toUpperCase() + trimmedName.trim().slice(1)
-    );
+    const trimmed = name.replace(/\s+/g, ' ').trim();
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
   }
 
   private fieldLabels: { [key: string]: string } = {
@@ -714,6 +675,7 @@ export class ProductFormComponent implements OnInit {
     description: 'Description',
     composition: 'Composition',
     dlc: 'DLC',
+    customDlc: 'DLC personnalisée',
     cookInstructions: 'Instructions de cuisson',
     forSale: 'En vente',
     stockQuantity: 'Quantité en stock',
@@ -726,18 +688,11 @@ export class ProductFormComponent implements OnInit {
     if (!control || control.valid || !control.errors) return null;
 
     const label = this.fieldLabels[controlName] || controlName;
-
-    if (control.hasError('required'))
-      return `Le champ "${label}" est obligatoire.`;
-    if (control.hasError('minlength'))
-      return `Le champ "${label}" doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
-    if (control.hasError('maxlength'))
-      return `Le champ "${label}" ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
-    if (control.hasError('pattern'))
-      return `Le champ "${label}" contient des caractères non autorisés.`;
-    if (control.hasError('min'))
-      return `Le champ "${label}" doit être un nombre positif.`;
-
+    if (control.hasError('required')) return `Le champ "${label}" est obligatoire.`;
+    if (control.hasError('minlength')) return `Le champ "${label}" doit contenir au moins ${control.errors['minlength'].requiredLength} caractères.`;
+    if (control.hasError('maxlength')) return `Le champ "${label}" ne peut pas dépasser ${control.errors['maxlength'].requiredLength} caractères.`;
+    if (control.hasError('pattern')) return `Le champ "${label}" contient des caractères non autorisés.`;
+    if (control.hasError('min')) return `Le champ "${label}" doit être un nombre positif.`;
     return null;
   }
 

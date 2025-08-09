@@ -80,9 +80,11 @@
 
                     <button 
                         mat-icon-button
-                        matTooltip="Modifier" 
+                        #editBtn
+                        [matTooltip]="'Modifier'" #tt="matTooltip"
                         class="edit" 
-                        (click)="openIngredientForm(ingredient)"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="tt.hide(0); openIngredientForm(ingredient)"
                     >
                         <div class="content">
                             <mat-icon class="icon">edit</mat-icon>
@@ -116,8 +118,14 @@
 
     <mat-divider></mat-divider>
 
-    <div class="add-button">
-        <button mat-raised-button class="add" (click)="openIngredientForm(null)">Ajouter un ingrédient</button>
+    <div class="add-button" #addBtn>
+        <button 
+            mat-raised-button 
+            class="add" 
+            (mousedown)="$event.preventDefault()"
+            (click)="openIngredientForm(null)">
+                Ajouter un ingrédient
+            </button>
         <mat-paginator #ingredientsPaginator [pageSize]="10"></mat-paginator>
     </div>
 <!-- </div> -->

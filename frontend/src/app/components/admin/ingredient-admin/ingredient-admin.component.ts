@@ -178,6 +178,8 @@ export class IngredientAdminComponent implements OnInit, OnDestroy {
 
     // Récupérer tous les ingrédients disponibles pour permettre la sélection des sous-ingrédients
       const dialogRef = this.dialog.open(IngredientFormComponent, {
+        autoFocus: true,
+        restoreFocus: true,
         panelClass: 'custom-dialog',
         data: {
           ingredient: ingredient,

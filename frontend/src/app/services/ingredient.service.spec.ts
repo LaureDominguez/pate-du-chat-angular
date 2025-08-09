@@ -30,6 +30,7 @@ describe('IngredientService', () => {
     {
       _id: '1',
       name: 'Tomate',
+      slug: 'tomate',
       bio: true,
       supplier: 'sup1',
       type: 'simple',
