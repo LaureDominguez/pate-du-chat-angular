@@ -2,12 +2,14 @@
 
 .vitrine-container {
     padding: 20px;
+    display: block;
+    min-height: 200px;
 }
 
 .product-tile {
     cursor: pointer;
     transition: transform 0.2s ease-in-out;
-    overflow: hidden;
+    // overflow: hidden;
     
     .tile-content {
         text-align: center;

@@ -22,6 +22,8 @@ import { MatAutocomplete } from '@angular/material/autocomplete';
 })
 export class IngredientFormComponent implements OnDestroy, AfterViewInit {
   ingredientForm: FormGroup;
+  private SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u
+
 
   private destroy$ = new Subject<void>();
 
@@ -101,8 +103,7 @@ export class IngredientFormComponent implements OnDestroy, AfterViewInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
+          Validators.pattern(this.SAFE_TEXT),
         ],
       ],
       bio: [

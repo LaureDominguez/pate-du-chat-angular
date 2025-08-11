@@ -15,6 +15,10 @@ const validateRequest = (req, res, next) => {
 	next();
 };
 
+const SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u;
+const OPTIONNAL_SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]*$/u
+
+
 // Récupérer toutes les catégories
 router.get('/', async (req, res) => {
 	try {
@@ -76,7 +80,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -88,7 +92,7 @@ router.post(
 			.withMessage(
 				'Le champ "description" doit contenir entre 2 et 255 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -134,7 +138,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -146,7 +150,7 @@ router.put(
 			.withMessage(
 				'Le champ "description" doit contenir entre 2 et 255 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),

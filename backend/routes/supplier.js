@@ -16,6 +16,10 @@ const validateRequest = (req, res, next) => {
     next();
 };
 
+const SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u;
+const OPTIONNAL_SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]*$/u
+
+
 
 // 🔹 Récupérer tous les fournisseurs
 router.get('/', async (req, res) => {
@@ -88,27 +92,25 @@ router.post(
             .withMessage(
                 'Le champ "nom" doit contenir entre 2 et 50 caractères.'
             )
-            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
             .withMessage(
                 'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
             ),
         check('description')
             .optional()
             .trim()
-            .isLength({ max: 100 })
+            .isLength({ max: 250 })
 			.if(check('description').notEmpty())
             .withMessage(
                 'Le champ "description" doit contenir entre 2 et 100 caractères.'
             )
-            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
             .withMessage(
                 'Le champ "description" ne doit pas contenir de caractères spéciaux.'
             ),
     ],
     validateRequest,
     async (req, res) => {
-    // const { name, description } = req.body;
-    console.log('🔵 Création d\'un nouveau fournisseur', req.body);
     try {
         let { name, description } = req.body;
         name = sanitize(name);
@@ -147,19 +149,19 @@ router.put(
             .withMessage(
                 'Le champ "nom" doit contenir entre 2 et 50 caractères.'
             )
-            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
             .withMessage(
                 'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
             ),
         check('description')
             .optional()
             .trim()
-            .isLength({ max: 100 })
+            .isLength({ max: 250 })
 			.if(check('description').notEmpty())
             .withMessage(
                 'Le champ "description" doit contenir entre 2 et 100 caractères.'
             )
-            .matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
             .withMessage(
                 'Le champ "description" ne doit pas contenir de caractères spéciaux.'
             ),

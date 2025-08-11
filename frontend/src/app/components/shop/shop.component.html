@@ -1,3 +1,9 @@
 <div class="container">
-    <p>plouf shop works!</p>
+    <app-shop-grid
+        [products]="products"
+        [selectedProduct]="selectedProduct"
+        [cols]="cols"
+        (select)="onSelect($event)"
+        (close)="onClose()"
+    ></app-shop-grid>
 </div>

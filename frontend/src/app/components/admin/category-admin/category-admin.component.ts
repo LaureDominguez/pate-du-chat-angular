@@ -29,6 +29,10 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
 
   highlightedCategoryId: string | null = null;
 
+  private SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u
+  private OPTIONNAL_SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]*$/u
+
+
 
   isDefaultCategory(category: Category): boolean {
     return category._id === DEFAULT_CATEGORY._id;
@@ -109,16 +113,14 @@ export class CategoryAdminComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
+          Validators.pattern(this.SAFE_TEXT),
         ],
       ],
       description: [
         draft.description,
         [
           Validators.maxLength(100),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
+          Validators.pattern(this.OPTIONNAL_SAFE_TEXT),
         ]
       ]
     });

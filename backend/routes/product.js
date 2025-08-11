@@ -17,6 +17,8 @@ const validateRequest = (req, res, next) => {
 
 // Vérifier si un ObjectId est valide
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u;
+const OPTIONNAL_SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]*$/u
 
 // Obtenir tous les produits
 router.get('/', async (req, res) => {
@@ -204,7 +206,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -213,7 +215,7 @@ router.post(
 				throw new Error('Le champ "catégorie" est obligatoire.');
 			}
 			if (!mongoose.Types.ObjectId.isValid(value._id)) {
-				throw new Error('Le champ "catégorie" doit être un ID MongoDB valide.');
+				throw new Error('ID de la catégorie invalide.');
 			}
 			return true;
 		}),
@@ -225,7 +227,7 @@ router.post(
 			.withMessage(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -241,7 +243,7 @@ router.post(
 			.withMessage(
 				'Le champ "DLC" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -252,7 +254,7 @@ router.post(
 			.withMessage(
 				'Le champ "instructions de cuisson" doit avoir une longueur maximale de 250 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -376,7 +378,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -388,7 +390,7 @@ router.put(
 				}
 				if (!mongoose.Types.ObjectId.isValid(value._id)) {
 					throw new Error(
-						'Le champ "catégorie" doit être un ID MongoDB valide.'
+						'ID de la catégorie invalide.'
 					);
 				}
 				return true;
@@ -401,7 +403,7 @@ router.put(
 				'Le champ "description" ne doit pas dépasser 500 caractères.'
 			)
 			.if(check('description').notEmpty())
-			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
 
 			.withMessage(
 				'Le champ "description" ne doit pas contenir de caractères spéciaux.'
@@ -419,7 +421,7 @@ router.put(
 			.withMessage(
 				'Le champ "DLC" ne doit pas dépasser 50 caractères.'
 			)
-			.matches(/^[0-9]{1,2}(\/[0-9]{1,2}(\/[0-9]{2,4})?)?$|^[a-zA-ZÀ-ÿŒœ0-9\s.,;:'"()\-]+$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "DLC" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -430,7 +432,7 @@ router.put(
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas dépasser 250 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/)
+			.matches(OPTIONNAL_SAFE_TEXT)
 			.withMessage(
 				'Le champ "instructions de cuisson" ne doit pas contenir de caractères spéciaux.'
 			),

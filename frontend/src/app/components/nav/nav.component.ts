@@ -22,8 +22,8 @@ export class NavComponent implements OnInit {
   pageTitle: string = '';
 
   navItems = [
-    { title: 'Accueil', link: '/' },
-    { title: 'Les Produits', link: '/shop' },
+    // { title: 'Accueil', link: '/' },
+    { title: 'La Boutique', link: '/shop' },
     { title: 'Contact', link: '/contact' },
     { title: 'Gestion du site', link: '/admin' },
   ];

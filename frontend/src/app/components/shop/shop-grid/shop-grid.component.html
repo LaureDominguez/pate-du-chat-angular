@@ -1,66 +1,46 @@
 <div class="vitrine-container">
-    <!-- grid1 -->
-    <mat-grid-list 
-        [cols]="cols" 
-        rowHeight="1:1" 
-        gutterSize="10px"
-        *ngIf="grid1.length > 0"
-    >
-        <mat-grid-tile 
-            *ngFor="let product of grid1; let i = index; let last = last" 
-            class="product-tile"
-        >
-            <mat-card class="tile-content" (click)="onSelectProduct(product)">
-                <img 
-                    [src]="(product.images && product.images.length > 0) ? 
-                        product.images[0] : 'assets/images/no_image.png'" 
+    <!-- GRID 1 -->
+    <mat-grid-list *ngIf="grid1.length > 0" [cols]="cols" rowHeight="1:1" gutterSize="10px">
+        <mat-grid-tile *ngFor="let product of grid1; trackBy: trackById" class="product-tile">
+            <mat-card class="tile-content" role="button" tabindex="0" (click)="onSelectProduct(product)"
+                (keyup.enter)="onSelectProduct(product)">
+                <img [src]="product.images && product.images.length ? product.images[0] : 'assets/images/no_image.png'"
                     [alt]="product?.name || 'Pas d\'image disponible'"
-                    [ngClass]="product.images && product.images.length > 0 ? 'product-image' : 'default-image'"
-                >
+                    [ngClass]="product.images?.length ? 'product-image' : 'default-image'" />
                 <mat-card-content>
                     <mat-card-title>{{ product.name }}</mat-card-title>
-                    <mat-card-subtitle>{{ product.price | currency : 'EUR' }} {{product.quantityType}}</mat-card-subtitle>
+                    <mat-card-subtitle>
+                        {{ product.price | currency:'EUR' }} {{ product.quantityType }}
+                    </mat-card-subtitle>
                 </mat-card-content>
             </mat-card>
         </mat-grid-tile>
     </mat-grid-list>
 
-    <!-- Détail du produit sélectionné -->
-    <app-shop-detail 
-        *ngIf="selectedProduct" 
-        [product]="selectedProduct" 
-        (close)="closeProduct()">
+    <!-- DÉTAIL AU CENTRE -->
+    <app-shop-detail *ngIf="selectedProduct" [product]="selectedProduct" (close)="closeProduct()">
     </app-shop-detail>
 
-    <!-- grid2 -->
-
-    <mat-grid-list 
-        [cols]="cols" 
-        rowHeight="1:1" 
-        gutterSize="10px"
-        *ngIf="grid2.length > 0"
-    >
-        <mat-grid-tile 
-            *ngFor="let product of grid2; let i = index; let last = last" 
-            class="product-tile"
-        >
-        <mat-card class="tile-content" (click)="onSelectProduct(product)">
-            <img 
-                [src]="(product.images && product.images.length > 0) ? 
-                    product.images[0] : 'assets/images/no_image.png'" 
-                [alt]="product?.name || 'Pas d\'image disponible'"
-                [ngClass]="product.images && product.images.length > 0 ? 'product-image' : 'default-image'"
-            >
-            <mat-card-content>
-                <mat-card-title>{{ product.name }}</mat-card-title>
-                <mat-card-subtitle>{{ product.price | currency : 'EUR' }} {{product.quantityType}}</mat-card-subtitle>
-            </mat-card-content>
-        </mat-card>
-    </mat-grid-tile>
+    <!-- GRID 2 -->
+    <mat-grid-list *ngIf="grid2.length > 0" [cols]="cols" rowHeight="1:1" gutterSize="10px">
+        <mat-grid-tile *ngFor="let product of grid2; trackBy: trackById" class="product-tile">
+            <mat-card class="tile-content" role="button" tabindex="0" (click)="onSelectProduct(product)"
+                (keyup.enter)="onSelectProduct(product)">
+                <img [src]="product.images && product.images.length ? product.images[0] : 'assets/images/no_image.png'"
+                    [alt]="product?.name || 'Pas d\'image disponible'"
+                    [ngClass]="product.images?.length ? 'product-image' : 'default-image'" />
+                <mat-card-content>
+                    <mat-card-title>{{ product.name }}</mat-card-title>
+                    <mat-card-subtitle>
+                        {{ product.price | currency:'EUR' }} {{ product.quantityType }}
+                    </mat-card-subtitle>
+                </mat-card-content>
+            </mat-card>
+        </mat-grid-tile>
     </mat-grid-list>
 </div>
 
-<!-- no product found -->
+<!-- ÉTAT VIDE -->
 <div class="container" *ngIf="!products.length">
     <p>Pas de produits disponibles</p>
-</div> 
+</div>

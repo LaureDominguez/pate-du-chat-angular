@@ -17,6 +17,8 @@ const validateRequest = (req, res, next) => {
 };
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u;
+
 
 // Récupérer tous les ingredients
 router.get('/', async (req, res) => {
@@ -121,7 +123,7 @@ router.post(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -129,19 +131,15 @@ router.post(
 			.optional()
 			.isBoolean()
 			.withMessage('Le champ "bio" doit être un booléen.'),
-		check('supplier')
-			// .trim()
-			.notEmpty()
-			.withMessage('Le champ "fournisseur" est obligatoire.')
-			// .isLength({ min: 2, max: 50 })
-			// .withMessage(
-			// 	'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
-			// )
-			// .matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
-			// .withMessage(
-			// 	'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
-			// )
-			,
+		check('supplier').custom((value) => {
+			if (!value || !value._id) {
+				throw new Error('Le champ "fournisseur" est obligatoire.');
+			}
+			if (!mongoose.Types.ObjectId.isValid(value._id)) {
+				throw new Error('ID du fournisseur invalide.');
+			}
+			return true;
+		}),
 		check('type')
 			.isIn(['simple', 'compose'])
 			.withMessage(
@@ -256,7 +254,7 @@ router.put(
 			.withMessage(
 				'Le champ "nom" doit avoir une longueur comprise entre 2 et 50 caractères.'
 			)
-			.matches(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/)
+			.matches(SAFE_TEXT)
 			.withMessage(
 				'Le champ "nom" ne doit pas contenir de caractères spéciaux.'
 			),
@@ -266,16 +264,15 @@ router.put(
 			.withMessage('Le champ "bio" doit être un booléen.'),
 		check('supplier')
 			.optional()
-			// .trim()
-			// .isLength({ min: 2, max: 50 })
-			// .withMessage(
-			// 	'Le champ "fournisseur" doit avoir une longueur comprise entre 2 et 50 caractères.'
-			// )
-			// .matches(/^[a-zA-Z0-9À-ÿŒœ\s-']+$/)
-			// .withMessage(
-			// 	'Le champ "fournisseur" ne doit pas contenir de caractères spéciaux.'
-			// ),
-			,
+			.custom((value) => {
+				if (!value || !value._id) {
+					throw new Error('Le champ "fournisseur" est obligatoire.');
+				}
+				if (!mongoose.Types.ObjectId.isValid(value._id)) {
+					throw new Error('ID du fournisseur invalide.');
+				}
+				return true;
+			}),
 		check('type')
 			.optional()
 			.isIn(['simple', 'compose'])
@@ -317,8 +314,6 @@ router.put(
 				images 
 			} = req.body;
 			
-			// console.log(`🟡 [DEBUG] Modification de l'ingrédient : ${name} (ID: ${req.params.id})`);
-    
 			const ingredient = await Ingredient.findById(req.params.id);
 			if (!ingredient) {
 				return res.status(404).json({ msg: 'Ingrédient inconnu' });
@@ -329,17 +324,12 @@ router.put(
 				existingIngredient &&
 				existingIngredient._id.toString() !== req.params.id
 			) {
-				// console.log(`⚠️ [CONFLIT] Un autre ingrédient avec le même nom et état bio existe déjà.`);
 				return res
 					.status(400)
 					.json({ msg: 'Un autre ingrédient porte déjà ce nom.' });
 			}
 
-			// console.log(`🔄 [INFO] Mise à jour de l'ingrédient: ${name}, Type: ${type}`);
-
 			if (type === 'compose') {
-				// console.log(`🟢 [INFO] Ingrédient composé détecté, recalcul des sous-ingrédients...`);
-
 				if (!subIngredients || subIngredients.length === 0) {
 					return res
 						.status(400)
@@ -350,23 +340,16 @@ router.put(
 					_id: { $in: subIngredients }
 				});
 
-				// console.log(`🔍 [DEBUG] Sous-ingrédients récupérés : `, subIngredientsData.map(ing => ing.name));
 
 				allergens = [... new Set(subIngredientsData.flatMap(ing => ing.allergens))];
 				vegan = subIngredientsData.every(ing => ing.vegan);
 				vegeta = subIngredientsData.every(ing => ing.vegeta);
-
-				// console.log(`✅ [INFO] Mise à jour automatique des valeurs :`);
-				// console.log(`   ➤ Allergènes : ${allergens}`);
-				// console.log(`   ➤ Vegan : ${vegan}`);
-				// console.log(`   ➤ Végétarien : ${vegeta}`);
 			}
 
 			// Mise à jour des champs
 			ingredient.name = sanitize(name) || ingredient.name;
-			// ingredient.bio = sanitize(bio) || ingredient.bio;
 			if (bio !== undefined) {
-				ingredient.bio = sanitize(bio);  // ✅ Correction : Accepter `false` comme valeur valide
+				ingredient.bio = sanitize(bio); 
 			}
 			
 			ingredient.supplier = sanitize(supplier) || ingredient.supplier;
@@ -383,17 +366,9 @@ router.put(
 
 			await ingredient.save();
 
-			// const updatedIngredient = await ingredient.save();
-			// res.status(200).json(updatedIngredient);
-
-			// console.log(`✅ [INFO] Ingrédient "${ingredient.name}" mis à jour avec succès.`);
-			
-			// ✅ Éviter la duplication des mises à jour en utilisant un Set
 			const updatedComposedIngredients = new Set();
 
 			if (ingredient.type === 'simple') {
-				// console.log(`🔄 [INFO] Mise à jour des ingrédients composés contenant "${ingredient.name}"...`);
-
 				const composedIngredients = await Ingredient.find({ subIngredients: ingredient._id });
 
 				for (const composed of composedIngredients) {
@@ -402,14 +377,10 @@ router.put(
 			
 						const subIngredientsData = await Ingredient.find({ _id: { $in: composed.subIngredients } });
 			
-						// console.log(`🔍 [DEBUG] Mise à jour de l'ingrédient composé : ${composed.name}`);
-						// console.log(`   ➤ Avant : Vegan: ${composed.vegan}, Végétarien: ${composed.vegeta}`);
-			
 						composed.allergens = [...new Set(subIngredientsData.flatMap(ing => ing.allergens))];
 						composed.vegan = subIngredientsData.every(ing => ing.vegan);
 						composed.vegeta = subIngredientsData.every(ing => ing.vegeta);
-			
-						// console.log(`   ➤ Après : Vegan: ${composed.vegan}, Végétarien: ${composed.vegeta}`);
+
 						
 						await composed.save();
 					}

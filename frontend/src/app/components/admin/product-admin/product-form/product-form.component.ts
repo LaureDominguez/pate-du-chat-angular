@@ -48,6 +48,9 @@ import { MatAutocomplete } from '@angular/material/autocomplete';
 })
 export class ProductFormComponent implements OnInit, OnDestroy, AfterViewInit {
   productForm: FormGroup;
+  private SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u
+  private OPTIONNAL_SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]*$/u
+
 
   private destroy$ = new Subject<void>();
 
@@ -75,7 +78,6 @@ export class ProductFormComponent implements OnInit, OnDestroy, AfterViewInit {
 
   displayCategory = (v: Category | string | null) =>
     typeof v === 'string' ? (v ?? '') : (v?.name ?? '');
-
 
   // Ingrédients (UI + data)
   ingredients: Ingredient[] = [];
@@ -139,17 +141,18 @@ export class ProductFormComponent implements OnInit, OnDestroy, AfterViewInit {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^[a-zA-ZÀ-ŸŒŒ0-9\s.,'"’()\-@%°&+]*$/),
+          Validators.pattern(this.SAFE_TEXT),
         ],
       ],
-      category: [data.product?.category || '', [Validators.required]],
+      category: [
+        data.product?.category || '', 
+        [Validators.required]
+      ],
       description: [
         data.product?.description || '',
         [
           Validators.maxLength(500),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
+          Validators.pattern(this.OPTIONNAL_SAFE_TEXT),
         ],
       ],
       composition: [
@@ -158,18 +161,24 @@ export class ProductFormComponent implements OnInit, OnDestroy, AfterViewInit {
       ],
       dlc: [
         isCustom ? 'Autre' : existingDlc || '',
-        [Validators.required, Validators.maxLength(50), Validators.pattern(/\S+/)],
+        [
+          Validators.required, 
+          Validators.maxLength(50), 
+          Validators.pattern(this.SAFE_TEXT),
+        ],
       ],
       customDlc: [
         isCustom ? existingDlc : '',
-        [Validators.maxLength(50), Validators.pattern(/\S+/)],
+        [
+          Validators.maxLength(50), 
+          Validators.pattern(this.OPTIONNAL_SAFE_TEXT),
+        ],
       ],
       cookInstructions: [
         data.product?.cookInstructions || '',
         [
           Validators.maxLength(250),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^(?=.*\S)[a-zA-ZÀ-ÿŒœ0-9\s.,;:!?()'"%°€$§@+\-–—\[\]#*/&\\n\r]*$/),
+          Validators.pattern(this.OPTIONNAL_SAFE_TEXT),
         ],
       ],
       forSale: [data.product?.forSale || false],

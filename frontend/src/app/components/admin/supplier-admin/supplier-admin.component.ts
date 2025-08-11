@@ -29,6 +29,10 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
   
   highlightedSupplierId: string | null = null;
 
+  private SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]+$/u
+  private OPTIONNAL_SAFE_TEXT =/^(?!.*(?:<|>|<\/?script\b|on\w+\s*=))[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Zs}\r\n\t]*$/u
+
+
   isDefaultSupplier(supplier: Supplier): boolean {
     return supplier._id === DEFAULT_SUPPLIER._id;
   }
@@ -105,16 +109,14 @@ export class SupplierAdminComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(50),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/)
+          Validators.pattern(this.SAFE_TEXT),
         ]
       ],
       description: [
         draft.description,
         [
-          Validators.maxLength(100),
-          Validators.pattern(/\S+/),
-          Validators.pattern(/^[a-zA-ZÀ-ÿŒœ0-9\s.,'"’()\-@%°&+]*$/)
+          Validators.maxLength(250),
+          Validators.pattern(this.OPTIONNAL_SAFE_TEXT),
         ]
       ]
     });
